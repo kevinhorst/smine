@@ -128,6 +128,11 @@ The smine pipeline mines and routes session batches (see feedback loop step 4): 
 
 Plan presentation rules for all of them live in [context/style/plan.md](context/style/plan.md): section order, stacked table cells, in-plan Q&A (OPEN decision rows, never popups), changelog, mode-invariant code.
 
+## Installation
+
+- `install.sh` — installs [peek-mcp](https://github.com/kevinhorst/peek-mcp) ≥ 1.0.7 (`--no-peek` to skip), optionally serena (`--serena`), builds `bin/configserver` and runs it as LaunchAgent `com.smine.configserver` on `:6001` (logs in `~/Library/Logs/`). Stop with `launchctl bootout gui/$(id -u)/com.smine.configserver` — a plain `kill` gets restarted.
+- Then run the sync scripts below to deploy settings, skills, and context.
+
 ## Sync scripts
 
 One direction only — the repo is the source of truth, nothing is read in place:
@@ -164,10 +169,9 @@ flowchart LR
     CX -- sync_context.sh --> TCX
 ```
 
-- `cmd/sync/sync_settings.sh` — copies `settings.json` → `~/.claude/`, `config.toml` → `~/.codex/`, and every `cmd/hooks/*.sh` → `~/.claude/hooks/` (chmod +x). Regenerates `~/.claude/hooks/review-context.env`, preserving the toggle state. Merges the `mcpServers` from `settings/claude_code/claude.json` additively into `~/.claude.json` (repo wins per named server; everything else in the file — other servers, harness state — is preserved). MCP servers for codex ride along inside `config.toml`.
-- `install.sh` — installs the MCP servers and the config server: `go install`s peek-mcp, optionally `uv tool install`s serena, builds `bin/configserver` via `make build`, then installs it as the LaunchAgent `com.smine.configserver` (generated from `cmd/configserver/com.smine.configserver.plist.template` into `~/Library/LaunchAgents/`, RunAtLoad + KeepAlive, logs at `~/Library/Logs/smine-configserver.{out,err}.log`) and bootstraps it on `:6001`. Stop it with `launchctl bootout gui/$(id -u)/com.smine.configserver` — a plain `kill` gets restarted by launchd. `--no-peek` skips peek-mcp; serena is not installed by default — `--serena` opts in (also pass `--serena` to `cmd/sync/sync_settings.sh` to configure it in the deployed settings).
-- `cmd/sync/sync_skills.sh` — copies every skill dir → `~/.claude/skills/` and `~/.codex/skills/`, substituting `$AGENT_CONTEXT_DIR_DEFAULT` in `SKILL.md`. Offers to prune installed skills that no longer exist in the repo (confirm per directory — other tools install skills there too). Also syncs agent definitions (`agents/*.md` → `~/.claude/agents/`) and the agent toolset (`cmd/worktrees/remove_agent_worktrees.sh` → `~/.claude/agents/tools/` — the checkout-independent path subagents invoke for worktree cleanup).
-- `cmd/sync/sync_context.sh` — builds a per-repo context pack in a target repo. Expands the `AGENTS.md` template (`{{ROLE}}` + `{{CONTEXT_DIR}}` placeholders, `{{LANG:x}}…{{/LANG:x}}` blocks for the languages you select), always syncs the baseline (header-marked `rules/` chapters + `aspects.json` + the artifact style guides `style/plan.md` and `style/commits.md`), copies selected language guides (`--langs go` → `style/go.md`; languages are the `style/*.md` files minus the artifact set), and never touches repo-owned content (`facts/`, unheaded `rules/` overlay files — a name collision aborts). Resolved settings persist to `<pack>/context-pack.json` (precedence: flags > pack file > prompt), so re-syncs are non-interactive; the merged pack is validated via `go run ./cmd/rules validate --pack` after writing. Flags: `--context-dir NAME`, `--langs a,b,c`, `--role TEXT`, `--symlink|--no-symlink` (the configserver Context page drives it this way).
+- `cmd/sync/sync_settings.sh` — `settings.json` → `~/.claude/`, `config.toml` → `~/.codex/` (codex MCP servers ride along inside), hooks → `~/.claude/hooks/`. Merges `mcpServers` from `settings/claude_code/claude.json` into `~/.claude.json` additively — repo wins per server, everything else untouched. `--serena` configures serena in the deployed settings.
+- `cmd/sync/sync_skills.sh` — skills → `~/.claude/skills/` and `~/.codex/skills/`, agent definitions → `~/.claude/agents/`. Offers per-directory pruning of skills gone from the repo.
+- `cmd/sync/sync_context.sh` — builds a context pack in a target repo: expands the `AGENTS.md` template, syncs baseline rules + style guides, copies selected language guides. Never touches repo-owned content (`facts/`, overlay rules). Settings persist to `<pack>/context-pack.json`, so re-syncs are non-interactive. Flags: `--context-dir`, `--langs`, `--role`, `--symlink|--no-symlink`.
 
 ## review-context hook
 
@@ -221,7 +225,7 @@ Beyond the config editors the server manages multi-repo worktrees, launchd routi
 }
 ```
 
-Session liveness comes from peek-mcp (v1.1.0+) as MCP client over Streamable HTTP at `127.0.0.1:<peek-port>/mcp` — the server spawns the binary itself unless one is already serving, so a standalone `peek-mcp start` is no longer needed. peek down → the session column degrades, pages keep rendering.
+Session liveness comes from peek-mcp (v1.0.7+) as MCP client over Streamable HTTP at `127.0.0.1:<peek-port>/mcp` — the server spawns the binary itself unless one is already serving, so a standalone `peek-mcp start` is no longer needed. peek down → the session column degrades, pages keep rendering.
 
 Routines wrap `claude -p` in launchd jobs: copy `routines/_templates/` into `routines/<name>/`, rename the plist to the label, edit the marked spots. The wrapper requires `flock` (`brew install flock`). First real routine: `routines/smine-nightly/` — headless `/smine --nightly` at 03:00, non-bare against the shared `~/.claude` (skills, peek-mcp, allowlist), auth via `CLAUDE_CODE_OAUTH_TOKEN` sourced from `~/.config/claude-routine/token` (0600, written from `claude setup-token`, never committed).
 
