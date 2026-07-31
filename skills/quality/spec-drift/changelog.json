@@ -1,0 +1,42 @@
+[
+  {
+    "version": "2.6",
+    "date": "2026-07-30",
+    "text": "reference rename — smine-rules → smine-style"
+  },
+  {
+    "version": "2.5",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared"
+  },
+  {
+    "version": "2.4",
+    "date": "2026-07-30",
+    "text": "moved under skills/quality/ group; name and behavior unchanged"
+  },
+  {
+    "version": "2.3",
+    "date": "2026-07-27",
+    "text": "reference rename — analyze-rules → smine-rules"
+  },
+  {
+    "version": "2.2",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "2.1",
+    "date": "2026-07-24",
+    "text": "reference merge: feature-refactor → feature-change"
+  },
+  {
+    "version": "2.0",
+    "date": "2026-07-23",
+    "text": "absorbed contract-drift-audit as read-only contract mode (consumer enumeration + classification + fix-order report, no fixing); mode selection at intake; effort token normalized"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-19",
+    "text": "initial version"
+  }
+]

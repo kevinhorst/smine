@@ -1,0 +1,88 @@
+instructions = "NEVER use `git commit --amend`. Always create new commits."
+sandbox_mode = "workspace-write"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+approval_policy = "never"
+personality = "pragmatic"
+tool_output_token_limit = 125000
+service_tier = "priority"
+notify = ["{{HOME}}/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+
+[sandbox_workspace_write]
+network_access = false
+
+[marketplaces.openai-bundled]
+last_updated = "2026-06-19T21:33:28Z"
+source_type = "local"
+source = "{{HOME}}/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-06-20T04:38:34Z"
+source_type = "local"
+source = "{{HOME}}/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[mcp_servers.peek-mcp]
+command = "{{HOME}}/go/bin/peek-mcp"
+args = ["start", "--transport=stdio", "--depth=100", "--claude-home={{HOME}}/.claude", "--codex-home={{HOME}}/.codex", "--diff-target=main"]
+enabled = true
+
+[mcp_servers.peek-mcp.tools.session_full]
+approval_mode = "approve"
+
+[mcp_servers.peek-mcp.tools.session_latest]
+approval_mode = "approve"
+
+[mcp_servers.peek-mcp.tools.session_list]
+approval_mode = "approve"
+
+[mcp_servers.peek-mcp.tools.session_get]
+approval_mode = "approve"
+
+[mcp_servers.peek-mcp.tools.session_plan]
+approval_mode = "approve"
+
+[mcp_servers.peek-mcp.tools.session_diff]
+approval_mode = "approve"
+
+[mcp_servers.peek-mcp.tools.session_uncommitted_diff]
+approval_mode = "approve"
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "{{HOME}}/.codex"
+CODEX_HOME = "{{HOME}}/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "feca4d852d7d18eab5e217b18c8c80099fe667c330e836640fd7a48f362de525"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.616.32156"
+CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
+
+[desktop.open-in-target-preferences]
+global = "systemDefault"
+
+[features]
+js_repl = false

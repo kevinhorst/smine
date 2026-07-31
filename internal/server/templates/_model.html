@@ -1,0 +1,9 @@
+{{define "_model.html"}}
+<span id="ovr-model" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
+<div id="model-section">
+  <form class="inline-form" hx-post="/api/model" hx-target="#model-section" hx-swap="outerHTML">
+    <input type="text" name="model" value="{{.Model}}" placeholder="e.g. opus[1m]" class="grow">
+    <button type="submit">Set</button>
+  </form>
+</div>
+{{end}}

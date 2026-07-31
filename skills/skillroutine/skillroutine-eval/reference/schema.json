@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-run evaluation",
+  "description": "Machine-readable scoring of n runs of one skill: rubric derived from the skill's SKILL.md (compliance axis) and supplied quality context (quality axis), +1/0/-1 per rule per run, justification required for every non-+1 cell.",
+  "type": "object",
+  "required": ["eval", "rubric", "runs", "scores", "totals"],
+  "additionalProperties": false,
+  "properties": {
+    "eval": {
+      "type": "object",
+      "required": ["skill", "skillMdPath", "date"],
+      "additionalProperties": false,
+      "properties": {
+        "skill": { "type": "string", "description": "name of the evaluated skill" },
+        "skillMdPath": { "type": "string", "description": "repo-relative path of the evaluated SKILL.md" },
+        "date": { "type": "string", "description": "ISO date of the evaluation" },
+        "manifest": { "type": "string", "description": "path of the manifest used" },
+        "notes": { "type": "string", "description": "eval-level caveats, e.g. discrepancies against a prior hand-built scoring" }
+      }
+    },
+    "rubric": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "axis", "rule", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Z][0-9]+$" },
+          "axis": { "enum": ["compliance", "quality"] },
+          "phase": { "type": "string", "description": "skill phase the rule belongs to, e.g. P0" },
+          "rule": { "type": "string" },
+          "source": { "type": "string", "description": "doc path(:line or rule id) the row derives from" }
+        }
+      }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "output", "model"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "output": { "type": "string", "description": "path of the run's output artifact" },
+          "model": {
+            "type": "object",
+            "required": ["id"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "effort": { "type": "string", "description": "reasoning effort, e.g. high, medium" },
+              "mode": { "type": "string", "description": "run mode/args, e.g. ultracode" },
+              "telemetry": { "type": "string", "description": "notable run telemetry, e.g. usage limit hit" }
+            }
+          }
+        }
+      }
+    },
+    "probes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "result"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "runId": { "type": "string", "description": "omitted for probes over the shared inputs" },
+          "ruleIds": { "type": "array", "items": { "type": "string" } },
+          "result": { "type": "string" }
+        }
+      }
+    },
+    "scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ruleId", "runId", "score"],
+        "additionalProperties": false,
+        "properties": {
+          "ruleId": { "type": "string" },
+          "runId": { "type": "string" },
+          "score": { "enum": [-1, 0, 1] },
+          "justification": { "type": "string" },
+          "evidence": { "type": "array", "items": { "type": "string" }, "description": "verbatim quotes or file:line anchors" },
+          "source": { "enum": ["agent", "probe", "user"] }
+        },
+        "if": { "properties": { "score": { "enum": [-1, 0] } } },
+        "then": { "required": ["ruleId", "runId", "score", "justification"] }
+      }
+    },
+    "totals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["runId", "axis", "raw", "max", "pct"],
+        "additionalProperties": false,
+        "properties": {
+          "runId": { "type": "string" },
+          "axis": { "enum": ["compliance", "quality"] },
+          "raw": { "type": "integer" },
+          "max": { "type": "integer" },
+          "pct": { "type": "number" }
+        }
+      }
+    }
+  }
+}

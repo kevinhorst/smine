@@ -1,0 +1,2234 @@
+[
+  {
+    "category": "advisor",
+    "explanation": "Model for the server-side advisor tool. Accepts a model alias (\"opus\", \"sonnet\", or \"fable\" on v2.1.170+) or a full model ID. Overridden by the --advisor CLI flag for the session, and blocked when the model is outside the availableModels allowlist. See https://code.claude.com/docs/en/advisor",
+    "key": "advisorModel",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "agent",
+    "explanation": "Name of an agent (built-in or custom) to use for the main thread. Applies the agent's system prompt, tool restrictions, and model. See https://code.claude.com/docs/en/sub-agents",
+    "key": "agent",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "agent",
+    "explanation": "When Remote Control is connected, allow Claude to send proactive push notifications to your phone, for example when a long task finishes. Requires Claude Code v2.1.119 or later. See https://code.claude.com/docs/en/remote-control#mobile-push-notifications",
+    "key": "agentPushNotifEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "allow",
+    "explanation": "(Managed settings only) Load claude.ai connectors alongside a deployed managed-mcp.json, which otherwise takes exclusive control and suppresses them. See https://code.claude.com/docs/en/managed-mcp",
+    "key": "allowAllClaudeAiMcps",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "allow",
+    "explanation": "(Managed settings only) Prevent loading of user, project, and plugin hooks. Only allows managed hooks and SDK hooks. See https://code.claude.com/docs/en/settings#hook-configuration",
+    "key": "allowManagedHooksOnly",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "allow",
+    "explanation": "(Managed settings only) When true, only allowedMcpServers from managed settings are respected; MCP servers defined in user, project, or local settings are ignored. deniedMcpServers still merges from all sources. See https://code.claude.com/docs/en/managed-mcp",
+    "key": "allowManagedMcpServersOnly",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "allow",
+    "explanation": "(Managed settings only) Prevent user and project settings from defining allow, ask, or deny permission rules. Only rules in managed settings apply. See https://code.claude.com/docs/en/settings#permission-settings",
+    "key": "allowManagedPermissionRulesOnly",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "allowed",
+    "explanation": "(Managed settings only) Allowlist of channel plugins that may run, each identified by its marketplace and plugin name. When set, only the listed plugins can push inbound channel messages while channelsEnabled is true. Replaces the default Anthropic allowlist when set; undefined falls back to the default and an empty array blocks all channel plugins. Requires channelsEnabled: true. See https://code.claude.com/docs/en/channels#restrict-which-channel-plugins-can-run",
+    "key": "allowedChannelPlugins",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "allowed",
+    "explanation": "Allowlist of URL patterns that HTTP hooks may target. Supports * as a wildcard. When set, hooks with non-matching URLs are blocked. Undefined = no restriction, empty array = block all HTTP hooks. Arrays merge across settings sources. See https://code.claude.com/docs/en/settings#hook-configuration",
+    "key": "allowedHttpHookUrls",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "allowed",
+    "explanation": "Enterprise allowlist of MCP servers that can be used. Applies to all scopes including enterprise servers from managed-mcp.json. If undefined, all servers are allowed. If empty array, no servers are allowed. Denylist takes precedence - if a server is on both lists, it is denied. See https://code.claude.com/docs/en/mcp#restriction-options",
+    "key": "allowedMcpServers",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "always",
+    "explanation": "Enable extended thinking by default for all sessions. Typically configured via the /config command rather than editing directly. See https://code.claude.com/docs/en/common-workflows#use-extended-thinking-thinking-mode",
+    "key": "alwaysThinkingEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "api",
+    "explanation": "Path to a script that outputs authentication values. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "apiKeyHelper",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "attribution",
+    "explanation": "Customize attribution for git commits and pull requests. See https://code.claude.com/docs/en/settings#attribution-settings",
+    "key": "attribution",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "attribution",
+    "explanation": "Attribution for git commits, including any trailers. Empty string hides commit attribution",
+    "key": "attribution.commit",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "attribution",
+    "explanation": "Attribution for pull request descriptions. Empty string hides pull request attribution",
+    "key": "attribution.pr",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "auto",
+    "explanation": "Automatically compact the conversation when context approaches the limit. Also configurable via the DISABLE_AUTO_COMPACT environment variable. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "autoCompactEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "auto",
+    "explanation": "Custom directory path for auto-memory storage. Supports ~/ prefix for home-directory expansion. Ignored if set in checked-in project settings (.claude/settings.json) for security. Defaults to ~/.claude/projects/<sanitized-cwd>/memory/ when unset. See https://code.claude.com/docs/en/memory",
+    "key": "autoMemoryDirectory",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "auto",
+    "explanation": "Enable automatic memory saves that capture useful context to .claude/memory/. Also configurable via CLAUDE_CODE_DISABLE_AUTO_MEMORY environment variable (set to 1 to disable, 0 to enable). See https://code.claude.com/docs/en/memory#auto-memory",
+    "key": "autoMemoryEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "auto",
+    "explanation": "Customization for the auto mode classifier prompt. Typically configured in managed settings to tune the allow/deny rules used when permissions.defaultMode is \"auto\". By default, allow, soft_deny, and environment REPLACE the corresponding built-in classifier section entirely. Include the literal string \"$defaults\" as an array entry (added in v2.1.118) to splice the built-in defaults in at that position alongside your custom rules. See https://code.claude.com/docs/en/permissions",
+    "key": "autoMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "auto",
+    "explanation": "Rules for the auto mode classifier allow section. Replaces the built-in allow rules entirely unless the literal string \"$defaults\" is included as an entry, which splices the built-in defaults in at that position.",
+    "key": "autoMode.allow",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "auto",
+    "explanation": "UNDOCUMENTED. Route all Bash/PowerShell commands through the auto mode classifier instead of only arbitrary-code-execution patterns (added in v2.1.193).",
+    "key": "autoMode.classifyAllShell",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "auto",
+    "explanation": "Entries for the auto mode classifier environment section. Replaces the built-in environment context entirely unless the literal string \"$defaults\" is included as an entry, which splices the built-in defaults in at that position.",
+    "key": "autoMode.environment",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "auto",
+    "explanation": "Rules for the auto mode classifier hard-deny section. Hard-deny rules block unconditionally regardless of user intent. Replaces the built-in hard-deny rules entirely unless the literal string \"$defaults\" is included as an entry, which splices the built-in defaults in at that position. See https://code.claude.com/docs/en/permissions",
+    "key": "autoMode.hard_deny",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "auto",
+    "explanation": "Rules for the auto mode classifier soft-deny section. Replaces the built-in soft-deny rules entirely unless the literal string \"$defaults\" is included as an entry, which splices the built-in defaults in at that position.",
+    "key": "autoMode.soft_deny",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "auto",
+    "explanation": "In fullscreen rendering, follow new output to the bottom of the conversation. Appears in /config as Auto-scroll. Permission prompts still scroll into view when this is off. See https://code.claude.com/docs/en/fullscreen",
+    "key": "autoScrollEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "auto",
+    "explanation": "Release channel to follow for updates. Use \"stable\" for a version that is typically about one week old and skips versions with major regressions, or \"latest\" (default) for the most recent release. Set DISABLE_AUTOUPDATER=1 to disable background auto-updates, or DISABLE_UPDATES=1 (added in v2.1.118) to block all update paths including manual `claude update`.",
+    "key": "autoUpdatesChannel",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "stable",
+      "latest"
+    ]
+  },
+  {
+    "category": "available",
+    "explanation": "Restrict which models users can select. When defined at multiple settings levels (user, project, etc.), arrays are merged and deduplicated. See https://code.claude.com/docs/en/model-config#restrict-model-selection",
+    "key": "availableModels",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "away",
+    "explanation": "Show a one-line session recap when you return to the terminal after a few minutes away. Set to false (or turn off Session recap in /config) to disable. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "awaySummaryEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "aws",
+    "explanation": "Command to run when AWS credentials are expired or unavailable; its output is shown to the user but interactive input is not supported. Also drives the \"Claude Platform on AWS · refresh credentials\" option in /login when configured. See https://code.claude.com/docs/en/amazon-bedrock#advanced-credential-configuration",
+    "key": "awsAuthRefresh",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "aws",
+    "explanation": "Command that outputs AWS credentials as JSON (in the form {\"Credentials\": {\"AccessKeyId\": ..., \"SecretAccessKey\": ..., \"SessionToken\": ...}}). The output is captured silently. Use when you cannot modify the .aws directory and must return credentials directly. See https://code.claude.com/docs/en/amazon-bedrock#advanced-credential-configuration",
+    "key": "awsCredentialExport",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "ax",
+    "explanation": "Render screen-reader-friendly output: flat text without decorative borders or animations screen-reader mode always uses the classic renderer, so the tui setting has no effect while it is active. The CLAUDE_AX_SCREEN_READER environment variable and --ax-screen-reader flag take precedence. Requires Claude Code v2.1.181 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "axScreenReader",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "blocked",
+    "explanation": "(Managed settings only) Blocklist of marketplace sources. These exact sources are blocked from being added as marketplaces. The check happens before downloading, so blocked sources never touch the filesystem.",
+    "key": "blockedMarketplaces",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "channels",
+    "explanation": "(Managed settings only) Allow channels for the organization. On claude.ai Team and Enterprise plans, channels are blocked when this is unset or false. For Anthropic Console accounts using API key authentication, channels are allowed by default unless the organization deploys managed settings, in which case this key must be set to true. See https://code.claude.com/docs/en/channels#enterprise-controls",
+    "key": "channelsEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "claude",
+    "explanation": "(Managed settings only) CLAUDE.md-style instructions injected as organization-managed memory. Honored only from managed/policy settings. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "claudeMd",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "claude",
+    "explanation": "Glob patterns for CLAUDE.md files to exclude from loading. Useful in monorepos to skip irrelevant instructions from other teams. Patterns match against absolute file paths. Arrays merge across settings layers. Managed policy CLAUDE.md files cannot be excluded. See https://code.claude.com/docs/en/memory#exclude-specific-claude-md-files",
+    "key": "claudeMdExcludes",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "cleanup",
+    "explanation": "Number of days to retain sessions, orphaned subagent worktrees, tasks, shell snapshots, and backups. Minimum is 1; setting 0 is rejected with a validation error. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "cleanupPeriodDays",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "number"
+  },
+  {
+    "category": "company",
+    "explanation": "Company announcements to display at startup (one will be randomly selected if multiple are provided)",
+    "key": "companyAnnouncements",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "default",
+    "explanation": "Default shell for input-box ! commands. Default: bash. Using \"powershell\" routes ! commands through PowerShell on Windows and requires CLAUDE_CODE_USE_POWERSHELL_TOOL=1 with pwsh on PATH. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "defaultShell",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "bash",
+      "powershell"
+    ]
+  },
+  {
+    "category": "denied",
+    "explanation": "Enterprise denylist of MCP servers that are explicitly blocked. If a server is on the denylist, it will be blocked across all scopes including enterprise. Denylist takes precedence over allowlist - if a server is on both lists, it is denied. See https://code.claude.com/docs/en/mcp#restriction-options",
+    "key": "deniedMcpServers",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "disable",
+    "explanation": "(Managed settings) Turn off background agents and the agent view: claude agents, --bg, /background, and the on-demand supervisor. Also configurable via the CLAUDE_CODE_DISABLE_AGENT_VIEW environment variable (set to 1 to disable). See https://code.claude.com/docs/en/agent-view",
+    "key": "disableAgentView",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable all hooks and statusLine execution. When true in managed settings, user and project-level disableAllHooks cannot override it. See https://code.claude.com/docs/en/hooks#disable-or-remove-hooks",
+    "key": "disableAllHooks",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable the Artifact tool, which publishes session output as a private web page on claude.ai. Also configurable via the CLAUDE_CODE_DISABLE_ARTIFACT environment variable. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableArtifact",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Set to \"disable\" to prevent auto mode from being activated: removes auto from the Shift+Tab cycle and rejects --permission-mode auto at startup. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableAutoMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "disable"
+    ]
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable the skills and workflows that ship with Claude Code: bundled skills and workflows are removed entirely, while built-in slash commands like /init stay typable but are hidden from the model. Skills from plugins, .claude/skills/, and .claude/commands/ are unaffected. Also configurable via the CLAUDE_CODE_DISABLE_BUNDLED_SKILLS environment variable. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableBundledSkills",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable claude.ai MCP connectors so they are not auto-fetched or connected. A value of true in any settings source takes precedence. Requires Claude Code v2.1.182 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableClaudeAiConnectors",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Set to \"disable\" to prevent Claude Code from registering the `claude://` deep-link protocol handler on startup. Most useful in managed settings where users cannot override it. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableDeepLinkRegistration",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "disable"
+    ]
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable Remote Control: blocks claude remote-control, the --remote-control flag, auto-start, and the in-session toggle. Requires Claude Code v2.1.128 or later. See https://code.claude.com/docs/en/remote-control",
+    "key": "disableRemoteControl",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable inline shell execution for `` !`...` `` and ` ```! ` blocks in skills and custom slash commands from user, project, plugin, or additional-directory sources. Commands are replaced with [shell command execution disabled by policy] instead of being run. Bundled and managed skills are not affected. Most useful in managed settings where users cannot override it. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableSkillShellExecution",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disable",
+    "explanation": "Disable dynamic workflows and bundled workflow commands. Also configurable via the CLAUDE_CODE_DISABLE_WORKFLOWS environment variable. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "disableWorkflows",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "disabled",
+    "explanation": "List of rejected MCP servers from .mcp.json. See https://code.claude.com/docs/en/mcp",
+    "key": "disabledMcpjsonServers",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "editor",
+    "explanation": "Key binding mode for the input prompt: \"normal\" or \"vim\". Appears in /config as Editor mode. See https://code.claude.com/docs/en/terminal-config#edit-prompts-with-vim-keybindings",
+    "key": "editorMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "normal",
+      "vim"
+    ]
+  },
+  {
+    "category": "effort",
+    "explanation": "Persist adaptive reasoning effort across sessions. Set to low, medium, high, or xhigh; max and ultracode are session-only and are not accepted in the settings file (use the CLAUDE_CODE_EFFORT_LEVEL environment variable or /effort for a session-only max). Effort is supported on Fable 5, Opus 4.8, Opus 4.7, Opus 4.6, and Sonnet 4.6, with xhigh sitting between high and max (added in v2.1.111). Defaults: Fable 5 and Opus 4.8 default to high; Opus 4.6 and Sonnet 4.6 default to high on all plans (Pro/Max raised from medium to high in v2.1.117); Opus 4.7 defaults to xhigh. Use /effort auto to reset to model default. Also configurable via CLAUDE_CODE_EFFORT_LEVEL environment variable. See https://code.claude.com/docs/en/model-config#adjust-effort-level",
+    "key": "effortLevel",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "low",
+      "medium",
+      "high",
+      "xhigh"
+    ]
+  },
+  {
+    "category": "enable",
+    "explanation": "Whether to automatically approve all MCP servers in the project. See https://code.claude.com/docs/en/mcp",
+    "key": "enableAllProjectMcpServers",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "enabled",
+    "explanation": "List of approved MCP servers from .mcp.json. See https://code.claude.com/docs/en/mcp",
+    "key": "enabledMcpjsonServers",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "enabled",
+    "explanation": "Enabled plugins using plugin-id@marketplace-id format. Example: { \"formatter@anthropic-tools\": true }. See https://code.claude.com/docs/en/plugins",
+    "key": "enabledPlugins",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "enforce",
+    "explanation": "(Managed settings) Extend the availableModels allowlist to the Default model option (requires v2.1.175+). Requires a non-empty availableModels list; when the account-type default is not in the allowlist, Default resolves to the first allowed entry instead. Has no effect when availableModels is unset or empty. See https://code.claude.com/docs/en/model-config#enforce-the-allowlist-for-the-default-model",
+    "key": "enforceAvailableModels",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "env",
+    "explanation": "Environment variables to set for Claude Code sessions. Many environment variables provide settings dimensions not available as dedicated settings.json properties (e.g., thinking tokens, prompt caching, bash timeouts, shell configuration). See https://code.claude.com/docs/en/settings#environment-variables for the full list.",
+    "key": "env",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "extra",
+    "explanation": "Additional marketplaces to make available for this repository. Typically used in repository .claude/settings.json to ensure team members have required plugin sources. See https://code.claude.com/docs/en/plugin-marketplaces",
+    "key": "extraKnownMarketplaces",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "fallback",
+    "explanation": "Fallback model chain tried in order when the primary model is overloaded, unavailable, or returns a non-retryable server error. Capped at three entries after deduplication; accepts model names or aliases, and \"default\" expands to the account-type default. Overridden by the --fallback-model CLI flag for the session. See https://code.claude.com/docs/en/model-config#fallback-model-chains",
+    "key": "fallbackModel",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "fast",
+    "explanation": "Enable fast mode, which uses Claude Opus 4.8 by default (since v2.1.154) for faster output at higher per-token cost without downgrading to a smaller model. Requires extra usage enabled. Toggle with the /fast command. Available on Opus 4.8 and Opus 4.7 (Opus 4.7 fast mode deprecated June 2026). See https://code.claude.com/docs/en/fast-mode",
+    "key": "fastMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "fast",
+    "explanation": "Require per-session opt-in for fast mode. When true, fast mode does not persist across sessions and users must enable it with /fast each session. Useful for controlling costs. See https://code.claude.com/docs/en/fast-mode",
+    "key": "fastModePerSessionOptIn",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "feedback",
+    "explanation": "Probability (0–1) that the session quality survey appears when eligible. A value of 0.05 means 5% of eligible sessions. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "feedbackSurveyRate",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "number"
+  },
+  {
+    "category": "file",
+    "explanation": "Snapshot edited files so /rewind can restore them. Also configurable via the CLAUDE_CODE_DISABLE_FILE_CHECKPOINTING environment variable (set to 1 to disable). See https://code.claude.com/docs/en/checkpointing",
+    "key": "fileCheckpointingEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "file",
+    "explanation": "Configure a custom script for @ file autocomplete. See https://code.claude.com/docs/en/settings#file-suggestion-settings",
+    "key": "fileSuggestion",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "footer",
+    "explanation": "Render extra clickable badges in the footer when a regex matches turn output (tool results and assistant responses). Read from user, --settings flag, and managed settings only; ignored in project and local settings. Requires Claude Code v2.1.176 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "footerLinksRegexes",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "force",
+    "explanation": "Force a specific login method: \"claudeai\" for Claude Pro/Max, \"console\" for Console billing",
+    "key": "forceLoginMethod",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "claudeai",
+      "console"
+    ]
+  },
+  {
+    "category": "force",
+    "explanation": "Organization UUID to use for OAuth login",
+    "key": "forceLoginOrgUUID",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "force",
+    "explanation": "(Managed settings only) Block CLI startup until remote managed settings are freshly fetched from the server. If the fetch fails, the CLI exits (fail-closed) rather than continuing with cached settings. When not set, startup continues without waiting for remote settings. See https://code.claude.com/docs/en/server-managed-settings",
+    "key": "forceRemoteSettingsRefresh",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "gcp",
+    "explanation": "Command to run when GCP credentials are expired or cannot be loaded. The command's output is displayed to the user but interactive input is not supported; it times out after three minutes. See https://code.claude.com/docs/en/google-vertex-ai#advanced-credential-configuration",
+    "key": "gcpAuthRefresh",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "hooks",
+    "explanation": "Lifecycle event hooks that run at configurable points during Claude Code operation (tool use, session start/end, notifications, prompt submit, message display, and more), not just before/after tool executions. See https://code.claude.com/docs/en/hooks",
+    "key": "hooks",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "http",
+    "explanation": "Allowlist of environment variable names HTTP hooks may interpolate into headers. When set, each hook's effective allowedEnvVars is the intersection with this list. Undefined = no restriction. Arrays merge across settings sources. See https://code.claude.com/docs/en/settings#hook-configuration",
+    "key": "httpHookAllowedEnvVars",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "include",
+    "explanation": "DEPRECATED. Use 'attribution' instead. Whether to include the co-authored-by Claude byline in git commits and pull requests (default: true)",
+    "key": "includeCoAuthoredBy",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "include",
+    "explanation": "Include built-in git commit and PR workflow instructions in Claude's system prompt. Also configurable via CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS environment variable (set to 1 to disable). See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "includeGitInstructions",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "input",
+    "explanation": "When Remote Control is connected, send a push notification to your phone when a permission prompt or question is waiting for input. Requires Claude Code v2.1.119 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "inputNeededNotifEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "language",
+    "explanation": "Configure Claude's preferred response language (e.g., \"japanese\", \"spanish\", \"french\"). Claude will respond in this language by default. Also sets the voice dictation language and terminal tab session title generation. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "language",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "left",
+    "explanation": "Whether the Left arrow key at the start of an empty prompt opens the agents view. Turn it off in /config (the leftArrowOpensAgents setting). See https://code.claude.com/docs/en/agent-view",
+    "key": "leftArrowOpensAgents",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "managed",
+    "explanation": "(Managed settings, third-party Desktop deployments only) MCP server configurations pushed to all users. Each entry specifies the transport and connection details, plus an optional toolPolicy map. Delivered through the managed settings file or MDM. See https://code.claude.com/docs/en/desktop#enterprise-configuration",
+    "key": "managedMcpServers",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "max",
+    "explanation": "Per-skill character cap on the combined description and when_to_use text in the skill listing Claude sees each turn. Text longer than this is truncated. See https://code.claude.com/docs/en/skills#skill-descriptions-are-cut-short",
+    "key": "maxSkillDescriptionChars",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "number"
+  },
+  {
+    "category": "minimum",
+    "explanation": "Minimum Claude Code version to stay on. Prevents downgrades when switching release channels. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "minimumVersion",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "model",
+    "explanation": "Override the default model used by Claude Code. For finer control, use environment variables: ANTHROPIC_MODEL (runtime override), ANTHROPIC_DEFAULT_OPUS_MODEL, ANTHROPIC_DEFAULT_SONNET_MODEL, ANTHROPIC_DEFAULT_HAIKU_MODEL (per-class pinning), CLAUDE_CODE_SUBAGENT_MODEL (subagent model). See https://code.claude.com/docs/en/model-config",
+    "key": "model",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "model",
+    "explanation": "Map Anthropic model IDs to provider-specific model IDs such as Bedrock inference profile ARNs, Vertex AI version names, or Foundry deployment names. Each model picker entry uses its mapped value when calling the provider API. Unknown keys are ignored. See https://code.claude.com/docs/en/model-config#override-model-ids-per-version",
+    "key": "modelOverrides",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "otel",
+    "explanation": "Path to an executable, or a shell command line with arguments, that outputs OpenTelemetry headers as a JSON object. Runs at startup and re-runs on the interval set by CLAUDE_CODE_OTEL_HEADERS_HELPER_DEBOUNCE_MS. Requires CLAUDE_CODE_ENABLE_TELEMETRY=1. See https://code.claude.com/docs/en/monitoring-usage#dynamic-headers",
+    "key": "otelHeadersHelper",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "output",
+    "explanation": "Controls the output style for assistant responses. Built-in styles: default, Explanatory, Learning. Custom styles can be added in ~/.claude/output-styles/ or .claude/output-styles/. See https://code.claude.com/docs/en/output-styles",
+    "key": "outputStyle",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "parent",
+    "explanation": "(Admin/managed settings only) Controls how SDK managedSettings (parent tier) merge with inherited settings. 'first-wins': first non-empty value applies (default). 'merge': merge arrays and objects. See https://code.claude.com/docs/en/server-managed-settings",
+    "key": "parentSettingsBehavior",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "first-wins",
+      "merge"
+    ]
+  },
+  {
+    "category": "permissions",
+    "explanation": "Tool usage permissions configuration.\nSee https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/settings#permission-settings\nSee https://code.claude.com/docs/en/tools-reference for full list of tools available to Claude.",
+    "key": "permissions",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "permissions",
+    "explanation": "Additional directories to include in the permission scope",
+    "key": "permissions.additionalDirectories",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "permissions",
+    "explanation": "List of permission rules for allowed operations",
+    "key": "permissions.allow",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "permissions",
+    "explanation": "List of permission rules that should always prompt for confirmation",
+    "key": "permissions.ask",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "permissions",
+    "explanation": "Default permission mode.\n\"default\": prompts on first use.\n\"acceptEdits\": auto-accepts file edits.\n\"plan\": read-only, no modifications.\nUNDOCUMENTED. \"delegate\": coordination-only for agent team leads (agent teams are experimental; enable via CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).\n\"dontAsk\": auto-denies unless pre-approved via permissions.\n\"bypassPermissions\": skips all prompts (use only in isolated environments).\n\"auto\": auto-approves tool calls with background safety checks that verify actions align with your request.\nSee https://code.claude.com/docs/en/permissions",
+    "key": "permissions.defaultMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "acceptEdits",
+      "bypassPermissions",
+      "default",
+      "delegate",
+      "dontAsk",
+      "plan",
+      "auto"
+    ]
+  },
+  {
+    "category": "permissions",
+    "explanation": "List of permission rules for denied operations",
+    "key": "permissions.deny",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "permissions",
+    "explanation": "Set to \"disable\" to prevent auto mode from being activated. Removes `auto` from the Shift+Tab cycle and rejects `--permission-mode auto` at startup. Most useful in managed settings where users cannot override it. See https://code.claude.com/docs/en/permissions",
+    "key": "permissions.disableAutoMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "disable"
+    ]
+  },
+  {
+    "category": "permissions",
+    "explanation": "Disable the ability to bypass permission prompts",
+    "key": "permissions.disableBypassPermissionsMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "disable"
+    ]
+  },
+  {
+    "category": "plans",
+    "explanation": "Customize where plan files are stored. Path is relative to project root (default: ~/.claude/plans)",
+    "key": "plansDirectory",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "plugin",
+    "explanation": "Per-plugin configuration including MCP server user configs and plugin options, keyed by plugin ID (plugin@marketplace format). See https://code.claude.com/docs/en/plugins",
+    "key": "pluginConfigs",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "plugin",
+    "explanation": "(Managed settings only) Allowlist of marketplace names whose plugins may surface as contextual \"suggested for this directory\" tips in the /plugin Discover tab. No marketplace-declared suggestions surface without this allowlist. The built-in first-party frontend-design tip is unaffected. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "pluginSuggestionMarketplaces",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "plugin",
+    "explanation": "(Managed settings only) Custom message appended to the plugin trust warning shown before installation. Use to provide organization-specific context about approved plugins. See https://code.claude.com/docs/en/settings#plugin-settings",
+    "key": "pluginTrustMessage",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "policy",
+    "explanation": "Admin-deployed executable that computes managed settings dynamically at startup. Honored only from MDM or the system managed-settings.json. Requires Claude Code v2.1.136 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "policyHelper",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "pr",
+    "explanation": "URL template for the PR badge shown in the footer and in tool-result summaries. Substitutes placeholders {host}, {owner}, {repo}, {number}, {url} from the gh-reported PR URL. Use this to point PR links at an internal code-review tool instead of github.com. Does not affect #123 autolinks in Claude's prose. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "prUrlTemplate",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "preferred",
+    "explanation": "Method for task-complete and permission-prompt notifications. \"auto\" (default) sends a desktop notification in iTerm2, Ghostty, and Kitty and does nothing in other terminals; \"terminal_bell\" rings the bell in any terminal; \"notifications_disabled\" turns them off. See https://code.claude.com/docs/en/terminal-config#get-a-terminal-bell-or-notification",
+    "key": "preferredNotifChannel",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "auto",
+      "terminal_bell",
+      "iterm2",
+      "iterm2_with_bell",
+      "kitty",
+      "ghostty",
+      "notifications_disabled"
+    ]
+  },
+  {
+    "category": "prefers",
+    "explanation": "Reduce or disable UI animations (spinners, shimmer, flash effects) for accessibility",
+    "key": "prefersReducedMotion",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "remote",
+    "explanation": "Connect Remote Control automatically when each interactive session starts. true = always, false = never, unset = organization default. Requires Claude Code v2.1.119 or later. See https://code.claude.com/docs/en/remote-control#enable-remote-control-for-all-sessions",
+    "key": "remoteControlAtStartup",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "required",
+    "explanation": "(Managed settings only) Maximum Claude Code version allowed to start. If the running version is newer, Claude Code exits at startup with instructions to install an approved version. See https://code.claude.com/docs/en/admin-setup#decide-what-to-enforce",
+    "key": "requiredMaximumVersion",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "required",
+    "explanation": "(Managed settings only) Minimum Claude Code version required to start. If the running version is older, Claude Code exits at startup rather than only warning. See https://code.claude.com/docs/en/admin-setup#decide-what-to-enforce",
+    "key": "requiredMinimumVersion",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "respect",
+    "explanation": "Control whether the @ file picker respects .gitignore patterns. When true (default), files matching .gitignore patterns are excluded from suggestions",
+    "key": "respectGitignore",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "respond",
+    "explanation": "Whether Claude responds after an input-box ! shell command runs (v2.1.186+). Set to false to add the command output to context without a response. See https://code.claude.com/docs/en/interactive-mode#shell-mode-with--prefix",
+    "key": "respondToBashCommands",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Sandbox execution configuration. See https://code.claude.com/docs/en/sandboxing",
+    "key": "sandbox",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Allow sandboxed commands to send Apple Events on macOS (v2.1.181+). Honored only from user, managed, or CLI settings; project settings cannot enable it. See https://code.claude.com/docs/en/sandboxing#limitations",
+    "key": "sandbox.allowAppleEvents",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Allow commands to run outside the sandbox via the dangerouslyDisableSandbox parameter. When false, the dangerouslyDisableSandbox parameter is completely ignored and all commands must run sandboxed. Default: true. See https://code.claude.com/docs/en/sandboxing#limitations",
+    "key": "sandbox.allowUnsandboxedCommands",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Automatically allow bash commands without prompting when they run in the sandbox. Only applies to commands that will run sandboxed. See https://code.claude.com/docs/en/sandboxing#sandbox-modes",
+    "key": "sandbox.autoAllowBashIfSandboxed",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "(Managed setting only) Path to custom bubblewrap (bwrap) binary for Linux/WSL sandbox. Overrides default. See https://code.claude.com/docs/en/server-managed-settings",
+    "key": "sandbox.bwrapPath",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Block sandboxed commands from reading credential files and secret environment variables (v2.1.187+). Entries merge across settings scopes. See https://code.claude.com/docs/en/sandboxing#protect-credentials",
+    "key": "sandbox.credentials",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Enable weaker sandbox mode for unprivileged docker environments where --proc mounting fails. This significantly reduces the strength of the sandbox and should only be used when this risk is acceptable. Default: false (secure). See https://code.claude.com/docs/en/sandboxing#limitations",
+    "key": "sandbox.enableWeakerNestedSandbox",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "macOS only. Allow access to the system TLS trust service (com.apple.trustd.agent) in the sandbox. Required for Go-based tools like gh, gcloud, and terraform to verify TLS certificates when using httpProxyPort with a MITM proxy and custom CA. Reduces security by opening a potential data exfiltration path. Default: false. See https://code.claude.com/docs/en/settings#sandbox-settings",
+    "key": "sandbox.enableWeakerNetworkIsolation",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Enable sandboxed bash. See https://code.claude.com/docs/en/sandboxing#enable-sandboxing",
+    "key": "sandbox.enabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Limit the entire sandbox configuration to the listed platforms. On platforms not in the list the sandbox config is inert: no sandbox, no auto-allow, no startup warning, and no failIfUnavailable exit. When omitted, all supported platforms are included. Only honored from managed (policy) settings.",
+    "key": "sandbox.enabledPlatforms",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Commands that should never run in the sandbox (e.g., [\"git\", \"docker\"]). See https://code.claude.com/docs/en/sandboxing#configure-sandboxing",
+    "key": "sandbox.excludedCommands",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "When true, make sandbox startup a hard failure if required sandbox dependencies are missing. Default: false (sandbox is skipped with a warning). See https://code.claude.com/docs/en/sandboxing#enable-sandboxing",
+    "key": "sandbox.failIfUnavailable",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Filesystem access control for sandboxed commands. See https://code.claude.com/docs/en/sandboxing#filesystem-isolation",
+    "key": "sandbox.filesystem",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Map of command patterns to filesystem paths to ignore violations for. Use \"*\" to match all commands",
+    "key": "sandbox.ignoreViolations",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Configures network isolation settings for the sandboxed bash environment, including domain restrictions, Unix socket access, and custom proxy configuration.",
+    "key": "sandbox.network",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Custom ripgrep configuration for Claude Code's bundled ripgrep support. Overrides the bundled binary and arguments.",
+    "key": "sandbox.ripgrep",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "(Managed setting only) Path to custom socat binary for Linux/WSL network proxying. Overrides default. See https://code.claude.com/docs/en/server-managed-settings",
+    "key": "sandbox.socatPath",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "show",
+    "explanation": "When true, the plan-approval dialog offers a \"clear context\" option. Defaults to false.",
+    "key": "showClearContextOnPlanAccept",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "show",
+    "explanation": "Show thinking summaries in the transcript view (Ctrl+O). Thinking summaries are not generated by default in interactive sessions; set to true to restore. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "showThinkingSummaries",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "show",
+    "explanation": "Show turn duration messages after responses (e.g., \"Cooked for 1m 6s\"). Set to false to hide these messages (default: true)",
+    "key": "showTurnDuration",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "skill",
+    "explanation": "Fraction of the model context window reserved for the skill listing sent to Claude (default 0.01 = 1%). When the listing exceeds this, descriptions are shortened to fit. Also configurable via the SLASH_COMMAND_TOOL_CHAR_BUDGET environment variable (fixed character count). See https://code.claude.com/docs/en/skills#skill-descriptions-are-cut-short",
+    "key": "skillListingBudgetFraction",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "number"
+  },
+  {
+    "category": "skill",
+    "explanation": "Per-skill visibility overrides. Controls whether skills appear to Claude and in the / picker. Values: 'on' (name and description shown, default), 'name-only' (name only), 'user-invocable-only' (hidden from Claude, visible in /), 'off' (hidden everywhere). Plugin skills are not affected by this setting. See https://code.claude.com/docs/en/skills#override-skill-visibility-from-settings",
+    "key": "skillOverrides",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "skip",
+    "explanation": "Whether the user has accepted the bypass permissions mode dialog. Typically managed by the CLI rather than set by hand.",
+    "key": "skipDangerousModePermissionPrompt",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "skip",
+    "explanation": "Skip the WebFetch blocklist check for enterprise environments with restrictive security policies. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "skipWebFetchPreflight",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "skipped",
+    "explanation": "List of marketplace names the user has chosen not to install when prompted",
+    "key": "skippedMarketplaces",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "skipped",
+    "explanation": "List of plugin IDs (plugin@marketplace format) the user has chosen not to install when prompted",
+    "key": "skippedPlugins",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "spinner",
+    "explanation": "Show tips in the spinner while Claude is working. Set to false to disable tips (default: true)",
+    "key": "spinnerTipsEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "spinner",
+    "explanation": "Customize the tips displayed in the spinner while Claude is working. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "spinnerTipsOverride",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "spinner",
+    "explanation": "Customize the verbs shown in spinner progress messages",
+    "key": "spinnerVerbs",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "ssh",
+    "explanation": "(Managed settings) Pre-configured SSH connections distributed to Desktop users. See https://code.claude.com/docs/en/desktop#ssh-sessions",
+    "key": "sshConfigs",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "ssh",
+    "explanation": "(Managed settings only) Allowlist restricting Desktop SSH sessions to approved hosts. Patterns are case-insensitive; * matches any host and *.example.com matches example.com and any subdomain. See https://code.claude.com/docs/en/desktop#ssh-sessions",
+    "key": "sshHostAllowlist",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "status",
+    "explanation": "Custom status line display configuration. See https://code.claude.com/docs/en/statusline",
+    "key": "statusLine",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "status",
+    "explanation": "A shell command or path to a script that displays session information (context usage, costs, git status, etc.) by reading JSON data from stdin and writing output to stdout. See https://code.claude.com/docs/en/statusline",
+    "key": "statusLine.command",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "status",
+    "explanation": "Set to true when your status line script renders the vim mode indicator itself, to suppress the built-in vim mode display. See https://code.claude.com/docs/en/statusline#manually-configure-a-status-line",
+    "key": "statusLine.hideVimModeIndicator",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "status",
+    "explanation": "Optional number of extra horizontal spacing characters added to the status line content; defaults to 0.",
+    "key": "statusLine.padding",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "number"
+  },
+  {
+    "category": "status",
+    "explanation": "Re-run the status line command every N seconds in addition to event-driven updates. Leave unset to run only on events. Useful for time-based data like clocks, or when background subagents change git state while the main session is idle. See https://code.claude.com/docs/en/statusline",
+    "key": "statusLine.refreshInterval",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "number"
+  },
+  {
+    "category": "status",
+    "explanation": "The type of status line handler; must be set to \"command\" to run a custom shell script that receives JSON session data via stdin.",
+    "key": "statusLine.type",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "command"
+    ]
+  },
+  {
+    "category": "strict",
+    "explanation": "(Managed settings only) Allowlist of plugin marketplaces users can add. Undefined = no restrictions, empty array = lockdown. Uses exact matching for source specifications. See https://code.claude.com/docs/en/plugin-marketplaces#managed-marketplace-restrictions",
+    "key": "strictKnownMarketplaces",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "strict",
+    "explanation": "(Managed settings) Block non-plugin customization sources for the listed surfaces. Array form locks specific surfaces (e.g., [\"skills\", \"hooks\"]); true locks all four; false is an explicit no-op. See https://code.claude.com/docs/en/plugins-reference",
+    "key": "strictPluginOnlyCustomization",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "subagent",
+    "explanation": "Status line configuration for subagent sessions. See https://code.claude.com/docs/en/statusline#subagent-status-lines",
+    "key": "subagentStatusLine",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "syntax",
+    "explanation": "Disable syntax highlighting in diffs, code blocks, and file previews. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "syntaxHighlightingDisabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "teammate",
+    "explanation": "How agent team teammates display: \"auto\" picks split panes in tmux or iTerm2, in-process otherwise; \"iterm2\" (added in v2.1.186) forces iTerm2 native split panes and requires the it2 CLI (it shows an error with the install command if it2 is missing). The default is \"in-process\" (it was \"auto\" before v2.1.179). Agent teams are experimental and disabled by default. Enable them by adding CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS to your settings.json or environment. See https://code.claude.com/docs/en/agent-teams#choose-a-display-mode",
+    "key": "teammateMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "auto",
+      "in-process",
+      "tmux",
+      "iterm2"
+    ]
+  },
+  {
+    "category": "terminal",
+    "explanation": "Enable the terminal progress bar that shows progress in supported terminals like Windows Terminal and iTerm2 (default: true)",
+    "key": "terminalProgressBarEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "theme",
+    "explanation": "Color theme for the interface: auto, dark, light, the daltonized variants (deuteranopia-friendly), the ansi variants (16-color terminals), or a custom theme reference such as custom:<slug> or custom:<plugin-name>:<slug>. See https://code.claude.com/docs/en/terminal-config#match-the-color-theme",
+    "key": "theme",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "string"
+  },
+  {
+    "category": "tui",
+    "explanation": "TUI rendering mode. Use \"fullscreen\" for the flicker-free alt-screen renderer with virtualized scrollback; \"default\" for the classic main-screen renderer. Corresponds to the /tui command. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "tui",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "fullscreen",
+      "default"
+    ]
+  },
+  {
+    "category": "use",
+    "explanation": "When true, apply the auto mode classifier during plan mode to auto-approve safe read-only tool calls while planning. Has no effect unless permissions.defaultMode allows auto. See https://code.claude.com/docs/en/permissions",
+    "key": "useAutoModeDuringPlan",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "verbose",
+    "explanation": "Show full tool output instead of truncated summaries. The --verbose flag overrides this for a single session. Requires Claude Code v2.1.119 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "verbose",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "view",
+    "explanation": "Transcript view mode. \"default\" shows standard interactive view; \"verbose\" shows expanded tool details; \"focus\" shows prompt, one-line tool summaries, and final response only (Ctrl+O toggle). See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "viewMode",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "default",
+      "verbose",
+      "focus"
+    ]
+  },
+  {
+    "category": "voice",
+    "explanation": "Voice dictation settings: enabled turns dictation on, mode selects \"hold\" or \"tap\", and autoSubmit sends the prompt on key release in hold mode. Written automatically when you run /voice. Requires a Claude.ai account. See https://code.claude.com/docs/en/voice-dictation",
+    "key": "voice",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "voice",
+    "explanation": "Legacy alias for voice.enabled; prefer the voice object. Requires a Claude.ai account. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "voiceEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "wheel",
+    "explanation": "In fullscreen rendering, accelerate mouse-wheel scroll speed during fast scrolls (v2.1.174+). Set to false for a constant scroll rate per wheel notch. See https://code.claude.com/docs/en/fullscreen#mouse-wheel-scrolling",
+    "key": "wheelScrollAccelerationEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "workflow",
+    "explanation": "Whether including the keyword \"ultracode\" in a prompt triggers a dynamic workflow. Requires Claude Code v2.1.157 or later. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "workflowKeywordTriggerEnabled",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "worktree",
+    "explanation": "Configuration for --worktree sessions. See https://code.claude.com/docs/en/settings#worktree-settings",
+    "key": "worktree",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "object"
+  },
+  {
+    "category": "worktree",
+    "explanation": "Whether to branch worktrees from origin/<default> (fresh) or local HEAD (head). Default: fresh. Set to 'head' to preserve unpushed commits in new worktrees. See https://code.claude.com/docs/en/settings#worktree-settings",
+    "key": "worktree.baseRef",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "fresh",
+      "head"
+    ]
+  },
+  {
+    "category": "worktree",
+    "explanation": "Isolation mode for background sessions. \"worktree\" blocks Edit/Write in main checkout until EnterWorktree is called; \"none\" lets background jobs edit the working copy directly without EnterWorktree, for repos where worktrees are impractical. See https://code.claude.com/docs/en/settings#worktree-settings",
+    "key": "worktree.bgIsolation",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "enum",
+    "values": [
+      "worktree",
+      "none"
+    ]
+  },
+  {
+    "category": "worktree",
+    "explanation": "Directories to check out in each worktree via git sparse-checkout (cone mode). Only the listed paths are written to disk, which is faster in large monorepos. See https://code.claude.com/docs/en/settings#worktree-settings",
+    "key": "worktree.sparsePaths",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "worktree",
+    "explanation": "Directories to symlink from the main repository into each worktree to avoid duplicating large directories on disk. No directories are symlinked by default. See https://code.claude.com/docs/en/settings#worktree-settings",
+    "key": "worktree.symlinkDirectories",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "array"
+  },
+  {
+    "category": "wsl",
+    "explanation": "(Windows managed settings only) When true, Claude Code on WSL reads managed settings from the Windows policy chain in addition to /etc/claude-code, with Windows sources taking priority. Only honored when set in the HKLM registry key or C:\\Program Files\\ClaudeCode\\managed-settings.json, both of which require Windows admin to write. For HKCU policy to also apply on WSL, the flag must additionally be set in HKCU itself. Has no effect on native Windows. See https://code.claude.com/docs/en/settings#available-settings",
+    "key": "wslInheritsWindowsSettings",
+    "source": "https://www.schemastore.org/claude-code-settings.json",
+    "target": "claude",
+    "type": "bool"
+  },
+  {
+    "category": "agents",
+    "explanation": "Agent-related settings (thread limits, etc.).",
+    "key": "agents",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "allow",
+    "explanation": "Whether the model may request a login shell for shell-based tools. Default to `true`\n\nIf `true`, the model may request a login shell (`login = true`), and omitting `login` defaults to using a login shell. If `false`, the model can never use a login shell: `login = true` requests are rejected, and omitting `login` defaults to a non-login shell.",
+    "key": "allow_login_shell",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "analytics",
+    "explanation": "When `false`, disables analytics across Codex product surfaces in this machine. Defaults to `true`.",
+    "key": "analytics",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "approval",
+    "explanation": "Default approval policy for executing commands.",
+    "key": "approval_policy",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "untrusted",
+      "on-request",
+      "never"
+    ]
+  },
+  {
+    "category": "approvals",
+    "explanation": "Configures who approval requests are routed to for review once they have been escalated. This does not disable separate safety checks such as ARC.",
+    "key": "approvals_reviewer",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "user",
+      "auto_review",
+      "guardian_subagent"
+    ]
+  },
+  {
+    "category": "apps",
+    "explanation": "Settings for app-specific controls.",
+    "key": "apps",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "apps",
+    "explanation": "Optional product SKU forwarded on host-owned Codex Apps MCP requests.",
+    "key": "apps_mcp_product_sku",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "audio",
+    "explanation": "Machine-local realtime audio device preferences used by realtime voice.",
+    "key": "audio",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "auto",
+    "explanation": "Optional policy instructions for the guardian auto-reviewer.",
+    "key": "auto_review",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "background",
+    "explanation": "Maximum poll window for background terminal output (`write_stdin`), in milliseconds. Default: `300000` (5 minutes).",
+    "key": "background_terminal_max_timeout",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "number"
+  },
+  {
+    "category": "chatgpt",
+    "explanation": "Base URL for requests to ChatGPT (as opposed to the OpenAI API).",
+    "key": "chatgpt_base_url",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "check",
+    "explanation": "When `true`, checks for Codex updates on startup and surfaces update prompts. Set to `false` only if your Codex updates are centrally managed. Defaults to `true`.",
+    "key": "check_for_update_on_startup",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "cli",
+    "explanation": "Preferred backend for storing CLI auth credentials. file (default): Use a file in the Codex home directory. keyring: Use an OS-specific keyring service. auto: Use the keyring if available, otherwise use a file.",
+    "key": "cli_auth_credentials_store",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "file",
+      "keyring",
+      "auto",
+      "ephemeral"
+    ]
+  },
+  {
+    "category": "compact",
+    "explanation": "Compact prompt used for history compaction.",
+    "key": "compact_prompt",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "debug",
+    "explanation": "Debugging and reproducibility settings.",
+    "key": "debug",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "default",
+    "explanation": "Default permissions profile to apply. Names starting with `:` refer to built-in profiles; other names are resolved from the `[permissions]` table.",
+    "key": "default_permissions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "desktop",
+    "explanation": "Opaque desktop settings stored alongside the rest of config.toml.",
+    "key": "desktop",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "developer",
+    "explanation": "Developer instructions inserted as a `developer` role message.",
+    "key": "developer_instructions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "disable",
+    "explanation": "When true, disables burst-paste detection for typed input entirely. All characters are inserted as they are received, and no buffering or placeholder replacement will occur for fast keypress bursts.",
+    "key": "disable_paste_burst",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "experimental",
+    "explanation": "A path that is guaranteed to be absolute and normalized (though it is not guaranteed to be canonicalized or exist on the filesystem).\n\nIMPORTANT: When deserializing an `AbsolutePathBuf`, a base path must be set using [AbsolutePathBufGuard::new]. If no base path is set, the deserialization will fail unless the path being deserialized is already absolute.",
+    "key": "experimental_compact_prompt_file",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Replaces the built-in realtime start instructions inserted into developer messages when realtime becomes active.",
+    "key": "experimental_realtime_start_instructions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Overrides only the WebRTC realtime call creation base URL. This is separate from `experimental_realtime_ws_base_url` because WebRTC call creation is HTTP, while sideband control is websocket.",
+    "key": "experimental_realtime_webrtc_call_base_url",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Overrides only the realtime conversation websocket transport instructions (the `Op::RealtimeConversation` `/ws` session.update instructions) without changing normal prompts.",
+    "key": "experimental_realtime_ws_backend_prompt",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Overrides only the realtime conversation websocket transport base URL (the `Op::RealtimeConversation` `/v1/realtime` connection) without changing normal provider HTTP requests.",
+    "key": "experimental_realtime_ws_base_url",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Selects the realtime websocket model/snapshot used for the `Op::RealtimeConversation` connection.",
+    "key": "experimental_realtime_ws_model",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Replaces the synthesized realtime startup context appended to websocket session instructions. An empty string disables startup context injection entirely.",
+    "key": "experimental_realtime_ws_startup_context",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. When set, app-server fetches thread-scoped config from a remote service at this endpoint.",
+    "key": "experimental_thread_config_endpoint",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "experimental",
+    "explanation": "Experimental / do not use. Selects the thread store implementation.",
+    "key": "experimental_thread_store",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "object"
+  },
+  {
+    "category": "features",
+    "explanation": "Centralized feature flags (new). Prefer this over individual toggles.",
+    "key": "features",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "feedback",
+    "explanation": "When `false`, disables feedback collection across Codex product surfaces. Defaults to `true`.",
+    "key": "feedback",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "file",
+    "explanation": "Optional URI-based file opener. If set, citations to files in the model output will be hyperlinked using the specified URI scheme.",
+    "key": "file_opener",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "vscode",
+      "vscode-insiders",
+      "windsurf",
+      "cursor",
+      "none"
+    ]
+  },
+  {
+    "category": "forced",
+    "explanation": "When set, restricts ChatGPT login to one or more workspace identifiers.",
+    "key": "forced_chatgpt_workspace_id",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "forced",
+    "explanation": "When set, restricts the login mechanism users may use.",
+    "key": "forced_login_method",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "chatgpt",
+      "api"
+    ]
+  },
+  {
+    "category": "ghost",
+    "explanation": "Compatibility-only settings retained so legacy `ghost_snapshot` config still loads.",
+    "key": "ghost_snapshot",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "hide",
+    "explanation": "When set to `true`, `AgentReasoning` events will be hidden from the UI/output. Defaults to `false`.",
+    "key": "hide_agent_reasoning",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "history",
+    "explanation": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
+    "key": "history",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "hooks",
+    "explanation": "Lifecycle hooks configured inline in TOML plus user-level overrides.",
+    "key": "hooks",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "include",
+    "explanation": "Whether to inject the `<apps_instructions>` developer block.",
+    "key": "include_apps_instructions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "include",
+    "explanation": "Whether to inject the `<collaboration_mode>` developer block.",
+    "key": "include_collaboration_mode_instructions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "include",
+    "explanation": "Whether to inject the `<environment_context>` user block.",
+    "key": "include_environment_context",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "include",
+    "explanation": "Whether to inject the `<permissions instructions>` developer block.",
+    "key": "include_permissions_instructions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "instructions",
+    "explanation": "System instructions.",
+    "key": "instructions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "log",
+    "explanation": "Directory where Codex writes log files. Setting this value explicitly also enables the TUI text log in this directory. Defaults to `$CODEX_HOME/log`.",
+    "key": "log_dir",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "marketplaces",
+    "explanation": "User-level marketplace entries keyed by marketplace name.",
+    "key": "marketplaces",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "mcp",
+    "explanation": "Optional fixed port for the local HTTP callback server used during MCP OAuth login. When unset, Codex will bind to an ephemeral port chosen by the OS.",
+    "key": "mcp_oauth_callback_port",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "number"
+  },
+  {
+    "category": "mcp",
+    "explanation": "Optional redirect URI to use during MCP OAuth login. When set, this URI is used in the OAuth authorization request instead of the local listener address. The local callback listener still binds to 127.0.0.1 (using `mcp_oauth_callback_port` when provided).",
+    "key": "mcp_oauth_callback_url",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "mcp",
+    "explanation": "Preferred backend for storing MCP OAuth credentials. keyring: Use an OS-specific keyring service. https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2 file: Use a file in the Codex home directory. auto (default): Use the OS-specific keyring service if available, otherwise use a file.",
+    "key": "mcp_oauth_credentials_store",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "auto",
+      "file",
+      "keyring"
+    ]
+  },
+  {
+    "category": "mcp",
+    "explanation": "Definition for MCP servers that Codex can reach out to for tool calls.",
+    "key": "mcp_servers",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "mcp_servers",
+    "explanation": "Authentication flow Codex attempts after resolving an HTTP MCP server's configured bearer token and authorization headers, which always take precedence. ChatGPT authentication falls back to stored OAuth credentials when its session provider is unavailable; both modes ultimately fall back to an unauthenticated connection.",
+    "key": "mcp_servers.<id>.auth",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "oauth",
+      "chatgpt"
+    ]
+  },
+  {
+    "category": "mcp_servers",
+    "explanation": "Legacy display-name field accepted for backward compatibility.",
+    "key": "mcp_servers.<id>.name",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "mcp_servers",
+    "explanation": "OAuth client settings used when Codex launches an MCP OAuth flow.",
+    "key": "mcp_servers.<id>.oauth",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "memories",
+    "explanation": "Memories subsystem settings.",
+    "key": "memories",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "model",
+    "explanation": "Optional override of model selection.",
+    "key": "model",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "model",
+    "explanation": "Token usage threshold triggering auto-compaction of conversation history.",
+    "key": "model_auto_compact_token_limit",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "number"
+  },
+  {
+    "category": "model",
+    "explanation": "Controls whether the auto-compaction limit applies to the full context or only to tokens after the carried prefix in the current compaction window.",
+    "key": "model_auto_compact_token_limit_scope",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "total",
+      "body_after_prefix"
+    ]
+  },
+  {
+    "category": "model",
+    "explanation": "Optional path to a JSON model catalog (applied on startup only). Per-thread `config` overrides are accepted but do not reapply this (no-ops).",
+    "key": "model_catalog_json",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "model",
+    "explanation": "Size of the context window for the model, in tokens.",
+    "key": "model_context_window",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "number"
+  },
+  {
+    "category": "model",
+    "explanation": "Optional path to a file containing model instructions that will override the built-in instructions for the selected model. Users are STRONGLY DISCOURAGED from using this field, as deviating from the instructions sanctioned by Codex will likely degrade model performance.",
+    "key": "model_instructions_file",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "model",
+    "explanation": "Provider to use from the model_providers map.",
+    "key": "model_provider",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "model",
+    "explanation": "User-defined provider entries that extend the built-in list. Built-in IDs cannot be overridden.",
+    "key": "model_providers",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "model",
+    "explanation": "A non-empty reasoning effort value advertised by the model.",
+    "key": "model_reasoning_effort",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "minimal",
+      "low",
+      "medium",
+      "high",
+      "xhigh"
+    ]
+  },
+  {
+    "category": "model",
+    "explanation": "A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#reasoning-summaries",
+    "key": "model_reasoning_summary",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "auto",
+      "concise",
+      "detailed",
+      "none"
+    ]
+  },
+  {
+    "category": "model",
+    "explanation": "Override to force-enable reasoning summaries for the configured model.",
+    "key": "model_supports_reasoning_summaries",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "model",
+    "explanation": "Optional verbosity control for GPT-5 models (Responses API `text.verbosity`).",
+    "key": "model_verbosity",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "low",
+      "medium",
+      "high"
+    ]
+  },
+  {
+    "category": "notice",
+    "explanation": "Collection of in-product notices (different from notifications) See [`crate::types::Notice`] for more details",
+    "key": "notice",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "notify",
+    "explanation": "Optional external command to spawn for end-user notifications.",
+    "key": "notify",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "array"
+  },
+  {
+    "category": "openai",
+    "explanation": "Base URL override for the built-in `openai` model provider.",
+    "key": "openai_base_url",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "orchestrator",
+    "explanation": "Orchestrator-owned feature settings.",
+    "key": "orchestrator",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "oss",
+    "explanation": "Preferred OSS provider for local models, e.g. \"lmstudio\" or \"ollama\".",
+    "key": "oss_provider",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "lmstudio",
+      "ollama"
+    ]
+  },
+  {
+    "category": "otel",
+    "explanation": "OTEL configuration.",
+    "key": "otel",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "permissions",
+    "explanation": "Named permissions profiles.",
+    "key": "permissions",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "personality",
+    "explanation": "Optionally specify a personality for the model",
+    "key": "personality",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "none",
+      "friendly",
+      "pragmatic"
+    ]
+  },
+  {
+    "category": "plan",
+    "explanation": "A non-empty reasoning effort value advertised by the model.",
+    "key": "plan_mode_reasoning_effort",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "none",
+      "minimal",
+      "low",
+      "medium",
+      "high",
+      "xhigh"
+    ]
+  },
+  {
+    "category": "plugins",
+    "explanation": "User-level plugin config entries keyed by plugin name.",
+    "key": "plugins",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "profile",
+    "explanation": "Profile to use from the `profiles` map.",
+    "key": "profile",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "profiles",
+    "explanation": "Named profiles to facilitate switching between different configurations.",
+    "key": "profiles",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "project",
+    "explanation": "Ordered list of fallback filenames to look for when AGENTS.md is missing.",
+    "key": "project_doc_fallback_filenames",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "array"
+  },
+  {
+    "category": "project",
+    "explanation": "Maximum number of bytes to include from an AGENTS.md project doc file.",
+    "key": "project_doc_max_bytes",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "number"
+  },
+  {
+    "category": "project",
+    "explanation": "Markers used to detect the project root when searching parent directories for `.codex` folders. Defaults to [\".git\"] when unset.",
+    "key": "project_root_markers",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "array"
+  },
+  {
+    "category": "realtime",
+    "explanation": "Experimental / do not use. Realtime websocket session selection. `version` controls v1/v2 and `type` controls conversational/transcription.",
+    "key": "realtime",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "review",
+    "explanation": "Review model override used by the `/review` feature.",
+    "key": "review_model",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Sandbox mode to use.",
+    "key": "sandbox_mode",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "read-only",
+      "workspace-write",
+      "danger-full-access"
+    ]
+  },
+  {
+    "category": "sandbox",
+    "explanation": "Sandbox configuration to apply if `sandbox` is `WorkspaceWrite`.",
+    "key": "sandbox_workspace_write",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "service",
+    "explanation": "Optional explicit service tier request id for new turns (for example `default`, `priority`, or `flex`; legacy `fast` also works).",
+    "key": "service_tier",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "shell",
+    "explanation": "Policy for building the `env` when spawning a process via shell-like tools.",
+    "key": "shell_environment_policy",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "show",
+    "explanation": "When set to `true`, `AgentReasoningRawContentEvent` events will be shown in the UI/output. Defaults to `false`.",
+    "key": "show_raw_agent_reasoning",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "skills",
+    "explanation": "User-level skill config entries keyed by SKILL.md path.",
+    "key": "skills",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "sqlite",
+    "explanation": "Directory where Codex stores the SQLite state DB. Defaults to `$CODEX_SQLITE_HOME` when set. Otherwise uses `$CODEX_HOME`.",
+    "key": "sqlite_home",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "string"
+  },
+  {
+    "category": "suppress",
+    "explanation": "Suppress warnings about unstable (under development) features.",
+    "key": "suppress_unstable_features_warning",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "bool"
+  },
+  {
+    "category": "tool",
+    "explanation": "Token budget applied when storing tool/function outputs in the context manager.",
+    "key": "tool_output_token_limit",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "number"
+  },
+  {
+    "category": "tool",
+    "explanation": "Additional discoverable tools that can be suggested for installation.",
+    "key": "tool_suggest",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "tools",
+    "explanation": "Nested tools section for feature toggles",
+    "key": "tools",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "tui",
+    "explanation": "Collection of settings that are specific to the TUI.",
+    "key": "tui",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  },
+  {
+    "category": "web",
+    "explanation": "Controls the web search tool mode: disabled, cached, indexed, or live.",
+    "key": "web_search",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "enum",
+    "values": [
+      "disabled",
+      "cached",
+      "indexed",
+      "live"
+    ]
+  },
+  {
+    "category": "windows",
+    "explanation": "Windows-specific configuration.",
+    "key": "windows",
+    "source": "https://developers.openai.com/codex/config-reference",
+    "target": "codex",
+    "type": "table"
+  }
+]

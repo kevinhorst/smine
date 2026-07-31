@@ -1,0 +1,83 @@
+{{define "head"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<script src="/assets/htmx.min.js"></script>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div id="error-banner" class="error-banner"></div>
+<script>
+  document.body.addEventListener('htmx:responseError', function (evt) {
+    var banner = document.getElementById('error-banner');
+    banner.textContent = evt.detail.xhr.responseText;
+    banner.style.display = 'block';
+  });
+  document.body.addEventListener('htmx:afterSwap', function () {
+    document.getElementById('error-banner').style.display = 'none';
+  });
+</script>
+{{end}}
+
+{{define "nav"}}
+<nav>
+  <a href="/" {{if eq .Page "overview"}}class="active"{{end}}>Overview</a>
+  <a href="/config/claude" {{if or (eq .Page "config-claude") (eq .Page "config-codex")}}class="active"{{end}}>Config</a>
+  <a href="/sessions" {{if eq .Page "sessions"}}class="active"{{end}}>Sessions</a>
+  <a href="/proposals" {{if eq .Page "proposals"}}class="active"{{end}}>Proposals</a>
+  <a href="/scripts/skills" {{if eq .Page "skills"}}class="active"{{end}}>Skills</a>
+  <a href="/context" {{if eq .Page "context"}}class="active"{{end}}>Context</a>
+  <a href="/repos" {{if eq .Page "repos"}}class="active"{{end}}>Repos</a>
+  <a href="/routines" {{if eq .Page "routines"}}class="active"{{end}}>Routines</a>
+  <a href="/tools" {{if eq .Page "tools"}}class="active"{{end}}>Tools</a>
+  <a href="/docs/checklist" {{if eq .Page "checklist"}}class="active"{{end}}>Checklist</a>
+  {{if peekDashboardURL}}<a href="{{peekDashboardURL}}">Peek</a>{{end}}
+</nav>
+{{end}}
+
+{{define "foot"}}
+<script>
+  // Terminal-window chrome (pre.file-view): the brandbook dots double as
+  // window controls — red closes, amber collapses to the title bar, green
+  // toggles a fullscreen overlay. Overlay buttons keep the dots pure CSS.
+  (function () {
+    var DOTS = [
+      { left: 12, title: 'close' },
+      { left: 30, title: 'minimize' },
+      { left: 48, title: 'expand' },
+    ];
+    function act(pre, title) {
+      if (title === 'close') { pre.remove(); return; }
+      if (title === 'minimize') { pre.classList.remove('maximized'); pre.classList.toggle('minimized'); return; }
+      pre.classList.remove('minimized'); pre.classList.toggle('maximized');
+    }
+    function decorate(root) {
+      root.querySelectorAll('pre.file-view:not([data-term])').forEach(function (pre) {
+        pre.setAttribute('data-term', '1');
+        DOTS.forEach(function (spec) {
+          var dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'term-dot';
+          dot.title = spec.title;
+          dot.style.left = spec.left + 'px';
+          dot.addEventListener('click', function () { act(pre, spec.title); });
+          pre.prepend(dot);
+        });
+      });
+    }
+    decorate(document);
+    document.body.addEventListener('htmx:afterSettle', function () { decorate(document); });
+    document.addEventListener('keydown', function (evt) {
+      if (evt.key !== 'Escape') { return; }
+      document.querySelectorAll('pre.file-view.maximized').forEach(function (pre) {
+        pre.classList.remove('maximized');
+      });
+    });
+  })();
+</script>
+</body>
+</html>
+{{end}}

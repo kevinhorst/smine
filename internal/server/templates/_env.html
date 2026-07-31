@@ -1,0 +1,13 @@
+{{define "_env.html"}}
+<span id="ovr-env" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
+<div id="env-section">
+  {{if not .Env}}<div class="empty">No env vars</div>{{end}}
+  {{range .Env}}
+  <div class="card">
+    <span class="label"><strong>{{.Key}}</strong> = {{.Value}}</span>
+    <button class="small" hx-delete="/api/env/{{.Key}}"
+            hx-target="#env-section" hx-swap="outerHTML">Remove</button>
+  </div>
+  {{end}}
+</div>
+{{end}}

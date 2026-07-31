@@ -1,0 +1,29 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{if .Batch.Batch.Title}}{{.Batch.Batch.Title}} · {{end}}{{.Batch.Batch.Scope}} · Batch {{.Batch.Batch.Number}}</h1>
+<div class="meta">{{if .Batch.Batch.DateRange}}{{.Batch.Batch.DateRange}}{{else}}{{.Batch.Batch.AnalyzedDate}}{{end}}</div>
+<div class="card card-column">
+  {{if .ThemeLabel}}<span class="label">{{.ThemeLabel}}</span>{{end}}
+  {{if .ThemeBullets}}
+  <ul class="theme-list">
+    {{range .ThemeBullets}}<li>{{.}}</li>{{end}}
+  </ul>
+  {{end}}
+  {{if .Batch.Batch.SourceNote}}<span class="meta">{{.Batch.Batch.SourceNote}}</span>{{end}}
+  <span class="meta">Created: {{.Batch.Batch.AnalyzedDate}}</span>
+</div>
+
+{{template "_batch_body.html" .}}
+
+{{if .Batch.Arcs}}
+<h2>Arcs</h2>
+{{range .Batch.Arcs}}
+<div class="card">
+  <span class="label">
+    {{.Summary}}<br>
+    {{range .SessionIds}}<a class="meta" href="#session-{{.}}">{{.}}</a>{{with peekSessionURL .}} <a class="meta" href="{{.}}" title="open in peek">peek</a>{{end}} {{end}}
+  </span>
+</div>
+{{end}}
+{{end}}
+{{template "foot" .}}

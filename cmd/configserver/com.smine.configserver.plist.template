@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.smine.configserver</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__REPO_DIR__/bin/configserver</string>
+		<string>-addr</string>
+		<string>:__PORT__</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>__REPO_DIR__</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>__PATH__</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/smine-configserver.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/smine-configserver.err.log</string>
+</dict>
+</plist>

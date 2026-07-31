@@ -1,0 +1,38 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+*.xml
+*.iml
+
+# machine-specific repo registry (D27)
+/repos.json
+
+# routine runtime state (machine-specific)
+routines/*/.lock
+routines/*/results.jsonl
+routines/*/.cadence-stamp
+
+# proposal vote sidecars (server-written, consumed by the smine-nightly apply stage)
+sessions/proposals/votes.jsonl
+sessions/proposals/votes-processing-*.jsonl
+sessions/proposals/votes-archive.jsonl
+
+# scratch candidate list from a failed smine nightly (never a tracked artifact)
+sessions/.candidates.txt
+
+bin/*
+
+.codex/environments
+
+.serena
+
+# never track compiled binaries
+/configserver
+cmd/configserver/main

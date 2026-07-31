@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "peek-mcp": {
+      "type": "stdio",
+      "command": "{{HOME}}/go/bin/peek-mcp",
+      "args": [
+        "start",
+        "--transport=stdio",
+        "--depth=100",
+        "--claude-home={{HOME}}/.claude",
+        "--codex-home={{HOME}}/.codex",
+        "--control-port=42424"
+      ],
+      "env": {
+        "MAX_MCP_OUTPUT_TOKENS": "125000"
+      }
+    }
+  }
+}

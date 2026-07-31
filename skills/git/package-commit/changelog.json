@@ -1,0 +1,47 @@
+[
+  {
+    "version": "1.8",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — commit style guide moved to the pack (style/commits.md)"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-30",
+    "text": "context redesign — commit style guide moved to this skill's assets/commits.md"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-30",
+    "text": "renamed per-package-commit → package-commit; behavior unchanged"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-27",
+    "text": "moved under skills/git/ group; name and behavior unchanged"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-24",
+    "text": "delegation removed — not delegatable (tested: delegated run far slower than inline); step 0 and inline arg deleted"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-22",
+    "text": "delegation intake (self-delegating to sonnet), inline arg, classification unattended-safe, effort low"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-06-22",
+    "text": "initial version"
+  }
+]

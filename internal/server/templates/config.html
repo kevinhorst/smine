@@ -1,0 +1,95 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Config</h1>
+{{template "_config_tabs" .}}
+<div class="card">
+  <form hx-post="/api/config/{{.Target}}/sync/revert" hx-target="#op-result"
+        hx-confirm="Overwrite the live {{.Target}} settings with the repo fragment?">
+    <button type="submit"{{if .FragmentMissing}} disabled{{end}}>Sync</button>
+  </form>
+  {{if .FragmentMissing}}<span class="meta">repo fragment missing: {{.FragmentPath}}</span>{{end}}
+  <form hx-post="/api/config/{{.Target}}/sync/apply" hx-target="#op-result"
+        hx-confirm="Overwrite the repo fragment with the live {{.Target}} settings?">
+    <button type="submit"{{if .FragmentMissing}} disabled{{end}}>Persist overrides</button>
+  </form>
+</div>
+<div id="op-result"></div>
+<div class="section-controls">
+  <button class="small" onclick="document.querySelectorAll('details.section').forEach(d => d.open = true)">Expand all</button>
+  <button class="small" onclick="document.querySelectorAll('details.section').forEach(d => d.open = false)">Collapse all</button>
+</div>
+
+{{/* Persist/Sync replace whole files; the body re-pulls itself on config-op
+     (mirrors #repo-list). The hx-get-on-load sections re-fire inside the
+     fresh content. */}}
+<div id="config-body" hx-get="/config/{{.Target}}" hx-trigger="config-op from:body"
+     hx-select="#config-body" hx-swap="outerHTML" hx-disinherit="*">
+{{if eq .Target "claude"}}
+<details id="hooks" class="section"{{if eq .Open "hooks"}} open{{end}}><summary>Hooks <span id="ovr-hooks"></span></summary>
+  <div hx-get="/api/hooks" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
+</details>
+<details id="permissions" class="section"{{if eq .Open "permissions"}} open{{end}}><summary>Permissions <span id="ovr-permissions"></span></summary>
+  <div hx-get="/api/permissions" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
+</details>
+<details id="mcp" class="section"{{if eq .Open "mcp"}} open{{end}}><summary>MCP Servers <span id="ovr-mcp"></span></summary>
+  <div hx-get="/api/mcp" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
+</details>
+<details id="env" class="section"{{if eq .Open "env"}} open{{end}}><summary>Environment Variables <span id="ovr-env"></span></summary>
+  <form class="inline-form" hx-post="/api/env" hx-target="#env-section" hx-swap="outerHTML">
+    <input type="text" name="key" placeholder="KEY">
+    <input type="text" name="value" placeholder="value">
+    <button type="submit">Add</button>
+  </form>
+  <div id="env-section" hx-get="/api/env" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
+</details>
+<details id="model" class="section"{{if eq .Open "model"}} open{{end}}><summary>Model <span id="ovr-model"></span></summary>
+  <div hx-get="/api/model" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
+</details>
+{{end}}
+
+{{range .Groups}}
+<details id="group-{{domID $.Target .Category}}" class="section"><summary>{{.Category}}{{if .Overridden}} <span class="badge badge-action">{{.Overridden}} overridden</span>{{end}}</summary>
+  {{range .Rows}}{{template "_config_row.html" .}}{{end}}
+</details>
+{{end}}
+{{if .Available}}
+<details id="available-{{.Target}}" class="section">
+  <summary>Show available ({{.AvailableCount}}){{if .AvailableOverridden}} <span class="badge badge-action">{{.AvailableOverridden}} overridden</span>{{end}}</summary>
+  {{range .Available}}
+  <h2>{{.Category}}</h2>
+  {{range .Rows}}{{template "_config_row.html" .}}{{end}}
+  {{end}}
+</details>
+{{end}}
+</div>
+<script>
+  // Mutations fire config-op → #config-body re-pulls; the fresh HTML renders
+  // every section closed (only ?open= survives). Carry the client's open set
+  // across the swap (D4).
+  let openSections = [];
+  document.body.addEventListener('htmx:beforeSwap', (event) => {
+    if (event.detail.target.id !== 'config-body') return;
+    openSections = Array.from(
+      document.querySelectorAll('#config-body details.section[open]'),
+      (section) => section.id).filter(Boolean);
+  });
+  document.body.addEventListener('htmx:afterSwap', (event) => {
+    if (event.detail.target.id !== 'config-body') return;
+    for (const id of openSections) {
+      const section = document.getElementById(id);
+      if (section) section.open = true;
+    }
+  });
+</script>
+{{template "foot" .}}
+
+{{define "_config_tabs"}}
+<div class="tabs">
+  <a href="/config/claude{{if .Entries}}/docs{{end}}" {{if eq .Page "config-claude"}}class="active"{{end}}>Claude</a>
+  <a href="/config/codex{{if .Entries}}/docs{{end}}" {{if eq .Page "config-codex"}}class="active"{{end}}>Codex</a>
+</div>
+<div class="tabs subtabs">
+  <a href="/config/{{.Target}}" {{if not .Entries}}class="active"{{end}}>Active</a>
+  <a href="/config/{{.Target}}/docs" {{if .Entries}}class="active"{{end}}>Documentation</a>
+</div>
+{{end}}

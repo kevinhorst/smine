@@ -1,0 +1,77 @@
+[
+  {
+    "version": "3.4",
+    "date": "2026-07-31",
+    "text": "diff range self-resolved — baseCommit pinned to the merge-base fork point (never the base tip); lane premise aborts explicit (required aborted flag), aborted lanes excluded from merges, fully-aborted rounds return abortedLanes loudly; front re-resolves and re-dispatches once on a premise-failed round"
+  },
+  {
+    "version": "3.3",
+    "date": "2026-07-31",
+    "text": "critical direction reads the hot-class gates from rules/concepting.md"
+  },
+  {
+    "version": "3.2",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — hot classes and integrity entries in rules/implementing.md, DoD walk via rules/reviewing.md, Go style at style/go.md"
+  },
+  {
+    "version": "3.1",
+    "date": "2026-07-30",
+    "text": "context redesign — hot-items via ../fdesign/assets/ + rules/ overlay; data-integrity direction reads rules/integrity.md and cites entry IDs"
+  },
+  {
+    "version": "3.0",
+    "date": "2026-07-30",
+    "text": "station protocol: tracks renamed to directions, n lanes per direction (default 2) with per-direction merge, deterministic diff-coverage self-verification per lane, every artifact a JSON+MD pair, human review gate with durable rejection ledger (plans/{slug}/reviews/rejected.json), mandatory fix handoff to a different agent/session, clean-slate rounds until two consecutive clean rounds; v2 hand-run protocol and approval styles deleted"
+  },
+  {
+    "version": "2.7",
+    "date": "2026-07-30",
+    "text": "moved under skills/quality/ group; reference rename per-package-commit → package-commit"
+  },
+  {
+    "version": "2.6",
+    "date": "2026-07-26",
+    "text": "findings render as a table with a mandatory Proposed-fix column (was a bare severity line); Stage A TRACK_SCHEMA gains a required fix per finding, and the merge stage carries/refines each track's fix into the ranked plan instead of inventing one"
+  },
+  {
+    "version": "2.5",
+    "date": "2026-07-24",
+    "text": "railroad default mode (solo via inline arg, auto-solo fallbacks); artifacts to args.artifactsDir so worktrees stay removable; Cleanup stage invokes the agent-toolset remove_agent_worktrees.sh per claude/railroad-* branch, safety-gated, never forced"
+  },
+  {
+    "version": "2.4",
+    "date": "2026-07-20",
+    "text": "merge agent runs in an isolated worktree too, branch renamed to claude/railroad-merge-{base} — same leftover visibility as the track agents"
+  },
+  {
+    "version": "2.3",
+    "date": "2026-07-20",
+    "text": "workflow guard fixed to the head tip (worktrees fork from the orchestrator checkout, not the base) — args gains headCommit, agents verify HEAD == headCommit + baseCommit ancestry; string args tolerated (harness delivers JSON strings on resume); optional trackModel/trackEffort passthrough"
+  },
+  {
+    "version": "2.2",
+    "date": "2026-07-19",
+    "text": "track agents rename their worktree branch to claude/railroad-{track}-{base} so leftovers are visible to claude/* tooling"
+  },
+  {
+    "version": "2.1",
+    "date": "2026-07-19",
+    "text": "railroad mode fronts the bundled workflow (workflows/railroad-review.js, invoke via scriptPath as analyze does) — Stage A track fan-out (review-only, isolated worktrees) + Stage B/C merge barrier with per-finding dispositions, current-tree re-verification, and ranked fix plan"
+  },
+  {
+    "version": "2.0",
+    "date": "2026-07-16",
+    "text": "tracks, solo/railroad modes, multi-agent merge protocol, hot-items critical track"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-06-22",
+    "text": "initial version"
+  }
+]

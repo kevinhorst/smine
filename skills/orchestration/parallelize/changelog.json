@@ -1,0 +1,42 @@
+[
+  {
+    "version": "1.7",
+    "date": "2026-07-30",
+    "text": "moved under skills/orchestration/ group; name and behavior unchanged"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-27",
+    "text": "reference rename — couchskill-eval → skillroutine-eval (matrix-mode routing)"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-24",
+    "text": "reference merge: feature-refactor → feature-change"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-19",
+    "text": "routing: fresh matrix scored by eval routes to couchskill-eval matrix mode"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-19",
+    "text": "fan-out cells rename their worktree branch to claude/parallelize-{cell}-{base} so leftovers are visible to claude/* tooling"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-19",
+    "text": "reference renames: refactor → feature-refactor, eval-skill → couchskill-eval"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-19",
+    "text": "initial version"
+  }
+]

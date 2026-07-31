@@ -1,0 +1,17 @@
+[
+  {
+    "version": "v1.2",
+    "date": "2026-07-31",
+    "text": "session-scope rename to personal/work (sessions/{personal,work} globs)"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-30",
+    "text": "smine-rules → smine-style (--no-rules → --no-style); production caps --max-proposals-per-dimension / --max-proposals-mined threaded into the workflow plus a deterministic trim stage"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-27",
+    "text": "merges the analyze v1.6 pipeline front and the /smine entrypoint — /smine now runs mine (smine-batch) + six-dimension fan-out via the session-mine workflow; adds --no-batch and per-dimension --no-* flags; analyze skill and analyze.js retired"
+  }
+]

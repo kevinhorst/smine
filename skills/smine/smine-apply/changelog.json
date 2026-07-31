@@ -1,0 +1,67 @@
+[
+  {
+    "version": "1.12",
+    "date": "2026-07-30",
+    "text": "auto-apply modes — decide (rules-file judged, fail-closed, autoApplyHeld write-back) and always (dimension-scoped) fill remaining cap slots after explicit votes; kind rename rules → style; outcome auto-applied"
+  },
+  {
+    "version": "1.11",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared; Command surface line retired"
+  },
+  {
+    "version": "1.10",
+    "date": "2026-07-30",
+    "text": "renamed proposal-apply → smine-apply; moved under skills/smine/; the proposal-apply-nightly routine is retired — the smine-nightly apply stage invokes this skill on routine/smine-nightly (cap env var SMINE_APPLY_CAP)"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-07-27",
+    "text": "reference renames — analyze chain → smine chain; couchskill-create + couchroutine-create → skillroutine-create (skill/routine routes)"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-26",
+    "text": "JSON-only + votes drain — proposals edited directly in <kind>.json (no md, no regenerate-from-md, desync guard becomes schema-conformance only); terminal votes append to a votes-archive.jsonl disposition ledger the wrapper drains by, over-cap votes stay live in the sidecar instead of a requeue file; cap is $PROPOSAL_APPLY_CAP (default 3)"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-26",
+    "text": "decided-date stamp — every status transition writes decided: <date> on the entry (schema.json bump)"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-24",
+    "text": "per-change proposal atoms — split siblings (--<n>) vote independently (analyze contract change)"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-24",
+    "text": "json regeneration coupled per-kind to each md mutation (was a deferred batch step); new Validate step asserts md↔json proposal-ID set-equality and `schema.json` conformance, STOP on mismatch/invalid — the skill is the only desync guard, the wrapper runs none"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-24",
+    "text": "per-group routine branches — precondition branch is `routine/proposal-apply-nightly` (was shared `routine/nightly`)"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-23",
+    "text": "worktree-relative contract — processing file and deferral requeue live inside the worktree; the wrapper owns all main-checkout crossings"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-22",
+    "text": "`p` (postpone) vote — Postponements step parks entries in `archive/postponed.md` with a dated status starting the 14-day clock; outcome vocab gains `postponed`"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-22",
+    "text": "vote comments are vote-agnostic — rejection reason on −, implementation instruction on +"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-22",
+    "text": "initial version"
+  }
+]

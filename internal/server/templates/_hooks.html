@@ -1,0 +1,34 @@
+{{define "_hooks.html"}}
+<span id="ovr-hooks" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
+<div id="hooks-section">
+  {{if not .Hooks}}<div class="empty">No hooks configured</div>{{end}}
+  {{range .Hooks}}
+  <div class="card card-column">
+    <div class="card-row">
+      <span class="badge {{if .Enabled}}badge-ok{{else}}badge-error{{end}}">{{.Event}}</span>
+      <span class="label"><strong>{{.Name}}</strong></span>
+      {{if .Matcher}}<span class="meta">{{.Matcher}}</span>{{end}}
+      {{if not .Enabled}}<span class="badge badge-dim">session only — lost on hard restart</span>{{end}}
+      <label class="toggle">
+        <input type="checkbox" {{if .Enabled}}checked{{end}}
+               hx-post="/api/hooks/{{.Event}}/{{.Index}}/toggle?enabled={{.Enabled}}"
+               hx-target="#hooks-section" hx-swap="outerHTML">
+        <span class="slider"></span>
+      </label>
+      <button hx-delete="/api/hooks/{{.Event}}/{{.Index}}?enabled={{.Enabled}}"
+              hx-confirm="Remove this hook entry?"
+              hx-target="#hooks-section" hx-swap="outerHTML">remove</button>
+    </div>
+    {{if ne .Name .Command}}<div class="meta">{{.Command}}</div>{{end}}
+    {{range .Views}}
+    {{if .Content}}
+    <details>
+      <summary class="meta">{{.ScriptPath}}</summary>
+      <pre class="file-view">{{.Content}}</pre>
+    </details>
+    {{end}}
+    {{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

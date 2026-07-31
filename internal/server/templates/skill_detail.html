@@ -1,0 +1,102 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="detail-head">
+  <h1>/{{.Skill.Name}}</h1>
+  {{if .Skill.Version}}<span class="badge badge-dim badge-version">v{{.Skill.Version}}</span>{{end}}
+</div>
+<div class="meta origin">{{if eq .Skill.Origin "home"}}active{{else}}{{.Skill.Origin}}{{end}}</div>
+{{if .Skill.Author}}<div class="meta">by {{.Skill.Author}}</div>{{end}}
+{{if .Skill.AllowedTools}}<div class="meta">allowed-tools: {{.Skill.AllowedTools}}</div>{{end}}
+{{if .File}}
+<div class="card">
+  <span class="label">{{.File}}</span>
+  <a class="meta" href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}">back to SKILL.md</a>
+</div>
+<pre class="file-view">{{.FileContent}}</pre>
+{{else}}
+<div class="md-body">{{.Body}}</div>
+{{if .Skill.Files}}
+<h2>Files</h2>
+{{range .Skill.Files}}
+<div class="card">
+  <a class="label"
+     href="/scripts/skills/{{$.Skill.Origin}}/{{$.Skill.Name}}/file?f={{queryEscape .}}">{{.}}</a>
+</div>
+{{end}}
+{{end}}
+{{if .ChangelogError}}
+<div class="card card-error"><span class="label">{{.ChangelogError}}</span></div>
+{{end}}
+{{if .Changelog}}
+<h2>Version history</h2>
+<table class="md-body checklist-table">
+  <thead><tr><th>Version</th><th>Date</th><th>Change</th></tr></thead>
+  <tbody>
+    {{range .Changelog}}
+    <tr><td>{{.Version}}</td><td>{{.Date}}</td><td>{{.Text}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Invocations}}
+<h2>Invocations ({{len .Invocations}})</h2>
+<table class="md-body checklist-table">
+  <thead><tr><th>Batch</th><th>Date</th><th>Session</th></tr></thead>
+  <tbody>
+    {{range .Invocations}}
+    <tr>
+      <td><a href="/sessions/{{.Scope}}/{{.BatchNumber}}?session={{queryEscape .SessionId}}">{{.Scope}} #{{.BatchNumber}}</a></td>
+      <td>{{.BatchDate}}</td>
+      <td>{{$peekURL := peekSessionURL .SessionId}}{{if $peekURL}}<a href="{{$peekURL}}" title="{{.SessionId}} — open in peek">{{.SessionTitle}}</a>{{else}}{{.SessionTitle}}{{end}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{range .EvalErrors}}
+<div class="card card-error"><span class="label">{{.}}</span></div>
+{{end}}
+{{if .Evals}}
+<h2>Eval runs</h2>
+{{range .Evals}}
+<h3>{{.Eval.Date}}</h3>
+{{if .Eval.Notes}}<div class="meta">{{.Eval.Notes}}</div>{{end}}
+{{if .Runs}}
+<table class="md-body checklist-table">
+  <thead><tr><th>Run</th><th>Model</th><th>Effort</th><th>Mode</th></tr></thead>
+  <tbody>
+    {{range .Runs}}
+    <tr><td>{{.Id}}</td><td>{{.Model.Id}}</td><td>{{.Model.Effort}}</td><td>{{.Model.Mode}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Totals}}
+<table class="md-body checklist-table">
+  <thead><tr><th>Run</th><th>Axis</th><th>Score</th><th>Pct</th></tr></thead>
+  <tbody>
+    {{range .Totals}}
+    <tr><td>{{.RunId}}</td><td>{{.Axis}}</td><td>{{.Raw}}/{{.Max}}</td><td>{{printf "%.0f" .Pct}}%</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{end}}
+{{end}}
+{{if .Examples}}
+<h2>Examples</h2>
+{{range .Examples}}
+<div class="card">
+  <a class="label"
+     href="/scripts/skills/{{$.Skill.Origin}}/{{$.Skill.Name}}/file?f={{queryEscape .}}">{{.}}</a>
+</div>
+{{end}}
+{{end}}
+{{if .ManifestStub}}
+<details>
+  <summary>eval manifest stub</summary>
+  <pre class="file-view">{{.ManifestStub}}</pre>
+</details>
+{{end}}
+{{end}}
+{{template "foot" .}}

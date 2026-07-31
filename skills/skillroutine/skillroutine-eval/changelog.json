@@ -1,0 +1,42 @@
+[
+  {
+    "version": "1.7",
+    "date": "2026-07-31",
+    "text": "contextFiles example updated to style/plan.md"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-27",
+    "text": "renamed couchskill-eval → skillroutine-eval; workflow couchskill-parallel-eval → skillroutine-parallel-eval; matrix resultsDir default sessions/skillroutine-eval/; sibling handoffs → skillroutine-create, smine-skills; effort token normalized (large → high)"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-19",
+    "text": "matrix mode — couchskill-parallel-eval pipe workflow nests parallelize fan-out then evals the surviving runs"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-19",
+    "text": "renamed eval-skill → couchskill-eval; moved under skills/couchskill/"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-16",
+    "text": "skill authoring delegates to /couchskill-create"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-13",
+    "text": "initial version"
+  }
+]

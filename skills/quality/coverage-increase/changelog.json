@@ -1,0 +1,52 @@
+[
+  {
+    "version": "1.9",
+    "date": "2026-07-31",
+    "text": "risk list reads the hot-class gates from rules/concepting.md"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — test style in style/go.md TESTS section, risk list from ALWAYS-HOT entries"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-30",
+    "text": "context redesign — risk list via ../fdesign/assets/hot-items.md + rules/ overlay; stop conditions via ../fdesign/assets/"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-30",
+    "text": "moved under skills/quality/ group; reference rename per-package-commit → package-commit"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-24",
+    "text": "reference merge: feature-refactor → feature-change; effort token normalized"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-19",
+    "text": "reference rename: refactor → feature-refactor"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-19",
+    "text": "--nightly unattended mode (dedicated branch, no ExitPlanMode gate, brief + morning-review report on the branch, top-N scope cap, non-interactive skips) + n cap arg"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-11",
+    "text": "initial version"
+  }
+]

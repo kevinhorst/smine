@@ -1,0 +1,32 @@
+[
+  {
+    "version": "1.5",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — stop conditions as ALWAYS-EXEC entries in rules/implementing.md"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-30",
+    "text": "context redesign — stop conditions via ../fdesign/assets/stop-conditions.md"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-30",
+    "text": "moved under skills/quality/ group; name and behavior unchanged"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-23",
+    "text": "Phase 1 evidence — payload-before-layers, disk-over-diff, config-surface proof, live-probe, gh issue-status verification; Phase 2 — never blame user env/stale binary, correction-as-rule grep-sweep; Phase 3 — 'not possible cleanly' acceptable, no DB writes on render"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-05",
+    "text": "initial version"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "version": "1.7",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-30",
+    "text": "moved under skills/agent/ group; name and behavior unchanged"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-27",
+    "text": "reference renames — ssummarize → smine-summary, couchskill-eval → skillroutine-eval"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-24",
+    "text": "delegation declaration removed — small skills are never delegatable"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-22",
+    "text": "classification unattended-safe (Delegation + Command surface), effort low"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-19",
+    "text": "reference rename: eval-skill → couchskill-eval; moved under skills/util/"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section standardized to match other skills"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-06-29",
+    "text": "initial version"
+  }
+]

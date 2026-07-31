@@ -1,0 +1,126 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Proposals</h1>
+<div class="tabs">
+  <a href="/proposals" {{if eq .Tab "open"}}class="active"{{end}}>Open</a>
+  <a href="/proposals?tab=notes" {{if eq .Tab "notes"}}class="active"{{end}}>Notes</a>
+  <a href="/proposals?tab=auto-apply" {{if eq .Tab "auto-apply"}}class="active"{{end}}>Auto-Apply</a>
+</div>
+{{if eq .Tab "auto-apply"}}
+{{if .AutoApplyError}}
+<div class="card card-error"><span class="label">{{.AutoApplyError}}</span></div>
+{{end}}
+<div class="card card-column">
+  <span class="label"><strong>Decide-mode rules</strong> <span class="meta">{{.AutoApplyPath}}</span></span>
+  <form class="card-column" hx-post="/api/auto-apply-rules">
+    <textarea name="content" rows="24">{{.AutoApplyContent}}</textarea>
+    <div class="card-row">
+      <button type="submit">Save</button>
+    </div>
+  </form>
+</div>
+{{else}}
+<div id="proposals-body">
+{{if .LoadErrors}}
+<div class="card card-error">
+  <span class="label">
+    {{len .LoadErrors}} file(s) failed to load:
+    {{range .LoadErrors}}<br>{{.}}{{end}}
+  </span>
+</div>
+{{end}}
+{{if not .Files}}
+<div class="empty">No proposal JSONs found (sessions/proposals/*.json).</div>
+{{end}}
+{{if and .Files (not .HasGroups)}}
+{{if eq .Tab "open"}}
+<div class="empty">Everything applied, happy {{.HappyWord}}!</div>
+{{else}}
+<div class="empty">No notes.</div>
+{{end}}
+{{end}}
+{{range .Files}}
+{{$file := .}}
+{{if .Groups}}
+<h2>{{.File.Kind}}{{if or .File.Updated .File.Source}} <span class="meta">{{if .File.Updated}}updated {{.File.Updated}}{{end}}{{if and .File.Updated .File.Source}} · {{end}}{{.File.Source}}</span>{{end}}</h2>
+{{/* Filter values only exist for votable proposals — no filter row on Notes. */}}
+{{if and .Filters (eq $.Tab "open")}}
+<div class="card card-filter">
+  <a class="badge {{if not .Filter}}badge-ok{{else}}badge-dim{{end}}" href="{{.AllURL}}"
+     hx-get="{{.AllURL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+     hx-swap="outerHTML" hx-push-url="true">all</a>
+  {{range .Filters}}
+  <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.URL}}"
+     hx-get="{{.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+     hx-swap="outerHTML" hx-push-url="true">{{.Value}}</a>
+  {{end}}
+</div>
+{{end}}
+{{range .Groups}}
+{{/* Server-side open is only the default for sections the script below has
+     never snapshotted (first load, deep link). */}}
+<details class="section" data-section="{{$file.File.Kind}}/{{.Title}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
+  <summary>{{.Title}}
+    {{- if .Accepted.URL}}
+    <a class="{{if .Accepted.Active}}badge badge-ok{{else}}state-note{{end}}" href="{{.Accepted.URL}}" title="{{.Accepted.Tooltip}}"
+       hx-get="{{.Accepted.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+       hx-swap="outerHTML" hx-push-url="true">+{{if .Accepted.Active}} ({{.Accepted.Count}}/{{.Total}}){{end}}</a>
+    {{- end}}
+    {{- if .Rejected.URL}}
+    <a class="{{if .Rejected.Active}}badge badge-action{{else}}state-note{{end}}" href="{{.Rejected.URL}}" title="{{.Rejected.Tooltip}}"
+       hx-get="{{.Rejected.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+       hx-swap="outerHTML" hx-push-url="true">−{{if .Rejected.Active}} [{{.Rejected.Count}}]{{end}}</a>
+    {{- end}}
+    {{- if .Postponed.URL}}
+    <a class="{{if .Postponed.Active}}badge badge-dim{{else}}state-note{{end}}" href="{{.Postponed.URL}}" title="{{.Postponed.Tooltip}}"
+       hx-get="{{.Postponed.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+       hx-swap="outerHTML" hx-push-url="true">p{{if .Postponed.Active}} [{{.Postponed.Count}}]{{end}}</a>
+    {{- end}}</summary>
+  {{range .Proposals}}
+  {{template "_proposal_card.html" .}}
+  {{end}}
+</details>
+{{end}}
+{{end}}
+{{end}}
+</div>
+<script>
+  // Filter clicks swap the whole #proposals-body; snapshot every section's
+  // collapse state before each swap and restore it after — the snapshot
+  // always wins, so no filter click ever collapses or uncollapses another
+  // section. Only the section whose own summary link triggered the swap is
+  // forced open. The map accumulates across swaps: sections hidden by one
+  // filter restore to their last-known state when they reappear.
+  var proposalsOpenState = {};
+  document.body.addEventListener('htmx:beforeSwap', function () {
+    document.querySelectorAll('#proposals-body details.section').forEach(function (section) {
+      proposalsOpenState[section.getAttribute('data-section')] = section.open;
+    });
+  });
+  document.body.addEventListener('htmx:afterSwap', function (evt) {
+    var sections = document.querySelectorAll('#proposals-body details.section');
+    var source = evt.detail && evt.detail.requestConfig && evt.detail.requestConfig.elt;
+
+    // The filter's own target sections arrive server-opened — pin them open
+    // in the snapshot; every other section restores its last-known state.
+    // Nothing is ever closed by a filter click.
+    sections.forEach(function (section) {
+      var key = section.getAttribute('data-section');
+      if (section.getAttribute('data-filter-target')) {
+        section.open = true;
+        proposalsOpenState[key] = true;
+        return;
+      }
+      if (key in proposalsOpenState) { section.open = proposalsOpenState[key]; }
+    });
+
+    var origin = source && source.closest ? source.closest('details.section') : null;
+    if (!origin) { return; }
+    var originKey = origin.getAttribute('data-section');
+    sections.forEach(function (section) {
+      if (section.getAttribute('data-section') === originKey) { section.open = true; }
+    });
+  });
+</script>
+{{end}}
+{{template "foot" .}}

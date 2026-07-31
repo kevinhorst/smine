@@ -1,0 +1,51 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="detail-head">
+  <h1>{{.Routine.Name}}</h1>
+  {{if .Routine.Label}}<span class="badge badge-dim">{{.Routine.Label}}</span>{{end}}
+</div>
+<div class="meta">{{.Routine.Dir}}</div>
+{{template "_routine_ops.html" .}}
+<div id="op-result"></div>
+<div class="routines-layout">
+<table class="md-body checklist-table">
+  <thead>
+    <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Next run</th><th>Env</th></tr>
+  </thead>
+  <tbody>
+    {{template "_routine_row.html" .Row}}
+  </tbody>
+</table>
+<div id="routine-configure"></div>
+</div>
+{{if .HistoryErr}}
+<div class="card card-error"><span class="label">{{.HistoryErr}}</span></div>
+{{end}}
+<h2>Run history</h2>
+{{if .History}}
+<table class="md-body checklist-table">
+  <thead>
+    <tr><th>Timestamp</th><th>Exit</th><th>Turns</th><th>Cost</th><th>Session</th></tr>
+  </thead>
+  <tbody>
+    {{range .History}}
+    <tr>
+      <td>{{.Timestamp}}</td>
+      <td>{{if eq .ExitStatus 0}}<span class="badge badge-ok">0</span>{{else}}<span class="badge badge-error">{{.ExitStatus}}</span>{{end}}</td>
+      <td>{{.NumTurns}}</td>
+      <td>${{printf "%.4f" .TotalCostUsd}}</td>
+      <td>
+        {{if .SessionId}}
+          {{$peekURL := peekSessionURL .SessionId}}
+          {{if $peekURL}}<a href="{{$peekURL}}" title="open in peek"><code>{{.SessionId}}</code></a>
+          {{else}}<code>{{.SessionId}}</code>{{end}}
+        {{else}}–{{end}}
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<div class="empty">No runs recorded.</div>
+{{end}}
+{{template "foot" .}}

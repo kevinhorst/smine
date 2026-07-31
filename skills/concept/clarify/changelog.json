@@ -1,0 +1,47 @@
+[
+  {
+    "version": "1.8",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — stop conditions as ALWAYS-EXEC entries in rules/implementing.md"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-30",
+    "text": "context redesign — stop conditions via ../fdesign/assets/stop-conditions.md"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-30",
+    "text": "reference rename — design-refine → the fdesign refine route"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-24",
+    "text": "renamed concept-clarify → clarify (leaf dir, frontmatter name, H1); live references swept repo-wide"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-23",
+    "text": "Phase 3 — one-field decisions reached in chat are written into the plan/spec docs in the same session"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-16",
+    "text": "concept paths under plans/{slug}/concept/"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-15",
+    "text": "renamed reference: feature-refine → design-refine"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-07",
+    "text": "initial version"
+  }
+]

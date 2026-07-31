@@ -1,0 +1,23 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Routines</h1>
+{{if .Rows}}
+{{template "_routine_ops.html" .}}
+<div id="op-result"></div>
+<div class="routines-layout">
+<table class="md-body checklist-table" id="routines-table"
+       hx-get="/routines" hx-trigger="repo-op from:body"
+       hx-select="#routines-table" hx-swap="outerHTML" hx-disinherit="*">
+  <thead>
+    <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Next run</th><th>Env</th></tr>
+  </thead>
+  <tbody>
+    {{range .Rows}}{{template "_routine_row.html" .}}{{end}}
+  </tbody>
+</table>
+<div id="routine-configure"></div>
+</div>
+{{else}}
+<div class="empty">No routines found.</div>
+{{end}}
+{{template "foot" .}}

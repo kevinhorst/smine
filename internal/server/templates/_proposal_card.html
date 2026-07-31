@@ -1,0 +1,72 @@
+{{define "_proposal_card.html"}}
+<div class="card card-column">
+  <div class="card-row">
+    {{if .Proposal.Id}}<span class="badge badge-dim">{{.Proposal.Id}}</span>{{end}}
+    <span class="label"><strong>{{.Proposal.Title}}</strong></span>
+    {{if .Proposal.Target}}<span class="badge badge-dim">→ {{.Proposal.Target}}</span>{{end}}
+    {{range .Proposal.Tags}}<span class="badge badge-dim">{{.}}</span>{{end}}
+    {{if .PendingVote}}
+      {{if eq .PendingVote "p"}}<span class="badge badge-dim">Postponed (Pending{{if .IsRevert}}, revert{{end}})</span>
+      {{else if eq .PendingVote "-"}}<span class="badge badge-action">Rejected (Pending{{if .IsRevert}}, revert{{end}})</span>
+      {{else}}<span class="badge badge-ok">Accepted (Pending)</span>{{end}}
+      {{if .PendingDate}}<span class="meta">{{.PendingDate}}</span>{{end}}
+    {{else if .Proposal.Status}}<span class="badge badge-ok">{{.Proposal.Status}}</span>
+      {{if .Proposal.Decided}}<span class="meta">{{.Proposal.Decided}}</span>{{end}}
+    {{end}}
+    {{if .Proposal.AutoApplyHeld.Reason}}
+      <span class="badge badge-action">held by auto-apply</span>
+      <span class="meta">{{.Proposal.AutoApplyHeld.Date}} — {{.Proposal.AutoApplyHeld.Reason}}</span>
+    {{end}}
+  </div>
+  {{if .Proposal.Proposed}}
+  <div class="card-row"><span class="meta">proposed {{.Proposal.Proposed}}</span></div>
+  {{end}}
+  {{if and .Proposal.Id .Proposal.Status}}
+  <form class="card-row" hx-post="/api/proposals/{{.Kind}}/{{pathEscape .Proposal.Id}}/vote"
+        hx-target="closest .card" hx-swap="outerHTML">
+    <input type="text" name="comment" maxlength="500"
+           placeholder="comment (rejection reason or agent instruction)" value="{{.PendingComment}}">
+    <button type="submit" name="vote" value="+">+</button>
+    <button type="submit" name="vote" value="-">−</button>
+    <button type="submit" name="vote" value="p">postpone</button>
+  </form>
+  {{end}}
+  {{if .Proposal.Change}}
+  <div class="finding">
+    <span class="badge badge-action">change</span>
+    <span class="label">{{.Proposal.Change}}</span>
+  </div>
+  {{end}}
+  {{range .Proposal.Fields}}
+  <div class="finding">
+    <span class="badge badge-dim">{{.Label}}</span>
+    <span class="label">{{.Text}}</span>
+  </div>
+  {{end}}
+  {{if .Evidence}}
+  <table class="evidence-table">
+    <thead><tr><th>Evidence</th><th>Detail</th></tr></thead>
+    <tbody>
+    {{range .Evidence}}
+    <tr>
+      <td class="evidence-title">{{.Item.Title}}</td>
+      <td>
+        <ul class="evidence-sessions">
+          {{range .Links}}
+          <li>{{if .URL}}<a href="{{.URL}}" title="{{.Id}}"><code>{{slice .Id 0 8}}</code></a>{{else}}<code class="meta" title="{{.Id}}">{{slice .Id 0 8}}</code>{{end}}{{with peekSessionURL .Id}} <a class="meta" href="{{.}}" title="open in peek">peek</a>{{end}}: {{.Note}}</li>
+          {{end}}
+        </ul>
+        {{range .Item.Snippets}}
+        <details class="snippet">
+          <summary>{{.Kind}}{{if .Lang}} · {{.Lang}}{{end}}{{if .Source}} · from {{.Source}}{{end}}</summary>
+          <pre><code>{{.Code}}</code></pre>
+        </details>
+        {{end}}
+      </td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  {{end}}
+</div>
+{{end}}

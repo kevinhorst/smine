@@ -1,0 +1,25 @@
+{{define "_batch_body.html"}}
+<div id="batch-body">
+  {{if .Batch.Sessions}}
+  <h2>Filter by dimension</h2>
+  <div class="card card-filter">
+    {{$page := .}}
+    <a class="badge {{if not .Dimension}}badge-ok{{else}}badge-dim{{end}}"
+       href="/sessions/{{.Batch.Batch.Scope}}/{{.Batch.Batch.Number}}{{if $page.SessionsParam}}?session={{$page.SessionsParam}}{{end}}"
+       hx-get="/sessions/{{.Batch.Batch.Scope}}/{{.Batch.Batch.Number}}{{if $page.SessionsParam}}?session={{$page.SessionsParam}}{{end}}"
+       hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">all</a>
+    {{range .Dimensions}}
+    <a class="badge {{if eq . $page.Dimension}}badge-ok{{else}}badge-dim{{end}}"
+       href="/sessions/{{$page.Batch.Batch.Scope}}/{{$page.Batch.Batch.Number}}?dimension={{.}}{{if $page.SessionsParam}}&session={{$page.SessionsParam}}{{end}}"
+       hx-get="/sessions/{{$page.Batch.Batch.Scope}}/{{$page.Batch.Batch.Number}}?dimension={{.}}{{if $page.SessionsParam}}&session={{$page.SessionsParam}}{{end}}"
+       hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">{{.}}</a>
+    {{end}}
+    <input type="checkbox" class="select-all" title="select all / none"
+           {{if .SessionIds}}checked{{end}}
+           hx-get="{{.ToggleAllURL}}"
+           hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">
+  </div>
+  {{end}}
+  {{template "_session_list.html" .}}
+</div>
+{{end}}

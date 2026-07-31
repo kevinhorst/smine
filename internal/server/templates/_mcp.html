@@ -1,0 +1,19 @@
+{{define "_mcp.html"}}
+<span id="ovr-mcp" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
+<div id="mcp-section">
+  {{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
+  {{if not .Servers}}<div class="empty">No MCP servers</div>{{end}}
+  {{range .Servers}}
+  <div class="card">
+    <span class="label">{{.Name}}</span>
+    <span class="badge {{if .Enabled}}badge-ok{{else}}badge-error{{end}}">{{if .Enabled}}enabled{{else}}disabled{{end}}</span>
+    <label class="toggle">
+      <input type="checkbox" {{if .Enabled}}checked{{end}}
+             hx-post="/api/mcp/{{.Name}}/toggle"
+             hx-target="#mcp-section" hx-swap="outerHTML">
+      <span class="slider"></span>
+    </label>
+  </div>
+  {{end}}
+</div>
+{{end}}

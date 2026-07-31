@@ -1,0 +1,28 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Context</h1>
+<div class="card">
+  <form class="card-row card-filter" hx-post="/context/sync" hx-target="#op-result"
+        hx-confirm="Write AGENTS.md and context docs into the target repository?">
+    <label>target {{template "_repo_select.html" .RepoNames}}</label>
+    <label>context folder <input type="text" name="context-dir" value="docs"></label>
+    <button type="submit">Sync context</button>
+    <label><input type="checkbox" name="symlink" checked> CLAUDE.md symlink</label>
+  </form>
+</div>
+<div id="op-result"></div>
+<h2>Aspects</h2>
+{{template "_aspects.html" .AspectsSection}}
+<details class="section">
+  <summary>AGENTS.md template</summary>
+  <pre class="file-view">{{.AgentsTemplate}}</pre>
+</details>
+{{range $group := .Groups}}
+<h2>{{$group.Name}}</h2>
+{{range $file := $group.Files}}
+<div class="card">
+  <a class="label" href="/context/{{pathEscape $group.Name}}/{{pathEscape $file}}">{{$file}}</a>
+</div>
+{{end}}
+{{end}}
+{{template "foot" .}}

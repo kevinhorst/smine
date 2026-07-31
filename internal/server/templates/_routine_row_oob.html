@@ -1,0 +1,7 @@
+{{define "_routine_row_oob.html"}}
+{{/* The template tag keeps the orphan <tr> intact while htmx parses the
+     response; without it the row gets flattened into the main swap. */}}
+<template>
+{{template "_routine_row.html" .}}
+</template>
+{{end}}

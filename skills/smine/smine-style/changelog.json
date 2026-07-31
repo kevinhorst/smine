@@ -1,0 +1,87 @@
+[
+  {
+    "version": "v1.16",
+    "date": "2026-07-31",
+    "text": "session-scope rename to personal/work (input globs)"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-07-30",
+    "text": "renamed smine-rules → smine-style (kind rename rules → style; output style.json); per-run production cap arg"
+  },
+  {
+    "version": "1.14",
+    "date": "2026-07-31",
+    "text": "navigating.md rename; stale context/go surface folded into context/style"
+  },
+  {
+    "version": "1.13",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — target surfaces are rules/ activity chapters and style/ guides"
+  },
+  {
+    "version": "1.12",
+    "date": "2026-07-30",
+    "text": "context redesign — target surfaces: context/rules entries + relocated skill assets"
+  },
+  {
+    "version": "1.11",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared"
+  },
+  {
+    "version": "1.10",
+    "date": "2026-07-27",
+    "text": "renamed analyze-rules → smine-rules; part of the /smine fan-out; sibling reroute → /smine-skills"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-07-26",
+    "text": "JSON-only — rules.json is the sole authoritative artifact; the md form and the regenerate-from-md step are gone, evidence/format sections re-anchored to schema fields"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-26",
+    "text": "proposed-date stamp — new items carry proposed: <date> (schema.json bump)"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-24",
+    "text": "one proposal = one change = one vote — proposal-level change field, evidence provenance-only, --<n> split ids (schema.json bump)"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-24",
+    "text": "mechanical Archive-suppression step (step 3) replaces the advisory archive line; Diff & write gains the Amendments-beat-New justification requirement"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-22",
+    "text": "archive doctrine incl. postponed 14-day suppression; status vocab completed"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-19",
+    "text": "ledger carries a Last-analyzed-batch first line, updated on every append"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-19",
+    "text": "per-session note bullets replace the evidence text blob; dimension must match batch findings"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-19",
+    "text": "structured evidence contract (title + 1-3 ranked session ids + optional change/snippets)"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-11",
+    "text": "initial version"
+  }
+]

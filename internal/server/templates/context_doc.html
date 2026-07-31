@@ -1,0 +1,8 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="card">
+  <span class="label">context/{{.Dir}}/{{.File}}</span>
+  <a class="meta" href="/context">back to context</a>
+</div>
+<div class="md-body">{{.Body}}</div>
+{{template "foot" .}}

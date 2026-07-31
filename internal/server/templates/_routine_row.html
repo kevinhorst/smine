@@ -1,0 +1,42 @@
+{{define "_routine_row.html"}}
+<tr id="routine-{{.Routine.Name}}"{{if .OOB}} hx-swap-oob="true"{{end}}
+    {{if .PollSince}}hx-get="/routines/{{pathEscape .Routine.Name}}/row?since={{.PollSince}}"
+    hx-trigger="every 3s" hx-swap="outerHTML"{{end}}>
+  {{if .Routine.LoadError}}
+  <td></td>
+  <td><span class="badge badge-error">broken</span></td>
+  <td><a href="/routines/{{pathEscape .Routine.Name}}">{{.Routine.Name}}</a></td>
+  <td colspan="4">{{.Routine.LoadError}}</td>
+  {{else}}
+  <td><input type="radio" name="rt-select" value="{{pathEscape .Routine.Name}}"
+       {{if .Loaded}}data-loaded="1"{{end}}
+       {{if and .Routine.ScheduleSupported (eq (len .Routine.Schedule) 1)}}{{with index .Routine.Schedule 0}}data-reschedule="1"
+       data-hour="{{intOrEmpty .Hour}}" data-minute="{{intOrEmpty .Minute}}" data-weekday="{{intOrEmpty .Weekday}}" data-day="{{intOrEmpty .Day}}"{{end}}{{end}}></td>
+  <td>
+    {{if .LoadedErr}}
+    <span class="badge badge-error">state unknown</span> <span class="meta">{{.LoadedErr}}</span>
+    {{else if .Loaded}}
+    <span class="badge badge-ok">loaded</span>
+    {{else}}
+    <span class="badge badge-dim">stopped</span>
+    {{end}}
+  </td>
+  <td><a href="/routines/{{pathEscape .Routine.Name}}">{{.Routine.Name}}</a></td>
+  <td>
+    {{if .Routine.ScheduleSupported}}
+      {{range $i, $interval := .Routine.Schedule}}{{if $i}}; {{end}}{{$interval}}{{end}}
+    {{else}}unsupported schedule{{end}}
+  </td>
+  <td class="run-cell">
+    {{with .Routine.LastRun}}
+      {{.Timestamp}}
+      {{if eq .ExitStatus 0}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">exit {{.ExitStatus}}</span>{{end}}
+    {{else}}never{{end}}
+  </td>
+  <td class="run-cell">{{if not .Routine.NextRun.IsZero}}{{.Routine.NextRun.Format "2006-01-02 15:04"}}{{else}}–{{end}}</td>
+  <td class="env-cell">
+    {{range $i, $pair := .EnvPairs}}{{if $i}}<br>{{end}}<code>{{$pair.Key}}={{$pair.Value}}</code>{{else}}–{{end}}
+  </td>
+  {{end}}
+</tr>
+{{end}}

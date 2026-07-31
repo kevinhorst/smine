@@ -1,0 +1,20 @@
+{{define "_checklist_row"}}
+<tr id="checklist-row-{{.Number}}">
+  <td>{{.Number}}</td>
+  <td><a href="#checklist-entry-{{.Number}}">{{.Title}}</a></td>
+  <td><span class="badge badge-dim">{{.Status}}</span></td>
+</tr>
+{{end}}
+
+{{define "_checklist_entry.html"}}
+<details id="checklist-entry-{{.Number}}" class="card card-column entry-card">
+  <summary>
+    <span class="label"><strong>{{.Number}}. {{.Title}}</strong></span>
+    <select name="status" hx-post="/api/checklist/{{.Number}}/status"
+            hx-swap="none" onclick="event.stopPropagation()">
+      {{range .Tags}}<option {{if eq . $.Status}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+  </summary>
+  {{if .Body}}<div class="md-body">{{.Body}}</div>{{end}}
+</details>
+{{end}}

@@ -1,0 +1,77 @@
+[
+  {
+    "version": "1.14",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — enforcement-surface list names style/ guides and rules/ activity chapters"
+  },
+  {
+    "version": "1.13",
+    "date": "2026-07-30",
+    "text": "context redesign — enforcement-surface list names context/rules entries and fdesign assets"
+  },
+  {
+    "version": "1.12",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared"
+  },
+  {
+    "version": "1.11",
+    "date": "2026-07-27",
+    "text": "renamed smine → smine-batch; now stage 1 of the /smine pipeline (fronted by skills/smine/smine); Analyzer header line updated (Analyzer: smine-batch v<version>); enable-model-invocation moved to the front skill; triggers narrowed to avoid colliding with /smine; effort token normalized (large → high)"
+  },
+  {
+    "version": "1.10",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-07-24",
+    "text": "renamed session-analyze → smine (leaf dir, frontmatter name, H1); live references swept repo-wide"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-19",
+    "text": "batch header carries the producing skill version (Analyzer: session-analyze v<version>)"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-19",
+    "text": "reference rename: eval-skill → couchskill-eval; moved under skills/session/"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-19",
+    "text": "workflow script location updated to skill-bundled convention (skills/<skill>/workflows/), .claude/workflows/ reference removed"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-19",
+    "text": "per-point evidence attribution (1-3 ranked session ids) + verbatim violation/fix snippets in reports"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-16",
+    "text": "--nightly unattended mode (all pending batches, no review STOPs) + enable-model-invocation for headless claude -p expansion"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-15",
+    "text": "Positive index (green counterpart of the frustration index)"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-11",
+    "text": "explicit skill and workflow candidate extraction"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-03",
+    "text": "initial version"
+  }
+]

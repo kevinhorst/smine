@@ -1,0 +1,199 @@
+{
+  "env": {
+    "BASH_MAX_OUTPUT_LENGTH": "150000",
+    "MAX_MCP_OUTPUT_TOKENS": "100000"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(afplay /System/Library/Sounds/Funk.aiff)",
+      "Bash(afplay /System/Library/Sounds/Glass.aiff)",
+      "Bash(afplay /System/Library/Sounds/Hero.aiff)",
+      "Bash({{HOME}}/.claude/agents/tools/remove_agent_worktrees.sh --delete-branch claude/*)",
+      "Bash(cat *)",
+      "Bash(defaults read *)",
+      "Bash(echo *)",
+      "Bash(find *)",
+      "Bash(gh *)",
+      "Bash(git * branch *)",
+      "Bash(git * log *)",
+      "Bash(git * show *)",
+      "Bash(git * stash list)",
+      "Bash(git * status *)",
+      "Bash(git add *)",
+      "Bash(git commit -m *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git rev-parse *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git worktree list)",
+      "Bash(git worktree list *)",
+      "Bash(go build *)",
+      "Bash(go fix *)",
+      "Bash(go test *)",
+      "Bash(go vet *)",
+      "Bash(gofmt *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(ioreg -l)",
+      "Bash(jq *)",
+      "Bash(ls *)",
+      "Bash(make build *)",
+      "Bash(make generate *)",
+      "Bash(make test *)",
+      "Bash(pwd)",
+      "Bash(sed -n *)",
+      "Bash(sw_vers)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(which *)",
+      "Bash(~/.claude/agents/tools/remove_agent_worktrees.sh --delete-branch claude/*)",
+      "Read(/{{HOME}}/.claude/**)",
+      "Read(/{{HOME}}/GolandProjects/**)",
+      "Read(/{{HOME}}/Library/Logs/**)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:web.archive.org)",
+      "WebFetch(domain:youtrack.jetbrains.com)",
+      "WebSearch",
+      "mcp__Peek_MCP",
+      "mcp__goland__cancel_sql_query",
+      "mcp__goland__get_database_object_description",
+      "mcp__goland__list_database_connections",
+      "mcp__goland__list_database_schemas",
+      "mcp__goland__list_schema_object_kinds",
+      "mcp__goland__list_schema_objects",
+      "mcp__goland__preview_table_data",
+      "mcp__goland__test_database_connection",
+      "mcp__peek-mcp",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__find_symbol",
+      "mcp__serena__get_diagnostics_for_file",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__initial_instructions",
+      "mcp__serena__rename_symbol",
+      "mcp__serena__replace_in_files"
+    ],
+    "deny": [
+      "Bash(git commit * --amend*)",
+      "Bash(git commit --amend*)",
+      "mcp__serena__delete_memory",
+      "mcp__serena__edit_memory",
+      "mcp__serena__list_memories",
+      "mcp__serena__onboarding",
+      "mcp__serena__read_memory",
+      "mcp__serena__rename_memory",
+      "mcp__serena__write_memory"
+    ],
+    "ask": [
+      "Bash(python3 -c *)",
+      "Bash(python3)",
+      "mcp__goland__execute_sql_query"
+    ],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "{{HOME}}/.claude"
+    ]
+  },
+  "model": "claude-fable-5",
+  "availableModels": [
+    "claude-opus-4-6",
+    "claude-opus-4-8",
+    "fable",
+    "haiku",
+    "opus",
+    "sonnet"
+  ],
+  "enforceAvailableModels": true,
+  "disabledMcpjsonServers": [
+    "clickup",
+    "claude-in-chrome",
+    "claude-preview"
+  ],
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Funk.aiff",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Funk.aiff",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/worktree-sessionstart.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Hero.aiff",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/review-context.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/worktree-guard.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/review-context.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "head"
+  },
+  "disableAllHooks": false,
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "autoCompactEnabled": false,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true
+}

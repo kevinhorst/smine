@@ -1,0 +1,72 @@
+[
+  {
+    "version": "1.13",
+    "date": "2026-07-31",
+    "text": "hot-class gates named under rules/concepting.md"
+  },
+  {
+    "version": "1.12",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — style/ guides and rules/ activity chapters replace skill assets; stops and hot classes as ALWAYS-EXEC/HOT entries"
+  },
+  {
+    "version": "1.11",
+    "date": "2026-07-30",
+    "text": "context redesign — stop-conditions/hot-items via ../fdesign/assets/, commits via ../package-commit/assets/, doctrine entries under rules/"
+  },
+  {
+    "version": "1.10",
+    "date": "2026-07-30",
+    "text": "allowed-tools mechanics manifest declared; Command surface line retired"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-07-30",
+    "text": "reference rename — design-refine → the fdesign refine route"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-30",
+    "text": "reference rename — per-package-commit → package-commit"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-24",
+    "text": "renamed feature-implement → fimplement (leaf dir, frontmatter name, H1); live references swept repo-wide"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-24",
+    "text": "delegation explicit-only via /delegate — auto-intake check removed, relay procedure moved to the delegate skill, relay data kept in ## Delegation"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-24",
+    "text": "Test runbook joins intake reading; runbook files persisted to plans/<feature>/runbooks/ and executed in verification"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-24",
+    "text": "reference merge: feature-refine + feature-refactor → feature-change"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-22",
+    "text": "gated delegation via implement-runner: intake check, gate relay + blocked-state handling, Model classification, effort medium"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-19",
+    "text": "reference rename: refactor → feature-refactor; moved under skills/feature/"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-19",
+    "text": "initial version"
+  }
+]

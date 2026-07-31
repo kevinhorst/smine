@@ -1,0 +1,82 @@
+[
+  {
+    "version": "2.5",
+    "date": "2026-07-31",
+    "text": "hot-class gates read from rules/concepting.md"
+  },
+  {
+    "version": "2.4",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — style/ guides and rules/ activity chapters replace skill assets; stops and hot classes as ALWAYS-EXEC/HOT entries"
+  },
+  {
+    "version": "2.3",
+    "date": "2026-07-30",
+    "text": "context redesign — plan-format.md, stop-conditions.md, hot-items.md relocated into this skill's assets/; data-integrity doctrine at $AGENT_CONTEXT_DIR_DEFAULT/rules/integrity.md"
+  },
+  {
+    "version": "2.2",
+    "date": "2026-07-30",
+    "text": "absorbs design-refine v1.6 as the refine route (/fdesign refine <plan file>) — driver classification, impact map, redesign discipline, three-place delta reporting, refine gate + stops; design-refine retired"
+  },
+  {
+    "version": "2.1",
+    "date": "2026-07-26",
+    "text": "Args section"
+  },
+  {
+    "version": "2.0",
+    "date": "2026-07-24",
+    "text": "renamed feature-design → fdesign (leaf dir, frontmatter name, H1); live references swept repo-wide"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-07-24",
+    "text": "Test runbook section — smoke scenarios as out-of-the-box request files in the project's tool, persisted to plans/<feature>/runbooks/; gate item; plan-format/DoD wired"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-24",
+    "text": "reference merge: feature-refine + feature-refactor → feature-change; effort token normalized"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-19",
+    "text": "reference rename: refactor → feature-refactor; moved under skills/feature/"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-19",
+    "text": "Phase 5 approval handoff — approval ≠ implement; AskUserQuestion routes ad hoc vs /feature-implement vs plan-only unless pre-clarified"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-16",
+    "text": "plan persists to plans/{slug}/design/raw.md; exploration input from design/exploration.md; TLDR section"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-15",
+    "text": "feature-refine renamed to design-refine; post-implementation adjustments route to the new /feature-refine"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-11",
+    "text": "data-integrity.md wired into preamble and Phase-0 check; decision axes controllable/debuggable/reliable"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-10",
+    "text": "template reordered per plan-format v2; Assumptions section; Phase-0 doc-check/modes/exploration input; extended gate checks"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-03",
+    "text": "initial version"
+  }
+]

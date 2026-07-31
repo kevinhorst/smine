@@ -1,0 +1,81 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Overview</h1>
+<div class="tiles" id="overview-tiles">
+  {{range .Tiles}}
+  {{if .Split}}
+  <div class="tile" draggable="true" data-tile-id="{{.Id}}">
+    <span class="tile-label">{{.Label}}</span>
+    <span class="tile-value tile-value-split">
+      <a class="split-frustration" href="{{.Split.FrustrationHref}}">{{.Split.FrustrationValue}}</a>
+      <span class="tile-value-sep">/</span>
+      <a class="split-positive" href="{{.Split.PositiveHref}}">{{.Split.PositiveValue}}</a>
+    </span>
+    {{if .Detail}}<span class="tile-detail">{{.Detail}}</span>{{end}}
+  </div>
+  {{else}}
+  <a class="tile" href="{{.Href}}" draggable="true" data-tile-id="{{.Id}}">
+    <span class="tile-label">{{.Label}}</span>
+    <span class="tile-value">{{.Value}}</span>
+    {{if .Trend}}
+    <svg class="tile-trend" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+      <polyline class="trend-positive" points="{{.Trend.PositivePoints}}"></polyline>
+      <polyline class="trend-frustration" points="{{.Trend.FrustrationPoints}}"></polyline>
+    </svg>
+    {{end}}
+    {{if .Detail}}<span class="tile-detail">{{.Detail}}</span>{{end}}
+  </a>
+  {{end}}
+  {{end}}
+</div>
+<script>
+  (function () {
+    const storageKey = 'overview-tile-order';
+    const grid = document.getElementById('overview-tiles');
+
+    // Apply the saved order: saved ids first, unknown/new tiles follow in
+    // their server-rendered default order; stale ids are skipped (D8).
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const tilesById = {};
+    for (const tile of grid.querySelectorAll('.tile')) {
+      tilesById[tile.dataset.tileId] = tile;
+    }
+    const ordered = saved.map((id) => tilesById[id]).filter(Boolean);
+    const savedIds = new Set(saved);
+    for (const tile of grid.querySelectorAll('.tile')) {
+      if (!savedIds.has(tile.dataset.tileId)) ordered.push(tile);
+    }
+    for (const tile of ordered) grid.appendChild(tile);
+
+    // Drag one tile onto another to swap their positions (D7).
+    let dragged = null;
+    grid.addEventListener('dragstart', (event) => {
+      dragged = event.target.closest('.tile');
+      dragged.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'move';
+    });
+    grid.addEventListener('dragend', () => {
+      if (dragged) dragged.classList.remove('dragging');
+      dragged = null;
+    });
+    grid.addEventListener('dragover', (event) => {
+      if (dragged) event.preventDefault();
+    });
+    grid.addEventListener('drop', (event) => {
+      const target = event.target.closest('.tile');
+      if (!dragged || !target || target === dragged) return;
+      event.preventDefault();
+      swapTiles(dragged, target);
+      const order = [...grid.querySelectorAll('.tile')].map((tile) => tile.dataset.tileId);
+      localStorage.setItem(storageKey, JSON.stringify(order));
+    });
+
+    function swapTiles(a, b) {
+      const marker = document.createElement('span');
+      a.replaceWith(marker);
+      b.replaceWith(a);
+      marker.replaceWith(b);
+    }
+  })();
+</script>
+{{template "foot" .}}

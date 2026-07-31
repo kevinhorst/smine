@@ -1,0 +1,8 @@
+{{define "_repo_path.html"}}
+<span id="repo-path">
+  <input type="text" name="path" value="{{.Value}}" placeholder="/path/to/repo">
+  <button type="button" hx-post="/repos/choose-folder" hx-include="closest form"
+          hx-target="#repo-path" hx-swap="outerHTML">Choose folder…</button>
+  {{if .Error}}<span class="badge badge-error" title="{{.Error}}">picker failed</span>{{end}}
+</span>
+{{end}}

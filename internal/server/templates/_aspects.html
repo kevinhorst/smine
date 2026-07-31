@@ -1,0 +1,18 @@
+<div id="aspects">
+  {{if .Error}}<p class="error-banner">{{.Error}}</p>{{end}}
+  <div class="card">
+    <form class="card-row card-filter" hx-post="/context/aspects" hx-target="#aspects">
+      <label>name <input type="text" name="name" placeholder="PERF"></label>
+      <label>scope <input type="text" name="scope" placeholder="Performance doctrine"></label>
+      <button type="submit">Add aspect</button>
+    </form>
+  </div>
+  {{range .Aspects}}
+  <div class="card card-row" style="display: flex; align-items: center; gap: 12px;">
+    <span class="label" style="flex-shrink: 0;">{{.Name}}</span>
+    <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{.Scope}}">{{.Scope}}</span>
+    <button hx-delete="/context/aspects/{{pathEscape .Name}}" hx-target="#aspects"
+            hx-confirm="Remove aspect {{.Name}}?" style="margin-left: auto; flex-shrink: 0;">remove</button>
+  </div>
+  {{end}}
+</div>

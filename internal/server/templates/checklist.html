@@ -1,0 +1,22 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{.Title}}</h1>
+<div class="tabs">
+  <a href="/docs/checklist" {{if eq .Tab "open"}}class="active"{{end}}>Not Done ({{.CountOpen}})</a>
+  <a href="/docs/checklist?tab=done" {{if eq .Tab "done"}}class="active"{{end}}>Done ({{.CountDone}})</a>
+</div>
+{{if .Error}}
+<div class="card card-error"><span class="label">{{.Error}}</span></div>
+{{end}}
+{{if .Entries}}
+<table class="md-body checklist-table">
+  <thead><tr><th>#</th><th>Title</th><th>Status</th></tr></thead>
+  <tbody>
+    {{range .Entries}}{{template "_checklist_row" .}}{{end}}
+  </tbody>
+</table>
+{{range .Entries}}{{template "_checklist_entry.html" .}}{{end}}
+{{else if not .Error}}
+<div class="empty">No checklist entries in this tab.</div>
+{{end}}
+{{template "foot" .}}

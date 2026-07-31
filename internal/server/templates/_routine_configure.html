@@ -1,0 +1,53 @@
+{{define "_routine_configure.html"}}
+<div class="card card-column">
+  <span class="label"><strong>Configure {{.Name}}</strong></span>
+  <form class="card-column configure-form" hx-post="/routines/{{pathEscape .Name}}/params" hx-target="#op-result">
+    {{range .Standard}}
+    <div class="card configure-row">
+      <span class="label configure-key"><strong>{{.Label}}</strong></span>
+      <input type="hidden" name="key" value="{{.Key}}">
+      {{if eq .Key "ROUTINE_PERMISSION_MODE"}}
+      <select name="value">
+        <option value="">{{.Default}} (default)</option>
+        <option value="default" {{if eq .Value "default"}}selected{{end}}>default</option>
+        <option value="acceptEdits" {{if eq .Value "acceptEdits"}}selected{{end}}>acceptEdits</option>
+        <option value="plan" {{if eq .Value "plan"}}selected{{end}}>plan</option>
+        <option value="bypassPermissions" {{if eq .Value "bypassPermissions"}}selected{{end}}>bypassPermissions</option>
+      </select>
+      {{else if eq .Key "SMINE_AUTO_APPLY"}}
+      <select name="value">
+        <option value="">{{.Default}} (default)</option>
+        <option value="never" {{if eq .Value "never"}}selected{{end}}>never</option>
+        <option value="decide" {{if eq .Value "decide"}}selected{{end}}>decide</option>
+        <option value="always" {{if eq .Value "always"}}selected{{end}}>always</option>
+      </select>
+      {{else}}
+      <input type="text" name="value" value="{{.Value}}" placeholder="{{.Default}}">
+      {{end}}
+    </div>
+    {{end}}
+    {{range .EnvPairs}}
+    <div class="card configure-row">
+      <span class="label configure-key"><strong>{{.Key}}</strong></span>
+      <input type="hidden" name="key" value="{{.Key}}">
+      {{if eq .Key "ROUTINE_TARGET_REPO"}}
+      <select name="value">
+        <option value="">– unset (file fallback) –</option>
+        {{$current := .Value}}{{$matched := false}}
+        {{range $.Repos}}
+        <option value="{{.Path}}" {{if eq .Path $current}}selected{{$matched = true}}{{end}}>{{.Name}}</option>
+        {{end}}
+        {{if and $current (not $matched)}}<option value="{{$current}}" selected>{{$current}}</option>{{end}}
+      </select>
+      {{else}}
+      <input type="text" name="value" value="{{.Value}}" {{with .Example}}placeholder="{{.}}"{{end}}>
+      {{end}}
+    </div>
+    {{end}}
+    <div class="card-row">
+      <button type="submit">Save</button>
+      <button type="button" onclick="document.getElementById('routine-configure').innerHTML = ''">Cancel</button>
+    </div>
+  </form>
+</div>
+{{end}}

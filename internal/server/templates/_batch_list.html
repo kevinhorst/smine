@@ -1,0 +1,32 @@
+{{define "_batch_list.html"}}
+<div class="batch-list">
+  {{if .Scope.LoadErrors}}
+  <div class="card card-error">
+    <span class="label">
+      {{len .Scope.LoadErrors}} file(s) failed to load:
+      {{range .Scope.LoadErrors}}<br>{{.}}{{end}}
+    </span>
+  </div>
+  {{end}}
+  {{if not .BatchBands}}
+  <div class="empty">
+    No batch JSONs in this scope{{if .Scope.MdReports}} ({{.Scope.MdReports}} markdown report(s) present —
+    convert them with /smine-summary){{end}}.
+  </div>
+  {{end}}
+  {{$scope := .Scope.Name}}
+  {{range .BatchBands}}
+  <details class="section">
+    <summary>{{.Label}} ({{len .Batches}}){{if .DateRange}} <span class="meta">{{.DateRange}}</span>{{end}}</summary>
+    {{range .Batches}}
+    <div class="card">
+      <a class="label" href="/sessions/{{$scope}}/{{.Batch.Number}}">
+        Batch {{.Batch.Number}} — {{if .Batch.Title}}{{.Batch.Title}}{{else}}{{.Batch.Theme}}{{end}}
+      </a>
+      <span class="meta">{{len .Sessions}} sessions · {{if .Batch.DateRange}}{{.Batch.DateRange}}{{else}}{{.Batch.AnalyzedDate}}{{end}}</span>
+    </div>
+    {{end}}
+  </details>
+  {{end}}
+</div>
+{{end}}

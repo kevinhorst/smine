@@ -1,0 +1,27 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Sessions</h1>
+{{if not .Scope}}
+<div class="empty">
+  No session data found. Generate batch JSONs with the /smine-summary skill
+  (sessions/&lt;scope&gt;/json/*.json).
+</div>
+{{else}}
+<div class="tabs">
+  {{$active := .Scope.Name}}
+  {{range .ScopeNames}}
+  <a href="/sessions/{{.}}" {{if eq . $active}}class="active"{{end}}>{{.}}</a>
+  {{end}}
+</div>
+<form hx-post="/sessions/reload" hx-target="#op-result" class="reload-form">
+  <button type="submit" class="small">Reload from disk</button>
+</form>
+<div id="op-result"></div>
+{{/* Reload changes the batch set, so the list re-pulls itself when the
+     reload op fires HX-Trigger: sessions-reload. */}}
+<div id="batch-list-wrap" hx-get="/sessions/{{.Scope.Name}}" hx-trigger="sessions-reload from:body"
+     hx-select="#batch-list-wrap" hx-swap="outerHTML" hx-disinherit="*">
+{{template "_batch_list.html" .}}
+</div>
+{{end}}
+{{template "foot" .}}

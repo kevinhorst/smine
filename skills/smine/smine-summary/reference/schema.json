@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "smine batch summary",
+  "description": "Machine-readable form of one sessions/{scope}/*batch-*.md report. Derived from real batches (personal 01/08, work 10/19): table columns and header prose vary by era, so everything except session id is optional.",
+  "type": "object",
+  "required": ["batch", "sessions"],
+  "additionalProperties": false,
+  "definitions": {
+    "snippet": {
+      "type": "object",
+      "required": ["kind", "code"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["violation", "fix", "context"] },
+        "lang": { "type": "string" },
+        "code": { "type": "string", "description": "verbatim from transcript/plan/diff — never reconstructed" },
+        "source": { "enum": ["transcript", "plan", "diff"] }
+      }
+    }
+  },
+  "properties": {
+    "batch": {
+      "type": "object",
+      "required": ["scope", "file"],
+      "additionalProperties": false,
+      "properties": {
+        "scope": { "enum": ["personal", "work"] },
+        "title": { "type": "string", "description": "short human batch title (5-9 words), names the batch's centerpiece" },
+        "number": { "type": "integer", "minimum": 1 },
+        "file": { "type": "string", "description": "repo-relative path of the source md" },
+        "analyzedDate": { "type": "string", "description": "ISO date the batch was analyzed" },
+        "dateRange": { "type": "string", "description": "covered session date range, verbatim from the header" },
+        "theme": { "type": "string" },
+        "sourceNote": { "type": "string", "description": "data-source / method note from the header" },
+        "analyzerVersion": { "type": "string", "description": "smine skill version from the batch header's Analyzer line, e.g. \"1.8\"" }
+      }
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+          "title": { "type": "string" },
+          "repo": { "type": "string", "description": "from [Repo, Type] title tags where present" },
+          "type": { "type": "string", "description": "session type tag, e.g. Fix, Implementation, Feature-Design" },
+          "signal": { "type": "string", "description": "signal/verdict column verbatim, e.g. 'yes (high)', 'exemplar'" },
+          "skipped": { "type": "boolean" },
+          "skipReason": { "type": "string" },
+          "dataGaps": { "type": "string", "description": "compaction boundaries, missing turns, rendering losses" },
+          "invoked_skills": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "skill names invoked during the session, from the report's 'Skills invoked:' line"
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["dimension", "summary"],
+              "additionalProperties": false,
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "skill-candidate",
+                    "workflow-candidate",
+                    "routine-candidate",
+                    "skill-report-card",
+                    "feature-design",
+                    "memory",
+                    "rule",
+                    "doc-drift",
+                    "harness-friction",
+                    "exemplar",
+                    "other"
+                  ]
+                },
+                "summary": { "type": "string" },
+                "quotes": { "type": "array", "items": { "type": "string" } },
+                "snippets": { "type": "array", "items": { "$ref": "#/definitions/snippet" } }
+              }
+            }
+          },
+          "frustration": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["quote"],
+              "additionalProperties": false,
+              "properties": {
+                "quote": { "type": "string" },
+                "trigger": { "type": "string" }
+              }
+            }
+          },
+          "positive": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["quote"],
+              "additionalProperties": false,
+              "properties": {
+                "quote": { "type": "string" },
+                "trigger": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "arcs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sessionIds", "summary"],
+        "additionalProperties": false,
+        "properties": {
+          "sessionIds": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }
+          },
+          "summary": { "type": "string" }
+        }
+      }
+    }
+  }
+}
