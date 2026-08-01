@@ -108,6 +108,6 @@ launchctl bootstrap gui/$(id -u) <repo-root>/routines/<name>/com.smine.routine.<
   so progress is monotonic; over-cap votes stay live for a future run; a failed
   publish leaves the sidecar fully intact. The wrapper also fails the run when the
   claude JSON envelope reports `is_error`/non-`success`, not just on a non-zero exit.
-  `PROPOSAL_APPLY_CAP` (default 3) overrides the per-run implementation cap.
+  `SMINE_APPLY_CAP` (default 3) overrides the per-run implementation cap.
 - **Lib regression tests**: `bash cmd/tests/test_routine_worktree.sh`
   (branch reuse/reset, own-group sweep, sibling survival, commit-body handoff).
