@@ -17,11 +17,15 @@ target repos.
 
 1. Work happens in local Claude Code / Codex sessions in the actual project repos — plans, diffs, and transcripts accumulate there.
 2. **peek-mcp** exposes those sessions (turns, plan, diff) to other sessions, so one session can read what another did (`skills/orchestration/peek`).
-3. **Analysis** mine the transcripts for agent mistakes, user corrections, workflow shapes, and frustration signals. This started as ad-hoc analysis and was then formalized into `skills/smine/smine-batch` (batch reports + analyzed-session ledger under `sessions/`).
-4. **Routing** — `/smine` mines and then fans each batch out to the six dimensions via the `session-mine` workflow (`smine-memory`, `smine-skills`, `smine-workflows`, `smine-routines`, `smine-style`, `smine-summary`): memory gets applied and consolidated, everything else lands as ranked proposals under `sessions/proposals/`, plus a machine-readable JSON per batch under `sessions/<scope>/json/`. Each dimension keeps its own `analyzed-*.txt` ledger. (`/smine --no-batch` routes already-mined batches; `/smine --no-<dimension>` skips one; `--max-proposals-per-dimension` / `--max-proposals-mined` cap nightly production.)
+3. **Session Mining** (s)mine the transcripts for agent mistakes, user corrections, workflow shapes, and frustration signals.
+   - This started as ad-hoc analysis and was then formalized into `skills/smine/`, which mines a session batch and then fans each batch out to the six dimensions (`smine-memory`, `smine-skills`, `smine-workflows`, `smine-routines`, `smine-style`, `smine-summary`)
+   - memory gets applied and consolidated, everything else lands as ranked proposals under `sessions/proposals/`, (or gets auto-applied if active) plus a machine-readable JSON per batch under `sessions/<scope>/json/`
+   - Each dimension keeps its own `analyzed-*.txt` ledger.
+   - `/smine --no-batch` routes already-mined batches; `/smine --no-<dimension>` skips one;
+   - `--max-proposals-per-dimension` / `--max-proposals-mined` cap nightly production
 5. Findings land here: as skill rules, as context-doc rules (e.g. a new `RULE-TEST-*` id in the TESTS section of `context/style/go.md`), or as whole new skills (`fexplore` came out of retrospective batch 19).
 6. Sync deploys the updated skills/context — the next session runs under the improved rules.
-7. Repeat. Solved-vs-open status is tracked in `docs/checklist.md`; rule changes are validated on artifacts under `tests/` (e.g. one real plan rendered in every mode/style variant under `tests/fdesign/`).
+7. Repeat.
 
 ```mermaid
 flowchart TD
