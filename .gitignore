@@ -10,6 +10,7 @@
 /dataSources.local.xml
 *.xml
 *.iml
+/.idea/
 
 # machine-specific repo registry (D27)
 /repos.json
