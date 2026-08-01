@@ -18,6 +18,8 @@
 routines/*/.lock
 routines/*/results.jsonl
 routines/*/.cadence-stamp
+# materialized from *.plist.template by install.sh; edited in place by the config server
+routines/*/com.smine.routine.*.plist
 
 # proposal vote sidecars (server-written, consumed by the smine-nightly apply stage)
 sessions/proposals/votes.jsonl

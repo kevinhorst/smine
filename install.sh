@@ -34,6 +34,20 @@ fi
 echo "-> Building configserver ..."
 make -C "$REPO_DIR" build
 
+echo "-> Materializing routine plists ..."
+for template in "$REPO_DIR"/routines/*/*.plist.template; do
+  [ -e "$template" ] || continue
+  target="${template%.template}"
+  if [ -e "$target" ]; then
+    echo "skip: $(basename "$target") exists (edit via the config server)"
+    continue
+  fi
+  sed -e "s|__REPO_DIR__|$REPO_DIR|g" \
+      -e "s|__HOME__|$HOME|g" \
+    "$template" > "$target"
+  echo "   $(basename "$target")"
+done
+
 LABEL="com.smine.configserver"
 AGENT_PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
