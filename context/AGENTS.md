@@ -9,16 +9,7 @@
 
 - `{{CONTEXT_DIR}}/rules/` — doctrine as typed entries (`FACT-*`, `NEVER-*`, `ALWAYS-*`) in activity chapters: `concepting.md` (hot-class gates), `implementing.md` (scoping, stop conditions, data integrity), `reviewing.md` (Definition of Done — every item PASS or N/A with a stated reason), `navigating.md`; orient here first and cite entry IDs when flagging violations
 - `{{CONTEXT_DIR}}/facts/` — facts about this repo (stack, architecture, environment)
-- `{{CONTEXT_DIR}}/style/` — artifact style guides: `plan.md` (plans), `commits.md` (commit subjects), one file per language
-{{LANG:go}}
-- Go code + test + goroutine style: {{CONTEXT_DIR}}/style/go.md
-{{/LANG:go}}
-{{LANG:python}}
-- Python code style: {{CONTEXT_DIR}}/style/python.md
-{{/LANG:python}}
-{{LANG:sql}}
-- SQL code style incl. database MCP workflow: {{CONTEXT_DIR}}/style/sql.md — the JetBrains IDE MCP database tools are the source of truth for live schema state when available
-{{/LANG:sql}}
+- `{{CONTEXT_DIR}}/style/` — artifact style guides: `plan.md` (plans)
 - Keep `AGENTS.md` and `{{CONTEXT_DIR}}/` up to date as part of the change when instructions, workflows, or expectations change
 
 ## Workflow routing

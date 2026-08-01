@@ -23,7 +23,7 @@ target repos.
    - Each dimension keeps its own `analyzed-*.txt` ledger.
    - `/smine --no-batch` routes already-mined batches; `/smine --no-<dimension>` skips one;
    - `--max-proposals-per-dimension` / `--max-proposals-mined` cap nightly production
-5. Findings land here: as skill rules, as context-doc rules (e.g. a new `RULE-TEST-*` id in the TESTS section of `context/style/go.md`), or as whole new skills (`fexplore` came out of retrospective batch 19).
+5. Findings land here: as skill rules, as context-doc rules (e.g. a new typed entry in `context/rules/`), or as whole new skills (`fexplore` came out of retrospective batch 19).
 6. Sync deploys the updated skills/context — the next session runs under the improved rules.
 7. Repeat.
 
@@ -57,7 +57,7 @@ flowchart TD
 | `skills/` | Skill definitions (`<name>/SKILL.md` + optional reference files). Directory name = skill name. |
 | `settings/claude_code/settings.json` | Claude Code settings (permissions allowlist, hooks, model). |
 | `settings/codex/config.toml` | Codex CLI config. |
-| `context/` | Agent context deployed into target repos as per-repo packs — and this repo's own pack: `AGENTS.md` (template with `{{ROLE}}`), `rules/` (typed `FACT/NEVER/ALWAYS` entries in activity chapters — `concepting.md` with the hot-class gates, `implementing.md` with stops/integrity, `reviewing.md` with the Definition of Done, `navigating.md` — plus the committed `rules.json` registry and UI-editable `aspects.json`), `style/` (artifact style guides, one file per artifact type: `plan.md`, `commits.md`, `go.md`, `python.md`, `sql.md`), `facts/` (this repo's facts; target repos own theirs). |
+| `context/` | Agent context deployed into target repos as per-repo packs — and this repo's own pack: `AGENTS.md` (template with `{{ROLE}}`), `rules/` (typed `FACT/NEVER/ALWAYS` entries in activity chapters — `concepting.md` with the hot-class gates, `implementing.md` with stops/integrity, `reviewing.md` with the Definition of Done, `navigating.md` — plus the committed `rules.json` registry and UI-editable `aspects.json`), `style/` (artifact style guides: `plan.md`; add your own, e.g. per-language guides — `style/<lang>.md` files become selectable in `sync_context.sh`), `facts/` (this repo's facts; target repos own theirs). |
 | `cmd/hooks/` | Hook scripts deployed to `~/.claude/hooks/` (see below). |
 | `cmd/sync/` | Deployment scripts (see below). |
 | `cmd/worktrees/` | Helpers for parallel agent work in git worktrees: sync target branch into `claude/*` worktrees, print status, force-remove agent worktrees. |
@@ -182,7 +182,7 @@ flowchart LR
 ## review-context hook
 
 `cmd/hooks/review-context.sh` runs on `UserPromptSubmit` (wired in `settings.json`)
-and injects `AGENTS.md`, `go.mod`, every `rules/*.md` doctrine chapter (baseline + repo overlays — implementing, reviewing incl. the Definition of Done, navigating), `style/commits.md`, and the language style guides into
+and injects `AGENTS.md`, `go.mod`, every `rules/*.md` doctrine chapter (baseline + repo overlays — implementing, reviewing incl. the Definition of Done, navigating), and whichever style guides the target pack carries into
 every prompt. Because Claude Code ignores matchers on `UserPromptSubmit` hooks,
 the script has its own kill switch:
 
