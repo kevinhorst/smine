@@ -11,7 +11,6 @@ authoring a new routine is `/skillroutine-create` (routine route).
 | Routine | Schedule (local) | Group / branch | Prompt | Budget |
 |---|---|---|---|---|
 | `smine-nightly` | 03:00 | `smine-nightly` → `routine/smine-nightly` | `/smine --nightly`, then `/smine-apply <votes file>` when votes are pending (two stages, one publish) | $15 per stage |
-| `coverage-increaser` | 04:00 | `coverage-increaser` → `routine/coverage-increaser` **in the target repo** | `/coverage-increase --nightly` | $15 |
 
 Each group owns one worktree at `~/.cache/claude-routine/worktrees/<group>` and
 one branch `routine/<group>`. Chain members (routines sharing a `ROUTINE_GROUP`)
@@ -39,7 +38,6 @@ logic assumes.
 | Group membership | `ROUTINE_GROUP=<group>` in `run.sh` before sourcing `_lib/worktree.sh`; default is the routine's own name | next run — creates a new `routine/<group>` branch |
 | Worktree root / branch name | `ROUTINE_WT_ROOT` / `ROUTINE_BRANCH` env overrides (defaults in `_lib/worktree.sh`) | next run |
 | Per-routine params | `EnvironmentVariables` in the routine's plist — editable from the config server's Routines page (Configure form: one input per plist-declared key), which rewrites the plist and re-bootstraps | after the re-bootstrap the form does |
-| Coverage target repo | `ROUTINE_TARGET_REPO` in the plist's `EnvironmentVariables` (Configure form); falls back to `~/.config/claude-routine/coverage-target` when unset, for manual non-launchd runs | next run |
 | Run every N days | `ROUTINE_CADENCE_DAYS` in the plist's `EnvironmentVariables` (Configure form). launchd stays on its daily schedule; `_lib/cadence.sh` gates the run against a `<routine>/.cadence-stamp` file and skips until N days have passed. Unset or `1` = every scheduled run | next run |
 
 Plist changes need a reload from the **main checkout** (never a worktree):
@@ -59,11 +57,7 @@ launchctl bootstrap gui/$(id -u) <repo-root>/routines/<name>/com.smine.routine.<
    before doing anything. Never cat it; check with `[[ -s ]]`.
 2. **Tools** — `brew install flock coreutils` (macOS ships neither `flock` nor
    `timeout`); `jq`; `claude` on PATH (run.sh prepends `/opt/homebrew/bin`).
-3. **Coverage target** — only `coverage-increaser` gates on it, same exit 78.
-   Set `ROUTINE_TARGET_REPO` via the Configure form (see table); without it the run
-   falls back to `~/.config/claude-routine/coverage-target`, which is what manual
-   non-launchd invocations use. One of the two must resolve.
-4. **Bootstrap** — handled by the configserver: at startup it bootstraps every
+3. **Bootstrap** — handled by the configserver: at startup it bootstraps every
    routine that is not degraded, already loaded, or stopped via the UI (Stop
    persists through `launchctl disable`; Start re-enables). Since the
    configserver runs as a LaunchAgent, a fresh login re-loads all enabled
@@ -82,7 +76,7 @@ launchctl bootstrap gui/$(id -u) <repo-root>/routines/<name>/com.smine.routine.<
   `runs` and `last exit code` counters, never by the `state` string (a finished
   job always reports `state = not running`).
 - **The work itself** — `git log main..routine/<group>` in the repo the group
-  runs against (smine; the target repo for `coverage-increaser`).
+  runs against.
 - **Full transcript** — the session_id from results.jsonl, via peek-mcp.
 
 ## Debugging
@@ -90,7 +84,7 @@ launchctl bootstrap gui/$(id -u) <repo-root>/routines/<name>/com.smine.routine.<
 - **Manual run**: execute `<routine>/run.sh` directly from the main checkout —
   same code path as launchd. `launchctl kickstart gui/$(id -u)/<label>` runs it
   with launchd's environment instead.
-- **Exit codes**: 78 = precondition (token / coverage target), 75 = group lock
+- **Exit codes**: 78 = precondition (token), 75 = group lock
   timeout (2 h), 70 = worktree create failed or worktree vanished mid-run,
   0 with `is_error: true` in results.jsonl = the agent itself reported failure.
 - **"already running"** = the routine's own `.lock` (self-overlap);
