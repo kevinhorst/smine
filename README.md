@@ -128,8 +128,9 @@ The smine pipeline mines and routes session batches (see feedback loop step 4): 
 
 Plan presentation rules for all of them live in [context/style/plan.md](context/style/plan.md): section order, stacked table cells, in-plan Q&A (OPEN decision rows, never popups), changelog, mode-invariant code.
 
-## Installation
-
+## Installation (MacOS)
+- **Fork the repository**
+- `git clone` the fork
 - `install.sh` — installs [peek-mcp](https://github.com/kevinhorst/peek-mcp) ≥ 1.0.7 (`--no-peek` to skip), optionally serena (`--serena`), builds `bin/configserver` and runs it as LaunchAgent `com.smine.configserver` on `:6001` (logs in `~/Library/Logs/`). Stop with `launchctl bootout gui/$(id -u)/com.smine.configserver` — a plain `kill` gets restarted.
 - Then run the sync scripts below to deploy settings, skills, and context.
 
