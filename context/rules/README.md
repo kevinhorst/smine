@@ -3,7 +3,7 @@
 Doctrine and fact entries for the context layer. Every statement in this directory is one typed,
 ID'd entry; the registry tool (`cmd/rules`) parses these files into `context/rules.json` and
 validates them in `make audit` (in this repo, together with `../facts/` — the source tree is
-smine' own pack).
+smine's own pack).
 
 Files are **activity chapters** — named for the activity the entries govern: `concepting.md`
 (hot-class gates, binding at plan time), `implementing.md` (scoping, stop conditions, data
