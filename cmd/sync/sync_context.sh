@@ -104,7 +104,7 @@ if $LANGS_SET; then
     [ -z "$lang" ] && continue
     case " $BASELINE_DIRS " in *" $lang "*) continue ;; esac
     known=false
-    for avail in "${available_langs[@]}"; do
+    for avail in ${available_langs[@]+"${available_langs[@]}"}; do
       [ "$avail" = "$lang" ] && known=true
     done
     if ! $known; then
@@ -114,7 +114,7 @@ if $LANGS_SET; then
     selected_langs+=("$lang")
   done
 else
-  for lang in "${available_langs[@]}"; do
+  for lang in ${available_langs[@]+"${available_langs[@]}"}; do
     printf "Include %s context? [Y/n]: " "$lang"
     read -r answer
     answer="${answer:-y}"
@@ -155,7 +155,8 @@ agents_content="${agents_content//\{\{ROLE\}\}/$ROLE}"
 agents_content="$(echo "$agents_content" | sed "s|{{CONTEXT_DIR}}|$CONTEXT_DIR|g")"
 
 # Strip unselected language blocks, unwrap selected ones
-for lang in "${available_langs[@]}"; do
+# ${arr[@]+...} guards empty-array expansion under set -u on bash 3.2.
+for lang in ${available_langs[@]+"${available_langs[@]}"}; do
   is_selected=false
   for sel in ${selected_langs[@]+"${selected_langs[@]}"}; do
     [ "$sel" = "$lang" ] && is_selected=true
