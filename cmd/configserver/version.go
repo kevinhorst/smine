@@ -1,7 +1,3 @@
 package main
 
-var version = "1.0.1"
-
-func Version() string {
-	return version
-}
+var version = "1.1.2"

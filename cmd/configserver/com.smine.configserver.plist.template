@@ -8,7 +8,7 @@
 	<array>
 		<string>__REPO_DIR__/bin/configserver</string>
 		<string>-addr</string>
-		<string>:__PORT__</string>
+		<string>127.0.0.1:__PORT__</string>
 	</array>
 	<key>WorkingDirectory</key>
 	<string>__REPO_DIR__</string>
