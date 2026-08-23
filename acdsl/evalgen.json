@@ -1,0 +1,9 @@
+{
+  "language": "go",
+  "maxLines": 250,
+  "timeoutMaxS": 60,
+  "bands": ["F", "A"],
+  "autoApply": false,
+  "execAllowlist": ["go", "git", "gofmt", "shellcheck"],
+  "importPolicy": "stdlib + github.com/kevinhorst/smine/internal/... + go.mod require set (enforced by ACDSL-GOLANG-GEN-001)"
+}

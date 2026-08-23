@@ -1,0 +1,25 @@
+version: "2"
+linters:
+  enable:
+    - errorlint
+    - gocritic
+    - modernize
+    - revive
+    - staticcheck
+    - wrapcheck
+  settings:
+    revive:
+      rules:
+        - name: var-naming
+        - name: function-result-limit
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+    modernize:
+      disable:
+        - stringscutprefix
+formatters:
+  enable:
+    - goimports
+    - grouper

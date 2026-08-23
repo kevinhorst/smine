@@ -1,0 +1,17 @@
+{
+  "kind": "context",
+  "groups": [
+    {
+      "title": "context/rules/go.md",
+      "proposals": [
+        {
+          "id": "fixture-rule",
+          "title": "Fixture rule",
+          "status": "proposed",
+          "change": "Add the fixture rule.",
+          "proposed": "2026-08-09"
+        }
+      ]
+    }
+  ]
+}

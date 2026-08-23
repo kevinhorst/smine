@@ -1,0 +1,5 @@
+# Conformant declarations (fixture; .txt so DiscoverRules never scans it).
+//acdsl:ACDSL-GOLANG-ERR-001 gofmt anchor="\.go$" why="conformant four-segment id"
+//acdsl:RULE-COMMIT-001 gofmt anchor="\.md$" why="conformant three-segment id"
+//acdsl:ACTION-IMPL-002 gofmt anchor="\.md$" why="conformant activity scope"
+//acdsl:TASK-FREEFORM-X gofmt anchor="\.go$" lifetime="task" why="task contracts are exempt"

@@ -1,0 +1,15 @@
+{
+  "kind": "context",
+  "groups": [
+    {
+      "title": "context/rules/go.md",
+      "proposals": [
+        {
+          "title": "Fixture rule",
+          "status": "proposed",
+          "bogus": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "batch": {
+    "scope": "personal",
+    "file": "sessions-batch-01.md"
+  },
+  "sessions": [
+    {
+      "id": "0f8f6f66-1111-2222-3333-444455556666"
+    }
+  ]
+}

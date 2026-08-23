@@ -1,0 +1,4 @@
+# Bounds-violating declarations (fixture; .txt so DiscoverRules never scans it).
+//acdsl:ACDSL-BOGUS-ERR-001 gofmt anchor="\.go$" why="unregistered scope"
+//acdsl:ACDSL-GOLANG-ERR-NAME-001 gofmt anchor="\.go$" why="five segments"
+//acdsl:ALWAYS-INTEG-001 gofmt anchor="\.go$" why="legacy kind"
