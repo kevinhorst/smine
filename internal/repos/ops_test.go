@@ -43,6 +43,7 @@ func initGitRepo(t *testing.T) (string, string) {
 	run("add", "base")
 	run("commit", "-qm", "base")
 	run("branch", "claude/feature")
+	run("branch", "claude-routines/nightly-2026-08-12")
 
 	cmd := exec.Command("git", "rev-parse", "claude/feature")
 	cmd.Dir = repo
@@ -52,9 +53,16 @@ func initGitRepo(t *testing.T) (string, string) {
 }
 
 func TestValidateBranchRejectsNonClaude(t *testing.T) {
-	err := ValidateBranch(context.Background(), "main", t.TempDir())
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Not an agent branch")
+	for _, branch := range []string{"main", "routine/nightly-2026-08-12"} {
+		err := ValidateBranch(context.Background(), branch, t.TempDir())
+		require.Error(t, err, branch)
+		assert.Contains(t, err.Error(), "Not an agent branch")
+	}
+}
+
+func TestValidateBranchAcceptsRoutineNamespace(t *testing.T) {
+	repo, _ := initGitRepo(t)
+	assert.NoError(t, ValidateBranch(context.Background(), "claude-routines/nightly-2026-08-12", repo))
 }
 
 func TestValidateBranchRejectsUnknownRef(t *testing.T) {

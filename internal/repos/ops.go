@@ -110,12 +110,12 @@ func Sync(ctx context.Context, branch, repoPath, scriptsDir string) (string, err
 	return output, nil
 }
 
-// ValidateBranch guards every mutating operation: agent namespace enforced,
+// ValidateBranch guards every operation on a branch: agent namespaces enforced,
 // ref existence verified — request input never reaches an argv unverified
 // (hot item H2).
 func ValidateBranch(ctx context.Context, branch, repoPath string) error {
-	// Branch: agent namespace only
-	if !strings.HasPrefix(branch, "claude/") {
+	// Branch: agent namespaces only (session pool + routine lineages)
+	if !strings.HasPrefix(branch, "claude/") && !strings.HasPrefix(branch, "claude-routines/") {
 		return fmt.Errorf("ValidateBranch: Not an agent branch: %q", branch)
 	}
 

@@ -13,18 +13,21 @@ import (
 // statusFixture mirrors the script's 14-column printf contract, captured from
 // a real run (D10 — hand-written rows that contradict the script's arithmetic
 // are banned): a probe-upgraded row (VERDICTS resolved:1, starred FROM entry
-// in IN, UNPICKED 0), the "unknown" FROM row with all "-"/"–" sentinels, and
-// an untracked-blocked row.
+// in IN, UNPICKED 0), the "unknown" FROM row with all "-"/"–" sentinels, an
+// untracked-blocked row, a worktree-less row contained via resolved picks
+// (twin sweep), and a worktree-less row with genuinely unpicked work.
 const statusFixture = `#    BRANCH                               FROM             DIRTY  UNTRACKED AHEAD  BEHIND  UNPICKED  VERDICTS             MERGED           IN                       LAST-COMMIT      WORKTREE
 1    claude/feature-a                     origin/main      0      0         1      2       0         resolved:1           -                origin/main*             2026-07-10 12:30 /tmp/repo/.claude/worktrees/feature-a
 2    claude/feature-b                     unknown          -      -         -      -       0         -                    -                -                        2026-07-09 08:15 –
 3    claude/feature-c                     main             0      3         0      0       0         -                    -                main                     2026-07-08 09:00 /tmp/repo/.claude/worktrees/feature-c
+4    claude/feature-d                     main             -      -         2      0       0         picked-resolved:2    -                main*                    2026-07-11 10:00 –
+5    claude/feature-e                     main             -      -         1      0       1         -                    -                -                        2026-07-11 10:05 –
 `
 
 func TestParseStatusFixture(t *testing.T) {
 	statuses, err := parseStatus(statusFixture)
 	require.NoError(t, err)
-	require.Len(t, statuses, 3)
+	require.Len(t, statuses, 5)
 
 	// Probe-upgraded row: the conflicted pick resolved on origin/main, so
 	// VERDICTS carries resolved:1, IN keeps the starred FROM entry, and the
@@ -57,6 +60,7 @@ func TestParseStatusFixture(t *testing.T) {
 	assert.Empty(t, second.Worktree)
 	assert.False(t, second.SafeToRemove)
 	assert.False(t, second.SafeViaProbe)
+	assert.Equal(t, []string{"work contained nowhere", "no worktree"}, second.UnsafeReasons)
 
 	// Untracked files alone must break the safe contract — the remove script
 	// blocks on them even when the work is contained elsewhere. Plain "main"
@@ -67,10 +71,31 @@ func TestParseStatusFixture(t *testing.T) {
 	assert.Equal(t, []string{"main"}, third.In)
 	assert.False(t, third.SafeToRemove)
 	assert.False(t, third.SafeViaProbe)
+	assert.Equal(t, []string{"untracked(3)"}, third.UnsafeReasons)
+
+	// No worktree left, work transferred as manually resolved picks: safety
+	// is containment alone — safe, with the resolved-pick count surfaced so
+	// the UI can flag that reconciliation is no longer automatic.
+	fourth := statuses[3]
+	assert.Equal(t, noWorktreeDirty, fourth.Dirty)
+	assert.Equal(t, "picked-resolved:2", fourth.Verdicts)
+	assert.Equal(t, 2, fourth.ResolvedPicks)
+	assert.Equal(t, []string{"main*"}, fourth.In)
+	assert.True(t, fourth.SafeToRemove)
+	assert.True(t, fourth.SafeViaProbe)
+	assert.Empty(t, fourth.UnsafeReasons)
+
+	// No worktree but genuinely unpicked work: unsafe, and the reasons name
+	// the unpicked count instead of a generic ✗.
+	fifth := statuses[4]
+	assert.Equal(t, noWorktreeDirty, fifth.Dirty)
+	assert.Equal(t, 1, fifth.Unpicked)
+	assert.False(t, fifth.SafeToRemove)
+	assert.Equal(t, []string{"unpicked(1)", "no worktree"}, fifth.UnsafeReasons)
 }
 
 func TestParseStatusNoBranches(t *testing.T) {
-	statuses, err := parseStatus("No claude/* branches found.\n")
+	statuses, err := parseStatus("No agent branches (claude/*, claude-routines/*) found.\n")
 	require.NoError(t, err)
 	assert.Nil(t, statuses)
 }
@@ -149,5 +174,5 @@ func TestStatusRunsScriptInRepoPath(t *testing.T) {
 	scriptsDir := writeStatusStub(t)
 	statuses, err := Status(context.Background(), t.TempDir(), scriptsDir)
 	require.NoError(t, err)
-	assert.Len(t, statuses, 3)
+	assert.Len(t, statuses, 5)
 }

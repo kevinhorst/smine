@@ -30,20 +30,22 @@ type Commit struct {
 }
 
 type WorktreeStatus struct {
-	Ahead        int // unknownCount when From is "unknown"
-	Behind       int // unknownCount when From is "unknown"
-	Branch       string
-	Dirty        int      // noWorktreeDirty when the branch has no worktree
-	From         string   // "unknown" when the branch reflog records no origin
-	In           []string // FROM first, probe-upgraded FROM entries keep their "*"; empty when the work exists nowhere else
-	LastCommit   string
-	MergedInto   string // actual merge commit target; empty when never merged
-	SafeToRemove bool
-	SafeViaProbe bool // an IN entry carries the "*" applied-probe marker
-	Unpicked     int
-	Untracked    int    // noWorktreeDirty when the branch has no worktree
-	Verdicts     string // applied-probe summary (applied:n,resolved:n); empty when "-"
-	Worktree     string // empty when none
+	Ahead         int // unknownCount when From is "unknown"
+	Behind        int // unknownCount when From is "unknown"
+	Branch        string
+	Dirty         int      // noWorktreeDirty when the branch has no worktree
+	From          string   // "unknown" when the branch reflog records no origin
+	In            []string // FROM first, probe/twin-upgraded entries keep their "*"; empty when the work exists nowhere else
+	LastCommit    string
+	MergedInto    string // actual merge commit target; empty when never merged
+	ResolvedPicks int    // picked-resolved verdicts: transferred via manually conflict-resolved picks, not auto-reconcilable
+	SafeToRemove  bool
+	SafeViaProbe  bool     // an IN entry carries the "*" probe/twin marker
+	UnsafeReasons []string // the conditions that made SafeToRemove false; empty when safe
+	Unpicked      int
+	Untracked     int    // noWorktreeDirty when the branch has no worktree
+	Verdicts      string // probe summary (applied:n,resolved:n,picked-resolved:n); empty when "-"
+	Worktree      string // empty when none
 }
 
 type CheckoutStatus struct {
@@ -132,7 +134,7 @@ func parseCount(field, column string) (int, error) {
 }
 
 func parseStatus(output string) ([]WorktreeStatus, error) {
-	if strings.HasPrefix(output, "No claude/") {
+	if strings.HasPrefix(output, "No agent branches") {
 		return nil, nil
 	}
 
@@ -217,6 +219,17 @@ func parseStatusRow(fields []string, line string) (*WorktreeStatus, error) {
 	// VERDICTS: "-" = nothing needed probing
 	if fields[8] != "-" {
 		status.Verdicts = fields[8]
+		for _, token := range strings.Split(status.Verdicts, ",") {
+			count, found := strings.CutPrefix(token, "picked-resolved:")
+			if !found {
+				continue
+			}
+			resolved, err := parseCount(count, "VERDICTS")
+			if err != nil {
+				return nil, err
+			}
+			status.ResolvedPicks = resolved
+		}
 	}
 
 	// MERGED: "-" = the tip was never target of an actual merge commit
@@ -235,14 +248,46 @@ func parseStatusRow(fields []string, line string) (*WorktreeStatus, error) {
 		status.Worktree = worktree
 	}
 
-	// Script header contract: DIRTY=0, UNTRACKED=0 and IN != "-" => safe to
-	// remove — the exact predicate remove_agent_worktrees.sh enforces. A "*"
-	// IN entry means containment came from the applied-probe heuristic.
-	status.SafeToRemove = status.Dirty == 0 && status.Untracked == 0 && len(status.In) > 0
+	// Script header contract: IN != "-" plus, when a worktree is checked out,
+	// DIRTY=0 and UNTRACKED=0 => safe to remove. A branch without a worktree
+	// (DIRTY "-") has no files to lose — containment alone decides. A "*" IN
+	// entry means containment came from the probe/twin verdicts.
+	contained := len(status.In) > 0
+	if status.Dirty == noWorktreeDirty {
+		status.SafeToRemove = contained
+	} else {
+		status.SafeToRemove = status.Dirty == 0 && status.Untracked == 0 && contained
+	}
 	for _, containing := range status.In {
 		if strings.HasSuffix(containing, "*") {
 			status.SafeViaProbe = true
 		}
 	}
+	if !status.SafeToRemove {
+		status.UnsafeReasons = unsafeReasons(status, contained)
+	}
 	return status, nil
+}
+
+// unsafeReasons names each condition that blocks removal, in the order the
+// safety predicate checks them — the UI shows these instead of a generic ✗.
+func unsafeReasons(status *WorktreeStatus, contained bool) []string {
+	var reasons []string
+	if status.Dirty > 0 {
+		reasons = append(reasons, fmt.Sprintf("dirty(%d)", status.Dirty))
+	}
+	if status.Untracked > 0 {
+		reasons = append(reasons, fmt.Sprintf("untracked(%d)", status.Untracked))
+	}
+	if !contained {
+		if status.Unpicked > 0 {
+			reasons = append(reasons, fmt.Sprintf("unpicked(%d)", status.Unpicked))
+		} else {
+			reasons = append(reasons, "work contained nowhere")
+		}
+		if status.Dirty == noWorktreeDirty {
+			reasons = append(reasons, "no worktree")
+		}
+	}
+	return reasons
 }
