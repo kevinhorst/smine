@@ -1,8 +1,10 @@
 ---
 name: delegate
-description: Run an eligible skill on a cheaper subagent runner — explicit invocation only, never a default. Trigger only on /delegate <skill> [args]. Args — skill: the eligible target skill; args: the target skill's own args, passed through unchanged.
+description: Run an eligible skill on a cheaper subagent runner — explicit invocation only, never a default. Trigger on /delegate <skill> [args], nothing else. Args — skill: the eligible target skill; args: the target skill's own args, passed through unchanged.
 author: Kevin Horst
-version: 1.3
+version: 1.7
+argument-hint: "<skill> [args...]"
+allowed-tools: Workflow, Agent, SendMessage, Bash(git log *), Read
 ---
 
 # Delegate
@@ -14,7 +16,7 @@ Run one eligible skill unattended on a subagent runner — same worktree, same b
 **Use when:** explicitly invoked as /delegate <skill> [args...] to run an eligible skill on a cheaper runner.
 **Don't use when:** the target skill has no `Delegation:` line or is small-tier — not delegatable, run it in-session. Fan-out across a model/effort matrix — /parallelize. The Agent tool is unavailable (e.g. Codex) — run in-session.
 **Preconditions:** target skill installed; its `## Model` section declares `Delegation: unattended-safe | gated`.
-**Workflow position:** standalone wrapper around any eligible skill (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone wrapper around any eligible skill (see README.md § Skill map, smine repo).
 
 ## Args
 
@@ -31,6 +33,16 @@ Read the target skill's `## Model` section; on any failed check refuse with the 
 - No `allowed-tools` frontmatter on a delegatable skill → refuse as undeclared surface.
 - An `allowed-tools` rule not covered by the permissions allowlist (`settings/claude_code/settings.json`) → a runner stalling on a permission prompt has nobody watching; the refusal names the missing rules.
 
+## Fast path (repeat target, same session)
+
+The eligibility checks and prompt assembly are deterministic within a session — the target's `## Model` section, its `allowed-tools`, and `settings.json` don't change mid-session. So on a **repeat** delegation of a `(skill, model)` pair already delegated successfully earlier this session:
+
+- Skip the five eligibility re-checks and the tier→model lookup.
+- Reuse the spawn prompt assembled the first time, substituting only the new args.
+- The result contract and gate relay (for gated skills) apply unchanged.
+
+The full ceremony runs on the first delegation of each `(skill, model)` pair. A first spawn that dies on a runner error (not a `blocked` result) establishes no fast-path entry — the next attempt re-runs the full ceremony. The fast path applies to both spawn routes — the route follows the target's delegation class and the prompt assembly is identical.
+
 ## Tier → model mapping
 
 | Tier | Runner model |
@@ -44,7 +56,11 @@ Read the target skill's `## Model` section; on any failed check refuse with the 
 
 ## Spawn contract
 
-Spawn ONE runner via the Agent tool and wait for it:
+The route splits by the target's delegation class; the prompt template below is identical on both.
+
+**unattended-safe → Workflow tool.** Call the Workflow tool: `{scriptPath: '<this skill's base directory>/workflows/delegate.js', args: {skill, prompt, runner, model}}` — `args` is a real JSON object, never a string; the base directory is stated when this skill loads. `prompt` is the assembled spawn prompt; `runner` is the skill's `Runner:` when declared (absent → `general-purpose`); `model` is the mapped target, only when the runner is `general-purpose` (a custom runner carries model + effort in its own frontmatter). The workflow runs ONE runner agent and returns the schema-validated result — no prose parsing; the run gets /workflows visibility, a journal, and resume.
+
+**gated → Agent tool.** Spawn ONE runner via the Agent tool and wait for it — the relay loop needs a mid-run SendMessage round-trip to the same runner, which a workflow script cannot pause for:
 
 - `subagent_type`: the skill's `Runner:` (default `general-purpose`)
 - `model`: the mapped target — only when the runner is `general-purpose`; a custom runner (`agents/<name>.md`) carries model + effort in its own frontmatter
@@ -88,10 +104,3 @@ Relay the result verbatim — never re-summarize from scratch. Runner null/error
 - Suggested: mid-tier / low
 - Reason: eligibility lookup, one spawn, verbatim relay — the judgment lives in the runner and the gated skill's own relay data
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.3 (2026-07-30): eligibility reads allowed-tools frontmatter instead of the retired Command surface line; refusals name the missing rules
-- v1.2 (2026-07-30): moved from skills/util/ to skills/orchestration/ group; name and behavior unchanged
-- v1.1 (2026-07-26): Args section
-- v1.0 (2026-07-24): initial version — explicit-only delegation; mechanism folded in from context/general/delegation.md (deleted); auto-intake removed from all skills

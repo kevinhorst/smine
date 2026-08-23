@@ -2,7 +2,8 @@
 name: peek
 description: Show the latest Claude Code or Codex session — turns, plan, diff, or list. Trigger on /peek [n] or "what Claude Code or Codex is doing". Args — n: recent-turn count (default 5); list|plan|diff: mode token; id or title: specific session, id wins; claude|codex: agent qualifier (default claude).
 author: Kevin Horst
-version: 1.7
+version: 1.9
+argument-hint: "[n] [list|plan|diff] [id|title] [claude|codex]"
 allowed-tools: mcp__Peek_MCP__session_full, mcp__Peek_MCP__session_list, mcp__Peek_MCP__session_plan, mcp__Peek_MCP__session_diff, ToolSearch
 ---
 
@@ -11,7 +12,7 @@ allowed-tools: mcp__Peek_MCP__session_full, mcp__Peek_MCP__session_list, mcp__Pe
 **Use when:** quick-viewing the latest Claude Code or Codex session — recent turns, plan, diff, or session list. Invoked via /peek [n] or "what is Claude doing".
 **Don't use when:** systematically mining sessions for lessons — /smine (the pipeline; raw miner /smine-batch). Reading session transcripts for memory/rule extraction — /smine. Evaluating skill outputs — /skillroutine-eval.
 **Preconditions:** peek-mcp available.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone (see README.md § Skill map, smine repo).
 
 ## Args
 
@@ -59,14 +60,3 @@ For `/peek list`, show the session table as-is — that is already compact.
 - Suggested: small / low
 - Reason: table-driven routing to MCP tools
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.7 (2026-07-30): allowed-tools permission manifest declared
-- v1.6 (2026-07-30): moved under skills/orchestration/ group; name and behavior unchanged
-- v1.5 (2026-07-27): reference renames — /smine is now the pipeline (raw miner /smine-batch), /couchskill-eval → /skillroutine-eval
-- v1.4 (2026-07-26): Args section
-- v1.3 (2026-07-22): effort token normalized (small / low)
-- v1.2 (2026-07-19): reference rename: eval-skill → couchskill-eval; moved under skills/util/
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-06-22): initial version

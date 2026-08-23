@@ -2,7 +2,7 @@
 name: close
 description: Remove the done session's pool worktree and claude/* branch, safety-gated, killing the session. Trigger on /close or "this session is done, clean up the worktree".
 author: Kevin Horst
-version: 1.4
+version: 1.5
 ---
 
 # Close
@@ -14,7 +14,7 @@ Explicit end-of-session cleanup: remove this session's `.claude/worktrees/<name>
 **Use when:** the user declares the current session done and wants its worktree and branch removed — /close.
 **Don't use when:** bulk cleanup of many agent worktrees, or any forced removal — run `cmd/worktrees/remove_agent_worktrees.sh` manually. Routine (launchd) worktrees — `routines/_lib/worktree.sh` owns their lifecycle. Merging or cherry-picking the session's work first — do that before /close; this skill never moves commits.
 **Preconditions:** session runs inside a `.claude/worktrees/<name>` pool worktree on a `claude/*` branch; the work already lives on a non-claude branch (the script's gate enforces this).
-**Workflow position:** standalone, terminal — nothing hands off from it (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone, terminal — nothing hands off from it (see README.md § Skill map, smine repo).
 
 ## Procedure
 
@@ -37,11 +37,3 @@ The script owns all safety logic — do not duplicate it here: it lifts the Sess
 - Suggested: small / low
 - Reason: single-script wrapper; all safety logic lives in remove_agent_worktrees.sh
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.4 (2026-07-31): genericized runner path to $HOME and persona reference (MIT release cleanup)
-- v1.3 (2026-07-30): moved under skills/orchestration/ group; name and behavior unchanged
-- v1.2 (2026-07-26): drop the cd — the script now normalizes its own cwd to the main checkout; invocation is a single plain command
-- v1.1 (2026-07-26): invoke the deployed script at ~/.claude/agents/tools/ (no permission prompt) instead of the main-checkout path
-- v1.0 (2026-07-24): initial version

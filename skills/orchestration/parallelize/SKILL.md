@@ -2,7 +2,8 @@
 name: parallelize
 description: Fan one skill across a {model} x {effort} x {arg-variants} x replicas matrix, then consolidate into a grounded base. Trigger on /parallelize or "bake-off" or "matrix run". Args — invocation: skill name, args, shared context doc; models[]: e.g. [opus, fable]; efforts[]: shorthand l/m/h/xh/max; argVariants[]: invocation flavors of the task; replicas: identical runs per cell; base commit: common start commit, clean tree.
 author: Kevin Horst
-version: 1.7
+version: 1.10
+argument-hint: "[invocation] [models] [efforts] [argVariants] [replicas] [base commit]"
 ---
 
 # Parallelize (matrix bake-off)
@@ -11,10 +12,10 @@ Fan one skill invocation across a dynamic matrix of cells, each in its own isola
 
 ## When to use
 
-**Use when:** fanning one skill invocation — any skill: fdesign, fchange, viability verdicts, investigations — across a `{model} × {effort} × {arg-variants} × replicas` matrix from a common base commit, to compare outputs and pick a grounded base. Invoked via /parallelize.
+**Use when:** fanning one skill invocation — any skill: fdesign (any route), viability verdicts, investigations — across a `{model} × {effort} × {arg-variants} × replicas` matrix from a common base commit, to compare outputs and pick a grounded base. Invoked via /parallelize.
 **Don't use when:** a single run is wanted — invoke the skill directly. Reviewing a diff — /railroad-review. Scoring or comparing already-finished runs — /skillroutine-eval. A fresh matrix whose deliverable is per-rule eval scores rather than a merged base — /skillroutine-eval matrix mode (its pipe workflow nests this skill's workflow).
 **Preconditions:** clean working tree at the base commit; the invocation has an unattended form (interactive gates bypassed per cell, e.g. `--nightly`) — a cell parked on an approval gate kills the matrix.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone (see README.md § Skill map, smine repo).
 
 ## Args
 
@@ -59,14 +60,3 @@ Fan one skill invocation across a dynamic matrix of cells, each in its own isola
 - Suggested: mid-tier / medium
 - Reason: intake + deterministic workflow fan-out; the heavy lifting happens in the cells and the synthesizer
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.7 (2026-07-30): moved under skills/orchestration/ group; name and behavior unchanged
-- v1.6 (2026-07-27): reference rename — couchskill-eval → skillroutine-eval (matrix-mode routing)
-- v1.5 (2026-07-26): Args section
-- v1.4 (2026-07-24): reference merge: feature-refactor → feature-change
-- v1.3 (2026-07-19): routing: fresh matrix scored by eval routes to couchskill-eval matrix mode
-- v1.2 (2026-07-19): fan-out cells rename their worktree branch to claude/parallelize-{cell}-{base} so leftovers are visible to claude/* tooling
-- v1.1 (2026-07-19): reference renames: refactor → feature-refactor, eval-skill → couchskill-eval
-- v1.0 (2026-07-19): initial version

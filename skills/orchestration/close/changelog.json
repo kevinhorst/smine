@@ -1,6 +1,11 @@
 [
   {
-    "version": "v1.4",
+    "version": "1.5",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.4",
     "date": "2026-07-31",
     "text": "genericized runner path to $HOME and persona reference (MIT release cleanup)"
   },
