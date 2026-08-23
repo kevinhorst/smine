@@ -3,26 +3,52 @@
 #
 # Usage:
 #   sync_skills.sh [--prune]
+#   sync_skills.sh --variant <leaf>=<name>:<disable> [--into <dir>]
 #
 # Installed skills that no longer exist in the repo are confirmed one by one;
-# with --prune they are removed without asking (the skip-list still applies).
+# with --prune they are removed without asking (the skip-list still applies;
+# variant leftovers named <leaf>--<name> are always prunable).
+# --variant renders one skill with the given entry ids/globs disabled
+# (rules render-skill) into <dir>/<leaf>--<name>/ — default dir is the claude
+# home skills root — a distinct name that never shadows the real skill; nothing
+# else runs in that mode.
 set -euo pipefail
 
 auto_prune=0
-for arg in "$@"; do
-  case "$arg" in
+variant=""
+into=""
+while [ $# -gt 0 ]; do
+  case "$1" in
     --prune) auto_prune=1 ;;
-    *) echo "usage: $(basename "$0") [--prune]"; exit 1 ;;
+    --variant) variant="${2:-}"; shift ;;
+    --into) into="${2:-}"; shift ;;
+    *) echo "usage: $(basename "$0") [--prune] [--variant <leaf>=<name>:<disable> [--into <dir>]]"; exit 1 ;;
   esac
+  shift
 done
 
 REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILLS_SRC="$REPO_DIR/skills"
+# shellcheck disable=SC2034 # read by the sourced smine_tool.sh
+RULES_REPO="$REPO_DIR"
+# shellcheck source=smine_tool.sh
+. "$(dirname "$0")/smine_tool.sh"
 
 CLAUDE_SKILLS="$HOME/.claude/skills"
 CODEX_SKILLS="$HOME/.codex/skills"
 
-HOOKS_ENV="$HOME/.claude/hooks/review-context.env"
+# SKILL.md files are projectable: strip working-copy projection blocks before
+# deploying so a projected skill never ships its block (the read-hook
+# re-projects on the next read).
+if [ -f "$REPO_DIR/acdsl/registry.json" ]; then
+  acdsl_cmd="go run ./cmd/acdsl"
+  for candidate in "$REPO_DIR/bin/acdsl" "$REPO_DIR/bin/acdsl.exe"; do
+    [ -x "$candidate" ] && { acdsl_cmd="$candidate"; break; }
+  done
+  (cd "$REPO_DIR" && $acdsl_cmd project -strip >/dev/null 2>&1) || true
+fi
+
+HOOKS_ENV="$HOME/.claude/hooks/global-context.env"
 
 # Skills installed by other sources — never offered for pruning.
 PRUNE_SKIP="codex-primary-runtime"
@@ -73,6 +99,34 @@ fi
 
 echo "using context dir: $context_dir"
 
+# Variant mode: render one skill with a disable list into a distinctly named
+# leaf (<leaf>--<name>) under the target root so it never shadows the real
+# skill. Nothing else runs in this mode.
+if [ -n "$variant" ]; then
+  leaf="${variant%%=*}"; rest="${variant#*=}"
+  name="${rest%%:*}"; disable="${rest#*:}"
+  case "$name" in
+    ''|*[!a-z0-9-]*|-*|*-) echo "error: variant name must be kebab-case: '$name'" >&2; exit 1 ;;
+  esac
+  [ "${#name}" -le 24 ] || { echo "error: variant name longer than 24 chars: $name" >&2; exit 1; }
+  src=""
+  for dir in "$SKILLS_SRC/$leaf" "$SKILLS_SRC"/*/"$leaf"; do
+    if [ -f "$dir/SKILL.md" ]; then src="$dir"; break; fi
+  done
+  [ -n "$src" ] || { echo "error: no skill leaf named $leaf under $SKILLS_SRC" >&2; exit 1; }
+  root="${into:-$CLAUDE_SKILLS}"
+  target_dir="$root/$leaf--$name"
+  rendered="$(mktemp)"
+  smine_tool rules render-skill --disable "$disable" "$src/SKILL.md" \
+    | sed "s|\\\$AGENT_CONTEXT_DIR_DEFAULT|$context_dir|g; s|^name: $leaf\$|name: $leaf--$name|" \
+    > "$rendered"
+  mkdir -p "$target_dir"
+  cp -R "${src%/}/." "$target_dir/"
+  mv "$rendered" "$target_dir/SKILL.md"
+  echo "rendered variant $leaf--$name (disabled: $disable) -> $target_dir"
+  exit 0
+fi
+
 # Resolve leaf skill dirs: a first-level dir containing SKILL.md is a skill;
 # one without is a group folder whose children are skills. Targets stay flat —
 # every leaf lands as $target/<leaf-name>.
@@ -120,6 +174,8 @@ for target in "$CLAUDE_SKILLS" "$CODEX_SKILLS"; do
       else
         echo "  $skill_name -> $target_dir (new v$new_version)"
       fi
+    elif [ -n "$new_version" ]; then
+      echo "  $skill_name -> $target_dir (unchanged v$new_version)"
     else
       echo "  $skill_name -> $target_dir"
     fi
@@ -136,8 +192,14 @@ for target in "$CLAUDE_SKILLS" "$CODEX_SKILLS"; do
         continue
         ;;
     esac
-    case "$repo_skill_names" in
-      *" $installed_name "*) continue ;;
+    # Variant leftovers (<leaf>--<name>) are never repo skills — always prunable.
+    case "$installed_name" in
+      *--*) ;;
+      *)
+        case "$repo_skill_names" in
+          *" $installed_name "*) continue ;;
+        esac
+        ;;
     esac
     if [ "$auto_prune" -eq 1 ]; then
       answer=y

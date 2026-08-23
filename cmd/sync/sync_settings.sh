@@ -3,6 +3,23 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
+# Marker expansion targets. The deployed files feed NATIVE processes (Claude
+# Code/node, codex, the peek-mcp binary), so on Windows the markers expand to
+# C:/-style paths (cygpath -m: forward slashes, JSON- and TOML-safe) and peek
+# resolves to the smine bin copy that install.ps1 refreshes - never an MSYS
+# /c/ path, which native spawns cannot open. Git Bash accepts C:/ paths too,
+# so hook commands keep working from the same expansion.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    HOME_NATIVE="$(cygpath -m "$HOME")"
+    PEEK_MCP="$(cygpath -m "$LOCALAPPDATA")/smine/bin/peek-mcp.exe"
+    ;;
+  *)
+    HOME_NATIVE="$HOME"
+    PEEK_MCP="$HOME/go/bin/peek-mcp"
+    ;;
+esac
+
 SYNC_SERENA=0
 for arg in "$@"; do
   case "$arg" in
@@ -33,7 +50,7 @@ sync_file() {
   fi
 
   tmp="$(mktemp)"
-  sed "s|{{HOME}}|$HOME|g" "$src" > "$tmp"
+  sed -e "s|{{HOME}}|$HOME_NATIVE|g" -e "s|{{PEEK_MCP}}|$PEEK_MCP|g" "$src" > "$tmp"
 
   if [ -f "$dst" ] && diff -q "$tmp" "$dst" >/dev/null 2>&1; then
     echo "unchanged: $dst"
@@ -46,14 +63,25 @@ sync_file() {
   echo "synced: $src -> $dst"
 }
 
-HOOKS_ENV="$HOME/.claude/hooks/review-context.env"
+HOOKS_ENV="$HOME/.claude/hooks/global-context.env"
 DOCS_DIR=""
 if [ -f "$HOOKS_ENV" ]; then
   DOCS_DIR="$(grep '^AGENT_CONTEXT_DIR_DEFAULT=' "$HOOKS_ENV" | cut -d= -f2)"
 fi
+# Migration: fall back to the retired review-context.env for the context dir.
+if [ -z "$DOCS_DIR" ] && [ -f "$HOME/.claude/hooks/review-context.env" ]; then
+  DOCS_DIR="$(grep '^AGENT_CONTEXT_DIR_DEFAULT=' "$HOME/.claude/hooks/review-context.env" | cut -d= -f2)"
+fi
 
 if [ -z "$DOCS_DIR" ]; then
-  read -rp "Docs folder relative to project root [docs]: " DOCS_DIR
+  # First run with no stored value: ask when a terminal is attached; a
+  # non-interactive run (piped install, CI) takes the default instead of
+  # dying on read's EOF under set -e.
+  if [ -t 0 ]; then
+    read -rp "Docs folder relative to project root [docs]: " DOCS_DIR
+  else
+    echo "no terminal attached — using default docs dir"
+  fi
   DOCS_DIR="${DOCS_DIR:-docs}"
 else
   echo "using context dir: $DOCS_DIR (from $HOOKS_ENV)"
@@ -70,12 +98,12 @@ merge_mcp_servers() {
     return
   fi
   if [ ! -f "$dst" ]; then
-    echo "skip: $dst not found (created by Claude Code, not by this script)"
-    return
+    printf '{}\n' > "$dst"
+    echo "created: $dst (empty seed — Claude Code adds its own state on first run)"
   fi
 
   expanded="$(mktemp)"
-  sed "s|{{HOME}}|$HOME|g" "$frag" > "$expanded"
+  sed -e "s|{{HOME}}|$HOME_NATIVE|g" -e "s|{{PEEK_MCP}}|$PEEK_MCP|g" "$frag" > "$expanded"
 
   tmp="$(mktemp)"
   jq --slurpfile frag "$expanded" \
@@ -94,6 +122,39 @@ merge_mcp_servers() {
   echo "merged: $frag -> $dst (mcpServers)"
 }
 
+# Serena writes its own config on first launch from the packaged template; the
+# template default auto-opens the web dashboard tab on every MCP session start.
+# Pin web_dashboard_open_on_launch to false — patch in place when the config
+# exists, else seed it from the packaged template.
+patch_serena_config() {
+  local cfg="$HOME/.serena/serena_config.yml" template tmp
+
+  if [ ! -f "$cfg" ]; then
+    template="$(find "$HOME/.local/share/uv/tools/serena-agent" \
+      -name serena_config.template.yml 2>/dev/null | head -1 || true)"
+    if [ -z "$template" ]; then
+      echo "skip: serena config (no $cfg and no packaged template found — run serena once, then re-sync)"
+      return
+    fi
+    mkdir -p "$HOME/.serena"
+    cp "$template" "$cfg"
+    echo "created: $cfg (from packaged template)"
+  fi
+
+  if grep -q '^web_dashboard_open_on_launch: [Ff]alse' "$cfg"; then
+    echo "unchanged: $cfg (web_dashboard_open_on_launch already false)"
+    return
+  fi
+  tmp="$(mktemp)"
+  sed 's/^web_dashboard_open_on_launch: .*/web_dashboard_open_on_launch: false/' "$cfg" > "$tmp" && mv "$tmp" "$cfg"
+  # sed only rewrites an uncommented key; if the template shipped it commented
+  # or absent, the override never landed — append it so the pin is effective.
+  if ! grep -q '^web_dashboard_open_on_launch: false' "$cfg"; then
+    printf '%s\n' 'web_dashboard_open_on_launch: false' >> "$cfg"
+  fi
+  echo "patched: $cfg (web_dashboard_open_on_launch: false)"
+}
+
 CLAUDE_MCP_SRC="$REPO_DIR/settings/claude_code/claude.json"
 CLAUDE_MCP_DST="$HOME/.claude.json"
 
@@ -110,6 +171,7 @@ fi
 merge_mcp_servers "$CLAUDE_MCP_SRC" "$CLAUDE_MCP_DST"
 if [ "$SYNC_SERENA" = 1 ]; then
   merge_mcp_servers "$REPO_DIR/settings/claude_code/claude.serena.json" "$CLAUDE_MCP_DST"
+  patch_serena_config
 fi
 
 HOOKS_SRC="$REPO_DIR/cmd/hooks"
@@ -129,15 +191,20 @@ if [ -d "$HOOKS_SRC" ]; then
     fi
   done
 
-  # Regenerate the env file but keep the user's toggle state (see review-context-toggle.sh).
+  # Regenerate the env file but keep the user's toggle state (see
+  # global-context-toggle.sh); migrate from the retired review-context.env once.
   ENABLED="1"
-  if [ -f "$HOOKS_DST/review-context.env" ]; then
+  if [ -f "$HOOKS_DST/global-context.env" ]; then
+    val="$(grep '^GLOBAL_CONTEXT_ENABLED=' "$HOOKS_DST/global-context.env" | cut -d= -f2 || true)"
+    [ -n "$val" ] && ENABLED="$val"
+  elif [ -f "$HOOKS_DST/review-context.env" ]; then
     val="$(grep '^REVIEW_CONTEXT_ENABLED=' "$HOOKS_DST/review-context.env" | cut -d= -f2 || true)"
     [ -n "$val" ] && ENABLED="$val"
   fi
   {
     echo "AGENT_CONTEXT_DIR_DEFAULT=$DOCS_DIR"
-    echo "REVIEW_CONTEXT_ENABLED=$ENABLED"
-  } > "$HOOKS_DST/review-context.env"
-  echo "wrote: $HOOKS_DST/review-context.env (AGENT_CONTEXT_DIR_DEFAULT=$DOCS_DIR, REVIEW_CONTEXT_ENABLED=$ENABLED)"
+    echo "GLOBAL_CONTEXT_ENABLED=$ENABLED"
+  } > "$HOOKS_DST/global-context.env"
+  rm -f "$HOOKS_DST/review-context.env"
+  echo "wrote: $HOOKS_DST/global-context.env (AGENT_CONTEXT_DIR_DEFAULT=$DOCS_DIR, GLOBAL_CONTEXT_ENABLED=$ENABLED)"
 fi
