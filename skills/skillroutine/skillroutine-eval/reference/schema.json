@@ -1,18 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "skill-run evaluation",
-  "description": "Machine-readable scoring of n runs of one skill: rubric derived from the skill's SKILL.md (compliance axis) and supplied quality context (quality axis), +1/0/-1 per rule per run, justification required for every non-+1 cell.",
+  "description": "Machine-readable scoring of n runs of one skill on three axes: self (the skill's own entry ids from the SKILL.md the run loaded), context (the context entry ids the run received), output (quality rules C<n> plus numeric metrics). +1/0/-1 per rule per run, justification required for every non-+1 cell.",
   "type": "object",
-  "required": ["eval", "rubric", "runs", "scores", "totals"],
+  "required": ["schemaVersion", "eval", "rubric", "runs", "scores", "totals"],
   "additionalProperties": false,
   "properties": {
+    "schemaVersion": { "const": "2.0" },
     "eval": {
       "type": "object",
       "required": ["skill", "skillMdPath", "date"],
       "additionalProperties": false,
       "properties": {
         "skill": { "type": "string", "description": "name of the evaluated skill" },
-        "skillMdPath": { "type": "string", "description": "repo-relative path of the evaluated SKILL.md" },
+        "skillMdPath": { "type": "string", "description": "repo-relative path of the source SKILL.md" },
         "date": { "type": "string", "description": "ISO date of the evaluation" },
         "manifest": { "type": "string", "description": "path of the manifest used" },
         "notes": { "type": "string", "description": "eval-level caveats, e.g. discrepancies against a prior hand-built scoring" }
@@ -26,11 +27,11 @@
         "required": ["id", "axis", "rule", "source"],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^[A-Z][0-9]+$" },
-          "axis": { "enum": ["compliance", "quality"] },
+          "id": { "type": "string", "pattern": "^((SKILL|ACTION|RULE|FACT)-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]{3}|C[0-9]+)$" },
+          "axis": { "enum": ["self", "context", "output"] },
           "phase": { "type": "string", "description": "skill phase the rule belongs to, e.g. P0" },
           "rule": { "type": "string" },
-          "source": { "type": "string", "description": "doc path(:line or rule id) the row derives from" }
+          "source": { "type": "string", "description": "doc path(:line or entry id) the row derives from" }
         }
       }
     },
@@ -39,11 +40,22 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "output", "model"],
+        "required": ["id", "output", "model", "skillMd"],
         "additionalProperties": false,
         "properties": {
           "id": { "type": "string" },
           "output": { "type": "string", "description": "path of the run's output artifact" },
+          "skillMd": { "type": "string", "description": "path of the rendered SKILL.md this run loaded — self rows are its entries" },
+          "transcript": { "type": "string", "description": "session JSONL path or peek session id" },
+          "variant": {
+            "type": "object",
+            "required": ["name", "disable"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "disable": { "type": "array", "items": { "type": "string" } }
+            }
+          },
           "model": {
             "type": "object",
             "required": ["id"],
@@ -90,6 +102,37 @@
         "then": { "required": ["ruleId", "runId", "score", "justification"] }
       }
     },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "unit", "direction", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "label": { "type": "string" },
+          "unit": { "type": "string" },
+          "direction": { "enum": ["higher", "lower"] },
+          "source": { "enum": ["probe", "telemetry", "user"] }
+        }
+      }
+    },
+    "metricValues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metricId", "runId", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "metricId": { "type": "string" },
+          "runId": { "type": "string" },
+          "value": { "type": ["number", "boolean", "null"] },
+          "note": { "type": "string", "description": "required when value is null — why it could not be collected" }
+        },
+        "if": { "properties": { "value": { "type": "null" } } },
+        "then": { "required": ["metricId", "runId", "value", "note"] }
+      }
+    },
     "totals": {
       "type": "array",
       "items": {
@@ -98,7 +141,23 @@
         "additionalProperties": false,
         "properties": {
           "runId": { "type": "string" },
-          "axis": { "enum": ["compliance", "quality"] },
+          "axis": { "enum": ["self", "context", "output"] },
+          "raw": { "type": "integer" },
+          "max": { "type": "integer" },
+          "pct": { "type": "number" }
+        }
+      }
+    },
+    "sharedTotals": {
+      "type": "array",
+      "description": "per run × axis over the rubric rows every run's variant has — present only when runs differ in variant",
+      "items": {
+        "type": "object",
+        "required": ["runId", "axis", "raw", "max", "pct"],
+        "additionalProperties": false,
+        "properties": {
+          "runId": { "type": "string" },
+          "axis": { "enum": ["self", "context", "output"] },
           "raw": { "type": "integer" },
           "max": { "type": "integer" },
           "pct": { "type": "number" }

@@ -1,6 +1,36 @@
 [
   {
-    "version": "v1.2",
+    "version": "1.8",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-08-23",
+    "text": "Retargeted skill registration references to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-08-20",
+    "text": "description format rule gains brevity caps (sentence <=160, total <=450 chars), test-enforced"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-08-18",
+    "text": "SKILL.md ## Changelog section retired — changelog.json is the only changelog; two version surfaces"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-08-18",
+    "text": "entry grammar for skill bodies (SKILL-<NAME>-<TOPIC>-NNN, payload entries), gate ACDSL-SKILL-005, /fmt skill migration route"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-08-18",
+    "text": "reference rename — fchange → fdesign change (fchange retired into the fdesign change route)"
+  },
+  {
+    "version": "1.2",
     "date": "2026-07-31",
     "text": "packaging contract label rename to com.smine.routine.*"
   },

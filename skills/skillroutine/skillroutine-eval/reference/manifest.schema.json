@@ -3,22 +3,53 @@
   "title": "skillroutine-eval manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["skill", "skillMd", "inputs", "runs"],
+  "required": ["schemaVersion", "skill", "skillMd", "inputs", "runs"],
   "properties": {
+    "schemaVersion": { "const": "2.0" },
     "skill": { "type": "string", "minLength": 1 },
-    "skillMd": { "type": "string", "minLength": 1 },
+    "skillMd": { "type": "string", "minLength": 1, "description": "source SKILL.md of the evaluated skill" },
     "contextFiles": { "type": "array", "items": { "type": "string" }, "default": [] },
     "qualityContext": { "type": "array", "items": { "type": "string" }, "default": [] },
     "inputs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-    "runs": {
+    "metrics": {
       "type": "array",
+      "description": "per-skill metrics added to the generic set; same shape as the output schema's metrics[] items",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "output", "model"],
+        "required": ["id", "label", "unit", "direction", "source"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "label": { "type": "string" },
+          "unit": { "type": "string" },
+          "direction": { "enum": ["higher", "lower"] },
+          "source": { "enum": ["probe", "telemetry", "user"] },
+          "command": { "type": "string", "description": "probe metrics: shell command run in the run's worktree; stdout is the value" }
+        }
+      }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "output", "model", "skillMd"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "output": { "type": "string", "minLength": 1 },
+          "skillMd": { "type": "string", "minLength": 1, "description": "the rendered SKILL.md this run loaded" },
+          "transcript": { "type": "string" },
+          "worktree": { "type": "string", "description": "run's worktree, for probe metrics" },
+          "variant": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "disable"],
+            "properties": {
+              "name": { "type": "string" },
+              "disable": { "type": "array", "items": { "type": "string" } }
+            }
+          },
           "model": {
             "type": "object",
             "additionalProperties": false,
@@ -37,8 +68,7 @@
             ]
           }
         }
-      },
-      "minItems": 1
+      }
     },
     "output": { "type": "string" },
     "md": { "type": "boolean", "default": false }

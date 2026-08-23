@@ -1,5 +1,40 @@
 [
   {
+    "version": "2.5",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "2.4",
+    "date": "2026-08-23",
+    "text": "matrix-mode resultsDir default moved to evals/<skill>-<base6>/ (durable results live under evals/, consumed by the config server's Tests tab)"
+  },
+  {
+    "version": "2.3",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "2.2",
+    "date": "2026-08-18",
+    "text": "self rows: --list-entries line documented as 1-based (rules render-skill now emits file line numbers)"
+  },
+  {
+    "version": "2.1",
+    "date": "2026-08-18",
+    "text": "allowed-tools permission manifest for headless runs; skill-eval routine named as the headless A/B runner (matrix mode stays interactive)"
+  },
+  {
+    "version": "2.0",
+    "date": "2026-08-18",
+    "text": "three axes (self/context/output) with entry ids as rubric ids, metrics table, variants in matrix mode, schema 2.0 + manifest 2.0; exemplar path corrected"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-08-12",
+    "text": "contextFiles example corrected to rules/plan.md (style/ layout retired)"
+  },
+  {
     "version": "1.7",
     "date": "2026-07-31",
     "text": "contextFiles example updated to style/plan.md"
