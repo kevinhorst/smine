@@ -42,3 +42,4 @@
 
 - Auto-memory files: one fact per file, named `type_kebab-slug.md` (type ∈ user | feedback | project | reference), frontmatter with name/description/metadata.type, indexed one line per fact in MEMORY.md.
 - Scope facts correctly: user-level facts belong here (edit via the smine repo, then sync), project facts in that project's auto-memory. Never stash cross-project facts in whichever project happens to be open.
+- Auto-memory is a staging area: durable facts get promoted into context docs by `/smine-memory` (migrate mode drains memory dirs into `proposals/context.json`); context docs are where they live long-term.

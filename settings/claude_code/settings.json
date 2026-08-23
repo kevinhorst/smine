@@ -1,46 +1,61 @@
 {
   "env": {
     "BASH_MAX_OUTPUT_LENGTH": "150000",
-    "MAX_MCP_OUTPUT_TOKENS": "100000"
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "MAX_MCP_OUTPUT_TOKENS": "100000",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:42442/otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_METRIC_EXPORT_INTERVAL": "10000"
   },
   "permissions": {
     "allow": [
-      "Bash(afplay /System/Library/Sounds/Funk.aiff)",
-      "Bash(afplay /System/Library/Sounds/Glass.aiff)",
-      "Bash(afplay /System/Library/Sounds/Hero.aiff)",
-      "Bash({{HOME}}/.claude/agents/tools/remove_agent_worktrees.sh --delete-branch claude/*)",
+      "Bash(/Users/kevinpersonal/.claude/agents/tools/remove_agent_worktrees.sh --delete-branch claude/*)",
+      "Bash(bash cmd/context/context_record.sh *)",
       "Bash(cat *)",
+      "Bash(cmd/context/context_record.sh *)",
+      "Bash(cp *)",
       "Bash(defaults read *)",
       "Bash(echo *)",
       "Bash(find *)",
       "Bash(gh *)",
-      "Bash(git * branch *)",
-      "Bash(git * log *)",
-      "Bash(git * show *)",
+      "Bash(git * branch*)",
+      "Bash(git * log*)",
+      "Bash(git * show*)",
       "Bash(git * stash list)",
-      "Bash(git * status *)",
-      "Bash(git add *)",
+      "Bash(git * status*)",
+      "Bash(git add*)",
       "Bash(git commit -m *)",
-      "Bash(git diff *)",
-      "Bash(git log *)",
-      "Bash(git rev-parse *)",
-      "Bash(git status)",
-      "Bash(git status *)",
-      "Bash(git worktree list)",
-      "Bash(git worktree list *)",
+      "Bash(git commit-tree*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git merge-base*)",
+      "Bash(git rev-list*)",
+      "Bash(git rev-parse*)",
+      "Bash(git status*)",
+      "Bash(git worktree add*)",
+      "Bash(git worktree list*)",
+      "Bash(git worktree remove*)",
+      "Bash(git write-tree*)",
       "Bash(go build *)",
       "Bash(go fix *)",
+      "Bash(go run ./cmd/acdsl *)",
+      "Bash(go run ./cmd/rules *)",
       "Bash(go test *)",
       "Bash(go vet *)",
       "Bash(gofmt *)",
+      "Bash(goimports *)",
       "Bash(grep *)",
       "Bash(head *)",
       "Bash(ioreg -l)",
       "Bash(jq *)",
       "Bash(ls *)",
-      "Bash(make build *)",
-      "Bash(make generate *)",
-      "Bash(make test *)",
+      "Bash(make audit*)",
+      "Bash(make build*)",
+      "Bash(make generate*)",
+      "Bash(make lint*)",
+      "Bash(make test*)",
+      "Bash(mkdir *)",
       "Bash(pwd)",
       "Bash(sed -n *)",
       "Bash(sw_vers)",
@@ -48,9 +63,8 @@
       "Bash(wc *)",
       "Bash(which *)",
       "Bash(~/.claude/agents/tools/remove_agent_worktrees.sh --delete-branch claude/*)",
-      "Read(/{{HOME}}/.claude/**)",
-      "Read(/{{HOME}}/GolandProjects/**)",
-      "Read(/{{HOME}}/Library/Logs/**)",
+      "Bash(~/.claude/hooks/play-sound.sh *)",
+      "Skill(jq)",
       "Skill(update-config)",
       "Skill(update-config:*)",
       "WebFetch(domain:code.claude.com)",
@@ -92,11 +106,14 @@
     "ask": [
       "Bash(python3 -c *)",
       "Bash(python3)",
+      "Edit(**/*.acdsl)",
+      "Edit(acdsl/**)",
+      "Write(**/*.acdsl)",
+      "Write(acdsl/**)",
       "mcp__goland__execute_sql_query"
     ],
     "defaultMode": "acceptEdits",
     "additionalDirectories": [
-      "{{HOME}}/.claude"
     ]
   },
   "model": "claude-fable-5",
@@ -120,7 +137,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Funk.aiff",
+            "command": "bash ~/.claude/hooks/play-sound.sh notify",
             "async": true
           }
         ]
@@ -131,8 +148,61 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Funk.aiff",
+            "command": "bash ~/.claude/hooks/play-sound.sh notify",
             "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/skill-context.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/acdsl-context.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/read-gate.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/acdsl-project.sh",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/worktree-write-guard.sh",
+            "timeout": 10
           }
         ]
       }
@@ -145,6 +215,14 @@
             "command": "bash ~/.claude/hooks/worktree-sessionstart.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/global-context.sh"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -152,7 +230,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Hero.aiff",
+            "command": "bash ~/.claude/hooks/play-sound.sh stop",
             "async": true
           }
         ]
@@ -163,7 +241,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/review-context.sh"
+            "command": "bash ~/.claude/hooks/global-context.sh"
           }
         ]
       }
@@ -181,7 +259,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/review-context.sh"
+            "command": "bash ~/.claude/hooks/skill-context.sh",
+            "timeout": 10
           }
         ]
       }
@@ -195,5 +274,7 @@
   "theme": "dark",
   "autoCompactEnabled": false,
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "useAutoModeDuringPlan": false,
+  "disableBundledSkills": true
 }
