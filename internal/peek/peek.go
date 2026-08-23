@@ -32,6 +32,12 @@ func NewClient(endpoint string) *Client {
 	return &Client{endpoint: endpoint}
 }
 
+// Endpoint reports the configured peek-mcp URL — degraded-mode banners name
+// it because the root-cause error alone often lacks the address.
+func (c *Client) Endpoint() string {
+	return c.endpoint
+}
+
 func (c *Client) connect(ctx context.Context) (*mcpclient.Client, error) {
 	mcpClient, err := mcpclient.NewStreamableHttpClient(c.endpoint)
 	if err != nil {
