@@ -4,7 +4,7 @@ description: Extract specific fields from JSON files efficiently using jq instea
 metadata:
   mcpmarket-version: 1.0.0
 author: tychohq
-version: 1.7
+version: 1.9
 allowed-tools: Bash(jq *), Read
 ---
 # jq: JSON Data Extraction Tool
@@ -15,7 +15,7 @@ Use jq to extract specific fields from JSON files without loading entire file co
 
 **Use when:** extracting specific fields from JSON/JSONL files — large files where only a subset is needed, nested structure queries, filtering/transforming structured data. Saves 80-95% context vs reading entire files.
 **Don't use when:** file is small (<50 lines) or you need to understand overall structure — just use Read. Making edits that need full context — Read first. The data is not JSON/JSONL.
-**Workflow position:** standalone — used as a utility by other skills (smine-summary, skillroutine-eval) (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone — used as a utility by other skills (smine-batch, skillroutine-eval) (see README.md § Skill map, smine repo).
 
 ## Common File Types
 
@@ -57,14 +57,3 @@ For comprehensive jq patterns, syntax, and examples, load [jq guide](./reference
 - Suggested: small / low
 - Reason: recipe lookup + jq invocation
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.7 (2026-07-30): allowed-tools permission manifest declared
-- v1.6 (2026-07-30): moved under skills/agent/ group; name and behavior unchanged
-- v1.5 (2026-07-27): reference renames — ssummarize → smine-summary, couchskill-eval → skillroutine-eval
-- v1.4 (2026-07-24): delegation declaration removed — small skills are never delegatable
-- v1.3 (2026-07-22): classification unattended-safe (Delegation + Command surface), effort low
-- v1.2 (2026-07-19): reference rename: eval-skill → couchskill-eval; moved under skills/util/
-- v1.1 (2026-07-13): When-to-use section standardized to match other skills
-- v1.0 (2026-06-29): initial version

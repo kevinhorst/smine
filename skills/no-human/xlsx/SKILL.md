@@ -3,14 +3,14 @@ name: xlsx
 description: "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved."
 license: Proprietary. LICENSE.txt has complete terms
 author: Anthropic
-version: 1.2
+version: 1.3
 ---
 
 ## When to use
 
 **Use when:** a spreadsheet file (.xlsx, .xlsm, .csv, .tsv) is the primary input or output — reading, editing, creating, or converting tabular data files. Trigger especially when the user references a spreadsheet file by name or path.
 **Don't use when:** the primary deliverable is a Word document — anthropic-skills:docx. HTML report, standalone Python script, database pipeline, or Google Sheets API integration — even if tabular data is involved. The deliverable is a presentation — anthropic-skills:pptx.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone (see README.md § Skill map, smine repo).
 
 # Requirements for Outputs
 
@@ -304,9 +304,3 @@ The script returns JSON with error details:
 - Suggested: mid-tier / medium
 - Reason: script-driven spreadsheet work via openpyxl recipes
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.2 (2026-07-30): moved under skills/agent/ group; name and behavior unchanged
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-07-10): initial version
