@@ -1,0 +1,162 @@
+[
+  {
+    "version": "1.31",
+    "date": "2026-08-23",
+    "text": "evalscript renamed to verifier across prose — gate.verifier field and sketched-verifier wording"
+  },
+  {
+    "version": "1.30",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.29",
+    "date": "2026-08-23",
+    "text": "seam update for the smine-memory redesign: context.json is shared with smine-memory (fact-surface groups, runs after this skill); fact/knowledge candidates skip to smine-memory instead of memory"
+  },
+  {
+    "version": "1.28",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.27",
+    "date": "2026-08-23",
+    "text": "acdsl-context: key rename — the ACDSL declaration key moved off Claude Code's native context: frontmatter field; prose references updated"
+  },
+  {
+    "version": "1.26",
+    "date": "2026-08-18",
+    "text": "mines the used-context record — context-use findings routed (violated-despite-present → gate route, needed-not-present → declaration/marker/new-rule, present-irrelevant → eviction with the ≥300 clean-runs verdict bar), channel stats in the run report; legacy status-less context.json archived to rejected.md and reset"
+  },
+  {
+    "version": "1.25",
+    "date": "2026-08-13",
+    "text": "skill-vs-context boundary tightened — only procedure changes reroute to /smine-skills; entries serving named skills carry the context: declaration in their change (one rule, one vote); Finish validates via go run ./cmd/acdsl check (Bash added to allowed-tools)"
+  },
+  {
+    "version": "1.24",
+    "date": "2026-08-12",
+    "text": "dynamic scope roster — input glob sessions/*/ (every scope dir except proposals/), personal/work no longer hardcoded"
+  },
+  {
+    "version": "1.23",
+    "date": "2026-08-11",
+    "text": "renamed smine-style → smine-context (name/H1/trigger/workflow position); the kind was already context, this catches the skill name up (--no-style → --no-context in /smine)"
+  },
+  {
+    "version": "1.22",
+    "date": "2026-08-10",
+    "text": "reconciliation guard — step 3 also sweeps existing proposed entries already applied/archived; title contract — split siblings never repeat a shared candidate heading"
+  },
+  {
+    "version": "1.21",
+    "date": "2026-08-09",
+    "text": "repo tags for reach routing — repo:<name> on repo-concentrated evidence, untagged = global; smine-apply maps tags to Reach"
+  },
+  {
+    "version": "1.20",
+    "date": "2026-08-09",
+    "text": "output is sessions/proposals/context.json (kind context, single artifact — kind style retired); target paths on the facts/rules/actions layout"
+  },
+  {
+    "version": "1.19",
+    "date": "2026-08-09",
+    "text": "identity-grammar wording (ACTION activity chapters)"
+  },
+  {
+    "version": "1.18",
+    "date": "2026-08-09",
+    "text": "sketched-evalscript proposals must carry violation + clean snippets as fixture seeds, else they stay J-form prose"
+  },
+  {
+    "version": "1.17",
+    "date": "2026-08-09",
+    "text": "context proposals carry gate {band, evalscript, anchor}; thresholds tightened (2 sessions, 3 + worked example + ab-required for J-band)"
+  },
+  {
+    "version": "1.16",
+    "date": "2026-07-31",
+    "text": "session-scope rename to personal/work (input globs)"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-07-30",
+    "text": "renamed smine-rules → smine-style (kind rename rules → style; output style.json); per-run production cap arg"
+  },
+  {
+    "version": "1.14",
+    "date": "2026-07-31",
+    "text": "navigating.md rename; stale context/go surface folded into context/style"
+  },
+  {
+    "version": "1.13",
+    "date": "2026-07-31",
+    "text": "activity-scoped context — target surfaces are rules/ activity chapters and style/ guides"
+  },
+  {
+    "version": "1.12",
+    "date": "2026-07-30",
+    "text": "context redesign — target surfaces: context/rules entries + relocated skill assets"
+  },
+  {
+    "version": "1.11",
+    "date": "2026-07-30",
+    "text": "allowed-tools permission manifest declared"
+  },
+  {
+    "version": "1.10",
+    "date": "2026-07-27",
+    "text": "renamed analyze-rules → smine-rules; part of the /smine fan-out; sibling reroute → /smine-skills"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-07-26",
+    "text": "JSON-only — rules.json is the sole authoritative artifact; the md form and the regenerate-from-md step are gone, evidence/format sections re-anchored to schema fields"
+  },
+  {
+    "version": "1.8",
+    "date": "2026-07-26",
+    "text": "proposed-date stamp — new items carry proposed: <date> (schema.json bump)"
+  },
+  {
+    "version": "1.7",
+    "date": "2026-07-24",
+    "text": "one proposal = one change = one vote — proposal-level change field, evidence provenance-only, --<n> split ids (schema.json bump)"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-07-24",
+    "text": "mechanical Archive-suppression step (step 3) replaces the advisory archive line; Diff & write gains the Amendments-beat-New justification requirement"
+  },
+  {
+    "version": "1.5",
+    "date": "2026-07-22",
+    "text": "archive doctrine incl. postponed 14-day suppression; status vocab completed"
+  },
+  {
+    "version": "1.4",
+    "date": "2026-07-19",
+    "text": "ledger carries a Last-analyzed-batch first line, updated on every append"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-07-19",
+    "text": "per-session note bullets replace the evidence text blob; dimension must match batch findings"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-07-19",
+    "text": "structured evidence contract (title + 1-3 ranked session ids + optional change/snippets)"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-07-13",
+    "text": "When-to-use section (routing, preconditions, workflow position)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-11",
+    "text": "initial version"
+  }
+]

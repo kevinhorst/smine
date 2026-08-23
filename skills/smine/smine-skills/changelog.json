@@ -1,6 +1,46 @@
 [
   {
-    "version": "v1.14",
+    "version": "1.22",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.21",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.20",
+    "date": "2026-08-23",
+    "text": "acdsl-context: key rename — the ACDSL declaration key moved off Claude Code's native context: frontmatter field; prose references updated"
+  },
+  {
+    "version": "1.19",
+    "date": "2026-08-18",
+    "text": "absorbs smine-workflows — workflow candidates are a third kind, stored in the \"Workflows (skill-bundled scripts)\" group of skills.json with the owning skill as target"
+  },
+  {
+    "version": "1.18",
+    "date": "2026-08-13",
+    "text": "skill-edit-vs-context boundary (step 2b) — knowledge a skill needs reroutes to /smine-context as entry + context: declaration, cross-skill rules never split into sibling edits; Finish validates via go run ./cmd/acdsl check (Bash added to allowed-tools)"
+  },
+  {
+    "version": "1.17",
+    "date": "2026-08-12",
+    "text": "dynamic scope roster — input glob sessions/*/ (every scope dir except proposals/), personal/work no longer hardcoded"
+  },
+  {
+    "version": "1.16",
+    "date": "2026-08-10",
+    "text": "reconciliation guard — step 3 also sweeps existing proposed entries (drop those already shipped in done.md or present in the target skill; re-point renamed targets across id/title/target); title contract <target> — <distinct name>, split siblings never repeat a shared candidate heading"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-08-09",
+    "text": "repo tags for routing — repo:<name> on repo-concentrated evidence; foreign-repo proposals disposition manual-external"
+  },
+  {
+    "version": "1.14",
     "date": "2026-07-31",
     "text": "session-scope rename to personal/work (input globs)"
   },

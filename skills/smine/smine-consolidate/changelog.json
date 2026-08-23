@@ -1,0 +1,17 @@
+[
+  {
+    "version": "1.2",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-08-23",
+    "text": "acdsl-context: key rename — the ACDSL declaration key moved off Claude Code's native context: frontmatter field; prose references updated"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-08-13",
+    "text": "initial version — proposals mode (dedup, re-home, presentation, schema/audit gate); skills/context modes reserved"
+  }
+]

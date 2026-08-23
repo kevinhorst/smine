@@ -1,5 +1,70 @@
 [
   {
+    "version": "1.25",
+    "date": "2026-08-23",
+    "text": "evalscript renamed to verifier across prose — gate.verifier field, manual-verifier disposition, cmd/acdsl/verifiers path"
+  },
+  {
+    "version": "1.24",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.23",
+    "date": "2026-08-23",
+    "text": "Retargeted doc pointers to README.md § Skill map and skills/README.md (docs reorg)"
+  },
+  {
+    "version": "1.22",
+    "date": "2026-08-20",
+    "text": "description first sentence trimmed under the new brevity caps"
+  },
+  {
+    "version": "1.21",
+    "date": "2026-08-18",
+    "text": "reference update — two version surfaces (SKILL.md ## Changelog section retired)"
+  },
+  {
+    "version": "1.20",
+    "date": "2026-08-18",
+    "text": "eviction change kinds (projected=\"false\" flip, context: declaration removal); Workflows group of skills.json implemented as a workflow script under the target skill; workflows dimension retired from always-mode"
+  },
+  {
+    "version": "1.19",
+    "date": "2026-08-10",
+    "text": "already-present guard — Implementations verify the change isn't already shipped (done.md / target) before applying; archive as already-present instead of duplicating"
+  },
+  {
+    "version": "1.18",
+    "date": "2026-08-09",
+    "text": "reach self-keyword retired — this repo is named smine (reach=\"smine\" / Reach: smine)"
+  },
+  {
+    "version": "1.17",
+    "date": "2026-08-09",
+    "text": "reach routing from repo: tags (repo/global/name-list on applied entries and rule lines); generation gains the repo-wide check -rule dry-run; manual-external scoped to non-context kinds"
+  },
+  {
+    "version": "1.16",
+    "date": "2026-08-09",
+    "text": "gate routing keyed to kind context (sessions/proposals/context.json); kind style retired from routing and auto-apply dimensions"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-08-09",
+    "text": "id-grammar migration citation refresh (ACDSL-GOLANG-GEN-001)"
+  },
+  {
+    "version": "1.14",
+    "date": "2026-08-09",
+    "text": "evalscript generation route — bounded by acdsl+evalgen.json, self-validated via fixtures and audit; manual-evalscript is the failure fallback; unattended generation opt-in"
+  },
+  {
+    "version": "1.13",
+    "date": "2026-08-09",
+    "text": "gated-apply route for style/context (rules.acdsl + fixtures + audit), manual-evalscript disposition, ab-required auto-apply hold"
+  },
+  {
     "version": "1.12",
     "date": "2026-07-30",
     "text": "auto-apply modes — decide (rules-file judged, fail-closed, autoApplyHeld write-back) and always (dimension-scoped) fill remaining cap slots after explicit votes; kind rename rules → style; outcome auto-applied"

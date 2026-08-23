@@ -1,5 +1,55 @@
 [
   {
+    "version": "1.24",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.23",
+    "date": "2026-08-23",
+    "text": "Retargeted doc pointers to README.md § Skill map and skills/README.md (docs reorg)"
+  },
+  {
+    "version": "1.22",
+    "date": "2026-08-20",
+    "text": "description compressed under the brevity caps"
+  },
+  {
+    "version": "1.21",
+    "date": "2026-08-18",
+    "text": "Downstream note lists the four fan-out dimensions (workflows dimension retired)"
+  },
+  {
+    "version": "1.20",
+    "date": "2026-08-18",
+    "text": "--agents (Codex mined by default), used-context record via cmd/context/context_record.sh + \"Context used:\" report line, context-use finding dimension, batch schema bump (sessions[].agent, sessions[].context, findings[].contextUse)"
+  },
+  {
+    "version": "1.19",
+    "date": "2026-08-12",
+    "text": "dynamic scopes — --scopes arg (restrict to named scope dirs, default all under sessions/ except proposals/); schema: .batch.scope is the scope directory name (org-name values like aqms retired)"
+  },
+  {
+    "version": "1.18",
+    "date": "2026-08-11",
+    "text": "absorbs smine-summary — §4 emits the batch's schema-conformant JSON (reference/schema.json moved here) in the same run as the md, jq-validated; smine-summary retired, JSON is no longer a fan-out dimension"
+  },
+  {
+    "version": "1.17",
+    "date": "2026-08-09",
+    "text": "--repos roster arg — mechanical repo attribution by cwd prefix match, [external] tag outside the roster, external sessions still mined"
+  },
+  {
+    "version": "1.16",
+    "date": "2026-08-09",
+    "text": "identity-grammar wording (ACTION activity chapters)"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-08-09",
+    "text": "session_events as pre-read signal (Signals line) + acdsl verdict-log join by branch (Gate verdicts line)"
+  },
+  {
     "version": "1.14",
     "date": "2026-07-31",
     "text": "activity-scoped context — enforcement-surface list names style/ guides and rules/ activity chapters"

@@ -1,6 +1,26 @@
 [
   {
-    "version": "v1.13",
+    "version": "1.17",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.16",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-08-12",
+    "text": "dynamic scope roster — input glob sessions/*/ (every scope dir except proposals/), personal/work no longer hardcoded"
+  },
+  {
+    "version": "1.14",
+    "date": "2026-08-09",
+    "text": "repo tags for routing — repo:<name> on repo-concentrated evidence; foreign-repo proposals disposition manual-external"
+  },
+  {
+    "version": "1.13",
     "date": "2026-07-31",
     "text": "session-scope rename to personal/work (input globs)"
   },
