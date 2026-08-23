@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Coverage for routines/_lib/worktree.sh (local-only contract): fresh group
-# branch from main + commit, reuse while unmerged, reset once merged, own-group
-# stale-worktree sweep, sibling-group survival, no-change skip, commit-body
-# handoff. Needs only git + a temp dir (no gh, no network; the flock-based
-# group lock is exercised manually, not here).
+# Coverage for routines/_lib/worktree.sh (local-only contract): a fresh dated
+# branch per run, never reused; a new run based on the newest un-merged dated
+# branch (chain tip) else main; same-day collision counter; merged-branch prune;
+# all-[failed] chain discard; own-group stale-worktree sweep; sibling-group
+# survival; the open-instance limit; no-change skip; commit-body handoff. Needs
+# only git + a temp dir (no gh, no network; the flock-based group lock is
+# exercised manually, not here).
 set -euo pipefail
 
 REPO_DIR=$(cd "$(dirname "$0")/../.." && pwd)
@@ -55,44 +57,139 @@ run_lib_group() {
       && ROUTINE_WT_ROOT="$ROUTINE_WT_ROOT_OVERRIDE" && "$@" )
 }
 
-test_fresh_branch_and_commit() {
-  setup_case fresh
-  wt=$(run_lib routine_worktree_create) || fail "create failed"
-  [[ -d "$wt" ]] || fail "worktree missing"
-  printf '%s\n' out > "$wt/sessions-out"
-  run_lib routine_worktree_publish 0 || fail "publish failed"
-  [[ -n "$(git -C "$repo_root" rev-list main..routine/probe-nightly)" ]] \
-    || fail "no commit on routine/probe-nightly ahead of main"
-  [[ ! -d "$wt" ]] || fail "worktree not removed after publish"
+run_lib_env() {
+  # like run_lib, but exports one extra VAR=value into the subshell (the limit)
+  local assignment=$1
+  shift
+  ( HOME="$TMP" && export "$assignment" && source "$LIB" \
+      && ROUTINE_WT_ROOT="$ROUTINE_WT_ROOT_OVERRIDE" && "$@" )
 }
 
-test_reuse_with_unmerged_commits() {
-  setup_case reuse
+# branch checked out in a worktree = the dated branch create just minted
+head_branch() {
+  git -C "$1" rev-parse --abbrev-ref HEAD
+}
+
+test_dated_branch_name() {
+  setup_case dated
+  wt=$(run_lib routine_worktree_create) || fail "create failed"
+  [[ -d "$wt" ]] || fail "worktree missing"
+  local branch
+  branch=$(head_branch "$wt")
+  [[ "$branch" =~ ^claude-routines/probe-nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] \
+    || fail "branch name not dated: $branch"
+}
+
+test_same_day_collision() {
+  setup_case collision
   wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  local b1 b2
+  b1=$(head_branch "$wt")
+  printf '%s\n' one > "$wt/n1"
+  run_lib routine_worktree_publish 0 || fail "first publish failed"
+  # same-day second run: the plain date is taken, so the counter kicks in
+  wt=$(run_lib routine_worktree_create) || fail "second create failed"
+  b2=$(head_branch "$wt")
+  [[ "$b2" == "$b1-2" ]] || fail "second same-day branch not -2 suffixed: $b1 -> $b2"
+  git -C "$repo_root" rev-parse --quiet --verify "refs/heads/$b1" >/dev/null \
+    || fail "first branch vanished (should persist un-merged)"
+}
+
+test_base_off_latest() {
+  setup_case baselatest
+  wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  local b1 b2
+  b1=$(head_branch "$wt")
   printf '%s\n' one > "$wt/night-one"
   run_lib routine_worktree_publish 0 || fail "first publish failed"
-  # main never merged the branch -> the commit is still unmerged; reuse it
+  # main never merged the branch -> new run is a distinct ref based on the tip
   wt=$(run_lib routine_worktree_create) || fail "second create failed"
-  [[ -f "$wt/night-one" ]] || fail "branch reset despite unmerged commits"
+  b2=$(head_branch "$wt")
+  [[ "$b2" != "$b1" ]] || fail "second run reused the branch ref"
+  [[ -f "$wt/night-one" ]] || fail "new branch not based on the un-merged tip"
 }
 
 test_reset_after_merge() {
   setup_case reset
   wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  local b1 b2
+  b1=$(head_branch "$wt")
   printf '%s\n' run-one > "$wt/run-one"
   run_lib routine_worktree_publish 0 || fail "first publish failed"
-  # accept the run: merge routine/probe-nightly into main, then main advances on its
-  # own. A merged branch is an ancestor of main -> next create resets to main
-  # (fresh) rather than reusing. (A local merge carries run-one into main, so
-  # file-presence cannot discriminate reset from reuse — advancing main can.)
-  git -C "$repo_root" merge -q routine/probe-nightly || fail "merge failed"
+  # accept the run: merge the dated branch into main, then main advances on its
+  # own. The merged branch is an ancestor of main -> next create prunes it and
+  # bases the new run on the advanced main.
+  git -C "$repo_root" merge -q "$b1" || fail "merge failed"
   printf '%s\n' later > "$repo_root/main-later"
   git -C "$repo_root" add main-later
   git -C "$repo_root" commit -qm "main advances"
   wt=$(run_lib routine_worktree_create) || fail "second create failed"
-  [[ -f "$wt/main-later" ]] || fail "branch not reset onto advanced main"
-  [[ -z "$(git -C "$repo_root" rev-list main..routine/probe-nightly)" ]] \
-    || fail "reset branch carries commits main lacks"
+  b2=$(head_branch "$wt")
+  [[ -f "$wt/main-later" ]] || fail "branch not based on advanced main"
+  [[ -z "$(git -C "$repo_root" rev-list main.."$b2")" ]] \
+    || fail "new branch carries commits main lacks"
+  # b1 was pruned; the new run re-uses the same date name, so assert the count,
+  # not the name — a surviving b1 would leave two dated branches.
+  local count
+  count=$(git -C "$repo_root" for-each-ref --format='%(refname:short)' \
+    'refs/heads/claude-routines/probe-nightly-*' | grep -c . || true)
+  [[ "$count" -eq 1 ]] || fail "merged dated branch not pruned (expected 1 open, got $count)"
+}
+
+test_failed_chain_discard() {
+  setup_case failreset
+  wt=$(run_lib routine_worktree_create) || fail "create failed"
+  local b1 b2
+  b1=$(head_branch "$wt")
+  printf '%s\n' partial > "$wt/partial"
+  # a failed claude run (non-zero exit) still publishes, but marks the subject
+  run_lib routine_worktree_publish 1 || fail "publish failed"
+  git -C "$repo_root" log -1 --format=%s "$b1" | grep -q '\[failed\]' \
+    || fail "failure commit subject missing [failed] marker"
+  # next create: the only un-merged chain is a failed run -> discard, base on main
+  wt=$(run_lib routine_worktree_create) || fail "second create failed"
+  b2=$(head_branch "$wt")
+  [[ ! -f "$wt/partial" ]] || fail "new branch not based on main despite only failed runs"
+  [[ -z "$(git -C "$repo_root" rev-list main.."$b2")" ]] \
+    || fail "new branch still carries the failed commit"
+  # b1 was discarded; the new run re-uses the same date name, so assert the
+  # count — a surviving failed b1 would leave two dated branches.
+  local count
+  count=$(git -C "$repo_root" for-each-ref --format='%(refname:short)' \
+    'refs/heads/claude-routines/probe-nightly-*' | grep -c . || true)
+  [[ "$count" -eq 1 ]] || fail "all-[failed] chain not discarded (expected 1 open, got $count)"
+}
+
+test_real_commit_survives_among_failures() {
+  setup_case failkeep
+  wt=$(run_lib routine_worktree_create) || fail "create failed"
+  printf '%s\n' good > "$wt/good"
+  run_lib routine_worktree_publish 0 || fail "success publish failed"
+  wt=$(run_lib routine_worktree_create) || fail "second create failed"
+  printf '%s\n' bad > "$wt/bad"
+  run_lib routine_worktree_publish 1 || fail "failure publish failed"
+  # chain now holds one real + one failed commit -> kept, next run based on it
+  wt=$(run_lib routine_worktree_create) || fail "third create failed"
+  [[ -f "$wt/good" ]] || fail "chain discarded despite a reviewable commit"
+}
+
+test_open_limit_skip() {
+  setup_case limit
+  wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  printf '%s\n' a > "$wt/a"
+  run_lib routine_worktree_publish 0 || fail "first publish failed"
+  wt=$(run_lib routine_worktree_create) || fail "second create failed"
+  printf '%s\n' b > "$wt/b"
+  run_lib routine_worktree_publish 0 || fail "second publish failed"
+  # two un-merged dated branches now open; a third create at the cap must refuse
+  local rc=0
+  wt=$(run_lib_env "ROUTINE_MAX_OPEN_BRANCHES=2" routine_worktree_create) || rc=$?
+  [[ "$rc" -eq 3 ]] || fail "expected rc 3 at limit, got $rc"
+  [[ ! -d "$ROUTINE_WT_ROOT_OVERRIDE/probe-nightly" ]] || fail "worktree created despite limit"
+  local count
+  count=$(git -C "$repo_root" for-each-ref --format='%(refname:short)' \
+    'refs/heads/claude-routines/probe-nightly-*' | grep -c . || true)
+  [[ "$count" -eq 2 ]] || fail "expected 2 open branches, got $count"
 }
 
 test_stale_worktree_sweep() {
@@ -106,75 +203,55 @@ test_stale_worktree_sweep() {
 test_sibling_group_survival() {
   setup_case sibling
   wt_a=$(run_lib_group alpha routine_worktree_create) || fail "alpha create failed"
+  local ba bb
+  ba=$(head_branch "$wt_a")
   printf '%s\n' wip > "$wt_a/wip"
   # a concurrent run of a different group must not touch alpha's live worktree
   wt_b=$(run_lib_group beta routine_worktree_create) || fail "beta create failed"
+  bb=$(head_branch "$wt_b")
   [[ -d "$wt_b" ]] || fail "beta worktree missing"
   [[ -f "$wt_a/wip" ]] || fail "sibling group's live worktree was destroyed"
   [[ "$wt_a" != "$wt_b" ]] || fail "groups share a worktree path"
-  git -C "$repo_root" rev-parse --quiet --verify routine/alpha >/dev/null \
-    && git -C "$repo_root" rev-parse --quiet --verify routine/beta >/dev/null \
-    || fail "per-group branches missing"
+  [[ "$ba" == claude-routines/alpha-* ]] || fail "alpha branch prefix wrong: $ba"
+  [[ "$bb" == claude-routines/beta-* ]] || fail "beta branch prefix wrong: $bb"
 }
 
 test_no_change_no_commit() {
   setup_case nochange
   wt=$(run_lib routine_worktree_create) || fail "create failed"
+  local b1
+  b1=$(head_branch "$wt")
   run_lib routine_worktree_publish 0 || fail "publish failed"
   # clean tree -> no commit; branch tip equals main
-  [[ -z "$(git -C "$repo_root" rev-list main..routine/probe-nightly)" ]] \
+  [[ -z "$(git -C "$repo_root" rev-list main.."$b1")" ]] \
     || fail "empty run created a commit"
-}
-
-test_failed_run_marks_and_resets() {
-  setup_case failreset
-  wt=$(run_lib routine_worktree_create) || fail "create failed"
-  printf '%s\n' partial > "$wt/partial"
-  # a failed claude run (non-zero exit) still publishes, but marks the subject
-  run_lib routine_worktree_publish 1 || fail "publish failed"
-  git -C "$repo_root" log -1 --format=%s routine/probe-nightly | grep -q '\[failed\]' \
-    || fail "failure commit subject missing [failed] marker"
-  # next create: the only unmerged commit is a failed run -> reset to main
-  wt=$(run_lib routine_worktree_create) || fail "second create failed"
-  [[ ! -f "$wt/partial" ]] || fail "branch not reset despite only failed runs"
-  [[ -z "$(git -C "$repo_root" rev-list main..routine/probe-nightly)" ]] \
-    || fail "reset branch still carries the failed commit"
-}
-
-test_real_commit_survives_among_failures() {
-  setup_case failkeep
-  wt=$(run_lib routine_worktree_create) || fail "create failed"
-  printf '%s\n' good > "$wt/good"
-  run_lib routine_worktree_publish 0 || fail "success publish failed"
-  wt=$(run_lib routine_worktree_create) || fail "second create failed"
-  printf '%s\n' bad > "$wt/bad"
-  run_lib routine_worktree_publish 1 || fail "failure publish failed"
-  # branch now holds one real + one failed commit -> must be kept, not reset
-  wt=$(run_lib routine_worktree_create) || fail "third create failed"
-  [[ -f "$wt/good" ]] || fail "branch reset despite a reviewable commit"
 }
 
 test_commit_body_handoff() {
   setup_case body
   wt=$(run_lib routine_worktree_create) || fail "create failed"
+  local b1
+  b1=$(head_branch "$wt")
   printf '%s\n' change > "$wt/changed"
   printf '%s\n' 'disposition table body' > "$wt/.routine-commit-body"
   run_lib routine_worktree_publish 0 || fail "publish failed"
-  git -C "$repo_root" log -1 --format=%b routine/probe-nightly | grep -q "disposition table body" \
+  git -C "$repo_root" log -1 --format=%b "$b1" | grep -q "disposition table body" \
     || fail "commit body missing the handoff content"
-  git -C "$repo_root" show --name-only --format= routine/probe-nightly | grep -q '\.routine-commit-body' \
+  git -C "$repo_root" show --name-only --format= "$b1" | grep -q '\.routine-commit-body' \
     && fail "handoff file entered the commit"
-  git -C "$repo_root" show --name-only --format= routine/probe-nightly | grep -q '^changed$' \
+  git -C "$repo_root" show --name-only --format= "$b1" | grep -q '^changed$' \
     || fail "changed file not committed"
 }
 
-test_fresh_branch_and_commit
-test_reuse_with_unmerged_commits
+test_dated_branch_name
+test_same_day_collision
+test_base_off_latest
 test_reset_after_merge
+test_failed_chain_discard
+test_real_commit_survives_among_failures
+test_open_limit_skip
 test_stale_worktree_sweep
 test_sibling_group_survival
 test_no_change_no_commit
-test_failed_run_marks_and_resets
-test_real_commit_survives_among_failures
 test_commit_body_handoff
 echo "OK"

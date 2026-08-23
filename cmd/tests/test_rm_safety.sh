@@ -31,11 +31,11 @@ test_sync_skills() {
   local fixture=$TMP/sync home=$TMP/sync-home victim=$TMP/victim
   mkdir -p "$fixture/cmd/sync" "$fixture/cmd/worktrees/_lib" "$fixture/skills/keep" \
     "$home/.claude/hooks" "$home/.claude/skills/stale" "$victim"
-  cp "$REPO_DIR/cmd/sync/sync_skills.sh" "$fixture/cmd/sync/"
+  cp "$REPO_DIR/cmd/sync/sync_skills.sh" "$REPO_DIR/cmd/sync/smine_tool.sh" "$fixture/cmd/sync/"
   cp "$REPO_DIR/cmd/worktrees/remove_agent_worktrees.sh" "$fixture/cmd/worktrees/"
   cp "$REPO_DIR/cmd/worktrees/_lib/verdict.sh" "$fixture/cmd/worktrees/_lib/"
   printf '%s\n' 'name: keep' > "$fixture/skills/keep/SKILL.md"
-  printf '%s\n' 'AGENT_CONTEXT_DIR_DEFAULT=docs' > "$home/.claude/hooks/review-context.env"
+  printf '%s\n' 'AGENT_CONTEXT_DIR_DEFAULT=docs' > "$home/.claude/hooks/global-context.env"
   printf '%s\n' stale > "$home/.claude/skills/stale/file"
 
   printf 'y\n' | HOME="$home" bash "$fixture/cmd/sync/sync_skills.sh"

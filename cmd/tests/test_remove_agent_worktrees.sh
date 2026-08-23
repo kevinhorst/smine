@@ -71,7 +71,7 @@ test_delete_branch_requires_target() {
   if out=$(cd "$repo" && bash "$SCRIPT" --delete-branch 2>&1); then
     fail "--delete-branch without target succeeded"
   fi
-  echo "$out" | grep -q "requires a claude/<branch> target" \
+  echo "$out" | grep -q "requires a branch target" \
     || fail "missing usage error for target-less --delete-branch: $out"
 }
 
@@ -192,6 +192,29 @@ test_competing_change_branch_skipped() {
   [ -d "$repo/.claude/worktrees/negative" ] || fail "unsafe worktree was removed"
 }
 
+# claude-routines/* lineages are valid targets: a contained routine branch's
+# worktree is removed and the branch deleted; the retired routine/* prefix is
+# rejected with the usage error.
+test_routine_namespace_target() {
+  local repo=$TMP/repo-routines out
+  init_repo "$repo"
+
+  git -C "$repo" branch claude-routines/nightly-2026-08-12
+  git -C "$repo" worktree add -q "$repo/.routine-wt" claude-routines/nightly-2026-08-12
+
+  out=$(cd "$repo" && bash "$SCRIPT" --delete-branch claude-routines/nightly-2026-08-12)
+  echo "$out" | grep -qF "removed: $repo/.routine-wt" \
+    || fail "routine worktree not removed: $out"
+  echo "$out" | grep -qF "deleted branch: claude-routines/nightly-2026-08-12" \
+    || fail "routine branch not deleted: $out"
+
+  if out=$(cd "$repo" && bash "$SCRIPT" routine/legacy 2>&1); then
+    fail "retired routine/* prefix accepted: $out"
+  fi
+  echo "$out" | grep -q '^usage:' || fail "wrong error for routine/* target: $out"
+}
+
+test_routine_namespace_target
 test_targeted_remove_follows_branch_not_dir_name
 test_targeted_no_worktree_is_reported
 test_delete_branch_requires_target
