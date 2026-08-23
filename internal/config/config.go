@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+
+	"github.com/kevinhorst/smine/internal/fsx"
 )
 
 type Hook struct {
@@ -16,14 +18,9 @@ type Hook struct {
 	Type    string `json:"type"`
 }
 
-type HookMatcher struct {
-	Pattern string `json:"pattern"`
-	Type    string `json:"type"`
-}
-
 type HookGroup struct {
-	Hooks   []Hook       `json:"hooks"`
-	Matcher *HookMatcher `json:"matcher,omitempty"`
+	Hooks   []Hook  `json:"hooks"`
+	Matcher *string `json:"matcher,omitempty"` // plain tool-name pattern, e.g. "Read" or "Write|Edit"
 }
 
 type Permissions struct {
@@ -191,7 +188,7 @@ func Save(path string, s *Settings) error {
 	if err := os.WriteFile(tmp, data, 0644); err != nil {
 		return fmt.Errorf("writing %s: %w", tmp, err)
 	}
-	if err := os.Rename(tmp, path); err != nil {
+	if err := fsx.ReplaceFile(tmp, path); err != nil {
 		os.Remove(tmp)
 		return fmt.Errorf("renaming %s to %s: %w", tmp, path, err)
 	}
