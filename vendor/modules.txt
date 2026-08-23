@@ -20,10 +20,14 @@ github.com/mark3labs/mcp-go/client/transport
 github.com/mark3labs/mcp-go/mcp
 github.com/mark3labs/mcp-go/server
 github.com/mark3labs/mcp-go/tracing
+# github.com/nishanths/exhaustive v0.12.0
+## explicit; go 1.18
+github.com/nishanths/exhaustive
+github.com/nishanths/exhaustive/cmd/exhaustive
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+# github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 ## explicit; go 1.21
 github.com/santhosh-tekuri/jsonschema/v6
 github.com/santhosh-tekuri/jsonschema/v6/kind
@@ -47,6 +51,16 @@ github.com/yuin/goldmark/renderer
 github.com/yuin/goldmark/renderer/html
 github.com/yuin/goldmark/text
 github.com/yuin/goldmark/util
+# golang.org/x/mod v0.23.0
+## explicit; go 1.22.0
+golang.org/x/mod/semver
+# golang.org/x/sync v0.11.0
+## explicit; go 1.18
+golang.org/x/sync/errgroup
+# golang.org/x/sys v0.47.0
+## explicit; go 1.25.0
+golang.org/x/sys/windows
+golang.org/x/sys/windows/registry
 # golang.org/x/text v0.14.0
 ## explicit; go 1.18
 golang.org/x/text/feature/plural
@@ -61,6 +75,40 @@ golang.org/x/text/internal/tag
 golang.org/x/text/language
 golang.org/x/text/message
 golang.org/x/text/message/catalog
+# golang.org/x/tools v0.30.0
+## explicit; go 1.22.0
+golang.org/x/tools/go/analysis
+golang.org/x/tools/go/analysis/checker
+golang.org/x/tools/go/analysis/internal
+golang.org/x/tools/go/analysis/internal/analysisflags
+golang.org/x/tools/go/analysis/internal/checker
+golang.org/x/tools/go/analysis/passes/inspect
+golang.org/x/tools/go/analysis/singlechecker
+golang.org/x/tools/go/analysis/unitchecker
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/ast/inspector
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/packages
+golang.org/x/tools/go/types/objectpath
+golang.org/x/tools/go/types/typeutil
+golang.org/x/tools/internal/aliases
+golang.org/x/tools/internal/analysisinternal
+golang.org/x/tools/internal/astutil/edge
+golang.org/x/tools/internal/diff
+golang.org/x/tools/internal/diff/lcs
+golang.org/x/tools/internal/event
+golang.org/x/tools/internal/event/core
+golang.org/x/tools/internal/event/keys
+golang.org/x/tools/internal/event/label
+golang.org/x/tools/internal/facts
+golang.org/x/tools/internal/gcimporter
+golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/packagesinternal
+golang.org/x/tools/internal/pkgbits
+golang.org/x/tools/internal/stdlib
+golang.org/x/tools/internal/typeparams
+golang.org/x/tools/internal/typesinternal
+golang.org/x/tools/internal/versions
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
