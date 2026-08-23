@@ -1,5 +1,5 @@
 {{define "_routine_row.html"}}
-<tr id="routine-{{.Routine.Name}}"{{if .OOB}} hx-swap-oob="true"{{end}}
+<tr id="routine-{{.Routine.Name}}" data-name="{{.Routine.Name}}"{{if .OOB}} hx-swap-oob="true"{{end}}
     {{if .PollSince}}hx-get="/routines/{{pathEscape .Routine.Name}}/row?since={{.PollSince}}"
     hx-trigger="every 3s" hx-swap="outerHTML"{{end}}>
   {{if .Routine.LoadError}}
@@ -21,7 +21,7 @@
     <span class="badge badge-dim">stopped</span>
     {{end}}
   </td>
-  <td><a href="/routines/{{pathEscape .Routine.Name}}">{{.Routine.Name}}</a></td>
+  <td><a href="/routines/{{pathEscape .Routine.Name}}">{{.Routine.Name}}</a>{{if .Pinned}} <span class="badge badge-dim" title="always listed first">pinned</span>{{end}}</td>
   <td>
     {{if .Routine.ScheduleSupported}}
       {{range $i, $interval := .Routine.Schedule}}{{if $i}}; {{end}}{{$interval}}{{end}}
@@ -29,14 +29,18 @@
   </td>
   <td class="run-cell">
     {{with .Routine.LastRun}}
-      {{.Timestamp}}
+      {{stampDate .Timestamp}}<br>{{stampTime .Timestamp}}<br>
       {{if eq .ExitStatus 0}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">exit {{.ExitStatus}}</span>{{end}}
     {{else}}never{{end}}
   </td>
-  <td class="run-cell">{{if not .Routine.NextRun.IsZero}}{{.Routine.NextRun.Format "2006-01-02 15:04"}}{{else}}–{{end}}</td>
-  <td class="env-cell">
-    {{range $i, $pair := .EnvPairs}}{{if $i}}<br>{{end}}<code>{{$pair.Key}}={{$pair.Value}}</code>{{else}}–{{end}}
+  <td>
+    {{if .Session}}
+      {{if .Session.Live}}<span class="badge badge-ok">live</span>{{end}}
+      {{$peekURL := peekSessionURL .Session.Id}}
+      {{if $peekURL}}<a href="{{$peekURL}}" title="{{.Session.Id}} — open in peek">{{if .Session.Title}}{{.Session.Title}}{{else}}(untitled){{end}}</a>{{else}}{{.Session.Title}}{{end}}
+    {{else}}–{{end}}
   </td>
+  <td class="run-cell">{{if not .Routine.NextRun.IsZero}}{{.Routine.NextRun.Format "2006-01-02"}}<br>{{.Routine.NextRun.Format "15:04"}}{{else}}–{{end}}</td>
   {{end}}
 </tr>
 {{end}}

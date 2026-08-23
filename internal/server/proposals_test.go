@@ -11,12 +11,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/proposals"
 )
 
 const proposalsFixture = `{
   "kind": "routines",
   "updated": "2026-07-11",
-  "source": "sessions/proposals/routines.json",
+  "source": "proposals/routines.json",
   "note": "Cumulative, cross-scope, ranked scheduling proposals",
   "groups": [
     {
@@ -69,7 +71,7 @@ func TestProposalsPage(t *testing.T) {
 		batchDir := filepath.Join(sessionsDir, "work", "json")
 		require.NoError(t, os.MkdirAll(batchDir, 0755))
 		require.NoError(t, os.WriteFile(filepath.Join(batchDir, "batch-03.json"), []byte(proposalsBatchFixture), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
@@ -83,7 +85,7 @@ func TestProposalsPage(t *testing.T) {
 		assert.Contains(t, body, "proposed")
 		assert.Contains(t, body, "Run the retrospective pipeline.")
 		// meta sits inline in the headline; the note paragraph is gone
-		assert.Contains(t, body, `<h2>routines <span class="meta">updated 2026-07-11 · sessions/proposals/routines.json</span></h2>`)
+		assert.Contains(t, body, `<h2>routines <span class="meta">updated 2026-07-11 · proposals/routines.json</span></h2>`)
 		assert.NotContains(t, body, "Cumulative, cross-scope")
 
 		// evidence table: kind-default dimension link, override link, unresolved id unlinked,
@@ -93,7 +95,11 @@ func TestProposalsPage(t *testing.T) {
 		assert.Contains(t, body, `<a href="/sessions/work/3?dimension=skill-report-card&amp;session=65a26e92-4c98-4879-82ce-35e644cd0ab5"`)
 		assert.Contains(t, body, `<li><code class="meta" title="00000000-0000-0000-0000-000000000000">00000000</code>: pruned session</li>`)
 		assert.Contains(t, body, "Wrap smine in a nightly schedule.")
-		assert.Contains(t, body, "proposed 2026-07-20")
+		assert.Contains(t, body, `<span class="meta">2026-07-20</span>`)
+		assert.Contains(t, body, `<details class="card-more">`)
+		assert.Contains(t, body, "details · 1 fields · 2 evidence")
+		assert.NotContains(t, body, "<th>Evidence</th>")
+		assert.NotContains(t, body, "tab=auto-apply")
 		assert.Contains(t, body, "fix · go · from plan")
 		assert.Contains(t, body, "<pre><code>func fixed() {}</code></pre>")
 		// Without a filter, sections stay collapsed.
@@ -118,19 +124,19 @@ func TestProposalsPage(t *testing.T) {
 		    {"title": "Considered, not proposed", "proposals": [{"id": "rejected-idea", "title": "rejected-idea"}]}
 		  ]
 		}`
-		styleFixture := `{
-		  "kind": "style",
+		rulesFixture := `{
+		  "kind": "context",
 		  "groups": [
-		    {"title": "Go", "proposals": [
-		      {"id": "G1", "title": "io idiom", "status": "proposed", "autoApplyHeld": {"date": "2026-07-30", "reason": "touches guard logic"}, "fields": [{"label": "Proposed rule (new, e.g. RULE-INTERFACE-002)", "text": "split on io idiom"}]},
-		      {"id": "G3", "title": "naming", "status": "proposed", "fields": [{"label": "Proposed rule (amend RULE-NAME-003)", "text": "full names"}]}
+		    {"title": "context/rules/go.md", "proposals": [
+		      {"id": "G1", "title": "io idiom", "status": "proposed", "gate": {"band": "J"}, "autoApplyHeld": {"date": "2026-07-30", "reason": "touches guard logic"}, "fields": [{"label": "Proposed rule (new, e.g. RULE-GOLANG-INTERFACE-002)", "text": "split on io idiom"}]},
+		      {"id": "G3", "title": "naming", "status": "proposed", "gate": {"band": "J"}, "fields": [{"label": "Proposed rule (amend RULE-GOLANG-NAME-003)", "text": "full names"}]}
 		    ]},
-		    {"title": "Reroutes (not rules)", "proposals": [{"id": "R1", "title": "rerouted rule", "fields": [{"label": "Note", "text": "see RULE-TEST-001"}]}]}
+		    {"title": "Reroutes (not rules)", "proposals": [{"id": "R1", "title": "rerouted rule", "fields": [{"label": "Note", "text": "see RULE-GOLANG-TEST-001"}]}]}
 		  ]
 		}`
 		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "skills.json"), []byte(skillsFixture), 0644))
-		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "style.json"), []byte(styleFixture), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "context.json"), []byte(rulesFixture), 0644))
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		// No filter: everything renders, badge rows list the values sorted.
 		response := httptest.NewRecorder()
@@ -138,8 +144,8 @@ func TestProposalsPage(t *testing.T) {
 		require.Equal(t, http.StatusOK, response.Code)
 		body := response.Body.String()
 		assert.Contains(t, body, ">contract-drift-audit</a>")
-		assert.Contains(t, body, ">RULE-INTERFACE</a>")
-		assert.Contains(t, body, ">RULE-NAME</a>")
+		assert.Contains(t, body, ">RULE-GOLANG-INTERFACE</a>")
+		assert.Contains(t, body, ">RULE-GOLANG-NAME</a>")
 		assert.Contains(t, body, "parallel-review-merge")
 		// Split siblings share one coarse badge — never per-sibling values.
 		assert.Contains(t, body, ">fdesign</a>")
@@ -157,7 +163,7 @@ func TestProposalsPage(t *testing.T) {
 		// the other kind's filter is preserved in the badge URLs.
 		response = httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet,
-			"/proposals?skills=contract-drift-audit&style=RULE-NAME", nil))
+			"/proposals?skills=contract-drift-audit&context=RULE-GOLANG-NAME", nil))
 		require.Equal(t, http.StatusOK, response.Code)
 		body = response.Body.String()
 		assert.Contains(t, body, "New skills")
@@ -176,18 +182,71 @@ func TestProposalsPage(t *testing.T) {
 		assert.Contains(t, siblingBody, "fdesign — a")
 		assert.Contains(t, siblingBody, "fdesign — b")
 		assert.NotContains(t, siblingBody, "contract-drift-audit</strong>")
-		// Style prefix filter: only the RULE-NAME proposal remains; the
+		// Context prefix filter: only the RULE-NAME proposal remains; the
 		// statusless rerouted entry is hidden under any active filter.
 		assert.Contains(t, body, "<strong>naming</strong>")
 		assert.NotContains(t, body, "io idiom")
 		assert.NotContains(t, body, "rerouted rule")
 		assert.NotContains(t, body, "rejected-idea")
-		// Badge URL for a style value carries the active skills filter.
-		assert.Contains(t, body, "skills=contract-drift-audit&amp;style=RULE-INTERFACE")
+		// Badge URL for a context value carries the active skills filter.
+		assert.Contains(t, body, "context=RULE-GOLANG-INTERFACE&amp;skills=contract-drift-audit")
 		// Only the filter's own target sections arrive open, marked so the
 		// client pins them; unfiltered kinds' sections stay untouched.
 		assert.Contains(t, body, `data-section="skills/New skills" open data-filter-target="1">`)
 		assert.NotContains(t, body, `data-section="skills/Edits" open`)
+	})
+
+	t.Run("filters-context-by-band-and-entry-prefix", func(t *testing.T) {
+		sessionsDir := t.TempDir()
+		jsonDir := filepath.Join(sessionsDir, "proposals")
+		require.NoError(t, os.MkdirAll(jsonDir, 0755))
+		contextFixture := `{
+		  "kind": "context",
+		  "groups": [
+		    {"title": "context/actions/implementing.md", "proposals": [
+		      {"id": "C1", "title": "judgment rule", "status": "proposed", "change": "Amend ACTION-IMPL-002: write a plan.", "gate": {"band": "J"}, "fields": [{"label": "Proposed rule (amend ACTION-IMPL-002)", "text": "write a plan first"}]},
+		      {"id": "C2", "title": "gated rule", "status": "accepted", "change": "Add a checkable rule.", "gate": {"band": "A", "verifier": "test-schema", "anchor": "_test\\.go$"}},
+		      {"id": "C3", "title": "ungated legacy rule", "status": "proposed", "change": "Add without a gate."}
+		    ]}
+		  ]
+		}`
+		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "context.json"), []byte(contextFixture), 0644))
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
+
+		// No filter: band-derived badges plus the canon entry prefix.
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body := response.Body.String()
+		assert.Contains(t, body, ">acdsl</a>")
+		assert.Contains(t, body, ">prose</a>")
+		assert.Contains(t, body, ">ACTION-IMPL</a>")
+
+		// prose narrows to band J and gateless proposals.
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals?context=prose", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body = response.Body.String()
+		assert.Contains(t, body, "judgment rule")
+		assert.Contains(t, body, "ungated legacy rule")
+		assert.NotContains(t, body, "<strong>gated rule</strong>")
+
+		// acdsl narrows to the F/A/D-banded proposal.
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals?context=acdsl", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body = response.Body.String()
+		assert.Contains(t, body, "gated rule")
+		assert.NotContains(t, body, "<strong>judgment rule</strong>")
+		assert.NotContains(t, body, "<strong>ungated legacy rule</strong>")
+
+		// Entry-prefix filter matches the citing proposal only.
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals?context=ACTION-IMPL", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body = response.Body.String()
+		assert.Contains(t, body, "judgment rule")
+		assert.NotContains(t, body, "<strong>gated rule</strong>")
 	})
 
 	t.Run("overlays-pending-vote-badge-and-comment", func(t *testing.T) {
@@ -197,7 +256,7 @@ func TestProposalsPage(t *testing.T) {
 		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "routines.json"), []byte(proposalsFixture), 0644))
 		votesLine := `{"kind":"routines","id":"nightly-session-analysis","title":"nightly-session-analysis","vote":"+","comment":"do it","ts":"2026-07-22T00:00:00Z"}` + "\n"
 		require.NoError(t, os.WriteFile(filepath.Join(sessionsDir, "proposals", "votes.jsonl"), []byte(votesLine), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
@@ -217,7 +276,7 @@ func TestProposalsPage(t *testing.T) {
 		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "routines.json"), []byte(proposalsFixture), 0644))
 		votesLine := `{"kind":"routines","id":"ghost","title":"ghost","vote":"+","comment":"gone","ts":"2026-07-22T00:00:00Z"}` + "\n"
 		require.NoError(t, os.WriteFile(filepath.Join(sessionsDir, "proposals", "votes.jsonl"), []byte(votesLine), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
@@ -252,7 +311,7 @@ func TestProposalsPage(t *testing.T) {
 {"kind":"skills","id":"voted-postpone","title":"Voted Postpone","vote":"p","comment":"","ts":"2026-07-23T00:00:00Z"}
 `
 		require.NoError(t, os.WriteFile(filepath.Join(sessionsDir, "proposals", "votes.jsonl"), []byte(votesLines), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		// No filter: the summary-line segments ARE the state filters; the
 		// global filter row carries only id badges. Pending votes win over
@@ -327,7 +386,7 @@ func TestProposalsPage(t *testing.T) {
 		  ]
 		}`
 		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "skills.json"), []byte(tabFixture), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		// Open tab: votable groups only — mixed groups stay with their
 		// note cards, fully-statusless groups move to Notes.
@@ -363,7 +422,7 @@ func TestProposalsPage(t *testing.T) {
 		  ]
 		}`
 		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "routines.json"), []byte(notesOnly), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
@@ -383,7 +442,7 @@ func TestProposalsPage(t *testing.T) {
 	})
 
 	t.Run("empty-state", func(t *testing.T) {
-		server := newTestServer(t, &Options{SessionsDir: t.TempDir()})
+		server := newTestServer(t, &Options{ProposalsDir: t.TempDir(), SessionsDir: t.TempDir()})
 
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
@@ -396,7 +455,7 @@ func TestProposalsPage(t *testing.T) {
 		jsonDir := filepath.Join(sessionsDir, "proposals")
 		require.NoError(t, os.MkdirAll(jsonDir, 0755))
 		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "broken.json"), []byte("{not json"), 0644))
-		server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
 
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/proposals", nil))
@@ -424,7 +483,7 @@ func newVoteServer(t *testing.T) (*Server, string) {
 	jsonDir := filepath.Join(sessionsDir, "proposals")
 	require.NoError(t, os.MkdirAll(jsonDir, 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "skills.json"), []byte(voteFixture), 0644))
-	return newTestServer(t, &Options{SessionsDir: sessionsDir}), sessionsDir
+	return newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir}), sessionsDir
 }
 
 // votesLines returns the non-blank lines of the votes sidecar.
@@ -552,5 +611,134 @@ func TestProposalVote(t *testing.T) {
 		server.Handler().ServeHTTP(response, formPost("/api/proposals/skills/statusless-one/vote",
 			url.Values{"vote": {"+"}}))
 		assert.Equal(t, http.StatusNotFound, response.Code)
+	})
+}
+
+func TestNamedProposalFilterKey(t *testing.T) {
+	// workflow proposal → wf: + script basename
+	workflow := &proposals.Proposal{Id: "review-defect-to-fix-pipeline", Target: "skills/quality/railroad-review/workflows/review-defect-to-fix.js"}
+	assert.Equal(t, "wf:review-defect-to-fix", namedProposalFilterKey(workflow))
+
+	// skill edit → the target skill, not the proposal id
+	edit := &proposals.Proposal{Id: "delta-re-review", Target: "railroad-review"}
+	assert.Equal(t, "railroad-review", namedProposalFilterKey(edit))
+
+	// new-skill candidate without a target → its own id
+	candidate := &proposals.Proposal{Id: "api-collection-from-codebase"}
+	assert.Equal(t, "api-collection-from-codebase", namedProposalFilterKey(candidate))
+
+	// split sibling → suffix stripped
+	split := &proposals.Proposal{Id: "some-candidate--2"}
+	assert.Equal(t, "some-candidate", namedProposalFilterKey(split))
+
+	// path-shaped target outside workflows/ → falls back to the id
+	pathTarget := &proposals.Proposal{Id: "doc-fix", Target: "docs/checklist.md"}
+	assert.Equal(t, "doc-fix", namedProposalFilterKey(pathTarget))
+}
+
+func TestCountLabel(t *testing.T) {
+	assert.Equal(t, "0", countLabel(0))
+	assert.Equal(t, "9", countLabel(9))
+	assert.Equal(t, "99", countLabel(99))
+	assert.Equal(t, "99+", countLabel(100))
+}
+
+func TestCategoryViews(t *testing.T) {
+	t.Run("context-buckets-by-surface", func(t *testing.T) {
+		groups := []groupView{
+			{Title: "context/rules/go.md", Count: 11},
+			{Title: "context/actions/implementing.md", Count: 25, IsFilterTarget: true},
+			{Title: "context/rules/sql.md", Count: 1},
+			{Title: "context/facts/repo.md", Count: 2},
+			{Title: "acdsl/rules.acdsl", Count: 3},
+			{Title: "Project-local: tooling", Count: 4},
+		}
+		categories := categoryViews("context", groups)
+
+		require.Len(t, categories, 5)
+		assert.Equal(t, "rules", categories[0].Title)
+		assert.Equal(t, "12", categories[0].CountLabel)
+		assert.Len(t, categories[0].Groups, 2)
+		assert.False(t, categories[0].Solo)
+		assert.False(t, categories[0].Groups[0].Solo)
+		assert.Equal(t, "context/cat:rules", categories[0].DataSection)
+		assert.Equal(t, "actions", categories[1].Title)
+		assert.True(t, categories[1].IsFilterTarget)
+		assert.Equal(t, "facts", categories[2].Title)
+		assert.Equal(t, "acdsl", categories[3].Title)
+		assert.Equal(t, "Project-local: tooling", categories[4].Title)
+		assert.True(t, categories[4].Solo)
+		assert.True(t, categories[4].Groups[0].Solo)
+	})
+
+	t.Run("other-kinds-stay-flat", func(t *testing.T) {
+		groups := []groupView{
+			{Title: "New skills", Count: 0},
+			{Title: "Edits to existing skills", Count: 52},
+		}
+		categories := categoryViews("skills", groups)
+
+		require.Len(t, categories, 2)
+		for _, category := range categories {
+			assert.True(t, category.Solo)
+			assert.Len(t, category.Groups, 1)
+		}
+	})
+}
+
+func TestSubgroupViews(t *testing.T) {
+	cardFor := func(id, target string) proposalView {
+		card := proposalView{Kind: "skills"}
+		card.Proposal.Id = id
+		card.Proposal.Target = target
+		return card
+	}
+
+	t.Run("splits-by-target-in-first-appearance-order", func(t *testing.T) {
+		group := groupView{Title: "Edits to existing skills", Total: 3, Proposals: []proposalView{
+			cardFor("fdesign--1", "fdesign"),
+			cardFor("fchange--1", "fchange"),
+			cardFor("fdesign--2", "fdesign"),
+		}}
+		subgroups := subgroupViews("skills", &group)
+
+		require.Len(t, subgroups, 2)
+		assert.Equal(t, "fdesign", subgroups[0].Title)
+		assert.Equal(t, "2", subgroups[0].CountLabel)
+		assert.Equal(t, "skills/Edits to existing skills/fdesign", subgroups[0].DataSection)
+		assert.Equal(t, "fchange", subgroups[1].Title)
+		assert.Len(t, subgroups[1].Proposals, 1)
+	})
+
+	t.Run("empty-target-falls-back-to-split-id-base", func(t *testing.T) {
+		group := groupView{Title: "Proposals", Total: 2, Proposals: []proposalView{
+			cardFor("analyze-ledger-drift-check", ""),
+			cardFor("analyze-parameterized-tier--1", ""),
+		}}
+		subgroups := subgroupViews("skills", &group)
+
+		require.Len(t, subgroups, 2)
+		assert.Equal(t, "analyze-ledger-drift-check", subgroups[0].Title)
+		assert.Equal(t, "analyze-parameterized-tier", subgroups[1].Title)
+	})
+
+	t.Run("single-key-stays-flat", func(t *testing.T) {
+		group := groupView{Title: "Edits", Total: 2, Proposals: []proposalView{
+			cardFor("fdesign--1", "fdesign"),
+			cardFor("fdesign--2", "fdesign"),
+		}}
+		assert.Nil(t, subgroupViews("skills", &group))
+	})
+
+	t.Run("context-and-statusless-groups-never-subgroup", func(t *testing.T) {
+		votable := groupView{Title: "context/rules/go.md", Total: 2, Proposals: []proposalView{
+			cardFor("G9--1", "a"), cardFor("G9--2", "b"),
+		}}
+		assert.Nil(t, subgroupViews("context", &votable))
+
+		notes := groupView{Title: "Reroute notes", Total: 0, Proposals: []proposalView{
+			cardFor("n1", "a"), cardFor("n2", "b"),
+		}}
+		assert.Nil(t, subgroupViews("skills", &notes))
 	})
 }

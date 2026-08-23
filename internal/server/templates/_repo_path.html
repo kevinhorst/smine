@@ -4,5 +4,6 @@
   <button type="button" hx-post="/repos/choose-folder" hx-include="closest form"
           hx-target="#repo-path" hx-swap="outerHTML">Choose folder…</button>
   {{if .Error}}<span class="badge badge-error" title="{{.Error}}">picker failed</span>{{end}}
+  {{if .Value}}<span class="meta repo-chosen">chosen: <code>{{.Value}}</code></span>{{end}}
 </span>
 {{end}}

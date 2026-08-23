@@ -2,27 +2,76 @@
 {{template "nav" .}}
 <h1>Context</h1>
 <div class="card">
-  <form class="card-row card-filter" hx-post="/context/sync" hx-target="#op-result"
+  <form class="card-row card-filter" hx-post="/context/sync" hx-target="#op-result" hx-swap="innerHTML show:none"
         hx-confirm="Write AGENTS.md and context docs into the target repository?">
-    <label>target {{template "_repo_select.html" .RepoNames}}</label>
+    {{template "_repo_select.html" .RepoNames}}
     <label>context folder <input type="text" name="context-dir" value="docs"></label>
-    <button type="submit">Sync context</button>
+    <button type="submit" title="what ships is decided per entry by its Reach — targets receive only entries that reach them (cmd/rules filter, no per-repo selection here)">Sync context</button>
     <label><input type="checkbox" name="symlink" checked> CLAUDE.md symlink</label>
+    <label title="deploy the prose pack — actions chapters, rules guides, generated context.json"><input type="checkbox" name="prose" checked> sync prose</label>
+    <label title="ship the reach-covered gate slice — rules.acdsl, registry subset, prebuilt bin/acdsl + verifier binaries; the deployed read hook activates automatically"><input type="checkbox" name="acdsl" checked> sync acdsl</label>
+    <label title="also ship task-lifetime contract rules (plans/*/design/contract.acdsl and other task *.acdsl files) that reach the target"><input type="checkbox" name="task"> sync task</label>
   </form>
 </div>
 <div id="op-result"></div>
-<h2>Aspects</h2>
-{{template "_aspects.html" .AspectsSection}}
+{{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
+{{template "_aspect_bar.html" .AspectBar}}
+<form id="bulk-reach" method="post" action="/context/reach/bulk">
+  <input type="hidden" name="aspect" value="{{.Filter.Aspect}}">
+  <input type="hidden" name="topic" value="{{.Filter.Topic}}">
+  <input type="hidden" name="reach-filter" value="{{.Filter.Reach}}">
+  <input type="hidden" name="layer" value="{{.Filter.Layer}}">
+  <input type="hidden" name="lifetime" value="{{.Filter.Lifetime}}">
+{{if .Acdsl.Show}}{{template "_acdsl.html" .Acdsl}}{{end}}
+{{if .ShowProse}}
+<div id="prose-body">
+{{if not .Filter.Active}}
+<h2>baseline</h2>
 <details class="section">
   <summary>AGENTS.md template</summary>
   <pre class="file-view">{{.AgentsTemplate}}</pre>
 </details>
-{{range $group := .Groups}}
-<h2>{{$group.Name}}</h2>
-{{range $file := $group.Files}}
-<div class="card">
-  <a class="label" href="/context/{{pathEscape $group.Name}}/{{pathEscape $file}}">{{$file}}</a>
+{{end}}
+{{range .Sections}}
+<h2>{{.Kind}}s</h2>
+{{range .Groups}}
+<details class="section" {{if .Open}}open{{end}}>
+  <summary><input type="checkbox" class="bulk-all" title="select all in this group"> {{.Scope}} <span class="badge badge-dim">{{len .Entries}}</span>
+    <span class="meta badge-topic" title="entries in this scope cited by at least one acdsl rule">coverage {{.CoveragePercent}} ({{.Covered}} of {{.Total}})</span>
+    {{$scope := .Scope}}
+    {{if .Topics}}
+    <a class="badge {{if and (not $.Filter.Topic) (eq $scope $.Filter.Aspect)}}badge-ok{{else}}badge-dim{{end}} badge-topic"
+       href="{{.AllURL}}">all</a>
+    {{end}}
+    {{range $i, $chip := .Topics}}
+    <a class="badge {{if and $chip.Name (eq $chip.Name $.Filter.Topic) (eq $scope $.Filter.Aspect)}}badge-ok{{else}}badge-dim{{end}} badge-topic{{if ge $i 4}} topic-extra hidden{{end}}"
+       href="{{$chip.URL}}">{{$chip.Name}} ({{$chip.Count}})</a>
+    {{end}}
+    {{if .ExtraTopics}}<button type="button" class="badge badge-dim badge-topic topic-toggle" data-more="+{{.ExtraTopics}}">+{{.ExtraTopics}}</button>{{end}}
+  </summary>
+  {{range .Entries}}{{template "_entry_card" .}}{{end}}
+</details>
+{{end}}
+{{else}}
+<div class="card"><span class="empty">no entries</span></div>
+{{end}}
 </div>
 {{end}}
-{{end}}
+</form>
 {{template "foot" .}}
+
+{{define "_entry_card"}}
+<div class="card card-column">
+  <div class="card-row">
+    <input type="checkbox" name="id" value="{{.Entry.Id}}" class="bulk-check">
+    <span class="badge {{if eq .Entry.Kind "action"}}badge-ok{{else}}badge-dim{{end}}">{{.Entry.Kind}}</span>
+    <span class="label"><a href="/context/entry/{{pathEscape .Entry.Id}}"><strong>{{.Entry.Id}}</strong></a></span>
+    {{if .Entry.Reach}}<span class="badge {{if eq .Entry.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Entry.Reach "smine"}}scoped to smine (this repo), never deploys{{else if eq .Entry.Reach "global"}}ships to every target{{else}}ships exactly to the named repos{{end}}">{{.Entry.Reach}}</span>{{end}}
+    {{if .Entry.Enforcement}}<span class="badge badge-dim" title="{{enforcementTitle .Entry.Enforcement}}">{{.Entry.Enforcement}}</span>{{end}}
+    {{if .Entry.Version}}<span class="badge badge-dim badge-version">v{{.Entry.Version}}</span>{{end}}
+    {{range .GatedBy}}<a class="badge badge-ok" href="/context/rule/{{pathEscape .}}" title="cited by this acdsl rule's why — the checkable slice is gated">gated: {{.}}</a>{{end}}
+  </div>
+  <div class="description">{{.Entry.Content.Statement}}</div>
+  {{if .Entry.Source}}<div class="meta explanation"><a href="/context/{{sourceDocHref .Entry.Source}}"><code>{{.Entry.Source}}</code></a></div>{{end}}
+</div>
+{{end}}

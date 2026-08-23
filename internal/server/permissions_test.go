@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -91,6 +92,90 @@ func TestTogglePermission(t *testing.T) {
 	})
 }
 
+func postAddPermission(t *testing.T, server *Server, rule string) *httptest.ResponseRecorder {
+	t.Helper()
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, formPost("/api/permissions/add?rule="+url.QueryEscape(rule), nil))
+	return response
+}
+
+// Fixture (writePermissionSettings): allow ls+cat, ask rm, disabled-allow jq.
+func TestAddPermission(t *testing.T) {
+	t.Run("new-rule-appended", func(t *testing.T) {
+		settingsPath, server := writePermissionSettings(t)
+		response := postAddPermission(t, server, "Bash(rg *)")
+		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+		assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+		assert.Contains(t, response.Body.String(), ">allowed</span>")
+
+		mainPerms, _ := loadPermissions(t, settingsPath)
+		assert.Equal(t, []string{"Bash(ls *)", "Bash(cat *)", "Bash(rg *)"}, mainPerms.Allow)
+	})
+
+	t.Run("already-allowed-noop", func(t *testing.T) {
+		settingsPath, server := writePermissionSettings(t)
+		response := postAddPermission(t, server, "Bash(ls *)")
+		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+		assert.Empty(t, response.Header().Get("HX-Trigger"))
+		assert.Contains(t, response.Body.String(), ">allowed</span>")
+
+		mainPerms, disabledPerms := loadPermissions(t, settingsPath)
+		assert.Equal(t, []string{"Bash(ls *)", "Bash(cat *)"}, mainPerms.Allow)
+		assert.Equal(t, []string{"Bash(jq *)"}, disabledPerms.Allow)
+	})
+
+	t.Run("already-ask-noop", func(t *testing.T) {
+		settingsPath, server := writePermissionSettings(t)
+		response := postAddPermission(t, server, "Bash(rm *)")
+		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+		assert.Empty(t, response.Header().Get("HX-Trigger"))
+		assert.Contains(t, response.Body.String(), ">ask</span>")
+
+		mainPerms, _ := loadPermissions(t, settingsPath)
+		assert.Equal(t, []string{"Bash(rm *)"}, mainPerms.Ask)
+	})
+
+	t.Run("parked-allow-moved-back", func(t *testing.T) {
+		settingsPath, server := writePermissionSettings(t)
+		response := postAddPermission(t, server, "Bash(jq *)")
+		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+		assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+
+		mainPerms, disabledPerms := loadPermissions(t, settingsPath)
+		assert.Equal(t, []string{"Bash(ls *)", "Bash(cat *)", "Bash(jq *)"}, mainPerms.Allow)
+		assert.Empty(t, disabledPerms.Allow)
+	})
+
+	t.Run("parked-ask-moved-to-allow", func(t *testing.T) {
+		settingsPath := filepath.Join(t.TempDir(), "settings.json")
+		require.NoError(t, config.Save(settingsPath, config.NewSettings()))
+		disabled := config.NewSettings()
+		require.NoError(t, disabled.SetPermissions(config.Permissions{Ask: []string{"Bash(rg *)"}}))
+		require.NoError(t, config.Save(config.DisabledPath(settingsPath), disabled))
+		server := newTestServer(t, &Options{SettingsPath: settingsPath})
+
+		response := postAddPermission(t, server, "Bash(rg *)")
+		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+
+		mainPerms, disabledPerms := loadPermissions(t, settingsPath)
+		assert.Equal(t, []string{"Bash(rg *)"}, mainPerms.Allow)
+		assert.Empty(t, disabledPerms.Ask)
+	})
+
+	t.Run("empty-rule-400", func(t *testing.T) {
+		_, server := writePermissionSettings(t)
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/api/permissions/add", nil))
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("non-rule-400", func(t *testing.T) {
+		_, server := writePermissionSettings(t)
+		response := postAddPermission(t, server, "rm -rf /")
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+	})
+}
+
 func TestPermissionsSectionOverriddenBadge(t *testing.T) {
 	perms := `{"permissions": {"allow": ["Bash(ls *)"]}}`
 
@@ -141,4 +226,47 @@ func TestPermissionMutationTriggersConfigOp(t *testing.T) {
 	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/permissions", nil))
 	require.Equal(t, http.StatusOK, response.Code)
 	assert.Empty(t, response.Header().Get("HX-Trigger"))
+}
+
+func TestPermissionRows(t *testing.T) {
+	t.Run("marks-shared-local-and-repo-only", func(t *testing.T) {
+		main := []string{"Bash(ls *)", "Bash(cat *)"} // ls shared, cat local
+		disabled := []string{"Bash(jq *)"}            // jq local (parked)
+		frag := []string{"Bash(ls *)", "Bash(rm *)"}  // rm repo-only
+		rows := permissionRows(main, disabled, frag, listAllow, listDisabledAllow, true)
+
+		bySource := map[string]permissionRow{}
+		for _, row := range rows {
+			bySource[row.Value] = row
+		}
+		assert.Equal(t, permSourceShared, bySource["Bash(ls *)"].Source)
+		assert.Equal(t, permSourceLocal, bySource["Bash(cat *)"].Source)
+		assert.Equal(t, permSourceLocal, bySource["Bash(jq *)"].Source)
+		require.Contains(t, bySource, "Bash(rm *)")
+		repoOnly := bySource["Bash(rm *)"]
+		assert.Equal(t, permSourceRepoOnly, repoOnly.Source)
+		assert.False(t, repoOnly.Enabled)
+		assert.Empty(t, repoOnly.List)
+	})
+
+	t.Run("unknown-fragment-skips-marking", func(t *testing.T) {
+		rows := permissionRows([]string{"Bash(ls *)"}, nil, nil, listAllow, listDisabledAllow, false)
+		require.Len(t, rows, 1)
+		assert.Empty(t, rows[0].Source)
+	})
+}
+
+func TestPermissionsLocalAndRepoOnlyMarking(t *testing.T) {
+	live := `{"permissions": {"allow": ["Bash(ls *)", "Bash(cat *)"]}}`    // ls shared, cat local
+	fragment := `{"permissions": {"allow": ["Bash(ls *)", "Bash(rm *)"]}}` // rm repo-only
+	server := newSectionServer(t, live, fragment)
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/permissions", nil))
+	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+	body := response.Body.String()
+
+	assert.Contains(t, body, "Bash(rm *)")        // repo-only rule surfaced as a row
+	assert.Contains(t, body, ">local</span>")     // cat marked local (orange)
+	assert.Contains(t, body, ">Repo Only</span>") // rm marked repo-only (grey)
 }

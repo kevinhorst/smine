@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/kevinhorst/smine/internal/config"
+	"github.com/kevinhorst/smine/internal/fsx"
 	"github.com/kevinhorst/smine/internal/server/catalog"
 	"github.com/kevinhorst/smine/internal/server/respond"
 )
@@ -47,9 +48,25 @@ func (s *Server) handleConfigSyncOp(w http.ResponseWriter, r *http.Request, reve
 	}
 
 	op := func(context.Context) (string, error) {
+		before, err := os.ReadFile(dst)
+		if err != nil && !os.IsNotExist(err) {
+			return "", fmt.Errorf("handleConfigSyncOp: Failed to read %s: %w", dst, err)
+		}
 		output, err := copyFileAtomic(src, dst)
-		if err != nil || !revert || target == catalog.TargetCodex {
+		if err != nil {
 			return output, err
+		}
+		diff, err := fileDiff(before, dst)
+		if err != nil {
+			return output, fmt.Errorf("handleConfigSyncOp: Failed to diff %s: %w", dst, err)
+		}
+		if diff == nil {
+			output += "\n(no changes)"
+		} else {
+			output += "\n" + formatDiff(diff)
+		}
+		if !revert || target == catalog.TargetCodex {
+			return output, nil
 		}
 
 		// Revert makes the repo fragment the whole truth: parked disabled
@@ -62,10 +79,12 @@ func (s *Server) handleConfigSyncOp(w http.ResponseWriter, r *http.Request, reve
 	s.runRepoOp(configSyncLockKey, "config-op", op, w, r)
 }
 
-// clearParkedClaudeState empties the in-memory disabled-hooks store and the
+// clearParkedClaudeState empties the disabled-hooks sidecar and the
 // settings.disabled.json sidecar.
 func (s *Server) clearParkedClaudeState() error {
-	s.disabledHooks.Clear()
+	if err := s.disabledHooks.Clear(); err != nil {
+		return fmt.Errorf("clearParkedClaudeState: %w", err)
+	}
 	if err := config.Save(config.DisabledPath(s.settingsPath), config.NewSettings()); err != nil {
 		return fmt.Errorf("clearParkedClaudeState: %w", err)
 	}
@@ -111,7 +130,7 @@ func copyFileAtomic(src, dst string) (string, error) {
 	if err := tmp.Close(); err != nil {
 		return "", fmt.Errorf("copyFileAtomic: Failed to close %s: %w", tmp.Name(), err)
 	}
-	if err := os.Rename(tmp.Name(), dst); err != nil {
+	if err := fsx.ReplaceFile(tmp.Name(), dst); err != nil {
 		return "", fmt.Errorf("copyFileAtomic: Failed to rename to %s: %w", dst, err)
 	}
 	return fmt.Sprintf("synced: %s -> %s", src, dst), nil

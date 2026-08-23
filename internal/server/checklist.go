@@ -4,6 +4,7 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/kevinhorst/smine/internal/checklist"
@@ -40,9 +41,13 @@ func (s *Server) handleChecklistPage(w http.ResponseWriter, r *http.Request) {
 	}
 	data := checklistPageData{Page: pageChecklist, Tab: tab, Title: "Workflow Improvements Checklist"}
 	parsedChecklist, err := checklist.Parse(s.checklistPath)
-	if err != nil {
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		// A tree without the checklist doc (a fresh clone; the file is a
+		// private artifact) renders an empty checklist, not an error.
+	case err != nil:
 		data.Error = err.Error()
-	} else {
+	default:
 		for _, entry := range parsedChecklist.Entries {
 			isDone := entry.Status == statusDone
 			if isDone {
@@ -51,7 +56,7 @@ func (s *Server) handleChecklistPage(w http.ResponseWriter, r *http.Request) {
 				data.CountOpen++
 			}
 			if isDone == (tab == "done") {
-				data.Entries = append(data.Entries, checklistEntryData(parsedChecklist, entry))
+				data.Entries = append(data.Entries, s.checklistEntryData(parsedChecklist, entry))
 			}
 		}
 	}
@@ -86,8 +91,8 @@ func (s *Server) handleChecklistStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func checklistEntryData(parsedChecklist *checklist.Checklist, entry checklist.Entry) checklistEntryView {
-	body, err := renderMarkdown([]byte(entry.Body))
+func (s *Server) checklistEntryData(parsedChecklist *checklist.Checklist, entry checklist.Entry) checklistEntryView {
+	body, err := s.renderDocMarkdown([]byte(entry.Body))
 	if err != nil {
 		body = template.HTML("")
 	}

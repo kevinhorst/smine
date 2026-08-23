@@ -6,17 +6,19 @@
 </div>
 <div class="meta">{{.Routine.Dir}}</div>
 {{template "_routine_ops.html" .}}
+{{template "_routine_tokens.html" .}}
 <div id="op-result"></div>
+<h2>status</h2>
 <div class="routines-layout">
+<div id="routine-configure"></div>
 <table class="md-body checklist-table">
   <thead>
-    <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Next run</th><th>Env</th></tr>
+    <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Session</th><th>Next run</th></tr>
   </thead>
   <tbody>
     {{template "_routine_row.html" .Row}}
   </tbody>
 </table>
-<div id="routine-configure"></div>
 </div>
 {{if .HistoryErr}}
 <div class="card card-error"><span class="label">{{.HistoryErr}}</span></div>
@@ -30,7 +32,7 @@
   <tbody>
     {{range .History}}
     <tr>
-      <td>{{.Timestamp}}</td>
+      <td class="run-cell">{{stampDate .Timestamp}}<br>{{stampTime .Timestamp}}</td>
       <td>{{if eq .ExitStatus 0}}<span class="badge badge-ok">0</span>{{else}}<span class="badge badge-error">{{.ExitStatus}}</span>{{end}}</td>
       <td>{{.NumTurns}}</td>
       <td>${{printf "%.4f" .TotalCostUsd}}</td>

@@ -35,14 +35,16 @@
   <a href="/tools" {{if eq .Page "tools"}}class="active"{{end}}>Tools</a>
   <a href="/docs/checklist" {{if eq .Page "checklist"}}class="active"{{end}}>Checklist</a>
   {{if peekDashboardURL}}<a href="{{peekDashboardURL}}">Peek</a>{{end}}
+  <span class="nav-brand">smine.<span class="nav-version">v{{appVersion}}</span></span>
 </nav>
 {{end}}
 
 {{define "foot"}}
 <script>
-  // Terminal-window chrome (pre.file-view): the brandbook dots double as
-  // window controls — red closes, amber collapses to the title bar, green
-  // toggles a fullscreen overlay. Overlay buttons keep the dots pure CSS.
+  // Terminal-window chrome. pre.file-view: amber collapses to the title bar,
+  // green toggles a fullscreen overlay, red is decorative. .window-card
+  // (configure widget): only the rose dot, which closes the container named
+  // by data-close. Overlay buttons keep the dots pure CSS.
   (function () {
     var DOTS = [
       { left: 12, title: 'close' },
@@ -50,14 +52,20 @@
       { left: 48, title: 'expand' },
     ];
     function act(pre, title) {
-      if (title === 'close') { pre.remove(); return; }
+      if (title === 'close') {
+        var target = document.querySelector(pre.dataset.close);
+        if (target) target.innerHTML = '';
+        return;
+      }
       if (title === 'minimize') { pre.classList.remove('maximized'); pre.classList.toggle('minimized'); return; }
       pre.classList.remove('minimized'); pre.classList.toggle('maximized');
     }
     function decorate(root) {
-      root.querySelectorAll('pre.file-view:not([data-term])').forEach(function (pre) {
+      root.querySelectorAll('pre.file-view:not([data-term]), .window-card:not([data-term])').forEach(function (pre) {
         pre.setAttribute('data-term', '1');
+        var isWindowCard = pre.classList.contains('window-card');
         DOTS.forEach(function (spec) {
+          if (isWindowCard !== (spec.title === 'close')) return;
           var dot = document.createElement('button');
           dot.type = 'button';
           dot.className = 'term-dot';
@@ -77,6 +85,32 @@
       });
     });
   })();
+
+  // Bulk select-all: a summary's .bulk-all checkbox toggles every .bulk-check
+  // inside its <details>; the click never toggles the section itself.
+  document.body.addEventListener('click', function (evt) {
+    var all = evt.target.closest('.bulk-all');
+    if (!all) { return; }
+    evt.stopPropagation();
+    all.closest('details').querySelectorAll('.bulk-check').forEach(function (box) {
+      box.checked = all.checked;
+    });
+  });
+
+  // Topic-chip overflow: rows cap at 4 chips; the "+N" toggle shows the rest
+  // and flips to "hide". Delegated so htmx swaps keep working; the click
+  // never toggles the surrounding <details>.
+  document.body.addEventListener('click', function (evt) {
+    var toggle = evt.target.closest('.topic-toggle');
+    if (!toggle) { return; }
+    evt.preventDefault();
+    evt.stopPropagation();
+    var expanded = toggle.textContent === 'hide';
+    toggle.closest('summary').querySelectorAll('.topic-extra').forEach(function (chip) {
+      chip.classList.toggle('hidden', expanded);
+    });
+    toggle.textContent = expanded ? toggle.dataset.more : 'hide';
+  });
 </script>
 </body>
 </html>

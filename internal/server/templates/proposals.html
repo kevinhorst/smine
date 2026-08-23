@@ -4,22 +4,7 @@
 <div class="tabs">
   <a href="/proposals" {{if eq .Tab "open"}}class="active"{{end}}>Open</a>
   <a href="/proposals?tab=notes" {{if eq .Tab "notes"}}class="active"{{end}}>Notes</a>
-  <a href="/proposals?tab=auto-apply" {{if eq .Tab "auto-apply"}}class="active"{{end}}>Auto-Apply</a>
 </div>
-{{if eq .Tab "auto-apply"}}
-{{if .AutoApplyError}}
-<div class="card card-error"><span class="label">{{.AutoApplyError}}</span></div>
-{{end}}
-<div class="card card-column">
-  <span class="label"><strong>Decide-mode rules</strong> <span class="meta">{{.AutoApplyPath}}</span></span>
-  <form class="card-column" hx-post="/api/auto-apply-rules">
-    <textarea name="content" rows="24">{{.AutoApplyContent}}</textarea>
-    <div class="card-row">
-      <button type="submit">Save</button>
-    </div>
-  </form>
-</div>
-{{else}}
 <div id="proposals-body">
 {{if .LoadErrors}}
 <div class="card card-error">
@@ -30,7 +15,7 @@
 </div>
 {{end}}
 {{if not .Files}}
-<div class="empty">No proposal JSONs found (sessions/proposals/*.json).</div>
+<div class="empty">No proposal JSONs found (proposals/*.json).</div>
 {{end}}
 {{if and .Files (not .HasGroups)}}
 {{if eq .Tab "open"}}
@@ -44,23 +29,35 @@
 {{if .Groups}}
 <h2>{{.File.Kind}}{{if or .File.Updated .File.Source}} <span class="meta">{{if .File.Updated}}updated {{.File.Updated}}{{end}}{{if and .File.Updated .File.Source}} · {{end}}{{.File.Source}}</span>{{end}}</h2>
 {{/* Filter values only exist for votable proposals — no filter row on Notes. */}}
-{{if and .Filters (eq $.Tab "open")}}
+{{if and .FilterRows (eq $.Tab "open")}}
 <div class="card card-filter">
-  <a class="badge {{if not .Filter}}badge-ok{{else}}badge-dim{{end}}" href="{{.AllURL}}"
-     hx-get="{{.AllURL}}" hx-target="#proposals-body" hx-select="#proposals-body"
-     hx-swap="outerHTML" hx-push-url="true">all</a>
-  {{range .Filters}}
-  <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.URL}}"
-     hx-get="{{.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
-     hx-swap="outerHTML" hx-push-url="true">{{.Value}}</a>
+  {{$view := .}}
+  {{range $index, $row := .FilterRows}}
+  {{if $index}}<hr class="filter-divider">{{end}}
+  <div class="card-row">
+    {{with $row.Label}}<span class="section-label">{{.}}</span>{{end}}
+    <a class="badge {{if not $view.Filter}}badge-ok{{else}}badge-dim{{end}}" href="{{$view.AllURL}}"
+       hx-get="{{$view.AllURL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+       hx-swap="outerHTML" hx-push-url="true">all</a>
+    {{range $row.Filters}}
+    <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.URL}}"
+       hx-get="{{.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
+       hx-swap="outerHTML" hx-push-url="true">{{.Label}}</a>
+    {{end}}
+  </div>
   {{end}}
 </div>
+{{end}}
+{{range .Categories}}
+{{if not .Solo}}
+<details class="section" data-section="{{.DataSection}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
+  <summary>{{.Title}} <span class="count-note">{{.CountLabel}}</span></summary>
 {{end}}
 {{range .Groups}}
 {{/* Server-side open is only the default for sections the script below has
      never snapshotted (first load, deep link). */}}
-<details class="section" data-section="{{$file.File.Kind}}/{{.Title}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
-  <summary>{{.Title}}
+<details class="section{{if not .Solo}} section-sub{{end}}" data-section="{{.DataSection}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
+  <summary>{{.Title}} <span class="count-note">{{.CountLabel}}</span>
     {{- if .Accepted.URL}}
     <a class="{{if .Accepted.Active}}badge badge-ok{{else}}state-note{{end}}" href="{{.Accepted.URL}}" title="{{.Accepted.Tooltip}}"
        hx-get="{{.Accepted.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
@@ -76,10 +73,23 @@
        hx-get="{{.Postponed.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
        hx-swap="outerHTML" hx-push-url="true">p{{if .Postponed.Active}} [{{.Postponed.Count}}]{{end}}</a>
     {{- end}}</summary>
+  {{if .Subgroups}}
+  {{range .Subgroups}}
+  <details class="section section-sub" data-section="{{.DataSection}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
+    <summary>{{.Title}} <span class="count-note">{{.CountLabel}}</span></summary>
+    {{range .Proposals}}
+    {{template "_proposal_card.html" .}}
+    {{end}}
+  </details>
+  {{end}}
+  {{else}}
   {{range .Proposals}}
   {{template "_proposal_card.html" .}}
   {{end}}
+  {{end}}
 </details>
+{{end}}
+{{if not .Solo}}</details>{{end}}
 {{end}}
 {{end}}
 {{end}}
@@ -122,5 +132,4 @@
     });
   });
 </script>
-{{end}}
 {{template "foot" .}}

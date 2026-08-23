@@ -1,0 +1,118 @@
+{{template "head" .}}
+{{template "nav" .}}
+{{template "_skill_head" .}}
+{{if .File}}
+<div class="card">
+  <span class="label">{{.File}}</span>
+  <a class="meta" href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}/tests">back to Tests</a>
+</div>
+<pre class="file-view">{{.FileContent}}</pre>
+{{else}}
+{{range .EvalErrors}}
+<div class="card card-error"><span class="label">{{.}}</span></div>
+{{end}}
+{{if .Evals}}
+{{range .Evals}}
+{{$view := .}}
+<h2>{{.Dir.Eval.Eval.Date}} — {{.Dir.Dir}}{{if .Dir.Eval.IsLegacy}} <span class="meta">(schema v1)</span>{{end}}</h2>
+{{if .Dir.Eval.Eval.Notes}}<div class="meta">{{.Dir.Eval.Eval.Notes}}</div>{{end}}
+{{if .Runs}}
+<table class="md-body checklist-table">
+  <thead><tr><th></th><th>Run</th><th>Variant</th><th>Model</th><th>Effort</th><th>Mode</th></tr></thead>
+  <tbody>
+    {{range .Runs}}
+    <tr><td>{{.Label}}</td><td>{{.Run.Id}}</td><td>{{if .Run.Variant.Name}}{{.Run.Variant.Name}}{{else}}default{{end}}</td><td>{{.Run.Model.Id}}</td><td>{{.Run.Model.Effort}}</td><td>{{.Run.Model.Mode}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Rankings}}
+<h3>Ranking</h3>
+<table class="md-body checklist-table">
+  <thead><tr><th>Axis</th><th>Run</th><th>Score</th><th>Pct</th></tr></thead>
+  <tbody>
+    {{range .Rankings}}
+    <tr><td>{{.Axis}}</td><td>{{.RunLabel}}</td><td>{{.Raw}}/{{.Max}}</td><td>{{printf "%.0f" .Pct}}%</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{range .Axes}}
+<h3>{{.Axis}} axis</h3>
+<table class="md-body checklist-table score-matrix">
+  <thead><tr><th>Rule</th>{{range $view.Runs}}<th>{{.Label}}</th>{{end}}</tr></thead>
+  <tbody>
+    {{range .Rows}}
+    <tr><td title="{{.Rule.Rule}}">{{.Rule.Id}}</td>{{range .Cells}}<td class="score-cell {{.Class}}" title="{{.Title}}">{{.Text}}</td>{{end}}</tr>
+    {{end}}
+  </tbody>
+</table>
+{{if .Justifications}}
+<details>
+  <summary>justifications ({{len .Justifications}})</summary>
+  <table class="md-body checklist-table">
+    <thead><tr><th>Rule</th><th>Run</th><th>Score</th><th>Source</th><th>Justification</th><th>Evidence</th></tr></thead>
+    <tbody>
+      {{range .Justifications}}
+      <tr><td>{{.RuleId}}</td><td>{{.RunLabel}}</td><td>{{.Score}}</td><td>{{.Source}}</td><td>{{.Justification}}</td><td class="meta">{{.Evidence}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</details>
+{{end}}
+{{end}}
+{{if .Dir.Eval.Probes}}
+<h3>Probes</h3>
+<table class="md-body checklist-table">
+  <thead><tr><th>Probe</th><th>Result</th></tr></thead>
+  <tbody>
+    {{range .Dir.Eval.Probes}}
+    <tr><td>{{.Name}}</td><td>{{.Result}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Dir.Deltas}}
+<h3>Deltas</h3>
+<table class="md-body checklist-table">
+  <thead><tr><th>Axis</th><th>Dimension</th><th>Arm</th><th>Δ pct</th><th>n</th></tr></thead>
+  <tbody>
+    {{range .Dir.Deltas}}
+    <tr><td>{{.Axis}}</td><td>{{.Dimension}}</td><td>{{.Arm}}</td><td>{{printf "%+.1f" .DeltaPct}}</td><td>{{.N}}</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Dir.Eval.Metrics}}
+<h3>Metrics</h3>
+<table class="md-body checklist-table">
+  <thead><tr><th>Metric</th><th>Run</th><th>Value</th></tr></thead>
+  <tbody>
+    {{range $metric := .Dir.Eval.Metrics}}{{range $value := $view.Dir.Eval.MetricValues}}{{if eq $value.MetricId $metric.Id}}
+    <tr><td>{{$metric.Label}} ({{$metric.Unit}})</td><td>{{$value.RunId}}</td><td>{{if eq $value.Value nil}}—{{else}}{{$value.Value}}{{end}}{{if $value.Note}} <span class="meta">{{$value.Note}}</span>{{end}}</td></tr>
+    {{end}}{{end}}{{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Dir.Files}}
+<details>
+  <summary>artifacts ({{len .Dir.Files}})</summary>
+  <div class="meta">
+    {{range .Dir.Files}}
+    <a href="/scripts/skills/{{$.Skill.Origin}}/{{$.Skill.Name}}/tests/file?d={{$view.Dir.Dir}}&f={{.}}">{{.}}</a>
+    {{end}}
+  </div>
+</details>
+{{end}}
+{{end}}
+{{else}}
+<p class="description">No eval runs yet. The nightly skill-eval routine writes to evals/&lt;skill&gt;-&lt;date&gt;/, or run /skillroutine-eval with the manifest stub below.</p>
+{{end}}
+{{if .ManifestStub}}
+<details>
+  <summary>eval manifest stub</summary>
+  <pre class="file-view">{{.ManifestStub}}</pre>
+</details>
+{{end}}
+{{end}}
+{{template "foot" .}}

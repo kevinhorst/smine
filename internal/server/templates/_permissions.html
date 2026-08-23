@@ -4,27 +4,35 @@
   <h2 class="first">Permissions — Allow</h2>
   {{if not .Allow}}<div class="empty">None</div>{{end}}
   {{range .Allow}}
-  <div class="card {{if not .Enabled}}card-disabled{{end}}">
+  <div class="card {{if or (not .Enabled) (eq .Source "repoOnly")}}card-disabled{{end}}">
     <span class="label">{{.Value}}</span>
+    {{if eq .Source "local"}}<span class="badge badge-action" title="in your live settings but not the repo fragment — added locally">local</span>{{end}}
+    {{if eq .Source "repoOnly"}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{end}}
+    {{if ne .Source "repoOnly"}}
     <label class="toggle">
       <input type="checkbox" {{if .Enabled}}checked{{end}}
              hx-post="/api/permissions/{{.List}}/{{.Index}}/toggle"
              hx-target="#permissions-section" hx-swap="outerHTML">
       <span class="slider"></span>
     </label>
+    {{end}}
   </div>
   {{end}}
   <h2>Permissions — Ask</h2>
   {{if not .Ask}}<div class="empty">None</div>{{end}}
   {{range .Ask}}
-  <div class="card {{if not .Enabled}}card-disabled{{end}}">
+  <div class="card {{if or (not .Enabled) (eq .Source "repoOnly")}}card-disabled{{end}}">
     <span class="label">{{.Value}}</span>
+    {{if eq .Source "local"}}<span class="badge badge-action" title="in your live settings but not the repo fragment — added locally">local</span>{{end}}
+    {{if eq .Source "repoOnly"}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{end}}
+    {{if ne .Source "repoOnly"}}
     <label class="toggle">
       <input type="checkbox" {{if .Enabled}}checked{{end}}
              hx-post="/api/permissions/{{.List}}/{{.Index}}/toggle"
              hx-target="#permissions-section" hx-swap="outerHTML">
       <span class="slider"></span>
     </label>
+    {{end}}
   </div>
   {{end}}
 </div>

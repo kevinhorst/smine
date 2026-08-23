@@ -39,6 +39,14 @@ func TestConfigItems(t *testing.T) {
 		return settingsPath, newTestServer(t, &Options{SettingsPath: settingsPath})
 	}
 
+	t.Run("choose-folder-404-on-non-path-key", func(t *testing.T) {
+		_, server := newServer(t, "")
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response,
+			formPost("/api/config/claude/disabledMcpjsonServers/choose-folder", url.Values{}))
+		assert.Equal(t, http.StatusNotFound, response.Code)
+	})
+
 	t.Run("add-to-unset-key-creates-array", func(t *testing.T) {
 		settingsPath, server := newServer(t, "")
 		response := httptest.NewRecorder()

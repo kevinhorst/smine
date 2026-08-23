@@ -1,0 +1,41 @@
+{{template "head" .}}
+{{template "nav" .}}
+{{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
+<div class="detail-head">
+  <h1>{{.Entry.Id}}</h1>
+  <span class="badge {{if eq .Entry.Kind "action"}}badge-ok{{else}}badge-dim{{end}}">{{.Entry.Kind}}</span>
+  {{if .Entry.Enforcement}}<span class="badge badge-dim" title="{{enforcementTitle .Entry.Enforcement}}">{{.Entry.Enforcement}}</span>{{end}}
+  {{if eq .Entry.Reach "none"}}<span class="badge badge-error" title="disabled — deploys nowhere">disabled</span>
+  {{else}}<span class="badge {{if eq .Entry.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Entry.Reach "smine"}}binds only in smine (this repo), never deploys{{else if eq .Entry.Reach "global"}}binds in any repo{{else}}deploys exactly to the named repos{{end}}">{{.Entry.Reach}}</span>{{end}}
+  {{if .Entry.Version}}<span class="badge badge-dim badge-version">v{{.Entry.Version}}</span>{{end}}
+</div>
+<div class="meta detail-meta">scope {{.Entry.Scope}}{{if .Entry.Topic}} · topic {{.Entry.Topic}}{{end}}{{if .Entry.Source}} · source <a href="/context/{{sourceDocHref .Entry.Source}}"><code>{{.Entry.Source}}</code></a>{{end}}</div>
+<h2>reach</h2>
+<div class="card card-filter">
+  <form method="post" action="/context/entry/{{pathEscape .Entry.Id}}/reach">
+    {{template "_reach_picker.html" .Picker}}
+    <button type="submit">set reach</button>
+    <span class="meta">check the deploy targets — disabled and global stand alone; disabled entries deploy nowhere</span>
+  </form>
+</div>
+<h2>content</h2>
+<div class="card card-column">
+  <div class="description">{{.Entry.Content.Statement}}</div>
+</div>
+<h2>examples</h2>
+<div class="card card-column">
+  <div class="card-row"><span class="badge badge-ok">positive</span> <span class="empty">None</span></div>
+</div>
+<div class="card card-column">
+  <div class="card-row"><span class="badge badge-error">negative</span> <span class="empty">None</span></div>
+</div>
+{{if .GatedBy}}
+<h2>gates</h2>
+{{range .GatedBy}}
+<div class="card">
+  <a class="label" href="/context/rule/{{pathEscape .}}">{{.}}</a>
+  <span class="meta" title="cited by this acdsl rule's why — the checkable slice is gated">gate</span>
+</div>
+{{end}}
+{{end}}
+{{template "foot" .}}

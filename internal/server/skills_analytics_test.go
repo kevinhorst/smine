@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,14 +28,21 @@ func skillsTestEnv(t *testing.T, withChangelog bool) *Server {
 	}
 
 	evalsDir := t.TempDir()
-	evalSkillDir := filepath.Join(evalsDir, "demo")
-	require.NoError(t, os.MkdirAll(evalSkillDir, 0o755))
+	evalSkillDir := filepath.Join(evalsDir, "demo-2026-07-11")
+	require.NoError(t, os.MkdirAll(filepath.Join(evalSkillDir, "runs"), 0o755))
 	evalContent := `{
+		"schemaVersion": "2.0",
 		"eval": {"skill": "demo", "date": "2026-07-11", "notes": "baseline"},
 		"runs": [{"id": "run-1", "model": {"id": "claude-fable-5", "effort": "high"}}],
-		"totals": [{"runId": "run-1", "axis": "compliance", "raw": 22, "max": 25, "pct": 88}]
+		"rubric": [{"id": "SKILL-DEMO-A-001", "axis": "self", "phase": "step", "rule": "Do the thing.", "source": "skills/demo/SKILL.md:3"}],
+		"scores": [{"ruleId": "SKILL-DEMO-A-001", "runId": "run-1", "score": 0, "source": "agent", "justification": "not demonstrated", "evidence": ["line 4"]}],
+		"probes": [{"name": "context-injection", "ruleIds": ["SKILL-DEMO-A-001"], "result": "identical sets"}],
+		"totals": [{"runId": "run-1", "axis": "self", "raw": 22, "max": 25, "pct": 88}]
 	}`
-	require.NoError(t, os.WriteFile(filepath.Join(evalSkillDir, "eval-1.json"), []byte(evalContent), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(evalSkillDir, "eval.json"), []byte(evalContent), 0o644))
+	deltasContent := `[{"axis": "self", "dimension": "context", "arm": "off", "delta_pct": 1.4, "n": 4}]`
+	require.NoError(t, os.WriteFile(filepath.Join(evalSkillDir, "deltas.json"), []byte(deltasContent), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(evalSkillDir, "runs", "run-1.md"), []byte("run output\n"), 0o644))
 
 	examplesDir := t.TempDir()
 	exampleSkillDir := filepath.Join(examplesDir, "demo")
@@ -70,13 +78,64 @@ func TestSkillDetailRendersAllBlocks(t *testing.T) {
 	assert.Contains(t, body, "Version history")
 	assert.Contains(t, body, "allowed-tools: Bash(jq *), Read")
 	assert.Contains(t, body, "added X")
-	assert.Contains(t, body, "Eval runs")
-	assert.Contains(t, body, "claude-fable-5")
 	assert.Contains(t, body, "Examples")
 	assert.Contains(t, body, "input.md")
-	assert.Contains(t, body, "eval manifest stub")
+	assert.Contains(t, body, "/scripts/skills/repo/demo/tests")
+	assert.NotContains(t, body, "Eval runs")
+	assert.NotContains(t, body, "eval manifest stub")
 	assert.Contains(t, body, "Invocations (1)")
 	assert.Contains(t, body, "/sessions/personal/1?session=00000000-0000-0000-0000-000000000001")
+}
+
+func TestSkillTestsTabRendersEvaluation(t *testing.T) {
+	server := skillsTestEnv(t, false)
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/scripts/skills/repo/demo/tests", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	body := response.Body.String()
+
+	assert.Contains(t, body, "2026-07-11 — demo-2026-07-11")
+	assert.Contains(t, body, "claude-fable-5")
+	assert.Contains(t, body, "Ranking")
+	assert.Contains(t, body, "22/25")
+	assert.Contains(t, body, "self axis")
+	assert.Contains(t, body, "SKILL-DEMO-A-001")
+	assert.Contains(t, body, "justifications (1)")
+	assert.Contains(t, body, "not demonstrated")
+	assert.Contains(t, body, "context-injection")
+	assert.Contains(t, body, "Deltas")
+	assert.Contains(t, body, "&#43;1.4")
+	assert.Contains(t, body, "artifacts (3)")
+	assert.Contains(t, body, "eval manifest stub")
+}
+
+func TestSkillTestsTabEmptyState(t *testing.T) {
+	server := skillsTestEnv(t, false)
+	addSkill(t, server, "bare")
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/scripts/skills/repo/bare/tests", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	body := response.Body.String()
+
+	assert.Contains(t, body, "No eval runs yet")
+	assert.Contains(t, body, "eval manifest stub")
+}
+
+func TestSkillTestsFileServesArtifact(t *testing.T) {
+	server := skillsTestEnv(t, false)
+
+	response := httptest.NewRecorder()
+	target := "/scripts/skills/repo/demo/tests/file?d=demo-2026-07-11&f=" + url.QueryEscape("runs/run-1.md")
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, target, nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, response.Body.String(), "run output")
+
+	denied := httptest.NewRecorder()
+	target = "/scripts/skills/repo/demo/tests/file?d=demo-2026-07-11&f=" + url.QueryEscape("../../go.mod")
+	server.Handler().ServeHTTP(denied, httptest.NewRequest(http.MethodGet, target, nil))
+	assert.Equal(t, http.StatusNotFound, denied.Code)
 }
 
 func TestSkillDetailWithoutChangelogHidesBlock(t *testing.T) {

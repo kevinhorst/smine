@@ -112,6 +112,26 @@ const batchFixture = `{
   "arcs": []
 }`
 
+func TestBatchPageDivergentScopeURLs(t *testing.T) {
+	sessionsDir := t.TempDir()
+	jsonDir := filepath.Join(sessionsDir, "work", "json")
+	require.NoError(t, os.MkdirAll(jsonDir, 0755))
+	divergent := `{
+	  "batch": {"scope": "aqms", "number": 1, "file": "batch1.md"},
+	  "sessions": [{"id": "abc123", "title": "First session", "findings": [{"dimension": "memory", "summary": "a finding"}]}],
+	  "arcs": []
+	}`
+	require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "batch1.json"), []byte(divergent), 0644))
+	server := newTestServer(t, &Options{SessionsDir: sessionsDir})
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/sessions/work/1", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	body := response.Body.String()
+	assert.Contains(t, body, `hx-get="/sessions/work/1`, "htmx URLs key off the directory scope")
+	assert.NotContains(t, body, "aqms", "the JSON scope value never reaches the page")
+}
+
 func TestSessionsPages(t *testing.T) {
 	sessionsDir := t.TempDir()
 	jsonDir := filepath.Join(sessionsDir, "personal", "json")

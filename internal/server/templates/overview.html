@@ -11,18 +11,22 @@
       <span class="tile-value-sep">/</span>
       <a class="split-positive" href="{{.Split.PositiveHref}}">{{.Split.PositiveValue}}</a>
     </span>
+    {{if .Trend}}
+    <svg class="tile-trend" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+      {{range .Trend.Bars}}<rect class="{{.Class}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}"></rect>{{end}}
+    </svg>
+    {{end}}
+    {{if .Filters}}
+    <span class="tile-filter">
+      {{range .Filters}}<a class="tile-filter-link{{if .Active}} tile-filter-active{{end}}" href="{{.URL}}">{{.Label}}</a>{{end}}
+    </span>
+    {{end}}
     {{if .Detail}}<span class="tile-detail">{{.Detail}}</span>{{end}}
   </div>
   {{else}}
   <a class="tile" href="{{.Href}}" draggable="true" data-tile-id="{{.Id}}">
     <span class="tile-label">{{.Label}}</span>
     <span class="tile-value">{{.Value}}</span>
-    {{if .Trend}}
-    <svg class="tile-trend" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
-      <polyline class="trend-positive" points="{{.Trend.PositivePoints}}"></polyline>
-      <polyline class="trend-frustration" points="{{.Trend.FrustrationPoints}}"></polyline>
-    </svg>
-    {{end}}
     {{if .Detail}}<span class="tile-detail">{{.Detail}}</span>{{end}}
   </a>
   {{end}}

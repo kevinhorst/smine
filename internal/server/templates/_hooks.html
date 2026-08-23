@@ -1,6 +1,12 @@
 {{define "_hooks.html"}}
-<span id="ovr-hooks" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
+<span id="ovr-hooks" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment — diff inside the section">overridden</span>{{end}}</span>
 <div id="hooks-section">
+  {{if .Diff}}
+  <details>
+    <summary class="meta">repo fragment → live settings diff</summary>
+    {{template "_diff.html" .Diff}}
+  </details>
+  {{end}}
   {{if not .Hooks}}<div class="empty">No hooks configured</div>{{end}}
   {{range .Hooks}}
   <div class="card card-column">
@@ -8,7 +14,6 @@
       <span class="badge {{if .Enabled}}badge-ok{{else}}badge-error{{end}}">{{.Event}}</span>
       <span class="label"><strong>{{.Name}}</strong></span>
       {{if .Matcher}}<span class="meta">{{.Matcher}}</span>{{end}}
-      {{if not .Enabled}}<span class="badge badge-dim">session only — lost on hard restart</span>{{end}}
       <label class="toggle">
         <input type="checkbox" {{if .Enabled}}checked{{end}}
                hx-post="/api/hooks/{{.Event}}/{{.Index}}/toggle?enabled={{.Enabled}}"

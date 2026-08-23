@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kevinhorst/smine/internal/evals"
 	"github.com/kevinhorst/smine/internal/server/respond"
 	"github.com/kevinhorst/smine/internal/sessions"
 	"github.com/kevinhorst/smine/internal/skills"
@@ -44,15 +43,13 @@ type skillDetailPage struct {
 	Body           template.HTML
 	Changelog      []skills.ChangelogEntry
 	ChangelogError string
-	EvalErrors     []string
-	Evals          []evals.EvalFile
 	Examples       []string
 	File           string
 	FileContent    string
 	Invocations    []sessions.Invocation
-	ManifestStub   string
 	Page           string
 	Skill          *skills.Skill
+	Tab            string
 	Title          string
 }
 
@@ -102,7 +99,7 @@ func (s *Server) handleSkillDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := renderMarkdown(manifest)
+	body, err := s.renderDocMarkdown(manifest)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
 		return
@@ -115,7 +112,7 @@ func (s *Server) handleSkillDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) skillDetailData(skill *skills.Skill) skillDetailPage {
-	data := skillDetailPage{Page: pageSkills, Skill: skill}
+	data := skillDetailPage{Page: pageSkills, Skill: skill, Tab: "skill"}
 
 	changelog, err := skills.LoadChangelog(skill.Path)
 	if err != nil {
@@ -123,19 +120,8 @@ func (s *Server) skillDetailData(skill *skills.Skill) skillDetailPage {
 	}
 	data.Changelog = changelog
 
-	data.Evals, data.EvalErrors = evals.LoadForSkill(s.evalsDir, skill.Name)
 	data.Examples = exampleFiles(s.examplesDir, skill.Name)
 	data.Invocations = s.sessions.InvocationsBySkill()[skill.Name]
-
-	var examplePaths []string
-	for _, file := range data.Examples {
-		examplePaths = append(examplePaths, filepath.Join(s.examplesDir, skill.Name, file))
-	}
-	stub, err := evals.ManifestStub(s.evalsDir, examplePaths, filepath.Join(skill.Path, "SKILL.md"), skill.Name)
-	if err != nil {
-		data.EvalErrors = append(data.EvalErrors, err.Error())
-	}
-	data.ManifestStub = stub
 	return data
 }
 
@@ -185,6 +171,7 @@ func (s *Server) handleSkillFile(w http.ResponseWriter, r *http.Request) {
 		FileContent: string(content),
 		Page:        pageSkills,
 		Skill:       skill,
+		Tab:         "skill",
 		Title:       "Skill — " + skill.Name + " — " + requested,
 	}
 	s.renderFragment(w, tmplSkillDetail, data)

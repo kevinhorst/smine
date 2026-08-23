@@ -110,13 +110,6 @@ func TestConfigPages(t *testing.T) {
 		assert.Equal(t, "/config/claude", response.Header().Get("Location"))
 	})
 
-	t.Run("docs-page-lists-catalog", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude/docs", nil))
-		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-		assert.Contains(t, response.Body.String(), "disabledMcpjsonServers")
-	})
-
 	t.Run("unknown-target-404", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/bogus", nil))
@@ -165,24 +158,15 @@ func TestConfigOpenSection(t *testing.T) {
 	})
 }
 
-func TestConfigDocsTabs(t *testing.T) {
+func TestConfigTabs(t *testing.T) {
 	server := newTestServer(t, &Options{})
 
-	t.Run("docs-page-links-cross-target-docs", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude/docs", nil))
-		require.Equal(t, http.StatusOK, response.Code)
-		assert.Contains(t, response.Body.String(), `href="/config/codex/docs"`)
-	})
-
-	t.Run("active-page-links-cross-target-active", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude", nil))
-		require.Equal(t, http.StatusOK, response.Code)
-		body := response.Body.String()
-		assert.Contains(t, body, `href="/config/codex"`)
-		assert.NotContains(t, body, `href="/config/codex/docs"`)
-	})
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	body := response.Body.String()
+	assert.Contains(t, body, `href="/config/codex"`)
+	assert.NotContains(t, body, "/docs\"")
 }
 
 const codexFixture = `sandbox_mode = "workspace-write"
@@ -327,7 +311,10 @@ func TestConfigOverriddenPage(t *testing.T) {
 		body := getConfig(t, server)
 		row := body[strings.Index(body, `id="row-claude-customThing"`):]
 		row = row[:strings.Index(row, "</div>")]
-		assert.Contains(t, row, "overridden")
+		// A fragment-only key is flagged Repo Only (the precise form of the
+		// old generic "overridden") and shows the repo value (D1b).
+		assert.Contains(t, row, "Repo Only")
+		assert.Contains(t, row, "repo: true")
 		assert.Contains(t, row, "undocumented")
 	})
 
@@ -350,6 +337,23 @@ func TestConfigOverriddenPage(t *testing.T) {
 		assert.Contains(t, summary, "1 overridden")
 	})
 
+	t.Run("overridden-key-shows-repo-value", func(t *testing.T) {
+		server := newServer(t, `{"model": "sonnet"}`, `{"model": "opus"}`)
+		body := getConfig(t, server)
+		modelRow := body[strings.Index(body, `id="row-claude-model"`):]
+		modelRow = modelRow[:strings.Index(modelRow, "</div>")]
+		assert.Contains(t, modelRow, "repo: opus")
+	})
+
+	t.Run("fragment-only-key-marked-repo-only", func(t *testing.T) {
+		server := newServer(t, `{}`, `{"model": "opus"}`)
+		body := getConfig(t, server)
+		modelRow := body[strings.Index(body, `id="row-claude-model"`):]
+		modelRow = modelRow[:strings.Index(modelRow, "</div>")]
+		assert.Contains(t, modelRow, "Repo Only")
+		assert.Contains(t, modelRow, "repo: opus")
+	})
+
 	t.Run("missing-fragment-disables-sync-buttons", func(t *testing.T) {
 		server := newServer(t, `{}`, "")
 		body := getConfig(t, server)
@@ -357,4 +361,35 @@ func TestConfigOverriddenPage(t *testing.T) {
 		assert.Contains(t, body, "disabled>Sync")
 		assert.Contains(t, body, "disabled>Persist overrides")
 	})
+}
+
+func TestDocHref(t *testing.T) {
+	cases := []struct {
+		name        string
+		explanation string
+		source      string
+		want        string
+	}{
+		{"deep-link-with-anchor",
+			"Enterprise allowlist. See https://code.claude.com/docs/en/mcp#restriction-options",
+			"https://www.schemastore.org/claude-code-settings.json",
+			"https://code.claude.com/docs/en/mcp#restriction-options"},
+		{"trailing-period-trimmed",
+			"See https://code.claude.com/docs/en/statusline.",
+			"src",
+			"https://code.claude.com/docs/en/statusline"},
+		{"no-url-falls-back",
+			"A plain description with no link.",
+			"https://www.schemastore.org/claude-code-settings.json",
+			"https://www.schemastore.org/claude-code-settings.json"},
+		{"empty-explanation-falls-back",
+			"",
+			"https://developers.openai.com/codex/config-reference",
+			"https://developers.openai.com/codex/config-reference"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, docHref(tc.explanation, tc.source))
+		})
+	}
 }

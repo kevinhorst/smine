@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kevinhorst/smine/internal/config"
 	"github.com/kevinhorst/smine/internal/peek"
@@ -28,6 +29,7 @@ const (
 )
 
 type Options struct {
+	AcdslVerdictsPath  string
 	AutoApplyRulesPath string
 	ChecklistPath      string
 	ClaudeFragmentPath string
@@ -39,6 +41,7 @@ type Options struct {
 	ExamplesDir        string
 	PeekDashboardURL   string
 	PeekEndpoint       string
+	ProposalsDir       string
 	ReposPath          string
 	RoutinesDir        string
 	SessionsDir        string
@@ -46,10 +49,13 @@ type Options struct {
 	SkillsHome         string
 	SkillsRepo         string
 	SyncScriptsDir     string
+	TokenDir           string
+	Version            string
 	WorktreeScriptsDir string
 }
 
 type Server struct {
+	acdslVerdictsPath  string
 	autoApplyRulesPath string
 	catalog            []catalog.Entry
 	checklistPath      string
@@ -62,6 +68,7 @@ type Server struct {
 	evalsDir           string
 	examplesDir        string
 	peekClient         *peek.Client
+	proposalsDir       string
 	repoLocks          *repos.Locks
 	repoRegistry       *repos.Registry
 	routinesDir        string
@@ -72,6 +79,7 @@ type Server struct {
 	skillsRepo         string
 	syncScripts        string
 	tmpl               *template.Template
+	tokenDir           string
 	worktreeScripts    string
 }
 
@@ -81,11 +89,17 @@ func New(opts *Options) (*Server, error) {
 		// detail table compares it against the branch slug to expose
 		// pool-recycled dirs whose name no longer matches their branch.
 		"baseName": filepath.Base,
-		// branchParam strips the claude/ prefix for URL segments (D16).
-		"branchParam": func(branch string) string {
-			return strings.TrimPrefix(branch, agentBranchPrefix)
+		// branchSlug strips the agent-namespace prefix for the worktree-dir
+		// display compare; URLs and forms carry the full branch name (D3).
+		"branchSlug": func(branch string) string {
+			return branch[strings.Index(branch, "/")+1:]
 		},
-		"domID": domID,
+		"hasPrefix": strings.HasPrefix,
+		"domID":     domID,
+		// enforcementTitle explains an enforcement token in plain language —
+		// the tokens are contract vocabulary, the tooltip is where they get
+		// defined.
+		"enforcementTitle": enforcementTitle,
 		// intOrEmpty renders optional interval fields ("" when nil).
 		"intOrEmpty": func(p *int) any {
 			if p == nil {
@@ -93,9 +107,36 @@ func New(opts *Options) (*Server, error) {
 			}
 			return *p
 		},
+		// nameWrap inserts word-break opportunities after '_' and '-' so long
+		// repo names wrap at token boundaries, never mid-word (pathWrap's
+		// sibling for names).
+		"nameWrap": func(name string) template.HTML {
+			var builder strings.Builder
+			for _, character := range name {
+				builder.WriteString(template.HTMLEscapeString(string(character)))
+				if character == '_' || character == '-' {
+					builder.WriteString("<wbr>")
+				}
+			}
+			return template.HTML(builder.String())
+		},
 		"pathEscape": url.PathEscape,
+		// pathWrap inserts word-break opportunities after each slash so long
+		// absolute paths wrap at segment boundaries, never mid-word.
+		"pathWrap": func(path string) template.HTML {
+			var builder strings.Builder
+			for _, segment := range strings.SplitAfter(path, "/") {
+				builder.WriteString(template.HTMLEscapeString(segment))
+				builder.WriteString("<wbr>")
+			}
+			return template.HTML(builder.String())
+		},
 		"peekDashboardURL": func() string {
 			return opts.PeekDashboardURL
+		},
+		// appVersion feeds the nav brand; ldflags -X main.version stamps it.
+		"appVersion": func() string {
+			return opts.Version
 		},
 		"peekSessionURL": func(id string) string {
 			if opts.PeekDashboardURL == "" || id == "" {
@@ -104,6 +145,25 @@ func New(opts *Options) (*Server, error) {
 			return opts.PeekDashboardURL + "sessions/" + url.PathEscape(id)
 		},
 		"queryEscape": url.QueryEscape,
+		// stampDate/stampTime split an RFC3339 run timestamp into its date and
+		// time-of-day lines; an unparseable stamp renders verbatim as the date.
+		"stampDate": func(stamp string) string {
+			if t, err := time.Parse(time.RFC3339, stamp); err == nil {
+				return t.Format("2006-01-02")
+			}
+			return stamp
+		},
+		"stampTime": func(stamp string) string {
+			if t, err := time.Parse(time.RFC3339, stamp); err == nil {
+				return t.Format("15:04:05Z")
+			}
+			return ""
+		},
+		// sourceDocHref maps an entry source path to its doc-view route.
+		"sourceDocHref": sourceDocHref,
+		// docHref extracts a key's code.claude.com deep link from its
+		// explanation, falling back to the generic schema source.
+		"docHref": docHref,
 	}
 	tmpl, err := template.New("").Funcs(funcs).ParseFS(templateFS, "templates/*.html")
 	if err != nil {
@@ -140,6 +200,7 @@ func New(opts *Options) (*Server, error) {
 	}
 
 	configServer := &Server{
+		acdslVerdictsPath:  opts.AcdslVerdictsPath,
 		autoApplyRulesPath: opts.AutoApplyRulesPath,
 		catalog:            entries,
 		checklistPath:      opts.ChecklistPath,
@@ -152,6 +213,7 @@ func New(opts *Options) (*Server, error) {
 		evalsDir:           opts.EvalsDir,
 		examplesDir:        opts.ExamplesDir,
 		peekClient:         peek.NewClient(opts.PeekEndpoint),
+		proposalsDir:       opts.ProposalsDir,
 		repoLocks:          repos.NewLocks(),
 		repoRegistry:       registry,
 		routinesDir:        opts.RoutinesDir,
@@ -162,6 +224,7 @@ func New(opts *Options) (*Server, error) {
 		skillsRepo:         opts.SkillsRepo,
 		syncScripts:        opts.SyncScriptsDir,
 		tmpl:               tmpl,
+		tokenDir:           opts.TokenDir,
 		worktreeScripts:    opts.WorktreeScriptsDir,
 	}
 	return configServer, nil
@@ -204,6 +267,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/hooks", s.handleGetHooks)
 	mux.HandleFunc("POST /api/hooks/{event}/{index}/toggle", s.handleToggleHook)
 	mux.HandleFunc("GET /api/permissions", s.handleGetPermissions)
+	mux.HandleFunc("POST /api/permissions/add", s.handleAddPermission)
 	mux.HandleFunc("POST /api/permissions/{list}/{index}/toggle", s.handleTogglePermission)
 	mux.HandleFunc("GET /api/mcp", s.handleGetMCP)
 	mux.HandleFunc("POST /api/mcp/{server}/toggle", s.handleToggleMCP)
@@ -220,25 +284,33 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/proposals/{kind}/{id}/vote", s.handleProposalVote)
 	mux.HandleFunc("GET /config", s.handleConfigRedirect)
 	mux.HandleFunc("GET /config/{target}", s.handleConfigPage)
-	mux.HandleFunc("GET /config/{target}/docs", s.handleConfigDocs)
 	mux.HandleFunc("POST /api/config/{target}/{key}", s.handleConfigSet)
 	mux.HandleFunc("DELETE /api/config/{target}/{key}", s.handleConfigUnset)
 	mux.HandleFunc("POST /api/config/{target}/sync/apply", s.handleConfigApplyOverrides)
 	mux.HandleFunc("POST /api/config/{target}/sync/revert", s.handleConfigRevert)
 	mux.HandleFunc("POST /api/config/{target}/{key}/items", s.handleConfigItemAdd)
+	mux.HandleFunc("POST /api/config/{target}/{key}/choose-folder", s.handleConfigItemChooseFolder)
 	mux.HandleFunc("DELETE /api/config/{target}/{key}/items/{index}", s.handleConfigItemRemove)
 	mux.HandleFunc("POST /api/config/codex/{key}/toggle", s.handleConfigCodexToggle)
 	mux.HandleFunc("GET /docs/checklist", s.handleChecklistPage)
 	mux.HandleFunc("POST /api/checklist/{number}/status", s.handleChecklistStatus)
-	mux.HandleFunc("POST /api/auto-apply-rules", s.handleAutoApplyRulesSave)
 	mux.HandleFunc("GET /scripts/skills", s.handleSkillsIndex)
 	mux.HandleFunc("POST /scripts/skills/sync", s.handleSkillsSync)
 	mux.HandleFunc("GET /scripts/skills/{origin}/{name}", s.handleSkillDetail)
 	mux.HandleFunc("GET /scripts/skills/{origin}/{name}/file", s.handleSkillFile)
+	mux.HandleFunc("GET /scripts/skills/{origin}/{name}/tests", s.handleSkillTests)
+	mux.HandleFunc("GET /scripts/skills/{origin}/{name}/tests/file", s.handleSkillTestsFile)
 	mux.HandleFunc("GET /context", s.handleContextIndex)
+	mux.HandleFunc("POST /context/acdsl/fixtures/run", s.handleAcdslFixturesRun)
+	mux.HandleFunc("POST /context/reach/bulk", s.handleContextReachBulk)
+	mux.HandleFunc("POST /context/rule/{id}/reach", s.handleContextRuleReach)
+	mux.HandleFunc("POST /context/entry/{id}/reach", s.handleContextEntryReach)
 	mux.HandleFunc("POST /context/sync", s.handleContextSync)
 	mux.HandleFunc("POST /context/aspects", s.handleContextAspectAdd)
 	mux.HandleFunc("DELETE /context/aspects/{name}", s.handleContextAspectDelete)
+	mux.HandleFunc("GET /context/entry/{id}", s.handleContextEntry)
+	mux.HandleFunc("GET /context/rule/{id}", s.handleContextRule)
+	mux.HandleFunc("POST /context/rule/{id}/fixtures/run", s.handleContextRuleFixturesRun)
 	mux.HandleFunc("GET /context/{dir}/{file}", s.handleContextDoc)
 	mux.HandleFunc("DELETE /api/hooks/{event}/{index}", s.handleDeleteHook)
 	mux.HandleFunc("GET /repos", s.handleReposIndex)
@@ -246,6 +318,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /repos/delete", s.handleReposDelete)
 	mux.HandleFunc("POST /repos/choose-folder", s.handleReposChooseFolder)
 	mux.HandleFunc("GET /repos/{name}", s.handleRepoDetail)
+	mux.HandleFunc("GET /repos/{name}/status", s.handleRepoWorktreeStatus)
 	mux.HandleFunc("GET /repos/{name}/branches/{branch}/commits/{class}", s.handleRepoCommits)
 	mux.HandleFunc("POST /repos/{name}/branches/{branch}/sync", s.handleRepoSync)
 	mux.HandleFunc("POST /repos/{name}/branches/{branch}/merge", s.handleRepoMerge)
@@ -262,8 +335,56 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /routines/{name}/configure", s.handleRoutineConfigure)
 	mux.HandleFunc("POST /routines/{name}/params", s.handleRoutineParams)
 	mux.HandleFunc("POST /routines/{name}/duplicate", s.handleRoutineDuplicate)
+	mux.HandleFunc("POST /routines/tokens", s.handleRoutineTokenAdd)
 	mux.HandleFunc("GET /tools", s.handleToolsIndex)
 	mux.HandleFunc("POST /tools/prune-jetbrains", s.handleToolsPruneJetbrains)
-	mux.HandleFunc("POST /tools/secretscan", s.handleToolsSecretScan)
-	return mux
+	return sameOriginGuard(mux)
+}
+
+// sameOriginGuard rejects state-changing requests that a cross-site page could
+// forge. Safe methods (GET/HEAD) pass untouched, so every read path is
+// unaffected. For POST/DELETE/PUT/PATCH the guard trusts the browser's Fetch
+// metadata (Sec-Fetch-Site: same-origin/none) and, absent it, an Origin whose
+// host matches the request host. Non-browser callers (curl, tests) send
+// neither header and are allowed — they are not the CSRF vector.
+func sameOriginGuard(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isMutatingMethod(r.Method) && !sameOriginRequest(r) {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// isMutatingMethod reports whether the method changes server state.
+func isMutatingMethod(method string) bool {
+	switch method {
+	case http.MethodPost, http.MethodDelete, http.MethodPut, http.MethodPatch:
+		return true
+	default:
+		return false
+	}
+}
+
+// sameOriginRequest reports whether a mutating request originates same-origin.
+// Sec-Fetch-Site is authoritative when present; otherwise an Origin header
+// must match the request host. Requests carrying neither header are treated as
+// non-browser clients and allowed.
+func sameOriginRequest(r *http.Request) bool {
+	switch r.Header.Get("Sec-Fetch-Site") {
+	case "same-origin", "none":
+		return true
+	case "cross-site", "same-site":
+		return false
+	}
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	parsed, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	return parsed.Host == r.Host
 }

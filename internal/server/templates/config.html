@@ -2,18 +2,19 @@
 {{template "nav" .}}
 <h1>Config</h1>
 {{template "_config_tabs" .}}
-<div class="card">
+<div class="card card-actions">
   <form hx-post="/api/config/{{.Target}}/sync/revert" hx-target="#op-result"
         hx-confirm="Overwrite the live {{.Target}} settings with the repo fragment?">
-    <button type="submit"{{if .FragmentMissing}} disabled{{end}}>Sync</button>
+    <button type="submit" title="repo fragment → live: overwrite the live {{.Target}} settings with the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Sync</button>
   </form>
-  {{if .FragmentMissing}}<span class="meta">repo fragment missing: {{.FragmentPath}}</span>{{end}}
   <form hx-post="/api/config/{{.Target}}/sync/apply" hx-target="#op-result"
         hx-confirm="Overwrite the repo fragment with the live {{.Target}} settings?">
-    <button type="submit"{{if .FragmentMissing}} disabled{{end}}>Persist overrides</button>
+    <button type="submit" title="live → repo fragment: write the current live {{.Target}} settings back into the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Persist overrides</button>
   </form>
+  {{if .FragmentMissing}}<span class="meta">repo fragment missing: {{.FragmentPath}}</span>{{end}}
 </div>
 <div id="op-result"></div>
+<h2>settings</h2>
 <div class="section-controls">
   <button class="small" onclick="document.querySelectorAll('details.section').forEach(d => d.open = true)">Expand all</button>
   <button class="small" onclick="document.querySelectorAll('details.section').forEach(d => d.open = false)">Collapse all</button>
@@ -85,11 +86,7 @@
 
 {{define "_config_tabs"}}
 <div class="tabs">
-  <a href="/config/claude{{if .Entries}}/docs{{end}}" {{if eq .Page "config-claude"}}class="active"{{end}}>Claude</a>
-  <a href="/config/codex{{if .Entries}}/docs{{end}}" {{if eq .Page "config-codex"}}class="active"{{end}}>Codex</a>
-</div>
-<div class="tabs subtabs">
-  <a href="/config/{{.Target}}" {{if not .Entries}}class="active"{{end}}>Active</a>
-  <a href="/config/{{.Target}}/docs" {{if .Entries}}class="active"{{end}}>Documentation</a>
+  <a href="/config/claude" {{if eq .Page "config-claude"}}class="active"{{end}}>Claude</a>
+  <a href="/config/codex" {{if eq .Page "config-codex"}}class="active"{{end}}>Codex</a>
 </div>
 {{end}}

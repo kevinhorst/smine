@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/kevinhorst/smine/internal/repos"
-	"github.com/kevinhorst/smine/internal/secretscan"
-	"github.com/kevinhorst/smine/internal/server/respond"
 )
 
 const (
@@ -20,19 +18,15 @@ const (
 )
 
 // toolNames mirrors the actions offered on the Tools page (tools.html).
-var toolNames = []string{"prune-jetbrains", "secretscan"}
+var toolNames = []string{"prune-jetbrains"}
 
 type toolsPage struct {
-	Page      string
-	RepoNames []string
-	Title     string
+	Page  string
+	Title string
 }
 
 func (s *Server) handleToolsIndex(w http.ResponseWriter, r *http.Request) {
 	data := toolsPage{Page: pageTools, Title: "Tools"}
-	for _, repo := range s.repoRegistry.Repos() {
-		data.RepoNames = append(data.RepoNames, repo.Name)
-	}
 	s.renderFragment(w, tmplTools, data)
 }
 
@@ -43,26 +37,4 @@ func (s *Server) handleToolsPruneJetbrains(w http.ResponseWriter, r *http.Reques
 		return repos.PruneJetbrains(ctx, dryRun, force, s.worktreeScripts)
 	}
 	s.runRepoOp(jetbrainsLockKey, "repo-op", op, w, r)
-}
-
-func (s *Server) handleToolsSecretScan(w http.ResponseWriter, r *http.Request) {
-	repo, ok := s.repoRegistry.Find(r.FormValue("name"))
-	if !ok {
-		respond.WithBadRequest("unknown repo", w)
-		return
-	}
-
-	history := r.FormValue("history") == "on"
-	op := func(ctx context.Context) (string, error) {
-		result, err := secretscan.Scan(repo.Path, secretscan.Options{ShouldScanHistory: history})
-		if err != nil {
-			return "", err
-		}
-		data, err := secretscan.RenderJson(result)
-		if err != nil {
-			return "", err
-		}
-		return string(data), nil
-	}
-	s.runRepoOp(repo.Name, "repo-op", op, w, r)
 }

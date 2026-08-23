@@ -38,6 +38,7 @@
 
 /* ---- brandbook tokens (Brand Book & Style Guide v1.0) ---- */
 :root {
+  color-scheme: dark;
   /* brand greens */
   --neon: #00ebaa;          /* primary interactive accent */
   --brand-emerald: #10b981; /* hover, success */
@@ -123,6 +124,8 @@ nav a:hover { color: var(--text); }
 nav a.active { color: var(--neon); }
 nav a.active::before { content: '['; }
 nav a.active::after { content: ']'; }
+.nav-brand { margin-left: auto; color: var(--neon); font-weight: 600; }
+.nav-brand .nav-version { color: var(--text-2); font-weight: 400; font-size: 0.85em; margin-left: 6px; }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .tabs a {
@@ -170,9 +173,12 @@ nav a.active::after { content: ']'; }
 }
 .tile-detail { color: var(--text-3); font-size: 0.8125rem; word-break: break-word; }
 .tile-trend { width: 100%; height: 28px; margin-top: 2px; }
-.tile-trend polyline { fill: none; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-.trend-frustration { stroke: var(--rose); }
-.trend-positive { stroke: var(--brand-emerald); }
+.trend-frustration { fill: var(--rose); }
+.trend-positive { fill: var(--brand-emerald); }
+.tile-filter { display: flex; gap: 10px; font-size: 0.75rem; }
+.tile-filter-link { color: var(--text-3); text-decoration: none; }
+.tile-filter-link:hover { color: var(--text); }
+.tile-filter-active { color: var(--brand-emerald); }
 .tile-value-split { display: flex; align-items: baseline; gap: 8px; }
 .tile-value-split a { text-decoration: none; }
 .tile-value-split a:hover { text-decoration: underline; }
@@ -201,7 +207,8 @@ nav a.active::after { content: ']'; }
 .card .meta {
   font-size: 0.8125rem;
   color: var(--text-3);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .card a { color: var(--text); }
 .card a:hover { color: var(--neon); }
@@ -210,7 +217,30 @@ nav a.active::after { content: ']'; }
 .card-config { flex-wrap: wrap; }
 .card-config .label-key { flex-basis: 40%; }
 .card-filter { flex-wrap: wrap; justify-content: flex-start; }
+/* rows in sectioned filter cards always span the card — children wrap at the
+   real card edge, never at the row's intrinsic width */
+.card-filter > .card-row { width: 100%; }
+/* action cards: buttons sit together on the left instead of space-between */
+.card-actions { justify-content: flex-start; }
 .card-filter label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.filter-divider { width: 100%; border: none; border-top: 1px solid var(--line); margin: 4px 0; }
+.repos-table { width: 100%; table-layout: fixed; }
+.repos-table td { overflow-wrap: break-word; }
+.repos-table th { overflow-wrap: normal; white-space: nowrap; }
+.repos-table th:nth-child(1) { width: 22%; }
+.repos-table th:nth-child(2) { width: 40%; }
+.repos-table th:nth-child(3) { width: 15%; }
+.repos-table th:nth-child(4) { width: 11%; }
+.repos-table th:nth-child(5) { width: 12%; }
+.inline-form label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.inline-form input[type="checkbox"] { margin: 0; }
+.inline-check { display: inline-flex; align-items: center; gap: 6px; }
+/* add-repo lane: picker children join the form's flex row; the chosen-path
+   line wraps below at full form width */
+#repo-path { display: contents; }
+#repo-add-form { flex: 1 1 auto; flex-wrap: wrap; margin-bottom: 0; }
+#repo-add-form input[name="path"] { flex: 1 1 260px; }
+.repo-chosen { flex-basis: 100%; }
 #context-target { display: inline-flex; align-items: center; gap: 8px; }
 .card-error { border-color: var(--rose); }
 .card-disabled { opacity: 0.55; }
@@ -224,7 +254,6 @@ nav a.active::after { content: ']'; }
 }
 .finding { margin-top: 10px; }
 .finding .label { margin-left: 6px; }
-/* .card .finding — must outrank .card .meta's nowrap (specificity) */
 .card .finding blockquote {
   margin: 4px 0 0 12px;
   border-left: 2px solid var(--brand-deep);
@@ -241,7 +270,12 @@ nav a.active::after { content: ']'; }
 .evidence-sessions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .snippet { margin: 4px 0; }
 .snippet summary { color: var(--text-2); cursor: pointer; }
-.snippet pre { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; margin: 4px 0 0; overflow-x: auto; padding: 6px 10px; }
+.snippet pre { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; margin: 4px 0 0; overflow-wrap: anywhere; padding: 6px 10px; white-space: pre-wrap; }
+.card-proposal { padding: 8px 12px; margin-bottom: 6px; }
+.card-proposal .finding { margin-top: 4px; }
+.card-more { margin-top: 4px; }
+.card-more > summary { color: var(--text-3); cursor: pointer; font-size: 0.8125rem; }
+.card-proposal input[type="text"] { max-width: 480px; }
 .session-card > summary, .entry-card > summary {
   display: flex;
   align-items: center;
@@ -266,18 +300,87 @@ input[type="checkbox"] { accent-color: var(--neon); }
   white-space: normal;
 }
 .badge-version { margin-left: auto; }
+.skill-args { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.arg-chip {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--surface-elev);
+  color: var(--text-3);
+}
+.skill-args-list { margin: 8px 0 0 20px; font-family: var(--font-sans); font-size: 0.9375rem; color: var(--text-2); }
 .routines-layout { display: flex; flex-direction: column; gap: 16px; }
-.routines-layout > table { width: 100%; margin-bottom: 24px; }
+.routines-layout > table { width: 100%; max-width: 100%; table-layout: fixed; margin-bottom: 24px; }
+.routines-layout > table td { overflow-wrap: break-word; }
+.routines-layout > table th:nth-child(1) { width: 4%; }
+.routines-layout > table th:nth-child(2) { width: 10%; }
+.routines-layout > table th:nth-child(3) { width: 22%; }
+.routines-layout > table th:nth-child(4) { width: 12%; }
+.routines-layout > table th:nth-child(5) { width: 14%; }
+.routines-layout > table th:nth-child(6) { width: 26%; }
+.routines-layout > table th:nth-child(7) { width: 12%; }
+/* Center the select radio in its column. */
+.routines-layout > table td:first-child { text-align: center; }
+/* State/exit badges never wrap or clip inside a fixed-layout cell. */
+.routines-layout > table .badge { white-space: nowrap; }
+.routines-layout > table td:nth-child(2) { white-space: normal; }
 #routine-configure { width: 100%; }
-.env-cell code { overflow-wrap: anywhere; }
 .run-cell { white-space: nowrap; }
 .configure-form { width: 100%; }
 .configure-row { width: 100%; justify-content: flex-start; gap: 16px; }
 .configure-row .configure-key { flex: 0 0 260px; }
-.configure-row input[type="text"], .configure-row select { flex: 1 1 auto; min-width: 0; }
+.configure-row input[type="text"], .configure-row input[type="password"], .configure-row select, .configure-row textarea { flex: 1 1 auto; min-width: 0; }
+#routine-ops form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#routine-ops form[data-op="reschedule"] label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.8125rem; color: var(--text-3); white-space: nowrap;
+}
+#routine-ops form[data-op="reschedule"] input[type="number"] { width: 10ch; padding-right: 4px; }
+#routine-ops form[data-op="run"] { display: flex; align-items: center; gap: 12px; }
+#routine-ops form[data-op="run"] input { width: 28ch; }
+#routine-tokens form { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; flex-wrap: wrap; }
+#routine-tokens input { flex: 1 1 200px; }
 .detail-head { display: flex; align-items: baseline; gap: 12px; }
+.detail-meta { opacity: 0.6; margin-bottom: 16px; }
+.badge-topic { opacity: 0.7; }
+.hidden { display: none; }
+button.topic-toggle { border: none; cursor: pointer; }
 .reload-form { margin-bottom: 16px; }
 .checklist-table { margin-bottom: 24px; }
+.table-scroll { overflow-x: auto; }
+/* The combined counts cell never wraps mid-number; auto layout sizes the
+   remaining columns to their content. */
+.wt-counts { white-space: nowrap; }
+.checkout-line { margin: 4px 0 12px; }
+/* The safe badge stays beside its checkbox, never wrapping underneath. */
+.checklist-table td:first-child { white-space: nowrap; }
+/* long repo names wrap at nameWrap's <wbr> token boundaries; break-word is the
+   fallback. MUST stay below the .checklist-table nowrap rule above — equal
+   specificity, source order decides, and the repos table carries both classes. */
+.repos-table td:first-child { white-space: normal; overflow-wrap: break-word; }
+
+/* section identifier: bordered label naming a control-panel row —
+   square corners + outline so it never reads as a filter chip */
+.section-label {
+  /* real width, not flex-basis: Safari computes a wrapping row's intrinsic
+     width from the label's content size, so a basis-only width makes the
+     row too narrow and wraps its last item */
+  flex: 0 0 auto;
+  width: 90px;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+/* control-panel checkboxes sit at the right edge of their row */
+.card-row .push-right { margin-left: auto; }
 
 .badge {
   font-size: 0.6875rem;
@@ -291,6 +394,11 @@ input[type="checkbox"] { accent-color: var(--neon); }
 .badge-error { background: var(--rose); color: var(--bg); }
 .badge-action { background: var(--amber); color: var(--bg); }
 .badge-dim { background: var(--surface-elev); color: var(--text-2); }
+
+.diff-view { padding: 8px 12px; }
+.diff-add { color: var(--brand-emerald); }
+.diff-del { color: var(--rose); }
+.diff-skip { color: var(--text-2); }
 
 .toggle {
   position: relative;
@@ -328,7 +436,7 @@ input[type="checkbox"] { accent-color: var(--neon); }
   margin-bottom: 12px;
 }
 .inline-form .grow { flex: 1; }
-input[type="text"], input[type="number"], select, textarea {
+input[type="text"], input[type="number"], input[type="password"], select, textarea {
   background: var(--bg-1);
   border: 1px solid var(--line);
   color: var(--text);
@@ -337,7 +445,7 @@ input[type="text"], input[type="number"], select, textarea {
   font-size: 0.875rem;
   font-family: var(--font-mono);
 }
-input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--neon);
   box-shadow: 0 0 0 3px rgba(0, 235, 170, 0.12);
@@ -395,6 +503,21 @@ details.section > summary .badge {
 }
 .state-note:hover { color: var(--neon); border-color: var(--brand-emerald); }
 
+/* nested bars + always-visible count pill on section summaries */
+details.section .section-sub { margin: 10px 12px; background: var(--surface-2); }
+details.section > summary .count-note { margin-left: 6px; text-decoration: none; }
+.count-note {
+  display: inline-block;
+  min-width: 2.2em;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text-3);
+}
+
 .list-editor { display: flex; flex-direction: column; gap: 4px; flex-basis: 100%; }
 .list-item { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border-radius: var(--radius); padding: 4px 8px; }
 .value-view, pre.file-view {
@@ -409,6 +532,14 @@ details.section > summary .badge {
   color: var(--aqua);
   padding: 8px 12px;
 }
+/* repo-fragment value reveal (D1b): a structured value renders as a wrapping,
+   scrollable block on its own line — never an overflowing inline string. */
+.repo-view { flex-basis: 100%; margin-top: 4px; }
+.repo-scalar { font-size: 0.8125rem; color: var(--text-3); overflow-wrap: anywhere; }
+/* a long list-item value wraps within its space; the remove button holds its
+   size and never collapses onto two lines. */
+.list-item .label { min-width: 0; }
+.list-item > button { flex-shrink: 0; }
 /* terminal window (brandbook signature component) */
 pre.file-view {
   position: relative;
@@ -439,6 +570,21 @@ pre.file-view.maximized {
   margin: 0;
   overflow: auto;
   box-shadow: var(--glow);
+}
+/* window-card: the terminal chrome on a card widget (configure). Only the
+   rose close dot — no minimize/maximize. */
+.window-card { position: relative; overflow: hidden; }
+.window-card::before {
+  content: '';
+  display: block;
+  width: calc(100% + 32px);
+  height: 30px;
+  margin: -12px -16px 4px;
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background-color: var(--bg-2);
+  background-image:
+    radial-gradient(circle at 20px 15px, var(--rose) 4.5px, transparent 5.5px);
 }
 .term-dot {
   position: absolute;
@@ -480,3 +626,59 @@ pre.file-view.maximized {
 .md-body th, .md-body td { border: 1px solid var(--line); padding: 4px 10px; }
 .md-body blockquote { border-left: 3px solid var(--brand-deep); padding-left: 12px; color: var(--text-2); }
 .md-body a { color: var(--neon); }
+
+/* ---- permission chips: applyable rules inside rendered docs ---- */
+.perm-chip { display: inline-flex; align-items: center; gap: 0.3em; }
+.perm-apply {
+  border: 1px solid var(--brand-emerald);
+  color: var(--brand-emerald);
+  background: transparent;
+  border-radius: 10px;
+  font-size: 0.72em;
+  padding: 0 0.5em;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.perm-apply:hover { background: var(--brand-emerald); color: var(--bg); }
+.perm-apply-parked { border-color: var(--amber); color: var(--amber); }
+.perm-apply-parked:hover { background: var(--amber); color: var(--bg); }
+
+/* ---- reach picker: dropdown with checkboxes (detail pages + filter bar) ---- */
+.reach-picker { position: relative; display: inline-block; }
+.reach-picker > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.reach-picker > summary::-webkit-details-marker { display: none; }
+.reach-picker > summary::after { content: " ▾"; color: var(--text-dim); }
+.reach-picker[open] > summary { color: var(--neon); border-color: var(--neon); }
+.reach-picker > .reach-options {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  min-width: max-content;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--surface-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.reach-options label { display: flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--text-2); font-size: 0.875rem; }
+
+/* skill Tests tab — eval score matrix */
+.score-cell { text-align: center; }
+.score-pos { color: var(--brand-emerald); }
+.score-neg { color: var(--rose); }
+.score-zero { color: var(--text-dim); }
+.score-absent { color: var(--text-dim); opacity: 0.5; }

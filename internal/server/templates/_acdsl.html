@@ -1,0 +1,51 @@
+<section id="acdsl-section">
+  {{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
+  {{range .Violations}}<div class="card card-error"><span class="label">{{.}}</span></div>{{end}}
+
+  <h2>acdsl</h2>
+
+  <div class="card card-filter">
+    <span class="label">{{.RuleCount}} rules · {{.GateOnlyCount}} gate-only · coverage <strong>{{.CoveragePercent}}</strong> ({{.CoveredEntries}} of {{.TotalEntries}} entries) · {{.StyleGatedCount}} style-guide rules gated</span>
+    <button type="button" hx-post="{{.FixturesURL}}" hx-target="#acdsl-section" hx-swap="outerHTML">run fixtures</button>
+    {{if .FixturesResult}}<span class="meta">{{.FixturesResult}}</span>{{end}}
+  </div>
+
+  {{range .RuleGroups}}
+  <details class="section" {{if .Open}}open{{end}}>
+  <summary><input type="checkbox" class="bulk-all" title="select all in this group"> {{.Scope}} <span class="badge badge-dim">{{len .Rows}}</span>
+    {{$scope := .Scope}}
+    {{if .Topics}}
+    <a class="badge {{if and (not $.Filter.Topic) (eq $scope $.Filter.Aspect)}}badge-ok{{else}}badge-dim{{end}} badge-topic"
+       href="{{.AllURL}}">all</a>
+    {{end}}
+    {{range $i, $chip := .Topics}}
+    <a class="badge {{if and (eq $chip.Name $.Filter.Topic) (eq $scope $.Filter.Aspect)}}badge-ok{{else}}badge-dim{{end}} badge-topic{{if ge $i 4}} topic-extra hidden{{end}}"
+       href="{{$chip.URL}}">{{$chip.Name}} ({{$chip.Count}})</a>
+    {{end}}
+    {{if .ExtraTopics}}<button type="button" class="badge badge-dim badge-topic topic-toggle" data-more="+{{.ExtraTopics}}">+{{.ExtraTopics}}</button>{{end}}
+  </summary>
+  {{range .Rows}}
+  <div class="card card-column">
+    <div class="card-row">
+      <input type="checkbox" name="id" value="{{.Rule.Id}}" class="bulk-check">
+      <span class="badge {{if .Rule.Projected}}badge-ok{{else}}badge-dim{{end}}" title="{{if .Rule.Projected}}prose delivered into prompts and working-copy projections; the gate checks it too{{else}}checked only by the gate — no prose delivered{{end}}">{{if .Rule.Projected}}projected{{else}}gate-only{{end}}</span>
+      <span class="label"><a href="/context/rule/{{pathEscape .Rule.Id}}"><strong>{{.Rule.Id}}</strong></a></span>
+      {{if eq .Rule.Reach "none"}}<span class="badge badge-error" title="disabled — governs no files, checked by nothing, deploys nowhere">disabled</span>
+      {{else}}<span class="badge {{if eq .Rule.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Rule.Reach "smine"}}binds only in smine (this repo), never deploys{{else if eq .Rule.Reach "global"}}would bind in any repo — future distribution manifest{{else}}deploys exactly to the named repos{{end}}">{{.Rule.Reach}}</span>{{end}}
+      {{if eq .Rule.Lifetime "task"}}<span class="badge badge-dim">task</span>{{end}}
+      <span class="badge badge-dim" title="{{if .VerifierTitle}}{{.VerifierTitle}}{{else}}registered verifier — no description in acdsl/registry.json{{end}}">{{.Rule.Verifier}}</span>
+      {{if .HasFixtures}}<span class="badge badge-ok" title="green/red examples exist under acdsl/fixtures/{{.Rule.Id}} — replayed by run fixtures">fixtures</span>{{else}}<span class="badge badge-action" title="no fixture examples yet — nothing regression-checks this rule">no fixtures</span>{{end}}
+      {{if .Candidate}}<span class="badge badge-action" title="{{.CandidateDetail}}">{{.Candidate}}</span>{{end}}
+      <span class="meta">
+        <code>{{.Rule.Anchor}}</code> ·
+        {{range .Stats}}<span title="share of the {{.Runs}} logged gate runs that went red while the rule was {{if .Projected}}projected{{else}}gate-only{{end}} — {{if .LastRed}}last red {{.LastRed}}{{else}}no red runs{{end}}">{{if .Projected}}while projected{{else}}while gate-only{{end}}: red <strong>{{.RedRatePercent}}</strong> ({{.RedRuns}}) · {{.Runs}} runs</span> {{else}}<span class="empty">no runs</span>{{end}}
+      </span>
+    </div>
+    <div class="description">{{.Rule.Why}}</div>
+    {{if .Covers}}<div class="meta explanation">gates: {{range $i, $cover := .Covers}}{{if $i}} · {{end}}{{if $cover.InRegistry}}<a href="/context/entry/{{pathEscape $cover.Id}}"><code>{{$cover.Id}}</code></a>{{else}}<code title="cited id without a matching entry in context.json">{{$cover.Id}}</code>{{end}}{{end}}</div>{{end}}
+  </div>
+  {{end}}
+  </details>
+  {{end}}
+
+</section>

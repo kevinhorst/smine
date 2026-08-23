@@ -2,23 +2,25 @@
 {{template "nav" .}}
 <h1>Tools</h1>
 <div class="card">
-  <form hx-post="/tools/prune-jetbrains" hx-target="#op-result">
-    <button type="submit">Prune JetBrains recent projects</button>
+  <form id="prune-form" hx-post="/tools/prune-jetbrains" hx-target="#op-result">
+    <button type="submit" title="Claude worktrees appear as projects in JetBrains IDEs. Use this tool to remove them.">Prune JetBrains recent projects</button>
     <label><input type="checkbox" name="dry-run" checked> dry run</label>
     <label><input type="checkbox" name="force"> force</label>
   </form>
-</div>
-<div class="card">
-  <span class="badge badge-action">Experimental</span> <span class="label">Secret scan (WIP) — read-only, raw JSON output</span>
-  {{if .RepoNames}}
-  <form hx-post="/tools/secretscan" hx-target="#op-result">
-    {{template "_repo_select.html" .RepoNames}}
-    <button type="submit">Scan repo secrets</button>
-    <label><input type="checkbox" name="history"> include git history</label>
-  </form>
-  {{else}}
-  <span class="label">no repos registered</span>
-  {{end}}
+  <script>
+    // A dry run is read-only; the real prune edits JetBrains Recent Projects
+    // and asks first. The confirm follows the checkbox.
+    (function () {
+      var form = document.getElementById('prune-form');
+      function sync() {
+        var isDryRun = form.querySelector('input[name="dry-run"]').checked;
+        if (isDryRun) form.removeAttribute('hx-confirm');
+        else form.setAttribute('hx-confirm', 'Prune JetBrains recent projects?');
+      }
+      form.addEventListener('change', sync);
+      sync();
+    })();
+  </script>
 </div>
 <div id="op-result"></div>
 {{template "foot" .}}

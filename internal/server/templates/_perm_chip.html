@@ -1,0 +1,3 @@
+{{define "_perm_chip.html"}}<span class="perm-chip"><code>{{.Rule}}</code>{{if eq .Status "allowed"}}<span class="badge badge-ok" title="already in permissions.allow">allowed</span>{{else if eq .Status "ask"}}<span class="badge badge-dim" title="already in permissions.ask">ask</span>{{else}}<button class="perm-apply{{if eq .Status "disabled"}} perm-apply-parked{{end}}"
+      hx-post="{{.AddURL}}" hx-target="closest .perm-chip" hx-swap="outerHTML"
+      title="{{if eq .Status "disabled"}}parked in settings.disabled.json — move back to permissions.allow{{else}}add to permissions.allow in live settings{{end}}">{{if eq .Status "disabled"}}enable{{else}}+ allow{{end}}</button>{{end}}</span>{{end}}

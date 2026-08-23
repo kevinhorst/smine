@@ -1,5 +1,5 @@
 {{define "_routine_configure.html"}}
-<div class="card card-column">
+<div class="card card-column window-card" data-close="#routine-configure">
   <span class="label"><strong>Configure {{.Name}}</strong></span>
   <form class="card-column configure-form" hx-post="/routines/{{pathEscape .Name}}/params" hx-target="#op-result">
     {{range .Standard}}
@@ -20,6 +20,15 @@
         <option value="never" {{if eq .Value "never"}}selected{{end}}>never</option>
         <option value="decide" {{if eq .Value "decide"}}selected{{end}}>decide</option>
         <option value="always" {{if eq .Value "always"}}selected{{end}}>always</option>
+      </select>
+      {{else if eq .Key "ROUTINE_TOKEN"}}
+      <select name="value">
+        <option value="">– default token file –</option>
+        {{$current := .Value}}{{$matched := false}}
+        {{range $.TokenLabels}}
+        <option value="{{.}}" {{if eq . $current}}selected{{$matched = true}}{{end}}>{{.}}</option>
+        {{end}}
+        {{if and $current (not $matched)}}<option value="{{$current}}" selected>{{$current}}</option>{{end}}
       </select>
       {{else}}
       <input type="text" name="value" value="{{.Value}}" placeholder="{{.Default}}">
@@ -44,9 +53,20 @@
       {{end}}
     </div>
     {{end}}
+    {{if .TokenErr}}
+    <div class="card card-error"><span class="label">{{.TokenErr}}</span></div>
+    {{end}}
+    {{if .AutoApplyPath}}
+    {{if .AutoApplyError}}
+    <div class="card card-error"><span class="label">{{.AutoApplyError}}</span></div>
+    {{end}}
+    <div class="card configure-row">
+      <span class="label configure-key"><strong>Auto-apply decide-mode rules</strong> <span class="meta">{{.AutoApplyPath}}</span></span>
+      <textarea name="auto_apply_content" rows="24">{{.AutoApplyContent}}</textarea>
+    </div>
+    {{end}}
     <div class="card-row">
       <button type="submit">Save</button>
-      <button type="button" onclick="document.getElementById('routine-configure').innerHTML = ''">Cancel</button>
     </div>
   </form>
 </div>

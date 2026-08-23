@@ -4,150 +4,14 @@
   <h1>{{.Repo.Name}}</h1>
 </div>
 <div class="meta">{{.Repo.Path}}</div>
-{{if .SessionsErr}}
-<div class="card card-error"><span class="label">peek-mcp unavailable — session column degraded: {{.SessionsErr}}</span></div>
-{{end}}
-{{/* worktree-status re-pulls itself when an op fires HX-Trigger: repo-op —
-     the table must never show already-removed worktrees. hx-disinherit keeps
-     the refresh attributes off the op forms inside, whose responses target
-     #op-result with the default swap. */}}
-<div id="worktree-status" hx-get="/repos/{{pathEscape .Repo.Name}}{{if .Merged}}?merged={{queryEscape .Merged}}{{end}}"
-     hx-trigger="repo-op from:body" hx-select="#worktree-status" hx-swap="outerHTML"
-     hx-disinherit="*">
-{{if .CheckoutErr}}
-<div class="card card-error"><span class="label">checkout state unavailable: {{.CheckoutErr}}</span></div>
-{{else if .Checkout}}
-<div class="meta">checkout: {{.Checkout.Branch}}
-  {{if gt .Checkout.Dirty 0}}
-  <span class="badge badge-error" title="merge and cherry-pick refuse on a dirty checkout — commit or stash first">{{.Checkout.Dirty}} uncommitted change(s)</span>
-  {{else}}
-  <span class="badge badge-ok">clean</span>
-  {{end}}
-</div>
-{{end}}
-{{if .StatusErr}}
-<div class="card card-error"><span class="label">{{.StatusErr}}</span></div>
-{{else}}
-{{if .MergedValues}}
-<div class="card card-filter">
-  <a class="badge {{if not .Merged}}badge-ok{{else}}badge-dim{{end}}"
-     href="/repos/{{pathEscape .Repo.Name}}"
-     hx-get="/repos/{{pathEscape .Repo.Name}}"
-     hx-target="#worktree-status" hx-select="#worktree-status" hx-swap="outerHTML" hx-push-url="true">all</a>
-  {{range .MergedValues}}
-  <a class="badge {{if eq . $.Merged}}badge-ok{{else}}badge-dim{{end}}"
-     href="/repos/{{pathEscape $.Repo.Name}}?merged={{queryEscape .}}"
-     hx-get="/repos/{{pathEscape $.Repo.Name}}?merged={{queryEscape .}}"
-     hx-target="#worktree-status" hx-select="#worktree-status" hx-swap="outerHTML" hx-push-url="true">{{.}}</a>
-  {{end}}
-</div>
-{{end}}
-{{if .Statuses}}
-{{/* The ops card acts on the row selected via the wt-select radios; the
-     script block below fills in hx-post/hx-confirm and the disabled states.
-     It lives inside #worktree-status so every repo-op refresh resets it to
-     the disabled no-selection state. */}}
-<div class="card" id="worktree-ops" data-repo="{{pathEscape .Repo.Name}}"
-     {{if and .Checkout (gt .Checkout.Dirty 0)}}data-checkout-dirty="1"{{end}}>
-  <form data-op="sync" hx-post="" hx-target="#op-result"><button type="submit" disabled>Sync</button></form>
-  <form data-op="merge" hx-post="" hx-target="#op-result"><button type="submit" disabled>Merge</button></form>
-  <form data-op="remove" data-delete-branch="1" hx-post="/repos/{{pathEscape .Repo.Name}}/remove-selected"
-        hx-target="#op-result" hx-include="#op-force, input[name=branch]:checked">
-    <input type="hidden" name="delete-branch" value="on">
-    <button type="submit" disabled>Remove</button>
-  </form>
-  <form data-op="remove" hx-post="/repos/{{pathEscape .Repo.Name}}/remove-selected"
-        hx-target="#op-result" hx-include="#op-force, input[name=branch]:checked">
-    <button type="submit" disabled>Remove Worktree</button>
-  </form>
-  <label><input type="checkbox" id="op-force" name="force"> force</label>
-</div>
-<table class="md-body checklist-table">
-  <thead>
-    <tr>
-      <th></th><th>Branch</th><th>Worktree</th>
-      <th title="branch this one was created from (reflog)">Base</th>
-      <th>Dirty</th>
-      <th title="untracked files, excluding worktree infrastructure (.idea/, .claude/, .claude-worktree)">Untracked</th>
-      <th>Ahead</th><th>Behind</th><th>Unpicked</th>
-      <th title="applied-probe results for commits missing from the base by patch-id: applied:n (clean empty re-pick), resolved:n (conflicted re-pick matched by range-diff)">Verdicts</th>
-      <th title="branch whose history has an actual merge commit for this branch's tip — empty when the state was only cherry-picked or fast-forwarded">Merged into</th>
-      <th title="every non-claude branch already containing all of this branch's work, base branch first">Contained in</th>
-      <th>Safe</th><th>Last commit</th><th>Session</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{range .Statuses}}
-    <tr>
-      <td><input type="checkbox" name="branch" value="{{branchParam .Branch}}"
-           data-branch="{{.Branch}}" data-worktree="{{.Worktree}}"
-           {{if .SafeToRemove}}data-safe="1"{{end}}></td>
-      <td>{{.Branch}}</td>
-      <td>
-        {{if .Worktree}}
-        <span title="{{.Worktree}}">{{baseName .Worktree}}</span>
-        {{if ne (baseName .Worktree) (branchParam .Branch)}}
-        <span class="badge badge-error" title="worktree directory name does not match the branch — pool-recycled dir; remove deletes THIS directory">dir≠branch</span>
-        {{end}}
-        {{else}}–{{end}}
-      </td>
-      <td>{{.From}}</td>
-      <td>{{if lt .Dirty 0}}–{{else}}{{.Dirty}}{{end}}</td>
-      <td>{{if lt .Untracked 0}}–{{else}}{{.Untracked}}{{end}}</td>
-      <td>
-        {{if lt .Ahead 0}}–
-        {{else if gt .Ahead 0}}
-        <a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape (branchParam .Branch)}}/commits/ahead"
-           hx-target="#commit-list" href="#">{{.Ahead}}</a>
-        {{else}}0{{end}}
-      </td>
-      <td>
-        {{if lt .Behind 0}}–
-        {{else if gt .Behind 0}}
-        <a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape (branchParam .Branch)}}/commits/behind"
-           hx-target="#commit-list" href="#">{{.Behind}}</a>
-        {{else}}0{{end}}
-      </td>
-      <td>
-        {{if gt .Unpicked 0}}
-        <a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape (branchParam .Branch)}}/commits/unpicked"
-           hx-target="#commit-list" href="#">{{.Unpicked}}</a>
-        {{else}}0{{end}}
-      </td>
-      <td>{{if .Verdicts}}{{.Verdicts}}{{else}}–{{end}}</td>
-      <td>{{if .MergedInto}}{{.MergedInto}}{{else}}–{{end}}</td>
-      <td>
-        {{if .In}}
-        {{range $i, $b := .In}}{{if lt $i 3}}{{if $i}}, {{end}}{{$b}}{{end}}{{end}}
-        {{if gt (len .In) 3}}
-        <a href="#" class="wt-more">…+{{len (slice .In 3)}}</a><span class="wt-more-rest" hidden>{{range slice .In 3}}, {{.}}{{end}}</span>
-        {{end}}
-        {{else}}–{{end}}
-      </td>
-      <td>
-        {{if and .SafeToRemove .SafeViaProbe}}<span class="badge badge-ok" title="safe via applied-probe — the base contains all work, partly by probe verdict (see Verdicts)">✓</span>
-        {{else if .SafeToRemove}}<span class="badge badge-ok">✓</span>
-        {{else}}<span class="badge badge-error" title="dirty, untracked files, or work exists nowhere else">✗</span>{{end}}
-      </td>
-      <td>{{.LastCommit}}</td>
-      <td>
-        {{with index $.Sessions .Worktree}}
-          {{if .Id}}
-            {{if .Live}}<span class="badge badge-ok">live</span>{{end}}
-            {{$peekURL := peekSessionURL .Id}}
-            {{if $peekURL}}<a href="{{$peekURL}}" title="{{.Id}} — open in peek">{{if .Title}}{{.Title}}{{else}}(untitled){{end}}</a>{{else}}{{.Title}}{{end}}
-            <span class="meta">{{.LastActive.Format "2006-01-02 15:04"}}</span>
-          {{else}}–{{end}}
-        {{else}}–{{end}}
-      </td>
-    </tr>
-    {{end}}
-  </tbody>
-</table>
-{{else}}
-<div class="empty">{{if .Merged}}No branches with work contained in {{.Merged}}.{{else}}No claude/* branches.{{end}}</div>
-{{end}}
-{{end}}
+<h2>worktrees</h2>
+{{/* Placeholder only — the fragment endpoint owns all subprocess cost so the
+     shell paints instantly (D3). `load` fires once here; the swapped-in
+     fragment carries `repo-op from:body` instead, never `load` (loop). */}}
+<div id="worktree-status"
+     hx-get="/repos/{{pathEscape .Repo.Name}}/status{{.Query}}"
+     hx-trigger="load" hx-swap="outerHTML" hx-disinherit="*">
+  <div class="empty">Loading worktree status…</div>
 </div>
 <div id="commit-list"></div>
 <div id="op-result"></div>
@@ -198,7 +62,26 @@
     });
   }
   document.addEventListener('change', function (e) {
+    if (e.target.classList && e.target.classList.contains('select-all')) {
+      document.querySelectorAll('input[name="branch"]').forEach(function (box) {
+        box.checked = e.target.checked;
+      });
+      refresh();
+      return;
+    }
     if (e.target.name === 'branch' || e.target.id === 'op-force') refresh();
+  });
+  // Optimistic removal (D4): hide the selected rows the moment the request
+  // fires; a clean run confirms silently, error/skip fires repo-op and the
+  // fragment refresh restores the actual rows.
+  document.addEventListener('htmx:beforeRequest', function (e) {
+    var form = e.detail.elt.closest && e.detail.elt.closest('form[data-op="remove"]');
+    if (!form) return;
+    document.querySelectorAll('input[name="branch"]:checked').forEach(function (sel) {
+      sel.checked = false;
+      sel.closest('tr').hidden = true;
+    });
+    refresh();
   });
   // Contained-in overflow: the …+n marker reveals the hidden rest of the list.
   document.addEventListener('click', function (e) {

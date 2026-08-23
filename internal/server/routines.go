@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
+	"os"
+	"path/filepath"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/kevinhorst/smine/internal/peek"
 	"github.com/kevinhorst/smine/internal/repos"
 	"github.com/kevinhorst/smine/internal/routines"
 	"github.com/kevinhorst/smine/internal/server/respond"
@@ -25,9 +29,12 @@ type standardSetting struct {
 }
 
 var standardSettings = []standardSetting{
+	{Key: "ROUTINE_EXTRA_PROMPT", Label: "Extra prompt (appended to the routine prompt)", Default: ""},
 	{Key: "ROUTINE_MODEL", Label: "Model", Default: "claude-opus-4-8[1m]"},
 	{Key: "ROUTINE_MAX_BUDGET_USD", Label: "Max budget (USD)", Default: "15"},
+	{Key: "ROUTINE_MAX_OPEN_BRANCHES", Label: "Max open branches (un-merged)", Default: "unlimited"},
 	{Key: "ROUTINE_PERMISSION_MODE", Label: "Permission mode", Default: "acceptEdits"},
+	{Key: "ROUTINE_TOKEN", Label: "Token (account)", Default: "default token file"},
 }
 
 // routineSettings declares routine-specific settings rendered on that
@@ -40,12 +47,15 @@ var routineSettings = map[string][]standardSetting{
 		{Key: "SMINE_APPLY_CAP", Label: "Max proposals applied", Default: "3"},
 		{Key: "SMINE_MAX_PROPOSALS_MINED", Label: "Max proposals mined", Default: "unlimited"},
 		{Key: "SMINE_MAX_PROPOSALS_PER_DIMENSION", Label: "Max proposals mined per dimension", Default: "unlimited"},
+		{Key: "SMINE_AGENTS", Label: "Agents mined", Default: "claude,codex"},
 	},
 }
 
 var autoApplyModes = []string{"never", "decide", "always"}
 
-var autoApplyDimensions = []string{"context", "routines", "skills", "style", "workflows"}
+var autoApplyDimensions = []string{"context", "routines", "skills", "style"}
+
+var mineAgents = []string{"claude", "codex"}
 
 // declaredExamples holds placeholder examples for known routine-specific keys (D7).
 var declaredExamples = map[string]string{
@@ -81,10 +91,16 @@ func validateSmineSetting(key, value string) error {
 	case "SMINE_AUTO_APPLY_DIMENSIONS":
 		for _, dimension := range strings.Split(value, ",") {
 			if !slices.Contains(autoApplyDimensions, strings.TrimSpace(dimension)) {
-				return fmt.Errorf("validateSmineSetting: Invalid dimension %s: must be context, routines, skills, style or workflows", strings.TrimSpace(dimension))
+				return fmt.Errorf("validateSmineSetting: Invalid dimension %s: must be context, routines, skills or style", strings.TrimSpace(dimension))
 			}
 		}
-	case "SMINE_APPLY_CAP", "SMINE_MAX_PROPOSALS_MINED", "SMINE_MAX_PROPOSALS_PER_DIMENSION":
+	case "SMINE_AGENTS":
+		for _, agent := range strings.Split(value, ",") {
+			if !slices.Contains(mineAgents, strings.TrimSpace(agent)) {
+				return fmt.Errorf("validateSmineSetting: Invalid agent %s: must be claude or codex", strings.TrimSpace(agent))
+			}
+		}
+	case "SMINE_APPLY_CAP", "SMINE_MAX_PROPOSALS_MINED", "SMINE_MAX_PROPOSALS_PER_DIMENSION", "ROUTINE_MAX_OPEN_BRANCHES":
 		number, err := strconv.Atoi(value)
 		if err != nil || number < 1 {
 			return fmt.Errorf("validateSmineSetting: Invalid value for %s: must be a positive integer", key)
@@ -93,13 +109,22 @@ func validateSmineSetting(key, value string) error {
 	return nil
 }
 
+// pinnedRoutine always sorts first on the routines index — the routine the
+// page exists for.
+const pinnedRoutine = "smine-nightly"
+
+// runNowPromptFileName is the one-shot Run-Now prompt extension in the
+// routine dir; run.sh appends its content to the prompt and deletes it.
+const runNowPromptFileName = ".run-now-prompt"
+
 const (
-	pageRoutines         = "routines"
-	tmplRoutineConfigure = "_routine_configure.html"
-	tmplRoutineDetail    = "routine_detail.html"
-	tmplRoutineRow       = "_routine_row.html"
-	tmplRoutineRowOOB    = "_routine_row_oob.html"
-	tmplRoutinesIndex    = "routines_index.html"
+	pageRoutines            = "routines"
+	tmplRoutineConfigure    = "_routine_configure.html"
+	tmplRoutineConfigureOOB = "_routine_configure_oob.html"
+	tmplRoutineDetail       = "routine_detail.html"
+	tmplRoutineRow          = "_routine_row.html"
+	tmplRoutineRowOOB       = "_routine_row_oob.html"
+	tmplRoutinesIndex       = "routines_index.html"
 
 	// statusStopPolling is htmx's stop-polling response code (D25).
 	statusStopPolling = 286
@@ -115,12 +140,13 @@ type routineDetailPage struct {
 }
 
 type routineView struct {
-	EnvPairs  []envPair
 	Loaded    bool
 	LoadedErr string
 	OOB       bool
+	Pinned    bool
 	PollSince int64
 	Routine   routines.Routine
+	Session   *peek.Session // peek session at the routine's worktree cwd; nil = none/peek down
 }
 
 type envPair struct {
@@ -130,10 +156,15 @@ type envPair struct {
 }
 
 type routineConfigureView struct {
-	EnvPairs []envPair
-	Name     string
-	Repos    []repos.Repo
-	Standard []standardSettingView
+	AutoApplyContent string
+	AutoApplyError   string
+	AutoApplyPath    string // empty = this routine has no rules editor
+	EnvPairs         []envPair
+	Name             string
+	Repos            []repos.Repo
+	Standard         []standardSettingView
+	TokenErr         string
+	TokenLabels      []string
 }
 
 type routinesIndexPage struct {
@@ -173,11 +204,12 @@ func (s *Server) rescanRoutine(routine *routines.Routine) *routines.Routine {
 	return routine
 }
 
-func (s *Server) routineView(ctx context.Context, routine *routines.Routine) routineView {
-	view := routineView{EnvPairs: declaredPairs(routine.Env, routine.Name), Routine: *routine}
+func (s *Server) routineView(ctx context.Context, routine *routines.Routine, sessions map[string]peek.Session) routineView {
+	view := routineView{Pinned: routine.Name == pinnedRoutine, Routine: *routine}
 	if routine.LoadError != "" {
 		return view
 	}
+	view.Session = routineSession(routine, sessions)
 
 	loaded, err := routines.IsLoaded(ctx, routine.Label)
 	if err != nil {
@@ -187,6 +219,42 @@ func (s *Server) routineView(ctx context.Context, routine *routines.Routine) rou
 
 	view.Loaded = loaded
 	return view
+}
+
+// routineSession picks the peek session running in the routine's worktree —
+// the cwd is deterministic per the worktree.sh contract:
+// $ROUTINE_WT_ROOT/$ROUTINE_GROUP, defaulting to
+// ~/.cache/claude-routine/worktrees/<name>.
+func routineSession(routine *routines.Routine, sessions map[string]peek.Session) *peek.Session {
+	if len(sessions) == 0 {
+		return nil
+	}
+	root := routine.Env["ROUTINE_WT_ROOT"]
+	if root == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil
+		}
+		root = filepath.Join(home, ".cache", "claude-routine", "worktrees")
+	}
+	group := routine.Env["ROUTINE_GROUP"]
+	if group == "" {
+		group = routine.Name
+	}
+	if session, ok := sessions[filepath.Clean(filepath.Join(root, group))]; ok {
+		return &session
+	}
+	return nil
+}
+
+// peekRoutineSessions is the routines-page peek lookup; peek down → nil map,
+// the pages render with dashed session cells (mirrors repos D3).
+func (s *Server) peekRoutineSessions(ctx context.Context) map[string]peek.Session {
+	sessions, err := s.peekClient.SessionsByCwd(ctx)
+	if err != nil {
+		return nil
+	}
+	return sessions
 }
 
 // declaredPairs lists routine-specific env sorted by key; the standard
@@ -210,7 +278,7 @@ func (s *Server) renderRoutineResult(ctx context.Context, output string, pollSin
 	}
 	s.renderFragment(w, tmplOpResult, result)
 
-	view := s.routineView(ctx, routine)
+	view := s.routineView(ctx, routine, s.peekRoutineSessions(ctx))
 	view.OOB = true
 	if resultErr == nil {
 		view.PollSince = pollSince
@@ -231,7 +299,7 @@ func (s *Server) handleRoutineDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.History = history
-	data.Row = s.routineView(r.Context(), routine)
+	data.Row = s.routineView(r.Context(), routine, s.peekRoutineSessions(r.Context()))
 
 	s.renderFragment(w, tmplRoutineDetail, data)
 }
@@ -263,6 +331,12 @@ func (s *Server) handleRoutineConfigure(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	s.renderFragment(w, tmplRoutineConfigure, s.routineConfigureViewFor(routine))
+}
+
+// routineConfigureViewFor builds the configure-panel view; shared by the
+// configure GET and the params POST, which re-renders the panel (D7).
+func (s *Server) routineConfigureViewFor(routine *routines.Routine) routineConfigureView {
 	view := routineConfigureView{
 		EnvPairs: declaredPairs(routine.Env, routine.Name),
 		Name:     routine.Name,
@@ -273,7 +347,24 @@ func (s *Server) handleRoutineConfigure(w http.ResponseWriter, r *http.Request) 
 		view.Standard = append(view.Standard, standardSettingView{standardSetting: setting, Value: routine.Env[setting.Key]})
 	}
 
-	s.renderFragment(w, tmplRoutineConfigure, view)
+	labels, err := routines.ListTokenLabels(s.tokenDir)
+	if err != nil {
+		view.TokenErr = err.Error()
+	}
+	view.TokenLabels = labels
+
+	// The auto-apply decide-rules editor lives with the routine that
+	// declares the mode setting (smine-nightly).
+	if isSettingKey("SMINE_AUTO_APPLY", routine.Name) {
+		view.AutoApplyPath = s.autoApplyRulesPath
+		content, err := os.ReadFile(s.autoApplyRulesPath)
+		if err != nil {
+			view.AutoApplyError = err.Error()
+		}
+		view.AutoApplyContent = string(content)
+	}
+
+	return view
 }
 
 func (s *Server) handleRoutineParams(w http.ResponseWriter, r *http.Request) {
@@ -293,6 +384,12 @@ func (s *Server) handleRoutineParams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenLabels, err := routines.ListTokenLabels(s.tokenDir)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+
 	env := make(map[string]string)
 	for index, key := range keys {
 		key = strings.TrimSpace(key)
@@ -309,8 +406,27 @@ func (s *Server) handleRoutineParams(w http.ResponseWriter, r *http.Request) {
 				respond.WithBadRequest(err.Error(), w)
 				return
 			}
+			// Stricter than the ROUTINE_TARGET_REPO precedent by design:
+			// an unknown label guarantees exit 78 every night (D9).
+			if key == "ROUTINE_TOKEN" && !slices.Contains(tokenLabels, value) {
+				respond.WithBadRequest(fmt.Sprintf("unknown token label %q", value), w)
+				return
+			}
 		}
 		env[key] = value
+	}
+
+	// The decide-rules textarea rides the same form for the routine that
+	// hosts the editor; absent field (other routines) writes nothing.
+	if content, ok := r.PostForm["auto_apply_content"]; ok && isSettingKey("SMINE_AUTO_APPLY", routine.Name) {
+		if len(content[0]) > maxAutoApplyRulesBytes {
+			respond.WithBadRequest("rules file exceeds 64 KiB", w)
+			return
+		}
+		if err := s.saveAutoApplyRules(content[0]); err != nil {
+			respond.WithInternalServerError(err, w)
+			return
+		}
 	}
 
 	if err := routines.SetEnv(env, routine.PlistPath); err != nil {
@@ -319,7 +435,47 @@ func (s *Server) handleRoutineParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	output, err := s.reloadRoutine(r.Context(), routine)
-	s.renderRoutineResult(r.Context(), output, 0, err, s.rescanRoutine(routine), w)
+	rescanned := s.rescanRoutine(routine)
+	s.renderRoutineResult(r.Context(), output, 0, err, rescanned, w)
+	// Re-render the open panel out-of-band so the persisted values show up
+	// without reopening Configure.
+	s.renderFragment(w, tmplRoutineConfigureOOB, s.routineConfigureViewFor(rescanned))
+}
+
+// handleRoutineTokenAdd stores a new token from the standalone add-token
+// widget. The value is write-only: never rendered or logged (D8).
+func (s *Server) handleRoutineTokenAdd(w http.ResponseWriter, r *http.Request) {
+	label, value := strings.TrimSpace(r.FormValue("token_label")), strings.TrimSpace(r.FormValue("token_value"))
+	if value == "" {
+		respond.WithBadRequest("token value required", w)
+		return
+	}
+
+	labels, err := routines.ListTokenLabels(s.tokenDir)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	if label == "" {
+		label = defaultTokenLabel(labels)
+	}
+	if err := routines.SaveToken(label, value, s.tokenDir); err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
+
+	s.renderFragment(w, tmplOpResult, opResult{Page: pageRoutines, Subject: "add token " + label})
+}
+
+// defaultTokenLabel names an unlabeled token by creation date, suffixed on
+// same-day collision (token-2026-08-12, token-2026-08-12-2, …) (D5).
+func defaultTokenLabel(labels []string) string {
+	base := time.Now().Format("token-2006-01-02")
+	label := base
+	for suffix := 2; slices.Contains(labels, label); suffix++ {
+		label = fmt.Sprintf("%s-%d", base, suffix)
+	}
+	return label
 }
 
 func (s *Server) handleRoutineDuplicate(w http.ResponseWriter, r *http.Request) {
@@ -328,7 +484,12 @@ func (s *Server) handleRoutineDuplicate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := routines.Duplicate(routine.Name, r.FormValue("newname"), s.routinesDir); err != nil {
+	suffix := r.FormValue("suffix")
+	if suffix == "" {
+		respond.WithBadRequest("suffix required", w)
+		return
+	}
+	if err := routines.Duplicate(routine.Name, routine.Name+"-"+suffix, s.routinesDir); err != nil {
 		respond.WithBadRequest(err.Error(), w)
 		return
 	}
@@ -346,7 +507,7 @@ func (s *Server) handleRoutineRow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	since, _ := strconv.ParseInt(r.URL.Query().Get("since"), 10, 64)
-	view := s.routineView(r.Context(), routine)
+	view := s.routineView(r.Context(), routine, s.peekRoutineSessions(r.Context()))
 
 	if hasResultAfter(routine.LastRun, since) {
 		w.WriteHeader(statusStopPolling)
@@ -361,6 +522,17 @@ func (s *Server) handleRoutineRun(w http.ResponseWriter, r *http.Request) {
 	routine := s.findRoutine(w, r)
 	if routine == nil {
 		return
+	}
+
+	// One-shot Run-Now extension: written before the kickstart, consumed and
+	// deleted by the wrapper at run start — it never leaks into later runs.
+	prompt := strings.TrimSpace(r.FormValue("prompt"))
+	if prompt != "" {
+		promptPath := filepath.Join(routine.Dir, runNowPromptFileName)
+		if err := os.WriteFile(promptPath, []byte(prompt), 0o644); err != nil {
+			respond.WithInternalServerError(fmt.Errorf("handleRoutineRun: Failed to write %s: %w", promptPath, err), w)
+			return
+		}
 	}
 
 	output, err := routines.RunNow(r.Context(), routine.Label)
@@ -397,9 +569,14 @@ func (s *Server) handleRoutinesIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := routinesIndexPage{Page: pageRoutines, Title: "Routines"}
+	sessions := s.peekRoutineSessions(r.Context())
 	for index := range list {
-		data.Rows = append(data.Rows, s.routineView(r.Context(), &list[index]))
+		data.Rows = append(data.Rows, s.routineView(r.Context(), &list[index], sessions))
 	}
+	// The pinned routine leads; Scan's alphabetical order holds behind it.
+	sort.SliceStable(data.Rows, func(i, j int) bool {
+		return data.Rows[i].Pinned && !data.Rows[j].Pinned
+	})
 	s.renderFragment(w, tmplRoutinesIndex, data)
 }
 

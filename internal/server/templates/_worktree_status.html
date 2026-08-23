@@ -1,0 +1,152 @@
+{{define "_worktree_status.html"}}
+{{/* worktree-status re-pulls itself when an op fires HX-Trigger: repo-op —
+     the table must never show already-removed worktrees. Never `load` here:
+     it re-fires on swapped-in content and would loop (D3). hx-disinherit
+     keeps the refresh attributes off the op forms inside, whose responses
+     target #op-result with the default swap. */}}
+<div id="worktree-status" hx-get="/repos/{{pathEscape .Repo.Name}}/status{{.Query}}"
+     hx-trigger="repo-op from:body" hx-swap="outerHTML"
+     hx-disinherit="*">
+{{if .SessionsErr}}
+<div class="card card-error"><span class="label" title="{{.SessionsErrDetail}}">peek-mcp unavailable — session column degraded: {{.SessionsErr}}</span></div>
+{{end}}
+{{if .CheckoutErr}}
+<div class="card card-error"><span class="label">checkout state unavailable: {{.CheckoutErr}}</span></div>
+{{else if .Checkout}}
+<div class="meta checkout-line">checkout: {{.Checkout.Branch}}
+  {{if gt .Checkout.Dirty 0}}
+  <span class="badge badge-error" title="merge and cherry-pick refuse on a dirty checkout — commit or stash first">{{.Checkout.Dirty}} uncommitted change(s)</span>
+  {{else}}
+  <span class="badge badge-ok">clean</span>
+  {{end}}
+</div>
+{{end}}
+{{if .StatusErr}}
+<div class="card card-error"><span class="label">{{.StatusErr}}</span></div>
+{{else}}
+<div class="card card-filter" title="kind chips separate claude/* session worktrees from claude-routines/* routine lineages; base chips show only branches created from the chosen base — the two combine">
+  <span class="section-label">kind</span>
+  {{range .KindFilters}}
+  <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+     href="/repos/{{pathEscape $.Repo.Name}}{{.Query}}"
+     hx-get="/repos/{{pathEscape $.Repo.Name}}/status{{.Query}}"
+     hx-target="#worktree-status" hx-swap="outerHTML"
+     hx-push-url="/repos/{{pathEscape $.Repo.Name}}{{.Query}}">{{.Label}}</a>
+  {{end}}
+  {{if gt (len .BaseFilters) 1}}
+  <hr class="filter-divider">
+  <span class="section-label">base</span>
+  {{range .BaseFilters}}
+  <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+     href="/repos/{{pathEscape $.Repo.Name}}{{.Query}}"
+     hx-get="/repos/{{pathEscape $.Repo.Name}}/status{{.Query}}"
+     hx-target="#worktree-status" hx-swap="outerHTML"
+     hx-push-url="/repos/{{pathEscape $.Repo.Name}}{{.Query}}">{{.Label}}</a>
+  {{end}}
+  {{end}}
+</div>
+{{if .Statuses}}
+{{/* The ops card acts on the row selected via the wt-select radios; the
+     script block below fills in hx-post/hx-confirm and the disabled states.
+     It lives inside #worktree-status so every repo-op refresh resets it to
+     the disabled no-selection state. */}}
+<div class="card card-actions" id="worktree-ops" data-repo="{{pathEscape .Repo.Name}}"
+     {{if and .Checkout (gt .Checkout.Dirty 0)}}data-checkout-dirty="1"{{end}}>
+  <form data-op="sync" hx-post="" hx-target="#op-result"
+        title="merge the base branch into the selected branch's worktree — skips a dirty worktree, aborts on conflict"><button type="submit" disabled>Sync</button></form>
+  <form data-op="merge" hx-post="" hx-target="#op-result"
+        title="merge the selected branch into the main checkout — requires a clean checkout, aborts on conflict"><button type="submit" disabled>Merge</button></form>
+  <form data-op="remove" data-delete-branch="1" hx-post="/repos/{{pathEscape .Repo.Name}}/remove-selected"
+        title="remove the selected worktrees AND delete their branches — only when safe, or with force"
+        hx-target="#op-result" hx-include="#op-force, input[name=branch]:checked">
+    <input type="hidden" name="delete-branch" value="on">
+    <button type="submit" disabled>Remove</button>
+  </form>
+  <form data-op="remove" hx-post="/repos/{{pathEscape .Repo.Name}}/remove-selected"
+        title="remove the selected worktrees, branches kept — only when safe, or with force"
+        hx-target="#op-result" hx-include="#op-force, input[name=branch]:checked">
+    <button type="submit" disabled>Remove Worktree</button>
+  </form>
+  <label title="override the safety checks — removes despite dirty/untracked files or work contained nowhere"><input type="checkbox" id="op-force" name="force"> force</label>
+</div>
+<div class="table-scroll">
+<table class="md-body checklist-table">
+  <thead>
+    <tr>
+      <th><input type="checkbox" class="select-all" title="select / deselect all rows"></th>
+      <th title="agent branch (claude/* session branches, claude-routines/* routine lineages)">Branch</th>
+      <th title="checkout directory name — hover the cell for the full path">Worktree</th>
+      <th title="branch this one was created from (reflog)">Base</th>
+      <th title="dirty/untracked · ahead/behind/unpicked — dirty: modified files in the worktree; untracked: untracked files excluding worktree infrastructure (.idea/, .claude/, .claude-worktree); ahead/behind: commits missing between this branch and Base; unpicked: commits transferred to no non-agent branch. Click a count for its commit list; – = no worktree / Base unknown">Counts</th>
+      <th title="probe results for commits missing from the base by patch-id: applied:n (patch applies empty on the base — change already present, byte-identical), resolved:n (conflicted re-pick on the base paired by range-diff — transferred verbatim after conflict), picked-resolved:n (landed on another branch as a same-subject twin with manual conflict resolution — counted as picked, but NOT auto-reconcilable: a merge or re-pick of this branch will conflict against the resolved version)">Verdicts</th>
+      <th title="branch whose history has an actual merge commit for this branch's tip — empty when the state was only cherry-picked or fast-forwarded">Merged into</th>
+      <th title="every non-agent branch already containing all of this branch's work, base branch first">Contained in</th>
+      <th title="date of the branch's newest commit">Last commit</th>
+      <th title="most recent Claude session in this worktree (via peek-mcp); link opens the peek dashboard">Session</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Statuses}}
+    <tr>
+      <td><input type="checkbox" name="branch" value="{{.Branch}}"
+           data-branch="{{.Branch}}" data-worktree="{{.Worktree}}"
+           {{if .SafeToRemove}}data-safe="1"{{end}}>
+        {{if and .SafeToRemove (gt .ResolvedPicks 0)}}<span class="badge badge-ok" title="all work is on a non-agent branch, but {{.ResolvedPicks}} commit(s) landed as manually conflict-resolved picks — NOT auto-reconcilable: a merge or re-pick of this branch will conflict against the resolved versions">✓ resolved</span>
+        {{else if and .SafeToRemove .SafeViaProbe}}<span class="badge badge-ok" title="safe via probe — a branch contains all work, partly by probe/twin verdict (see Verdicts)">✓</span>
+        {{else if and .SafeToRemove (lt .Dirty 0)}}<span class="badge badge-ok" title="no worktree checked out — nothing dirty to lose; every commit is contained on a non-agent branch">✓</span>
+        {{else if .SafeToRemove}}<span class="badge badge-ok" title="safe to remove: every commit is contained on a non-agent branch and the worktree (if any) is clean">✓</span>
+        {{else}}<span class="badge badge-error" title="unsafe to remove: {{range $i, $r := .UnsafeReasons}}{{if $i}}, {{end}}{{$r}}{{end}}">✗</span>{{end}}
+      </td>
+      <td>{{.Branch}}</td>
+      <td>
+        {{if .Worktree}}
+        <span title="{{.Worktree}}">{{baseName .Worktree}}</span>
+        {{if and (hasPrefix .Branch "claude/") (ne (baseName .Worktree) (branchSlug .Branch))}}
+        <span class="badge badge-error" title="worktree directory name does not match the branch — pool-recycled dir; remove deletes THIS directory">dir≠branch</span>
+        {{end}}
+        {{else}}–{{end}}
+      </td>
+      <td>{{.From}}</td>
+      <td class="wt-counts" title="dirty/untracked · ahead/behind/unpicked">
+        {{if lt .Dirty 0}}–{{else}}{{.Dirty}}{{end}}/{{if lt .Untracked 0}}–{{else}}{{.Untracked}}{{end}}
+        ·
+        {{if lt .Ahead 0}}–{{else if gt .Ahead 0}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/ahead"
+           hx-target="#commit-list" href="#">{{.Ahead}}</a>{{else}}0{{end}}/{{if lt .Behind 0}}–{{else if gt .Behind 0}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/behind"
+           hx-target="#commit-list" href="#">{{.Behind}}</a>{{else}}0{{end}}/{{if gt .Unpicked 0}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/unpicked"
+           hx-target="#commit-list" href="#">{{.Unpicked}}</a>{{else}}0{{end}}
+      </td>
+      <td>{{if .Verdicts}}{{.Verdicts}}{{else}}–{{end}}</td>
+      <td>{{if .MergedInto}}{{.MergedInto}}{{else}}–{{end}}</td>
+      <td>
+        {{if .In}}
+        {{range $i, $b := .In}}{{if lt $i 3}}{{if $i}}, {{end}}{{$b}}{{end}}{{end}}
+        {{if gt (len .In) 3}}
+        <a href="#" class="wt-more">…+{{len (slice .In 3)}}</a><span class="wt-more-rest" hidden>{{range slice .In 3}}, {{.}}{{end}}</span>
+        {{end}}
+        {{else}}–{{end}}
+      </td>
+      <td>{{.LastCommit}}</td>
+      <td>
+        {{with index $.Sessions .Worktree}}
+          {{if .Id}}
+            {{if .Live}}<span class="badge badge-ok">live</span>{{end}}
+            {{$peekURL := peekSessionURL .Id}}
+            {{if $peekURL}}<a href="{{$peekURL}}" title="{{.Id}} — open in peek">{{if .Title}}{{.Title}}{{else}}(untitled){{end}}</a>{{else}}{{.Title}}{{end}}
+            <span class="meta">{{.LastActive.Format "2006-01-02 15:04"}}</span>
+          {{else}}–{{end}}
+        {{else}}–{{end}}
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+</div>
+{{else}}
+<div class="empty">{{if or .Base .Kind}}No agent branches matching the active filter.{{else}}No agent branches (claude/*, claude-routines/*).{{end}}</div>
+{{end}}
+{{end}}
+{{if .Timings}}
+<div class="meta">{{range $i, $t := .Timings}}{{if $i}} · {{end}}{{$t.Step}} {{$t.Ms}}ms{{end}}</div>
+{{end}}
+</div>
+{{end}}

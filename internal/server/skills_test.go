@@ -170,7 +170,7 @@ func TestSkillGroups(t *testing.T) {
 	list := []skillCard{
 		{Invocations: 4, Skill: skills.Skill{Group: "smine", Name: "smine"}},
 		{HomeVersion: "1.1", Invocations: 2, Skill: skills.Skill{Group: "smine", Name: "smine-memory", Version: "1.2"}},
-		{Skill: skills.Skill{Group: "smine", Name: "smine-style"}},
+		{Skill: skills.Skill{Group: "smine", Name: "smine-context"}},
 		{Invocations: 7, Skill: skills.Skill{Name: "jq"}},
 		{Skill: skills.Skill{Group: "skillroutine", Name: "skillroutine-create"}},
 		{Skill: skills.Skill{Group: "skillroutine", Name: "skillroutine-eval"}},

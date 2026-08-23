@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -19,9 +20,8 @@ import (
 )
 
 const (
-	tmplConfig     = "config.html"
-	tmplConfigDocs = "config_docs.html"
-	tmplConfigRow  = "_config_row.html"
+	tmplConfig    = "config.html"
+	tmplConfigRow = "_config_row.html"
 )
 
 const (
@@ -54,23 +54,19 @@ type configPageData struct {
 	Title               string
 }
 
-type configDocsData struct {
-	Entries []catalog.Entry
-	Page    string
-	Target  string
-	Title   string
-}
-
 type configRow struct {
 	CanToggle   bool
 	Category    string
+	Diff        []diffLine
 	Documented  bool
 	Explanation string
 	IsTable     bool
 	Items       []configItem
 	Key         string
 	Overridden  bool
+	PathArray   bool
 	Presets     []string
+	RepoValue   string
 	Source      string
 	State       string // stateSet | stateUnset | stateDisabled
 	Subtables   []string
@@ -132,8 +128,18 @@ func (s *Server) claudeRows() ([]configRow, error) {
 		}
 		if entry.Type == catalog.TypeArray {
 			row.Presets = s.arrayPresets(entry.Key, row.Items)
+			row.PathArray = pathArrayKeys[entry.Key]
 		}
 		row.Overridden = claudeOverridden(main.Doc(), fragment.Doc(), path)
+		if row.Overridden {
+			if fragRaw, ok := fragment.Doc().Get(path); ok {
+				row.RepoValue = displayJSON(entry.Type, fragRaw)
+			}
+			blockType := entry.Type == catalog.TypeArray || entry.Type == catalog.TypeObject || entry.Type == catalog.TypeTable
+			if blockType && row.RepoValue != "" && row.Value != "" {
+				row.Diff = compactDiff(diffLines(row.RepoValue, row.Value), 2)
+			}
+		}
 		rows = append(rows, row)
 	}
 
@@ -141,6 +147,20 @@ func (s *Server) claudeRows() ([]configRow, error) {
 	rows = append(rows, undocumentedClaudeRows(covered, disabled.Doc(), fragment.Doc(), stateDisabled)...)
 	rows = append(rows, undocumentedClaudeRows(covered, fragment.Doc(), fragment.Doc(), stateUnset)...)
 	return rows, nil
+}
+
+// docURLRe matches the canonical per-key documentation deep link embedded in a
+// catalog explanation (a trailing "See https://code.claude.com/docs/...").
+var docURLRe = regexp.MustCompile(`https://code\.claude\.com/docs/\S+`)
+
+// docHref returns the per-key documentation URL: the code.claude.com deep link
+// from the explanation when present, else the generic schema source. Keys with
+// no embedded URL (all Codex keys, ~58 Claude keys) keep their .Source.
+func docHref(explanation, source string) string {
+	if match := docURLRe.FindString(explanation); match != "" {
+		return strings.TrimRight(match, ".,;)")
+	}
+	return source
 }
 
 // claudeOverridden reports whether the live value at path differs from the
@@ -377,22 +397,6 @@ func sortedGroups(byCategory map[string][]configRow) []configGroup {
 
 func (s *Server) handleConfigRedirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/config/claude", http.StatusFound)
-}
-
-func (s *Server) handleConfigDocs(w http.ResponseWriter, r *http.Request) {
-	target := r.PathValue("target")
-	if !catalog.IsTarget(target) {
-		http.NotFound(w, r)
-		return
-	}
-
-	data := configDocsData{
-		Entries: catalog.ForTarget(s.catalog, target),
-		Page:    "config-" + target,
-		Target:  target,
-		Title:   target + " docs",
-	}
-	s.renderFragment(w, tmplConfigDocs, data)
 }
 
 func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
@@ -751,10 +755,18 @@ func undocumentedClaudeRows(covered map[string]bool, doc, fragmentDoc *config.Do
 			// Fragment-only pass: the key exists nowhere live, so there is
 			// no live value to show — only the drift marker (D4).
 			row.Overridden = true
+			if raw, ok := fragmentDoc.Get([]string{key}); ok {
+				row.RepoValue = displayJSON("", raw)
+			}
 		} else {
 			raw, _ := doc.Get([]string{key})
 			row.Value = displayJSON("", raw)
 			row.Overridden = claudeOverridden(doc, fragmentDoc, []string{key})
+			if row.Overridden {
+				if fragRaw, ok := fragmentDoc.Get([]string{key}); ok {
+					row.RepoValue = displayJSON("", fragRaw)
+				}
+			}
 		}
 		rows = append(rows, row)
 	}

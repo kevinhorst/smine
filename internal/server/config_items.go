@@ -2,6 +2,8 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
@@ -10,9 +12,53 @@ import (
 	"github.com/creachadair/tomledit/parser"
 	"github.com/kevinhorst/smine/internal/codex"
 	"github.com/kevinhorst/smine/internal/config"
+	"github.com/kevinhorst/smine/internal/contextdocs"
 	"github.com/kevinhorst/smine/internal/server/catalog"
 	"github.com/kevinhorst/smine/internal/server/respond"
 )
+
+// pathArrayKeys are documented array keys whose items are filesystem paths —
+// they get the native folder picker beside the text add-form.
+var pathArrayKeys = map[string]bool{
+	"permissions.additionalDirectories": true,
+}
+
+// handleConfigItemChooseFolder opens the native folder dialog and appends
+// the picked path as an array item — the one-click add for path keys.
+// Cancel re-renders the row unchanged.
+func (s *Server) handleConfigItemChooseFolder(w http.ResponseWriter, r *http.Request) {
+	target := r.PathValue("target")
+	key := r.PathValue("key")
+	if s.itemEntry(target, key, w) == nil {
+		return
+	}
+	if !pathArrayKeys[key] || target != catalog.TargetClaude {
+		respond.WithNotFound("no folder picker for this key", w)
+		return
+	}
+	if !s.repoLocks.TryAcquire(chooseFolderLockKey) {
+		respond.WithConflict("a folder dialog is already open", w)
+		return
+	}
+	defer s.repoLocks.Release(chooseFolderLockKey)
+
+	path, err := contextdocs.ChooseFolder(r.Context(), "Add directory: choose the folder")
+	switch {
+	case errors.Is(err, contextdocs.ErrCanceled):
+		// dismissed: nothing to add
+	case err != nil:
+		respond.WithInternalServerError(err, w)
+		return
+	default:
+		if !s.mutateClaudeItems(key, w, func(items []json.RawMessage) ([]json.RawMessage, bool) {
+			quoted, _ := json.Marshal(path)
+			return append(items, quoted), true
+		}) {
+			return
+		}
+	}
+	s.renderConfigRow(w, target, key)
+}
 
 func (s *Server) handleConfigItemAdd(w http.ResponseWriter, r *http.Request) {
 	target := r.PathValue("target")
@@ -88,6 +134,37 @@ func (s *Server) itemEntry(target, key string, w http.ResponseWriter) *catalog.E
 		return nil
 	}
 	return entry
+}
+
+// appendClaudeItem appends one string item to a settings array key — the
+// error-returning variant of mutateClaudeItems for callers outside an HTTP
+// response context (e.g. the repos add-with-grant op). Same load/set/save
+// sequence, same file.
+func (s *Server) appendClaudeItem(key, value string) error {
+	settings, err := config.Load(s.settingsPath)
+	if err != nil {
+		return fmt.Errorf("appendClaudeItem: %w", err)
+	}
+	path := strings.Split(key, ".")
+	var items []json.RawMessage
+	if raw, ok := settings.Doc().Get(path); ok {
+		if err := json.Unmarshal(raw, &items); err != nil {
+			return fmt.Errorf("appendClaudeItem: existing value is not an array: %w", err)
+		}
+	}
+	quoted, _ := json.Marshal(value)
+	items = append(items, quoted)
+	encoded, err := json.Marshal(items)
+	if err != nil {
+		return fmt.Errorf("appendClaudeItem: %w", err)
+	}
+	if err := settings.Doc().Set(path, encoded); err != nil {
+		return fmt.Errorf("appendClaudeItem: %w", err)
+	}
+	if err := config.Save(s.settingsPath, settings); err != nil {
+		return fmt.Errorf("appendClaudeItem: %w", err)
+	}
+	return nil
 }
 
 // mutateClaudeItems loads the array (missing key = empty), applies mutate,

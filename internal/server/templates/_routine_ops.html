@@ -2,28 +2,65 @@
 {{/* Ops act on the routine selected via the rt-select radios; the script
      below fills in hx-post and the disabled states (mirrors repo_detail's
      worktree-ops card). Row swaps uncheck the radio, so htmx:afterSwap
-     resets the card to the disabled no-selection state. */}}
-<div class="card" id="routine-ops">
-  <form data-op="start" hx-post="" hx-target="#op-result"><button type="submit" disabled>Start</button></form>
-  <form data-op="stop" hx-post="" hx-target="#op-result"><button type="submit" disabled>Stop</button></form>
-  <form data-op="run" hx-post="" hx-target="#op-result"><button type="submit" disabled>Run now</button></form>
-  <form data-op="configure" hx-get="" hx-target="#routine-configure">
-    <button type="submit" disabled>Configure</button>
-  </form>
-  <form data-op="duplicate" hx-post="" hx-target="#op-result">
-    <input type="text" name="newname" placeholder="new instance name" pattern="[a-z0-9-]+">
-    <button type="submit" disabled>Duplicate</button>
-  </form>
-  <form data-op="reschedule" hx-post="" hx-target="#op-result">
-    <input type="number" name="hour" min="0" max="23" placeholder="hour" required>
-    <input type="number" name="minute" min="0" max="59" placeholder="minute" required>
-    <input type="number" name="weekday" min="0" max="7" placeholder="weekday">
-    <input type="number" name="day" min="1" max="31" placeholder="day of month">
-    <button type="submit" disabled>Reschedule</button>
-  </form>
+     resets the cards to the disabled no-selection state. The Configure
+     button opens the selected routine's configuration in
+     #routine-configure; selection alone never opens it. */}}
+<div id="routine-ops">
+  <div class="card card-filter card-column">
+    <div class="card-row">
+    <span class="section-label">Actions</span>
+    <form data-op="run" hx-post="" hx-target="#op-result">
+      <input type="text" name="prompt" placeholder="extra prompt for this run"
+             title="appended once to this run's prompt — one-shot, on top of the configured Extra prompt">
+      <button type="submit" disabled>Run now</button>
+    </form>
+    <form data-op="start" hx-post="" hx-target="#op-result"><button type="submit" disabled>Start</button></form>
+    <form data-op="stop" hx-post="" hx-target="#op-result"><button type="submit" disabled>Stop</button></form>
+    <form data-op="configure" hx-get="" hx-target="#routine-configure"><button type="submit" disabled>Configure</button></form>
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+    <span class="section-label">Schedule</span>
+    <form data-op="reschedule" hx-post="" hx-target="#op-result">
+      <input type="number" name="hour" min="0" max="23" required placeholder="hour" title="hour (0–23)">
+      <input type="number" name="minute" min="0" max="59" required placeholder="min" title="minute (0–59)">
+      <label title="weekly schedule — runs only on this weekday; picking one clears day of month">
+        <select name="weekday">
+          <option value="">every day</option>
+          <option value="0">Sun</option><option value="1">Mon</option><option value="2">Tue</option>
+          <option value="3">Wed</option><option value="4">Thu</option><option value="5">Fri</option>
+          <option value="6">Sat</option>
+        </select>
+      </label>
+      <label title="monthly schedule — runs only on this day of month (1–31); entering one clears weekday">day of month <input type="number" name="day" min="1" max="31" placeholder="–"></label>
+      <button type="submit" disabled>Reschedule</button>
+    </form>
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+    <span class="section-label">Duplicate</span>
+    <form data-op="duplicate" hx-post="" hx-target="#op-result">
+      <input type="text" name="suffix" placeholder="suffix" pattern="[a-z0-9-]+" required>
+      <button type="submit" disabled id="duplicate-btn" title="copies the selected routine's plist + env">Duplicate</button>
+      <span class="meta" id="duplicate-preview"></span>
+    </form>
+    </div>
+  </div>
 </div>
 <script>
 (function () {
+  // launchd accepts weekday 0-7 with 0 and 7 both Sunday; the select only
+  // offers 0-6, so a stored 7 gets a synthesized option instead of being
+  // silently dropped.
+  function setWeekday(select, value) {
+    if (value && !select.querySelector('option[value="' + value + '"]')) {
+      var option = document.createElement('option');
+      option.value = value;
+      option.textContent = 'Sun (' + value + ')';
+      select.appendChild(option);
+    }
+    select.value = value || '';
+  }
   function refresh() {
     var ops = document.getElementById('routine-ops');
     if (!ops) return;
@@ -33,34 +70,61 @@
     ops.querySelectorAll('form[data-op]').forEach(function (form) {
       var button = form.querySelector('button');
       if (!sel) { button.disabled = true; return; }
-      if (form.dataset.op === 'configure') form.setAttribute('hx-get', '/routines/' + sel.value + '/configure');
-      else form.setAttribute('hx-post', '/routines/' + sel.value + '/' + form.dataset.op);
+      var verb = form.dataset.op === 'configure' ? 'hx-get' : 'hx-post';
+      form.setAttribute(verb, '/routines/' + sel.value + '/' + form.dataset.op);
       var loaded = !!sel.dataset.loaded;
       if (form.dataset.op === 'start') button.disabled = loaded;
       else if (form.dataset.op === 'reschedule') button.disabled = !sel.dataset.reschedule;
-      else if (form.dataset.op === 'configure' || form.dataset.op === 'duplicate') button.disabled = false;
+      else if (form.dataset.op === 'duplicate') button.disabled = false;
+      else if (form.dataset.op === 'configure') button.disabled = false;
       else button.disabled = !loaded;
       htmx.process(form);
     });
+    var dup = document.getElementById('duplicate-btn');
+    if (dup) {
+      dup.title = sel
+        ? 'creates ' + sel.value + '-<suffix> — copies plist + env'
+        : "copies the selected routine's plist + env";
+    }
+    updateDuplicatePreview();
     if (sel && ops.dataset.sel !== sel.value) {
-      // A different routine reloads the open configure panel for the new
-      // selection; a closed panel stays closed.
+      // An open widget follows the selection; a closed one stays closed (D1).
       var configure = document.getElementById('routine-configure');
-      if (ops.dataset.sel && configure && configure.innerHTML.trim() !== '') {
+      if (configure && configure.innerHTML.trim() !== '') {
         htmx.ajax('GET', '/routines/' + sel.value + '/configure', { target: '#routine-configure' });
       }
       ops.dataset.sel = sel.value;
       ops.querySelector('input[name="hour"]').value = sel.dataset.hour || '';
       ops.querySelector('input[name="minute"]').value = sel.dataset.minute || '';
-      ops.querySelector('input[name="weekday"]').value = sel.dataset.weekday || '';
+      setWeekday(ops.querySelector('select[name="weekday"]'), sel.dataset.weekday);
       ops.querySelector('input[name="day"]').value = sel.dataset.day || '';
     }
   }
+  // The resulting routine name renders behind the Duplicate button and
+  // follows both the selection and the typed suffix.
+  function updateDuplicatePreview() {
+    var preview = document.getElementById('duplicate-preview');
+    if (!preview) return;
+    var sel = document.querySelector('input[name="rt-select"]:checked');
+    var suffix = document.querySelector('#routine-ops input[name="suffix"]');
+    preview.textContent = sel ? '→ ' + sel.value + '-' + ((suffix && suffix.value) || '<suffix>') : '';
+  }
+  document.addEventListener('input', function (e) {
+    if (e.target.name === 'suffix') updateDuplicatePreview();
+  });
   document.addEventListener('change', function (e) {
     if (e.target.name === 'rt-select') refresh();
+    // weekly and monthly schedules are mutually exclusive — picking one
+    // clears the other before the server would reject the pair.
+    if (e.target.name === 'weekday' && e.target.value !== '') {
+      document.querySelector('#routine-ops input[name="day"]').value = '';
+    }
+    if (e.target.name === 'day' && e.target.value !== '') {
+      document.querySelector('#routine-ops select[name="weekday"]').value = '';
+    }
   });
   document.body.addEventListener('htmx:afterSwap', refresh);
-  // The card renders above the table, so the radios don't exist yet while
+  // The cards render above the table, so the radios don't exist yet while
   // this script runs during the initial parse.
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);
   else refresh();

@@ -3,7 +3,7 @@
 <h1>Skills</h1>
 <div class="card">
   <form hx-post="/scripts/skills/sync" hx-target="#op-result"
-        hx-confirm="Sync all repo skills to ~/.claude/skills and ~/.codex/skills?">
+        hx-confirm="Sync all repo skills to the claude and codex home skill roots?">
     <button type="submit">Sync skills</button>
     <label><input type="checkbox" name="prune"> prune removed</label>
   </form>
@@ -14,6 +14,7 @@
 <div id="skills-list" hx-get="/scripts/skills{{if .State}}?state={{.State}}{{end}}"
      hx-trigger="repo-op from:body" hx-select="#skills-list" hx-swap="outerHTML"
      hx-disinherit="*">
+<h2>skills</h2>
 <div class="card card-filter">
   <a class="badge {{if not .State}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills">All ({{.CountAll}})</a>
   <a class="badge {{if eq .State "synced"}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills?state=synced">Synced ({{.CountSynced}})</a>
@@ -41,7 +42,8 @@
 <div class="card card-skill">
   <span class="label">
     <a href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}"><strong>/{{.Skill.Name}}</strong></a>
-    {{if .Skill.Description}}<br><span class="description">{{.Skill.Description}}</span>{{end}}
+    {{if .Skill.Summary}}<br><span class="description">{{.Skill.Summary}}</span>{{end}}
+    {{if .Skill.Args}}<br><span class="skill-args">{{range .Skill.Args}}<span class="arg-chip">{{.Name}}</span>{{end}}</span>{{end}}
   </span>
   <span class="badge badge-dim">{{.Invocations}} invocation{{if ne .Invocations 1}}s{{end}}</span>
   {{if .LastUsed}}<span class="badge badge-dim">last used {{.LastUsed}}</span>{{end}}

@@ -9,8 +9,14 @@
   {{else if eq .State "set"}}<span class="badge badge-ok">set</span>
   {{else if eq .State "disabled"}}<span class="badge badge-error">disabled</span>
   {{else}}<span class="badge badge-dim">unset</span>{{end}}
-  {{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}
-  {{if .Source}}<a class="meta" href="{{.Source}}" target="_blank" rel="noopener">docs</a>{{end}}
+  {{if .Overridden}}
+    {{if and (eq .State "unset") .RepoValue}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{else}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}
+    {{if not .RepoValue}}<span class="repo-scalar">repo: (unset)</span>
+    {{else if .Diff}}<span class="repo-scalar" title="repo fragment → live settings">repo → live:</span>{{template "_diff.html" .Diff}}
+    {{else if or (eq .Type "array") (eq .Type "object") (eq .Type "table")}}<span class="repo-scalar">repo:</span><pre class="value-view repo-view" title="value in the repo fragment (settings/claude_code/settings.json)">{{.RepoValue}}</pre>
+    {{else}}<span class="repo-scalar" title="value in the repo fragment (settings/claude_code/settings.json)">repo: {{.RepoValue}}</span>{{end}}
+  {{end}}
+  {{if .Source}}<a class="meta" href="{{docHref .Explanation .Source}}" target="_blank" rel="noopener">docs</a>{{end}}
 
   {{if ne .State "disabled"}}
     {{if eq .Type "bool"}}
@@ -43,6 +49,7 @@
         <div class="list-item">
           <span class="label">{{.Value}}</span>
           <button class="small" hx-delete="/api/config/{{$.Target}}/{{pathEscape $.Key}}/items/{{.Index}}"
+                  hx-confirm="Remove {{.Value}} from {{$.Key}} in the live settings?"
                   hx-target="#{{domID $.Target $.Key}}" hx-swap="outerHTML">×</button>
         </div>
         {{end}}
@@ -56,8 +63,14 @@
           <input type="text" name="value" placeholder="new item">
           {{end}}
           <button type="submit" class="small">Add</button>
+          {{if .PathArray}}
+          <button type="button" class="small" title="pick a folder in the native dialog — the choice is appended as an item"
+                  hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}/choose-folder"
+                  hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">add folder…</button>
+          {{end}}
         </form>
       </div>
+    {{else if .Diff}}
     {{else if .Value}}
       <pre class="value-view">{{.Value}}</pre>
     {{end}}
@@ -70,6 +83,7 @@
   {{end}}
   {{if and (eq .State "set") (not .IsTable)}}
     <button class="small" hx-delete="/api/config/{{.Target}}/{{pathEscape .Key}}"
+            hx-confirm="Remove {{.Key}} from the live settings?"
             hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">Remove</button>
   {{end}}
 </div>

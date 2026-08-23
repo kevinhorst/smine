@@ -6,6 +6,7 @@
   <div class="card">
     <span class="label"><strong>{{.Key}}</strong> = {{.Value}}</span>
     <button class="small" hx-delete="/api/env/{{.Key}}"
+            hx-confirm="Remove env var {{.Key}} from the live settings?"
             hx-target="#env-section" hx-swap="outerHTML">Remove</button>
   </div>
   {{end}}

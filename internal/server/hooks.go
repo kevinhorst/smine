@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"maps"
 	"net/http"
 	"os"
@@ -33,6 +34,7 @@ type hookGroupInfo struct {
 }
 
 type hooksData struct {
+	Diff       []diffLine
 	Hooks      []hookGroupInfo
 	Overridden bool
 }
@@ -79,8 +81,12 @@ func (s *Server) handleToggleHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !enabled {
-		// disabled row → re-enable: pop from memory, write back to settings.json
-		group, ok := s.disabledHooks.Pop(event, index)
+		// disabled row → re-enable: pop from the sidecar, write back to settings.json
+		group, ok, err := s.disabledHooks.Pop(event, index)
+		if err != nil {
+			respond.WithInternalServerError(err, w)
+			return
+		}
 		if !ok {
 			respond.WithNotFound("hook not found", w)
 			return
@@ -90,13 +96,16 @@ func (s *Server) handleToggleHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// enabled row → disable: remove from settings.json, park in memory
+	// enabled row → disable: remove from settings.json, park in the sidecar
 	group, ok := takeHookGroup(mainHooks, event, index)
 	if !ok {
 		respond.WithNotFound("hook not found", w)
 		return
 	}
-	s.disabledHooks.Add(event, group)
+	if err := s.disabledHooks.Add(event, group); err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
 	s.saveHooks(main, mainHooks, w)
 }
 
@@ -114,9 +123,14 @@ func (s *Server) handleDeleteHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// disabled row → drop from memory, nothing touches disk
+	// disabled row → drop from the sidecar
 	if r.URL.Query().Get("enabled") == "false" {
-		if _, ok := s.disabledHooks.Pop(event, index); !ok {
+		_, ok, err := s.disabledHooks.Pop(event, index)
+		if err != nil {
+			respond.WithInternalServerError(err, w)
+			return
+		}
+		if !ok {
 			respond.WithNotFound("hook not found", w)
 			return
 		}
@@ -165,18 +179,56 @@ func (s *Server) renderHooks(w http.ResponseWriter, main *config.Settings) {
 		Hooks:      hookRows(mainHooks, s.disabledHooks.Snapshot()),
 		Overridden: s.sectionOverridden(main, "hooks"),
 	}
+	if data.Overridden {
+		data.Diff = s.hooksFragmentDiff(main)
+	}
 	s.renderFragment(w, tmplHooks, data)
+}
+
+// hooksFragmentDiff diffs the repo fragment's hooks key against the live
+// settings' — canonical pretty-printed JSON, so key order and toggle-induced
+// array order are not noise. A fragment load error renders no diff, matching
+// sectionOverridden's degrade-to-quiet.
+func (s *Server) hooksFragmentDiff(main *config.Settings) []diffLine {
+	fragment, err := config.Load(s.claudeFragmentPath)
+	if err != nil {
+		return nil
+	}
+	return compactDiff(diffLines(canonicalPretty(fragment.Doc(), "hooks"), canonicalPretty(main.Doc(), "hooks")), 2)
+}
+
+// canonicalPretty pretty-prints a top-level key after canonicalJSON
+// normalization; a missing key renders empty, an unparseable one verbatim.
+func canonicalPretty(doc *config.Document, key string) string {
+	raw, ok := doc.Get([]string{key})
+	if !ok {
+		return ""
+	}
+
+	var value any
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return string(raw)
+	}
+	pretty, err := json.MarshalIndent(canonicalJSON(value), "", "  ")
+	if err != nil {
+		return string(raw)
+	}
+	return string(pretty)
 }
 
 func eventHookRows(enabled bool, event string, groups []config.HookGroup) []hookGroupInfo {
 	rows := make([]hookGroupInfo, 0, len(groups))
 	for index, hookGroup := range groups {
+		matcher := ""
+		if hookGroup.Matcher != nil {
+			matcher = *hookGroup.Matcher
+		}
 		row := hookGroupInfo{
 			Command: summarizeHookGroup(&hookGroup),
 			Enabled: enabled,
 			Event:   event,
 			Index:   index,
-			Matcher: matcherStr(hookGroup.Matcher),
+			Matcher: matcher,
 			Name:    summarizeHookNames(&hookGroup),
 			Views:   hookViews(&hookGroup),
 		}
@@ -195,13 +247,6 @@ func hookRows(mainHooks, disabledHooks map[string][]config.HookGroup) []hookGrou
 		return strings.Compare(left.Name, right.Name)
 	})
 	return rows
-}
-
-func matcherStr(matcher *config.HookMatcher) string {
-	if matcher == nil {
-		return ""
-	}
-	return matcher.Type + ":" + matcher.Pattern
 }
 
 // takeHookGroup removes and returns the group at event/index — the removal

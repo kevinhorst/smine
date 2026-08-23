@@ -1,0 +1,25 @@
+{{define "_routine_tokens.html"}}
+{{/* Tokens are global — one store shared by all routines — so adding one
+     needs no routine selection and lives outside Configure. */}}
+<div class="card" id="routine-tokens">
+  <form id="token-add-form" hx-post="/routines/tokens" hx-target="#op-result">
+    <span class="section-label">Add token</span>
+    <input type="text" name="token_label" placeholder="label — which account (default: token-YYYY-MM-DD)">
+    <input type="password" name="token_value" placeholder="paste claude setup-token output (hidden)" autocomplete="off">
+    <button type="submit">Add token</button>
+  </form>
+</div>
+<script>
+document.body.addEventListener('htmx:afterRequest', function (e) {
+  if (e.detail.elt.id !== 'token-add-form' || !e.detail.successful) return;
+  e.detail.elt.reset();
+  // An open configure panel still lists the old labels — reload it for the
+  // selected routine so the new label shows up in the token select.
+  var sel = document.querySelector('input[name="rt-select"]:checked');
+  var configure = document.getElementById('routine-configure');
+  if (sel && configure && configure.innerHTML.trim() !== '') {
+    htmx.ajax('GET', '/routines/' + sel.value + '/configure', { target: '#routine-configure' });
+  }
+});
+</script>
+{{end}}

@@ -11,33 +11,43 @@ import (
 	"github.com/kevinhorst/smine/internal/config"
 )
 
-// disabledHookStore parks toggled-off hook groups in memory — settings.json
-// stays the only persistent hook store (D33). A hard death loses the content;
-// a graceful shutdown round-trips it through the tmp file.
+// disabledHookStore parks toggled-off hook groups in a write-through sidecar
+// (hooks.disabled.json next to settings.json) — disk-visible and restart-proof;
+// settings.json stays the only store for enabled hooks (revises D33).
 type disabledHookStore struct {
-	// mu guards groups.
+	// mu guards groups and serializes persists.
 	mu     sync.Mutex
+	path   string
 	groups map[string][]config.HookGroup
 }
 
-func newDisabledHookStore() *disabledHookStore {
-	return &disabledHookStore{groups: make(map[string][]config.HookGroup)}
+func newDisabledHookStore(settingsPath string) *disabledHookStore {
+	return &disabledHookStore{
+		path:   filepath.Join(filepath.Dir(settingsPath), "hooks.disabled.json"),
+		groups: make(map[string][]config.HookGroup),
+	}
 }
 
-func (d *disabledHookStore) Add(event string, group config.HookGroup) {
+func (d *disabledHookStore) Add(event string, group config.HookGroup) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	d.add(event, group)
+	return d.persistLocked()
+}
+
+// add appends without persisting — the boot absorbs batch their persist.
+func (d *disabledHookStore) add(event string, group config.HookGroup) {
 	d.groups[event] = append(d.groups[event], group)
 }
 
-// Pop removes and returns the group at event/index; false when absent.
-func (d *disabledHookStore) Pop(event string, index int) (config.HookGroup, bool) {
+// Pop removes and returns the group at event/index; ok=false when absent.
+func (d *disabledHookStore) Pop(event string, index int) (config.HookGroup, bool, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	groups, ok := d.groups[event]
 	if !ok || index >= len(groups) {
-		return config.HookGroup{}, false
+		return config.HookGroup{}, false, nil
 	}
 
 	group := groups[index]
@@ -45,15 +55,16 @@ func (d *disabledHookStore) Pop(event string, index int) (config.HookGroup, bool
 	if len(d.groups[event]) == 0 {
 		delete(d.groups, event)
 	}
-	return group, true
+	return group, true, d.persistLocked()
 }
 
 // Clear drops every parked group — a claude Revert makes the repo fragment
 // the whole truth, so parked drift must not survive it.
-func (d *disabledHookStore) Clear() {
+func (d *disabledHookStore) Clear() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.groups = make(map[string][]config.HookGroup)
+	return d.persistLocked()
 }
 
 // Snapshot returns a rendering copy.
@@ -68,17 +79,61 @@ func (d *disabledHookStore) Snapshot() map[string][]config.HookGroup {
 	return snapshot
 }
 
-// disabledHooksTmpPath sits next to settings.json; the file exists only
-// between a graceful shutdown and the next boot (D33).
+// persist is the lock-taking wrapper for the boot path.
+func (d *disabledHookStore) persist() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.persistLocked()
+}
+
+// persistLocked mirrors the map to the sidecar; an empty map removes the file.
+func (d *disabledHookStore) persistLocked() error {
+	if len(d.groups) == 0 {
+		if err := os.Remove(d.path); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("disabledHookStore.persistLocked: %w", err)
+		}
+		return nil
+	}
+
+	data, err := json.MarshalIndent(d.groups, "", "  ")
+	if err != nil {
+		return fmt.Errorf("disabledHookStore.persistLocked: %w", err)
+	}
+	if err := os.WriteFile(d.path, data, 0o600); err != nil {
+		return fmt.Errorf("disabledHookStore.persistLocked: %w", err)
+	}
+	return nil
+}
+
+// load reads an existing sidecar into the store; a missing file is empty.
+func (d *disabledHookStore) load() error {
+	data, err := os.ReadFile(d.path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("disabledHookStore.load: %w", err)
+	}
+	if err := json.Unmarshal(data, &d.groups); err != nil {
+		return fmt.Errorf("disabledHookStore.load: Failed to parse %s: %w", d.path, err)
+	}
+	return nil
+}
+
+// disabledHooksTmpPath sits next to settings.json; legacy shutdown handoff of
+// the retired in-memory store — read (and consumed) at boot as migration only.
 func disabledHooksTmpPath(settingsPath string) string {
 	return filepath.Join(filepath.Dir(settingsPath), ".disabled-hooks.tmp.json")
 }
 
-// restoreDisabledHooks builds the boot store: the shutdown tmp file (consumed
-// and deleted) plus a one-time absorption of the sidecar's hooks key — after
-// this boot, settings.disabled.json never holds hooks again (D33, F25).
+// restoreDisabledHooks builds the boot store from hooks.disabled.json, then
+// absorbs the two legacy stores (shutdown tmp file, settings.disabled.json
+// hooks key) and persists the merge — legacy state migrates on first boot.
 func restoreDisabledHooks(settingsPath string) (*disabledHookStore, error) {
-	store := newDisabledHookStore()
+	store := newDisabledHookStore(settingsPath)
+	if err := store.load(); err != nil {
+		return store, err
+	}
 	if err := absorbTmpFile(store, disabledHooksTmpPath(settingsPath)); err != nil {
 		return store, err
 	}
@@ -86,7 +141,7 @@ func restoreDisabledHooks(settingsPath string) (*disabledHookStore, error) {
 	if err := absorbSidecarHooks(store, settingsPath); err != nil {
 		return store, err
 	}
-	return store, nil
+	return store, store.persist()
 }
 
 func absorbTmpFile(store *disabledHookStore, tmpPath string) error {
@@ -104,7 +159,7 @@ func absorbTmpFile(store *disabledHookStore, tmpPath string) error {
 	}
 	for event, eventGroups := range groups {
 		for _, group := range eventGroups {
-			store.Add(event, group)
+			store.add(event, group)
 		}
 	}
 
@@ -130,7 +185,7 @@ func absorbSidecarHooks(store *disabledHookStore, settingsPath string) error {
 
 	for event, groups := range hooks {
 		for _, group := range groups {
-			store.Add(event, group)
+			store.add(event, group)
 		}
 	}
 
@@ -141,19 +196,4 @@ func absorbSidecarHooks(store *disabledHookStore, settingsPath string) error {
 		return fmt.Errorf("absorbSidecarHooks: %w", err)
 	}
 	return nil
-}
-
-// FlushDisabledHooks parks the in-memory disabled hooks next to settings.json
-// for the next boot; an empty store leaves no file (D33).
-func (s *Server) FlushDisabledHooks() error {
-	groups := s.disabledHooks.Snapshot()
-	if len(groups) == 0 {
-		return nil
-	}
-
-	data, err := json.MarshalIndent(groups, "", "  ")
-	if err != nil {
-		return fmt.Errorf("Server.FlushDisabledHooks: %w", err)
-	}
-	return os.WriteFile(disabledHooksTmpPath(s.settingsPath), data, 0o600)
 }

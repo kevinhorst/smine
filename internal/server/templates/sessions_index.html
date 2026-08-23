@@ -3,7 +3,7 @@
 <h1>Sessions</h1>
 {{if not .Scope}}
 <div class="empty">
-  No session data found. Generate batch JSONs with the /smine-summary skill
+  No session data found. Generate batch JSONs with the /smine or /smine-batch skill
   (sessions/&lt;scope&gt;/json/*.json).
 </div>
 {{else}}
@@ -19,6 +19,7 @@
 <div id="op-result"></div>
 {{/* Reload changes the batch set, so the list re-pulls itself when the
      reload op fires HX-Trigger: sessions-reload. */}}
+<h2>batches</h2>
 <div id="batch-list-wrap" hx-get="/sessions/{{.Scope.Name}}" hx-trigger="sessions-reload from:body"
      hx-select="#batch-list-wrap" hx-swap="outerHTML" hx-disinherit="*">
 {{template "_batch_list.html" .}}

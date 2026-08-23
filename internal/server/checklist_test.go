@@ -42,6 +42,21 @@ const checklistTabsFixture = "# Checklist\n" +
 	"\n" +
 	"Open body.\n"
 
+func TestChecklistMissingFileRendersEmpty(t *testing.T) {
+	// A fresh clone has no checklist doc (private artifact) — the page
+	// renders an empty checklist, not the read error.
+	path := filepath.Join(t.TempDir(), "checklist.md")
+	server := newTestServer(t, &Options{ChecklistPath: path})
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/docs/checklist", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	body := response.Body.String()
+	assert.NotContains(t, body, "no such file")
+	assert.Contains(t, body, "Not Done (0)")
+	assert.Contains(t, body, "Done (0)")
+}
+
 func TestChecklistTabs(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "checklist.md")
 	require.NoError(t, os.WriteFile(path, []byte(checklistTabsFixture), 0644))

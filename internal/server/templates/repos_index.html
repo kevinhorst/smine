@@ -1,17 +1,22 @@
 {{template "head" .}}
 {{template "nav" .}}
 <h1>Repos</h1>
-<div class="card">
-  <form class="inline-form" hx-post="/repos/add" hx-target="#op-result">
+<div class="card card-filter card-column">
+  <form class="card-row" id="repo-add-form" hx-post="/repos/add" hx-target="#op-result" hx-swap="innerHTML show:none">
+    <span class="section-label">add</span>
     {{template "_repo_path.html" .AddPath}}
     <button type="submit">Add</button>
+    <label class="inline-check" title="also append the repo path to permissions.additionalDirectories in the live settings — grants every session read access and puts the repo on the smine working-repo roster"><input type="checkbox" name="additional-dir"> add to additionalDirectories</label>
   </form>
+  <hr class="filter-divider">
   {{/* Own repo-op listener: the select lives outside #repo-list, so it
        refreshes itself (mirrors #repo-list). */}}
-  <div id="repo-remove" hx-get="/repos" hx-trigger="repo-op from:body"
+  <div id="repo-remove" class="card-row" hx-get="/repos" hx-trigger="repo-op from:body"
        hx-select="#repo-remove" hx-swap="outerHTML" hx-disinherit="*">
     {{if .RepoNames}}
-    <form class="inline-form" hx-post="/repos/delete" hx-target="#op-result">
+    <form class="card-row" hx-post="/repos/delete" hx-target="#op-result"
+          hx-confirm="Remove the selected repo from the registry? The repository on disk is untouched.">
+      <span class="section-label">remove</span>
       {{template "_repo_select.html" .RepoNames}}
       <button type="submit">Remove</button>
     </form>
@@ -19,26 +24,21 @@
   </div>
 </div>
 <div id="op-result"></div>
+<h2>repos</h2>
 {{/* Add/remove change the row set, so the table re-pulls itself whenever an op
      fires HX-Trigger: repo-op (mirrors repo_detail's #worktree-status). */}}
 <div id="repo-list" hx-get="/repos" hx-trigger="repo-op from:body"
-     hx-select="#repo-list" hx-swap="outerHTML" hx-disinherit="*">
+     hx-select="#repo-list" hx-swap="outerHTML show:none" hx-disinherit="*">
 {{if .Rows}}
-<table class="md-body checklist-table">
-  <thead><tr><th>Name</th><th>Path</th><th>Claude</th><th>Codex</th><th>Context</th><th>Languages</th><th>Worktrees</th></tr></thead>
+<table class="md-body checklist-table repos-table">
+  <thead><tr><th>Name</th><th>Path</th><th>Context</th><th>ACDSL</th><th>Worktrees</th></tr></thead>
   <tbody>
     {{range .Rows}}
     <tr>
-      <td><a href="/repos/{{pathEscape .Repo.Name}}">{{.Repo.Name}}</a></td>
-      <td>{{.Repo.Path}}</td>
-      <td><span class="badge {{.Claude.Class}}" title="{{.Claude.Title}}">{{.Claude.Glyph}}</span></td>
-      <td><span class="badge {{.Codex.Class}}" title="{{.Codex.Title}}">{{.Codex.Glyph}}</span></td>
-      <td>
-        {{if .Context.HasGeneral}}<span class="badge badge-ok" title="context/general">general</span>{{else}}<span class="badge badge-error" title="no context/general">✗</span>{{end}}
-      </td>
-      <td>
-        {{range .Context.Languages}}<span class="badge badge-dim">{{.}}</span>{{end}}
-      </td>
+      <td><a href="/repos/{{pathEscape .Repo.Name}}">{{nameWrap .Repo.Name}}</a></td>
+      <td>{{pathWrap .Repo.Path}}</td>
+      <td><span class="badge {{.Context.Class}}" title="{{.Context.Title}}">{{.Context.Label}}</span></td>
+      <td><span class="badge {{.Acdsl.Class}}" title="{{.Acdsl.Title}}">{{.Acdsl.Label}}</span></td>
       <td>{{.Worktrees}}</td>
     </tr>
     {{end}}

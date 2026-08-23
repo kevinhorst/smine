@@ -2,36 +2,25 @@ package server
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
-	"github.com/kevinhorst/smine/internal/server/respond"
+	"github.com/kevinhorst/smine/internal/fsx"
 )
 
 const maxAutoApplyRulesBytes = 65536
 
-// handleAutoApplyRulesSave writes atomically — same discipline as
-// checklist.SetStatus; the full-page reload mirrors handleChecklistStatus and
-// re-renders the proposals auto-apply tab the form lives on.
-func (s *Server) handleAutoApplyRulesSave(w http.ResponseWriter, r *http.Request) {
-	content := r.FormValue("content")
-	if len(content) > maxAutoApplyRulesBytes {
-		respond.WithBadRequest("rules file exceeds 64 KiB", w)
-		return
-	}
-
+// saveAutoApplyRules writes atomically — same discipline as
+// checklist.SetStatus. Called from the configure-panel save (the rules
+// textarea rides the params form).
+func (s *Server) saveAutoApplyRules(content string) error {
 	tmp := s.autoApplyRulesPath + ".tmp"
 	if err := os.WriteFile(tmp, []byte(content), 0644); err != nil {
-		respond.WithInternalServerError(fmt.Errorf("handleAutoApplyRulesSave: Failed to write %s: %w", tmp, err), w)
-		return
+		return fmt.Errorf("saveAutoApplyRules: Failed to write %s: %w", tmp, err)
 	}
 
-	if err := os.Rename(tmp, s.autoApplyRulesPath); err != nil {
+	if err := fsx.ReplaceFile(tmp, s.autoApplyRulesPath); err != nil {
 		os.Remove(tmp)
-		respond.WithInternalServerError(fmt.Errorf("handleAutoApplyRulesSave: Failed to rename %s to %s: %w", tmp, s.autoApplyRulesPath, err), w)
-		return
+		return fmt.Errorf("saveAutoApplyRules: Failed to rename %s to %s: %w", tmp, s.autoApplyRulesPath, err)
 	}
-
-	w.Header().Set("HX-Refresh", "true")
-	w.WriteHeader(http.StatusOK)
+	return nil
 }

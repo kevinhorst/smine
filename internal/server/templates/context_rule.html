@@ -1,0 +1,88 @@
+{{template "head" .}}
+{{template "nav" .}}
+{{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
+<div class="detail-head">
+  <h1>{{.Row.Rule.Id}}</h1>
+  <span class="badge {{if .Row.Rule.Projected}}badge-ok{{else}}badge-dim{{end}}" title="{{if .Row.Rule.Projected}}prose delivered into prompts and working-copy projections; the gate checks it too{{else}}checked only by the gate — no prose delivered{{end}}">{{if .Row.Rule.Projected}}projected{{else}}gate-only{{end}}</span>
+  {{if eq .Row.Rule.Reach "none"}}<span class="badge badge-error" title="disabled — governs no files, checked by nothing, deploys nowhere">disabled</span>
+  {{else}}<span class="badge {{if eq .Row.Rule.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Row.Rule.Reach "smine"}}binds only in smine (this repo), never deploys{{else if eq .Row.Rule.Reach "global"}}would bind in any repo — future distribution manifest{{else}}deploys exactly to the named repos{{end}}">{{.Row.Rule.Reach}}</span>{{end}}
+  {{if eq .Row.Rule.Lifetime "task"}}<span class="badge badge-dim">task</span>{{end}}
+  {{if .Row.Candidate}}<span class="badge badge-action" title="{{.Row.CandidateDetail}}">{{.Row.Candidate}}</span>{{end}}
+</div>
+<div class="meta detail-meta">scope {{.Row.Aspect}} · verifier <code>{{.Row.Rule.Verifier}}</code> · anchor <code>{{.Row.Rule.Anchor}}</code> · {{range .Row.Stats}}<span title="share of the {{.Runs}} logged gate runs that went red while the rule was {{if .Projected}}projected{{else}}gate-only{{end}} — {{if .LastRed}}last red {{.LastRed}}{{else}}no red runs{{end}}">{{if .Projected}}while projected{{else}}while gate-only{{end}}: red <strong>{{.RedRatePercent}}</strong> ({{.RedRuns}}) · {{.Runs}} runs</span> {{else}}<span class="empty">no runs</span>{{end}}</div>
+<h2>reach</h2>
+<div class="card card-filter">
+  <form method="post" action="/context/rule/{{pathEscape .Row.Rule.Id}}/reach">
+    {{template "_reach_picker.html" .Picker}}
+    <button type="submit">set reach</button>
+    <span class="meta">check the deploy targets — disabled and global stand alone; disabled rules govern nothing</span>
+  </form>
+</div>
+<h2>content</h2>
+<div class="card card-column">
+  <div class="description">{{.Row.Rule.Why}}</div>
+</div>
+<h2>verifier</h2>
+<div class="card card-column">
+  <div class="card-row">
+    <span class="badge badge-dim">{{.Row.Rule.Verifier}}</span>
+    {{if not .VerifierFound}}<span class="meta">not registered in acdsl/registry.json</span>{{end}}
+  </div>
+  {{if .VerifierFound}}
+  {{if .Verifier.Description}}<div class="description">{{.Verifier.Description}}</div>{{end}}
+  <div class="meta explanation">command <code>{{range .Verifier.Argv}}{{.}} {{end}}</code> · timeout {{.Verifier.TimeoutSec}}s</div>
+  {{end}}
+</div>
+<section id="rule-fixtures">
+<h2>examples</h2>
+<div class="card card-filter">
+  {{if .Row.HasFixtures}}
+  <button hx-post="/context/rule/{{pathEscape .Row.Rule.Id}}/fixtures/run" hx-target="#rule-fixtures" hx-select="#rule-fixtures" hx-swap="outerHTML">run fixture</button>
+  {{else}}<span class="meta">no fixtures for this rule</span>{{end}}
+  {{if .FixturesResult}}<span class="meta">{{.FixturesResult}}</span>{{end}}
+</div>
+{{if .Positive}}
+{{range .Positive}}
+<div class="card card-column">
+  <div class="card-row"><span class="badge badge-ok">positive</span> <code>{{.Name}}</code></div>
+  <pre class="file-view">{{.Content}}</pre>
+</div>
+{{end}}
+{{else}}
+<div class="card card-column">
+  <div class="card-row"><span class="badge badge-ok">positive</span> <span class="empty">None</span></div>
+</div>
+{{end}}
+{{if .Negative}}
+{{range .Negative}}
+<div class="card card-column">
+  <div class="card-row"><span class="badge badge-error">negative</span> <code>{{.Name}}</code></div>
+  <pre class="file-view">{{.Content}}</pre>
+</div>
+{{end}}
+{{else}}
+<div class="card card-column">
+  <div class="card-row"><span class="badge badge-error">negative</span> <span class="empty">None</span></div>
+</div>
+{{end}}
+</section>
+{{if .Covers}}
+<h2>gates</h2>
+{{range .Covers}}
+<div class="card">
+  {{if .InRegistry}}<a class="label" href="/context/entry/{{pathEscape .Id}}">{{.Id}}</a>
+  {{else}}<span class="label">{{.Id}}</span> <span class="meta" title="cited id without a matching entry in context.json">not in context.json</span>{{end}}
+</div>
+{{end}}
+{{end}}
+{{if .RedRuns}}
+<h2>red runs</h2>
+{{range .RedRuns}}
+<div class="card card-row">
+  <span class="meta">{{.Ts}}</span>
+  <code>{{if .Branch}}{{.Branch}}{{else}}(no branch){{end}}</code>
+  <span class="badge badge-error">{{.Outcome}}</span>
+</div>
+{{end}}
+{{end}}
+{{template "foot" .}}

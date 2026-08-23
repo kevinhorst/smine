@@ -1,0 +1,60 @@
+{{define "_aspect_bar.html"}}
+<div id="aspect-bar">
+  {{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
+  <div class="card card-filter">
+    <div class="card-row">
+      <span class="section-label">reach</span>
+      {{range .Reaches}}
+      <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+         title="{{if eq .Name "global"}}binds in every repo{{else if eq .Name "smine"}}scoped to smine (this repo), never deploys{{else if ne .Name "all"}}deliberately scoped to {{.Name}}{{end}}"
+         href="{{.URL}}">{{.Name}}{{if .Counts}} ({{.RuleCount}}/{{.EntryCount}}){{end}}</a>
+      {{end}}
+      {{template "_reach_picker.html" .Bulk}}
+      <button type="submit" form="bulk-reach" title="apply the picked reach to every checked entry">set reach</button>
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+      <span class="section-label">layer</span>
+      {{range .Layers}}
+      <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+         title="{{if eq .Name "acdsl"}}the executable gate system{{else if ne .Name "all"}}prose {{.Name}} entries{{end}}"
+         href="{{.URL}}">{{.Name}}</a>
+      {{end}}
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+      <span class="section-label">lifetime</span>
+      {{range .Lifetimes}}
+      <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+         title="{{if eq .Name "task"}}one-job contract rules, retired with their task{{else if eq .Name "doctrine"}}standing rules{{end}}"
+         href="{{.URL}}">{{.Name}}</a>
+      {{end}}
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+      <span class="section-label">scope</span>
+      {{range .Aspects}}
+      <a class="badge {{if .Active}}badge-ok{{else if .Registered}}badge-dim{{else}}badge-action{{end}}"
+         title="{{if not .Registered}}scope not in the taxonomy — register it or fold the rules into an existing scope{{else if .Counts}}{{.Scope}}{{end}}"
+         href="{{.URL}}">{{.Name}}{{if .Counts}} ({{.RuleCount}}/{{.EntryCount}}){{end}}</a>
+      {{end}}
+      {{if .Filter.Aspect}}
+      <button class="small" hx-delete="/context/aspects/{{pathEscape .Filter.Aspect}}"
+              hx-target="#aspect-bar" hx-swap="outerHTML" hx-confirm="Remove {{.Filter.Aspect}} from the taxonomy?">remove {{.Filter.Aspect}}</button>
+      {{end}}
+    </div>
+    <form class="card-row" hx-post="/context/aspects" hx-target="#aspect-bar" hx-swap="outerHTML">
+      <input type="hidden" name="aspect" value="{{.Filter.Aspect}}">
+      <input type="hidden" name="reach" value="{{.Filter.Reach}}">
+      <input type="hidden" name="layer" value="{{.Filter.Layer}}">
+      <input type="hidden" name="lifetime" value="{{.Filter.Lifetime}}">
+      <input type="hidden" name="topic" value="{{.Filter.Topic}}">
+      <span class="section-label">add scope</span>
+      <input type="text" name="name" placeholder="IDENTIFIER" size="8">
+      <input type="text" name="scope" placeholder="description — what this scope covers" size="34"
+             title="short description shown in the taxonomy, e.g. 'API endpoints and versioning' — not a reach">
+      <button type="submit" class="small">add</button>
+    </form>
+  </div>
+</div>
+{{end}}

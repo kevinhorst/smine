@@ -3,7 +3,7 @@
   {{if .Error}}
   <div class="card card-error"><span class="badge badge-error">Failed</span> <span class="label">{{.Subject}}: {{.Error}}</span></div>
   {{else}}
-  <div class="card"><span class="badge badge-ok">Ok</span> <span class="label">{{.Subject}}</span></div>
+  <div class="card"><span class="badge badge-ok">Ok</span> <span class="label">{{.Subject}}</span>{{if .Duration}} <span class="meta">{{.Duration}}</span>{{end}}</div>
   {{end}}
   {{if .Output}}
   <pre class="file-view">{{.Output}}</pre>

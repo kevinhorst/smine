@@ -3,20 +3,54 @@
 <h1>Routines</h1>
 {{if .Rows}}
 {{template "_routine_ops.html" .}}
+{{template "_routine_tokens.html" .}}
 <div id="op-result"></div>
+<div class="card card-filter" id="routine-filter">
+  <span class="section-label">filter</span>
+  <a class="badge badge-ok" href="#" data-name="">all</a>
+  {{range .Rows}}
+  <a class="badge badge-dim" href="#" data-name="{{.Routine.Name}}">{{.Routine.Name}}</a>
+  {{end}}
+</div>
+<div id="routine-configure"></div>
+<h2>routines</h2>
 <div class="routines-layout">
 <table class="md-body checklist-table" id="routines-table"
        hx-get="/routines" hx-trigger="repo-op from:body"
        hx-select="#routines-table" hx-swap="outerHTML" hx-disinherit="*">
   <thead>
-    <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Next run</th><th>Env</th></tr>
+    <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Session</th><th>Next run</th></tr>
   </thead>
   <tbody>
     {{range .Rows}}{{template "_routine_row.html" .}}{{end}}
   </tbody>
 </table>
-<div id="routine-configure"></div>
 </div>
+<script>
+  // Name-chip filter: all shows everything, a name chip narrows to exactly
+  // that routine. Mirrors the other filter bars' chip look; purely
+  // client-side so the 3s row polling keeps working.
+  (function () {
+    var activeName = '';
+    function apply() {
+      document.querySelectorAll('#routine-filter .badge').forEach(function (chip) {
+        chip.classList.toggle('badge-ok', chip.dataset.name === activeName);
+        chip.classList.toggle('badge-dim', chip.dataset.name !== activeName);
+      });
+      document.querySelectorAll('#routines-table tbody tr').forEach(function (row) {
+        row.classList.toggle('hidden', !!activeName && row.dataset.name !== activeName);
+      });
+    }
+    document.addEventListener('click', function (e) {
+      var chip = e.target.closest('#routine-filter .badge');
+      if (!chip) return;
+      e.preventDefault();
+      activeName = chip.dataset.name;
+      apply();
+    });
+    document.body.addEventListener('htmx:afterSwap', apply);
+  })();
+</script>
 {{else}}
 <div class="empty">No routines found.</div>
 {{end}}
