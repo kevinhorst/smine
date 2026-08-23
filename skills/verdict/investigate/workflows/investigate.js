@@ -1,7 +1,7 @@
 export const meta = {
-  name: 'investigation',
+  name: 'investigate',
   description: 'Fan out N independent investigations of one open question, re-verify every load-bearing claim against primary sources, then merge into one baseline with a refuted-hypotheses register',
-  whenToUse: 'Invoked by the /investigation skill with the shared question, inputs, optional prior artifact, and investigator count as args',
+  whenToUse: 'Invoked by the /investigate skill with the shared question, inputs, optional prior artifact, and investigator count as args',
   phases: [
     { title: 'Fan-out', detail: 'N independent investigators build ranked hypotheses from the shared inputs' },
     { title: 'Re-verify', detail: 'adversarial barrier — every load-bearing claim checked against its actual primary artifact' },

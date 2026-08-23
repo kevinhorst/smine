@@ -1,0 +1,17 @@
+[
+  {
+    "version": "1.2",
+    "date": "2026-08-23",
+    "text": "renamed decision-support to support-decision and moved into the verdict group"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-07-19",
+    "text": "initial version"
+  }
+]

@@ -1,8 +1,8 @@
 ---
-name: decision-support
-description: Adjudicate an external position against the actual code/spec — structured verdict, read-only, never a fix. Trigger on /decision-support or "does he have a point" or "who's right".
+name: support-decision
+description: Adjudicate an external position against the actual code/spec — structured verdict, read-only, never a fix. Trigger on /support-decision or "does he have a point" or "who's right".
 author: Kevin Horst
-version: 1.0
+version: 1.2
 ---
 
 # Decision Support
@@ -14,7 +14,7 @@ Given an external position — a colleague's chat message (often German), a raw 
 **Use when:** a pasted external position needs adjudication against a closed verdict question — "does he have a point", "who's right", "is he wrong or am I wrong"; recurring "[Decision Support]" sessions.
 **Don't use when:** evaluating a *change* against impact axes — /fimpact. Resolving a *concept's* open questions — /clarify. Hunting defects or verifying a change — /railroad-review. There is no closed question, only an open "thoughts?" — narrow it first (or state the implied question).
 **Preconditions:** the external position pasted verbatim, one line of grounding context, and a closed verdict question.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone (see README.md § Skill map, smine repo).
 
 ## Intake
 
@@ -58,7 +58,3 @@ Then offer once: "Want me to apply?" Edits start only on an explicit "apply" / "
 - Suggested: frontier / large
 - Reason: independent cross-domain judgment on grounded evidence, resisting the framing of the pasted position
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.0 (2026-07-19): initial version
