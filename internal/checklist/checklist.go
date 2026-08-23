@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/kevinhorst/smine/internal/fsx"
 )
 
 type Entry struct {
@@ -126,7 +128,7 @@ func SetStatus(path string, number int, status string) error {
 	if err := os.WriteFile(tmp, out, 0644); err != nil {
 		return fmt.Errorf("SetStatus: Failed to write %s: %w", tmp, err)
 	}
-	if err := os.Rename(tmp, path); err != nil {
+	if err := fsx.ReplaceFile(tmp, path); err != nil {
 		os.Remove(tmp)
 		return fmt.Errorf("SetStatus: Failed to rename %s to %s: %w", tmp, path, err)
 	}
