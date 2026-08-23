@@ -123,8 +123,6 @@ test-coverage:
 # ==================================================================================== #
 
 
-
-
 ## installer-check: compile smine.iss with a dockerized iscc against a dummy payload (recreates dist/)
 # Run before touching CI: a tag run must never be the first iscc compile.
 .PHONY: installer-check
