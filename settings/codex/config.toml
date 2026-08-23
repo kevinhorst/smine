@@ -37,8 +37,8 @@ enabled = true
 enabled = true
 
 [mcp_servers.peek-mcp]
-command = "{{HOME}}/go/bin/peek-mcp"
-args = ["start", "--transport=stdio", "--depth=100", "--claude-home={{HOME}}/.claude", "--codex-home={{HOME}}/.codex", "--diff-target=main"]
+command = "{{PEEK_MCP}}"
+args = ["start", "--transport=stdio", "--depth=100", "--claude-home={{HOME}}/.claude", "--codex-home={{HOME}}/.codex", "--diff-target=main", "--control-port=0"]
 enabled = true
 
 [mcp_servers.peek-mcp.tools.session_full]
