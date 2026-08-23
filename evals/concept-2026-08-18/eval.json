@@ -1,0 +1,2873 @@
+{
+  "schemaVersion": "2.0",
+  "eval": {
+    "skill": "concept",
+    "skillMdPath": "skills/concept/concept/SKILL.md",
+    "date": "2026-08-18",
+    "manifest": "sessions/skillroutine-eval/concept-2026-08-18/manifest.json",
+    "notes": "Output-quality axis is N/A: qualityContext is empty, so there are no C-rules and no output-axis totals; numeric metrics are in metrics/metricValues. Context axis is non-discriminating for this task: the declared concept context set (ACTION-CONCEPT-HOT-* code gates + FACT-REPO-* repo facts) has no application surface in a product-concept document about login redirects, so every context cell scores 0 (not demonstrable) for ctx-on and ctx-off alike. The shared manifest input routines/skill-eval/briefs/concept/login_intent.md was absent from the worktree and reachable roots; brief content was inferred from verbatim references in the run outputs, so contradiction-audit and assumptions-novelty probes could not be run mechanically."
+  },
+  "rubric": [
+    {
+      "id": "SKILL-CONCEPT-MODEA-001",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Ask the user for the feature name and a description if not already provided.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:27"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEA-002",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Derive a directory slug (lowercase, underscores, e.g. login_intent).",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:29"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEA-003",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Create plans/{slug}/concept/concept.md using the Overview Template.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:31"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEA-004",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Create plans/{slug}/concept/user_stories.md using the User Stories Template.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:33"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEA-005",
+      "axis": "self",
+      "phase": "step",
+      "rule": "If the user provides enough specifics for an implementation block, create the Detailed Design page.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:35"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEA-006",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Set status to Draft.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:37"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEB-001",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Read existing concept docs at the path the user indicates (or find them in plans/).",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:41"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEB-002",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Apply user feedback: expand sections, add detail, add new design pages, resolve open questions.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:43"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEB-003",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Do NOT remove content the user did not ask to change.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:45"
+    },
+    {
+      "id": "SKILL-CONCEPT-MODEB-004",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Preserve existing section structure unless restructuring is requested.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:47"
+    },
+    {
+      "id": "SKILL-CONCEPT-CLOSING-001",
+      "axis": "self",
+      "phase": "step",
+      "rule": "With a non-empty Open Questions section, offer to continue into /clarify in the same session.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:51"
+    },
+    {
+      "id": "SKILL-CONCEPT-CLOSING-002",
+      "axis": "self",
+      "phase": "step",
+      "rule": "Skip the offer when Open Questions is empty or the user has scoped the session to drafting only.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:53"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-001",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Write concise, direct prose. No filler or hedging.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:57"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-002",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Use tables for structured data (thresholds, field definitions, limits).",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:59"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-003",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Use numbered steps for sequential flows. Indent sub-steps for backend/system logic.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:61"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-004",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Use concrete examples to clarify non-obvious rules or edge cases.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:63"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-005",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Reference existing project services by name when relevant (consult service-map.md).",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:65"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-006",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Number open questions for easy reference in discussions.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:67"
+    },
+    {
+      "id": "SKILL-CONCEPT-WRITING-007",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Every MVP and Backlog item carries a day estimate; each block states its total.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:69"
+    },
+    {
+      "id": "SKILL-CONCEPT-STORIES-001",
+      "axis": "self",
+      "phase": "review",
+      "rule": "Group stories by theme; HR dividers between groups; independent, testable, small, specific.",
+      "source": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md:263"
+    },
+    {
+      "id": "ACTION-CONCEPT-HOT-001",
+      "axis": "context",
+      "rule": "Present an approved example implementation in the plan before writing SQL with CTEs.",
+      "source": "context/context.json:ACTION-CONCEPT-HOT-001"
+    },
+    {
+      "id": "ACTION-CONCEPT-HOT-002",
+      "axis": "context",
+      "rule": "Present an approved example implementation in the plan before writing concurrency primitives.",
+      "source": "context/context.json:ACTION-CONCEPT-HOT-002"
+    },
+    {
+      "id": "ACTION-CONCEPT-HOT-003",
+      "axis": "context",
+      "rule": "Present an approved example implementation in the plan before introducing a new interface or generic type.",
+      "source": "context/context.json:ACTION-CONCEPT-HOT-003"
+    },
+    {
+      "id": "ACTION-CONCEPT-HOT-004",
+      "axis": "context",
+      "rule": "Write the source the generator consumes; never freehand generated output.",
+      "source": "context/context.json:ACTION-CONCEPT-HOT-004"
+    },
+    {
+      "id": "ACTION-CONCEPT-HOT-005",
+      "axis": "context",
+      "rule": "Present an approved example before adding, weakening, or removing validation/transaction/guard logic.",
+      "source": "context/context.json:ACTION-CONCEPT-HOT-005"
+    },
+    {
+      "id": "ACTION-CONCEPT-HOT-006",
+      "axis": "context",
+      "rule": "Present an approved example in the plan before using an anonymous (inline) struct type.",
+      "source": "context/context.json:ACTION-CONCEPT-HOT-006"
+    },
+    {
+      "id": "FACT-REPO-ARCH-001",
+      "axis": "context",
+      "rule": "Deployment is script-driven: sync_skills.sh / sync_context.sh / sync_settings.sh / sync_hooks.sh.",
+      "source": "context/context.json:FACT-REPO-ARCH-001"
+    },
+    {
+      "id": "FACT-REPO-ARCH-002",
+      "axis": "context",
+      "rule": "The config server is the UI over skills/context/proposals/routines; it shells out to the sync scripts.",
+      "source": "context/context.json:FACT-REPO-ARCH-002"
+    },
+    {
+      "id": "FACT-REPO-ARCH-003",
+      "axis": "context",
+      "rule": "Sessions run in pool worktrees under .claude/worktrees/<name> on claude/* branches; commits invisible until merged.",
+      "source": "context/context.json:FACT-REPO-ARCH-003"
+    },
+    {
+      "id": "FACT-REPO-STACK-001",
+      "axis": "context",
+      "rule": "Go 1.26 module github.com/kevinhorst/smine; make audit is the only quality gate.",
+      "source": "context/context.json:FACT-REPO-STACK-001"
+    }
+  ],
+  "runs": [
+    {
+      "id": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-on.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=102 output_tokens=7120"
+      }
+    },
+    {
+      "id": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-on.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=113 output_tokens=7319"
+      }
+    },
+    {
+      "id": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-on.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=93 output_tokens=6270"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    },
+    {
+      "id": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-on.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=97 output_tokens=6529"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    },
+    {
+      "id": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-off.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=115 output_tokens=7314"
+      }
+    },
+    {
+      "id": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-off.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=117 output_tokens=7229"
+      }
+    },
+    {
+      "id": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-off.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=103 output_tokens=7007"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    },
+    {
+      "id": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-off.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=109 output_tokens=7424"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    }
+  ],
+  "probes": [
+    {
+      "name": "context-injection",
+      "ruleIds": [
+        "ACTION-CONCEPT-HOT-001",
+        "ACTION-CONCEPT-HOT-002",
+        "ACTION-CONCEPT-HOT-003",
+        "ACTION-CONCEPT-HOT-004",
+        "ACTION-CONCEPT-HOT-005",
+        "ACTION-CONCEPT-HOT-006",
+        "FACT-REPO-ARCH-001",
+        "FACT-REPO-ARCH-002",
+        "FACT-REPO-ARCH-003",
+        "FACT-REPO-STACK-001"
+      ],
+      "result": "context_record.sh: all four ctx-on runs received the identical 10-entry set [ACTION-CONCEPT-HOT-001..006, FACT-REPO-ARCH-001..003, FACT-REPO-STACK-001]; all four ctx-off runs received zero injected entries."
+    },
+    {
+      "name": "context-applicability",
+      "ruleIds": [
+        "ACTION-CONCEPT-HOT-001",
+        "ACTION-CONCEPT-HOT-002",
+        "ACTION-CONCEPT-HOT-003",
+        "ACTION-CONCEPT-HOT-004",
+        "ACTION-CONCEPT-HOT-005",
+        "ACTION-CONCEPT-HOT-006",
+        "FACT-REPO-ARCH-001",
+        "FACT-REPO-ARCH-002",
+        "FACT-REPO-ARCH-003",
+        "FACT-REPO-STACK-001"
+      ],
+      "result": "The injected concept-context set is code-writing doctrine (HOT gates) plus claude-configs repo-mechanics facts, none of which have an application surface in a login-redirect product concept. The context axis is non-discriminating here: 0/10 across all runs, ctx-on and ctx-off alike."
+    },
+    {
+      "name": "tables-vs-bullets",
+      "ruleIds": [
+        "SKILL-CONCEPT-WRITING-002"
+      ],
+      "result": "1/8 runs (default.ctx-on.r2) rendered a validation-rules markdown table; the other 7 used bullet lists for Limits/Models/validation. Payload template SKILL-CONCEPT-TPL-002 prescribes bullet layout for Limits/Models, in tension with review guideline WRITING-002."
+    },
+    {
+      "name": "block-totals",
+      "ruleIds": [
+        "SKILL-CONCEPT-WRITING-007"
+      ],
+      "result": "Per-item day estimates present in all 8 runs; explicit per-block totals present in 4 (default.ctx-on.r2, default.ctx-off.r1, default.ctx-off.r2, no-closing.ctx-off.r2), absent in the other 4."
+    },
+    {
+      "name": "closing-gate",
+      "ruleIds": [
+        "SKILL-CONCEPT-CLOSING-001",
+        "SKILL-CONCEPT-CLOSING-002"
+      ],
+      "result": "All 4 default runs explicitly and correctly skipped the /clarify offer citing the unattended/drafting-only scope (CLOSING-002 satisfied); none could extend an interactive offer in a headless run (CLOSING-001 not demonstrable). The no-closing variant has both rows stripped."
+    },
+    {
+      "name": "self-report-vs-artifact",
+      "ruleIds": [
+        "SKILL-CONCEPT-WRITING-002"
+      ],
+      "result": "The default.ctx-off.r2 closing summary claims a validation rules and limits table, but its emitted artifact contains no table (bullet lists only). Scored on the artifact."
+    },
+    {
+      "name": "missing-shared-input",
+      "result": "Manifest input routines/skill-eval/briefs/concept/login_intent.md was absent from the worktree and reachable roots; the brief could not be read directly. Contradiction-audit and assumptions-novelty ratio probes could not be run mechanically."
+    }
+  ],
+  "scores": [
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Headless unattended run — there is no interactive user to receive a /clarify offer. The run acknowledged the closing gate but could not extend an offer.",
+      "evidence": [
+        "This is an unattended run, so I'm not chaining into /clarify — the Open Questions are left for a human pass."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent",
+      "justification": "Run correctly skipped the /clarify offer, explicitly citing the unattended/drafting-only scope — exactly the CLOSING-002 skip condition.",
+      "evidence": [
+        "This is an unattended run, so I'm not chaining into /clarify — the Open Questions are left for a human pass."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "MVP/Backlog items each carry a per-item day estimate, but no per-block total is stated (the rule requires both).",
+      "evidence": [
+        "items show (~2d)/(~1d) yet neither concept.md nor the detailed page states a block total"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Headless unattended run — there is no interactive user to receive a /clarify offer. The run acknowledged the closing gate but could not extend an offer.",
+      "evidence": [
+        "normally I'd offer to chain into /clarify, but this is an unattended session so I'm leaving that for a live follow-up."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent",
+      "justification": "Run correctly skipped the /clarify offer, explicitly citing the unattended/drafting-only scope — exactly the CLOSING-002 skip condition.",
+      "evidence": [
+        "normally I'd offer to chain into /clarify, but this is an unattended session so I'm leaving that for a live follow-up."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "MVP/Backlog items each carry a per-item day estimate, but no per-block total is stated (the rule requires both).",
+      "evidence": [
+        "items show (~2d)/(~1d) yet neither concept.md nor the detailed page states a block total"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "MVP/Backlog items each carry a per-item day estimate, but no per-block total is stated (the rule requires both).",
+      "evidence": [
+        "items show (~2d)/(~1d) yet neither concept.md nor the detailed page states a block total"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Headless unattended run — there is no interactive user to receive a /clarify offer. The run acknowledged the closing gate but could not extend an offer.",
+      "evidence": [
+        "Closing offer to chain into /clarify skipped — unattended session with open questions deliberately parked as assumptions."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent",
+      "justification": "Run correctly skipped the /clarify offer, explicitly citing the unattended/drafting-only scope — exactly the CLOSING-002 skip condition.",
+      "evidence": [
+        "Closing offer to chain into /clarify skipped — unattended session with open questions deliberately parked as assumptions."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Headless unattended run — there is no interactive user to receive a /clarify offer. The run acknowledged the closing gate but could not extend an offer.",
+      "evidence": [
+        "Unattended run, so I skipped the usual offer to chain into /clarify — the seven Open Questions in concept.md are the natural next input for it."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-CLOSING-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent",
+      "justification": "Run correctly skipped the /clarify offer, explicitly citing the unattended/drafting-only scope — exactly the CLOSING-002 skip condition.",
+      "evidence": [
+        "Unattended run, so I skipped the usual offer to chain into /clarify — the seven Open Questions in concept.md are the natural next input for it."
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "agent",
+      "justification": "MVP/Backlog items each carry a per-item day estimate, but no per-block total is stated (the rule requires both).",
+      "evidence": [
+        "items show (~2d)/(~1d) yet neither concept.md nor the detailed page states a block total"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-005",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEA-006",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-MODEB-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Mode B (refine an existing concept) not exercised — this run performed a Mode A fresh create, so the refine-path rule has no occasion to be demonstrated.",
+      "evidence": [
+        "output builds plans/login_intent/concept/ from scratch, Status: Draft"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "Structured data (Limits, Model fields, validation) rendered as bullet lists rather than tables. Note: payload template SKILL-CONCEPT-TPL-002 itself prescribes bullet layout for Limits/Models, so this is a skill-internal template/guideline tension, not solely a run choice.",
+      "evidence": [
+        "Limits and Models sections use bullet lines (- **TTL**: 15 minutes ...), no markdown table"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-005",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "agent",
+      "justification": "No docs/context/service-map.md applies to this greenfield login feature; infrastructure is referenced only generically (session cache, auth service, SSO provider), naming no mapped project service.",
+      "evidence": [
+        "Goals/Models reference the generic existing session cache, not a named service"
+      ]
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-006",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-WRITING-007",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "SKILL-CONCEPT-STORIES-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Injected context entry received (context_record.sh) but a login-intent concept document offers no application surface for it — the HOT gates govern code-writing (SQL CTEs, concurrency, generics, guard logic) and the FACT-REPO-* entries describe claude-configs repo mechanics; neither is exercised by product-concept prose. Neither demonstrably honored nor violated.",
+      "evidence": [
+        "context_record.sh injected.skill[].ids = the 10 concept-context entries"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-004",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-005",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "ACTION-CONCEPT-HOT-006",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-002",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-ARCH-003",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    },
+    {
+      "ruleId": "FACT-REPO-STACK-001",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "score": 0,
+      "source": "probe",
+      "justification": "Run invoked with --no-context; context_record.sh shows zero injected entries, so this entry was never received. Not demonstrable.",
+      "evidence": [
+        "context_record.sh injected.skill = [] for this ctx-off run"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "id": "wall_s",
+      "label": "Wall-clock time",
+      "unit": "s",
+      "direction": "lower",
+      "source": "telemetry"
+    },
+    {
+      "id": "output_tokens",
+      "label": "Output tokens",
+      "unit": "tokens",
+      "direction": "lower",
+      "source": "telemetry"
+    },
+    {
+      "id": "files_touched",
+      "label": "Concept files written",
+      "unit": "files",
+      "direction": "higher",
+      "source": "probe"
+    },
+    {
+      "id": "entry_citations",
+      "label": "Skill entry-id citations in output",
+      "unit": "count",
+      "direction": "higher",
+      "source": "probe"
+    },
+    {
+      "id": "audit_pass",
+      "label": "make audit passes",
+      "unit": "bool",
+      "direction": "higher",
+      "source": "probe"
+    },
+    {
+      "id": "diff_lines",
+      "label": "Diff lines",
+      "unit": "lines",
+      "direction": "lower",
+      "source": "probe"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "wall_s",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 102
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 113
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 93
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 97
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 115
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 117
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 103
+    },
+    {
+      "metricId": "wall_s",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 109
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 7120
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 7319
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 6270
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 6529
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 7314
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 7229
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 7007
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 7424
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 3
+    },
+    {
+      "metricId": "files_touched",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 3
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": 0
+    },
+    {
+      "metricId": "entry_citations",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": 0
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "audit_pass",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "Cell worktree is outside accessible roots and a concept run performs no code change — make audit is not applicable/collectible."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    },
+    {
+      "metricId": "diff_lines",
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "value": null,
+      "note": "git diff --numstat requires the cell worktree, which is outside accessible roots."
+    }
+  ],
+  "totals": [
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 12,
+      "max": 20,
+      "pct": 60
+    },
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 14,
+      "max": 20,
+      "pct": 70
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 13,
+      "max": 20,
+      "pct": 65
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 13,
+      "max": 20,
+      "pct": 65
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 12,
+      "max": 18,
+      "pct": 66.67
+    },
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    }
+  ],
+  "sharedTotals": [
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 13,
+      "max": 18,
+      "pct": 72.22
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 12,
+      "max": 18,
+      "pct": 66.67
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 12,
+      "max": 18,
+      "pct": 66.67
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "self",
+      "raw": 11,
+      "max": 18,
+      "pct": 61.11
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "self",
+      "raw": 12,
+      "max": 18,
+      "pct": 66.67
+    },
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    },
+    {
+      "runId": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "axis": "context",
+      "raw": 0,
+      "max": 10,
+      "pct": 0
+    }
+  ]
+}

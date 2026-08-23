@@ -1,0 +1,8 @@
+on	default	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	1
+on	default	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	2
+on	no-closing	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	1
+on	no-closing	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	2
+off	default	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	1
+off	default	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	2
+off	no-closing	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	1
+off	no-closing	routines/skill-eval/briefs/concept/login_intent.md	claude-opus-4-8[1m]	high	2

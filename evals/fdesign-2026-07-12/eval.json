@@ -1,0 +1,1780 @@
+{
+  "eval": {
+    "skill": "feature-design",
+    "skillMdPath": "skills/feature-design/SKILL.md",
+    "date": "2026-07-12",
+    "notes": "Hand-jsonified baseline from examples/feature-design/models/eval.md — five /feature-design runs against the same approved concept + exploration; Kevin's corrections integrated. Justifications carried for non-+1 cells only, per the source tables. Compliance totals are the source's published totals; they do not sum from the source's own cells for gpt56-sol-uc (cells sum 16, published 18), opus48-high (11 vs 12), opus46-medium (20 vs 21) — carried verbatim, not corrected."
+  },
+  "rubric": [
+    {
+      "id": "S1",
+      "axis": "compliance",
+      "phase": "P0",
+      "rule": "mode calibration (familiar depth)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S2",
+      "axis": "compliance",
+      "phase": "P0",
+      "rule": "exploration binding ([USER], no re-exploration)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S3",
+      "axis": "compliance",
+      "phase": "P0",
+      "rule": "backlog discipline (no scope promotion)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S4",
+      "axis": "compliance",
+      "phase": "P0",
+      "rule": "replace rule (JSON API fully deleted)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S5",
+      "axis": "compliance",
+      "phase": "P1",
+      "rule": "assumptions: novel deltas beyond errata recycle",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S6",
+      "axis": "compliance",
+      "phase": "P1",
+      "rule": "exemplar/mirrors per new artifact",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S7",
+      "axis": "compliance",
+      "phase": "P1",
+      "rule": "reuse inventory",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S8",
+      "axis": "compliance",
+      "phase": "P1",
+      "rule": "external facts fresh-verified, never memory",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S9",
+      "axis": "compliance",
+      "phase": "P1",
+      "rule": "real data inspected",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S10",
+      "axis": "compliance",
+      "phase": "P2",
+      "rule": "OPEN rows in plan, never popups",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S11",
+      "axis": "compliance",
+      "phase": "P2",
+      "rule": "local questions decided inline (self-agency)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S12",
+      "axis": "compliance",
+      "phase": "P2",
+      "rule": "contradictions surfaced, not silently resolved",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S13",
+      "axis": "compliance",
+      "phase": "P2",
+      "rule": "decision axes cited in Why",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S14",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "sections complete + ordered",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S15",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "Changes precision (location/mirrors/diff blocks)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S16",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "hot items w/ example implementations",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S17",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "tests table + not-tested list",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S18",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "contracts & sweeps",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S19",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "verification = observable checklist",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S20",
+      "axis": "compliance",
+      "phase": "P3",
+      "rule": "stop conditions (6 generic + specific)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S21",
+      "axis": "compliance",
+      "phase": "P4",
+      "rule": "no invention / overengineering",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S22",
+      "axis": "compliance",
+      "phase": "P4",
+      "rule": "plan-format details (render, cells, links)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S23",
+      "axis": "compliance",
+      "phase": "P4",
+      "rule": "code mode-invariant (full code / diffs)",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S24",
+      "axis": "compliance",
+      "phase": "P4",
+      "rule": "open questions + changelog correct",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "S25",
+      "axis": "compliance",
+      "phase": "P4",
+      "rule": "self-check gate actually run",
+      "source": "skills/feature-design/SKILL.md"
+    },
+    {
+      "id": "C1",
+      "axis": "quality",
+      "rule": "NAME-002 acronym casing in identifiers",
+      "source": "context/go/go.md:NAME-002"
+    },
+    {
+      "id": "C2",
+      "axis": "quality",
+      "rule": "NAME-003 verbose names",
+      "source": "context/go/go.md:NAME-003"
+    },
+    {
+      "id": "C3",
+      "axis": "quality",
+      "rule": "NAME-004/BOOL-001 method + predicate naming",
+      "source": "context/go/go.md:NAME-004,BOOL-001"
+    },
+    {
+      "id": "C4",
+      "axis": "quality",
+      "rule": "FILE-001 element order in shown units",
+      "source": "context/go/go.md:FILE-001"
+    },
+    {
+      "id": "C5",
+      "axis": "quality",
+      "rule": "STRUCT-001/002 field grouping/sorting",
+      "source": "context/go/go.md:STRUCT-001,STRUCT-002"
+    },
+    {
+      "id": "C6",
+      "axis": "quality",
+      "rule": "STRUCT-003 no interface-typed fields",
+      "source": "context/go/go.md:STRUCT-003"
+    },
+    {
+      "id": "C7",
+      "axis": "quality",
+      "rule": "STRUCT-005 logic in domain pkgs, not handlers",
+      "source": "context/go/go.md:STRUCT-005"
+    },
+    {
+      "id": "C8",
+      "axis": "quality",
+      "rule": "TYPE-001 typed models (RawMessage only where sanctioned)",
+      "source": "context/go/go.md:TYPE-001"
+    },
+    {
+      "id": "C9",
+      "axis": "quality",
+      "rule": "FUNC-001 signatures (error last, ≤3 returns)",
+      "source": "context/go/go.md:FUNC-001"
+    },
+    {
+      "id": "C10",
+      "axis": "quality",
+      "rule": "FUNC-002 no one-line wrappers",
+      "source": "context/go/go.md:FUNC-002"
+    },
+    {
+      "id": "C11",
+      "axis": "quality",
+      "rule": "CALL-001/002 multiline call discipline",
+      "source": "context/go/go.md:CALL-001,CALL-002"
+    },
+    {
+      "id": "C12",
+      "axis": "quality",
+      "rule": "CALL-003 alphabetical literals",
+      "source": "context/go/go.md:CALL-003"
+    },
+    {
+      "id": "C13",
+      "axis": "quality",
+      "rule": "RETURN-001 no composite literal in multi-value return",
+      "source": "context/go/go.md:RETURN-001"
+    },
+    {
+      "id": "C14",
+      "axis": "quality",
+      "rule": "ERR-001 Component.Method prefix, capitalized, no period",
+      "source": "context/go/go.md:ERR-001"
+    },
+    {
+      "id": "C15",
+      "axis": "quality",
+      "rule": "ERR-002 early returns, no nesting",
+      "source": "context/go/go.md:ERR-002"
+    },
+    {
+      "id": "C16",
+      "axis": "quality",
+      "rule": "ERR-004 New vs Errorf discipline",
+      "source": "context/go/go.md:ERR-004"
+    },
+    {
+      "id": "C17",
+      "axis": "quality",
+      "rule": "LOG-001 log format",
+      "source": "context/go/go.md:LOG-001"
+    },
+    {
+      "id": "C18",
+      "axis": "quality",
+      "rule": "COMMENT-001 minimal comments",
+      "source": "context/go/go.md:COMMENT-001"
+    },
+    {
+      "id": "C19",
+      "axis": "quality",
+      "rule": "CONST-001 no magic values",
+      "source": "context/go/go.md:CONST-001"
+    },
+    {
+      "id": "C20",
+      "axis": "quality",
+      "rule": "GR-007 mutex above guarded map",
+      "source": "context/go/go-goroutines.md:GR-007"
+    },
+    {
+      "id": "C21",
+      "axis": "quality",
+      "rule": "data-integrity #4 exhaustive enum handling",
+      "source": "context/go/data-integrity.md:#4"
+    },
+    {
+      "id": "C22",
+      "axis": "quality",
+      "rule": "DoD: no unnecessary complexity (no per-request rescans)",
+      "source": "context/general/definition-of-done.md:§7"
+    },
+    {
+      "id": "C23",
+      "axis": "quality",
+      "rule": "DoD: no duplication / reuse of existing helpers",
+      "source": "context/general/definition-of-done.md:§7"
+    },
+    {
+      "id": "C24",
+      "axis": "quality",
+      "rule": "Exemplar fidelity: matches repo handler idiom",
+      "source": "examples/feature-design/models/eval.md"
+    },
+    {
+      "id": "C25",
+      "axis": "quality",
+      "rule": "Implementability: real APIs, compiles-on-sight",
+      "source": "examples/feature-design/models/eval.md"
+    }
+  ],
+  "runs": [
+    {
+      "id": "f5-high",
+      "output": "examples/feature-design/models/fable5_high.md",
+      "model": {
+        "id": "claude-fable-5",
+        "effort": "high"
+      }
+    },
+    {
+      "id": "f5-uc",
+      "output": "examples/feature-design/models/fable5_ultracode.md",
+      "model": {
+        "id": "claude-fable-5",
+        "mode": "ultracode"
+      }
+    },
+    {
+      "id": "gpt56-sol-uc",
+      "output": "examples/feature-design/models/gpt5_6_sol_ultracode.md",
+      "model": {
+        "id": "gpt-5.6-sol",
+        "mode": "ultracode",
+        "telemetry": "usage limit hit before the self-gate ran"
+      }
+    },
+    {
+      "id": "opus48-high",
+      "output": "examples/feature-design/models/opus4_8_high.md",
+      "model": {
+        "id": "claude-opus-4-8",
+        "effort": "high"
+      }
+    },
+    {
+      "id": "opus46-medium",
+      "output": "examples/feature-design/models/opus4_6_medium.md",
+      "model": {
+        "id": "claude-opus-4-6",
+        "effort": "medium"
+      }
+    }
+  ],
+  "scores": [
+    {
+      "ruleId": "S1",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S1",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Overthought/verbose for familiar mode (1994 lines, \"thought itself into the ground\")"
+    },
+    {
+      "ruleId": "S1",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Kevin: familiar-mode plan far too verbose (3149 lines)"
+    },
+    {
+      "ruleId": "S1",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Over-terse — under-delivers required depth (missing code counted at S23)"
+    },
+    {
+      "ruleId": "S1",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S2",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S2",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S2",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S2",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S2",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S3",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S3",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S3",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Built the /catalog-refresh skill despite concept Backlog; all four others deferred"
+    },
+    {
+      "ruleId": "S3",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S3",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S4",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S4",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S4",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S4",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S4",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S5",
+      "runId": "f5-high",
+      "score": 0,
+      "justification": "All 4 Assumptions rows recycled from exploration errata — no independent doc cross-audit"
+    },
+    {
+      "ruleId": "S5",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S5",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S5",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Rows recycled from errata"
+    },
+    {
+      "ruleId": "S5",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Rows recycled; one semi-novel (external consumers)"
+    },
+    {
+      "ruleId": "S6",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S6",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S6",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S6",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "9 mirrors lines, sparser anchoring than peers (14–16)"
+    },
+    {
+      "ruleId": "S6",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S7",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S7",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S7",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S7",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S7",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S8",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S8",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Some fresh facts (yaml.v3 in go.mod); missed tomledit go 1.24"
+    },
+    {
+      "ruleId": "S8",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S8",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Relied on exploration facts only, no fresh verification"
+    },
+    {
+      "ruleId": "S8",
+      "runId": "opus46-medium",
+      "score": -1,
+      "justification": "Kevin: cutoff-era claims presented as fact (go version, tomledit)"
+    },
+    {
+      "ruleId": "S9",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S9",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S9",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S9",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S9",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Real-data facts are exploration recycles, no own inspection visible"
+    },
+    {
+      "ruleId": "S10",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S10",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S10",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S10",
+      "runId": "opus48-high",
+      "score": -1,
+      "justification": "AskUserQuestion popup mid-design (file-count) — the exact Phase-2 anti-pattern"
+    },
+    {
+      "ruleId": "S10",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S11",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S11",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S11",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "4 OPEN rows, lower self-agency; D1/D3 legitimate, D2/D4 arguably decidable"
+    },
+    {
+      "ruleId": "S11",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S11",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S12",
+      "runId": "f5-high",
+      "score": 0,
+      "justification": "Silently harmonized contradiction A (\"beyond type+enum\" rewording); direction structurally forced, behavior recorded openly → not −1"
+    },
+    {
+      "ruleId": "S12",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S12",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S12",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Same silent harmonization of contradiction A"
+    },
+    {
+      "ruleId": "S12",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Same silent harmonization of contradiction A"
+    },
+    {
+      "ruleId": "S13",
+      "runId": "f5-high",
+      "score": 0,
+      "justification": "Whys substantive but axes rarely named (2 hits vs Opus 6)"
+    },
+    {
+      "ruleId": "S13",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Whys substantive but axes rarely named"
+    },
+    {
+      "ruleId": "S13",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S13",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S13",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S14",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S14",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S14",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S14",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S14",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S15",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S15",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S15",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S15",
+      "runId": "opus48-high",
+      "score": -1,
+      "justification": "Zero diff blocks in a plan modifying existing files; changes prose-described"
+    },
+    {
+      "ruleId": "S15",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S16",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S16",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S16",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S16",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S16",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S17",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S17",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S17",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S17",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S17",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S18",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S18",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S18",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S18",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S18",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S19",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S19",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S19",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S19",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S19",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S20",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S20",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S20",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S20",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S20",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S21",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S21",
+      "runId": "f5-uc",
+      "score": -1,
+      "justification": "Kevin: overengineered, weird patterns"
+    },
+    {
+      "ruleId": "S21",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Overengineered (catalog grammar w/ template placeholders + unions beyond the spec's flat CatalogEntry)"
+    },
+    {
+      "ruleId": "S21",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S21",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S22",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S22",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S22",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S22",
+      "runId": "opus48-high",
+      "score": -1,
+      "justification": "Kevin: render errors"
+    },
+    {
+      "ruleId": "S22",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S23",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S23",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S23",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S23",
+      "runId": "opus48-high",
+      "score": -1,
+      "justification": "Missing crucial code; asked to split — \"code is mode-invariant\" violated"
+    },
+    {
+      "ruleId": "S23",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S24",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S24",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S24",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S24",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S24",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "S25",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "S25",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "S25",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Usage limit hit before the self-gate ran (Kevin's telemetry)"
+    },
+    {
+      "ruleId": "S25",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Gate cannot have passed given S15/S22/S23 — skipped or ineffective"
+    },
+    {
+      "ruleId": "S25",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C1",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C1",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C1",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C1",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C1",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C2",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C2",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C2",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C2",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C2",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C3",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C3",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C3",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places, package-prefix lowercase elsewhere (codexconfig: identity exists…); Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C3",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C3",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C4",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C4",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C4",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places, package-prefix lowercase elsewhere; Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C4",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C4",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Mixed; exemplar handleSkillFile shows no error wrapping, raw err.Error() to client (17 occurrences)"
+    },
+    {
+      "ruleId": "C5",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C5",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C5",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places, package-prefix lowercase elsewhere; Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C5",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C5",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Mixed; exemplar handleSkillFile shows no error wrapping, raw err.Error() to client (17 occurrences)"
+    },
+    {
+      "ruleId": "C6",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C6",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C6",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Unverified; grammar/store layering makes interface fields plausible, not confirmed"
+    },
+    {
+      "ruleId": "C6",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C6",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "One suspect field hit, unverified"
+    },
+    {
+      "ruleId": "C7",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C7",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Some view logic bleeds into server package"
+    },
+    {
+      "ruleId": "C7",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C7",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C7",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Skill-scan + match logic inline in handler (user's example)"
+    },
+    {
+      "ruleId": "C8",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C8",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C8",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "ValueType grammar is typed but a parallel model universe (overreach counted at C22)"
+    },
+    {
+      "ruleId": "C8",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C8",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C9",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C9",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C9",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C9",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C9",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C10",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C10",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C10",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Wrapper-heavy store layering"
+    },
+    {
+      "ruleId": "C10",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score"
+    },
+    {
+      "ruleId": "C10",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C11",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C11",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C11",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places, package-prefix lowercase elsewhere; Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C11",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C11",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Mixed; exemplar handleSkillFile shows no error wrapping, raw err.Error() to client (17 occurrences)"
+    },
+    {
+      "ruleId": "C12",
+      "runId": "f5-high",
+      "score": 0,
+      "justification": "Alphabetical literal ordering not verifiable from plan excerpts anywhere"
+    },
+    {
+      "ruleId": "C12",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Alphabetical literal ordering not verifiable from plan excerpts anywhere"
+    },
+    {
+      "ruleId": "C12",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Alphabetical literal ordering not verifiable from plan excerpts anywhere"
+    },
+    {
+      "ruleId": "C12",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Alphabetical literal ordering not verifiable from plan excerpts anywhere"
+    },
+    {
+      "ruleId": "C12",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Alphabetical literal ordering not verifiable from plan excerpts anywhere"
+    },
+    {
+      "ruleId": "C13",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C13",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C13",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places, package-prefix lowercase elsewhere; Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C13",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C13",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Mixed; exemplar handleSkillFile shows no error wrapping, raw err.Error() to client (17 occurrences)"
+    },
+    {
+      "ruleId": "C14",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C14",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C14",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places (selectDocument: Unset state has no file), package-prefix lowercase elsewhere; Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C14",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C14",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Mixed; exemplar handleSkillFile shows no error wrapping, raw err.Error() to client (17 occurrences)"
+    },
+    {
+      "ruleId": "C15",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C15",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C15",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C15",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C15",
+      "runId": "opus46-medium",
+      "score": -1,
+      "justification": "Kevin's example: triple-nested loops, no early returns — direct ERR-002 violation"
+    },
+    {
+      "ruleId": "C16",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C16",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C16",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C16",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score"
+    },
+    {
+      "ruleId": "C16",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C17",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C17",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C17",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Mixed: correct in places, package-prefix lowercase elsewhere; Kevin's full read: style violations throughout"
+    },
+    {
+      "ruleId": "C17",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable — too little code shown to score; that is itself the finding"
+    },
+    {
+      "ruleId": "C17",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Mixed; exemplar handleSkillFile shows no error wrapping, raw err.Error() to client (17 occurrences)"
+    },
+    {
+      "ruleId": "C18",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C18",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Comment/prose noise around code units"
+    },
+    {
+      "ruleId": "C18",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Kevin: verbose; explanatory comments restating code"
+    },
+    {
+      "ruleId": "C18",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C18",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C19",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C19",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C19",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C19",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable / magic strings inline"
+    },
+    {
+      "ruleId": "C19",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Not demonstrable / magic strings inline"
+    },
+    {
+      "ruleId": "C20",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C20",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C20",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Not demonstrable"
+    },
+    {
+      "ruleId": "C20",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable"
+    },
+    {
+      "ruleId": "C20",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C21",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C21",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C21",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C21",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Not demonstrable"
+    },
+    {
+      "ruleId": "C21",
+      "runId": "opus46-medium",
+      "score": 1
+    },
+    {
+      "ruleId": "C22",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C22",
+      "runId": "f5-uc",
+      "score": -1,
+      "justification": "Overengineered patterns (\"thought itself into the ground\")"
+    },
+    {
+      "ruleId": "C22",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Overengineered (grammar, unions, state machines beyond spec)"
+    },
+    {
+      "ruleId": "C22",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C22",
+      "runId": "opus46-medium",
+      "score": -1,
+      "justification": "ScanSkills per request + O(n·m) nested match — violates load-once (C7 exploration constraint) and DoD §7"
+    },
+    {
+      "ruleId": "C23",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C23",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Reuse present but uneven"
+    },
+    {
+      "ruleId": "C23",
+      "runId": "gpt56-sol-uc",
+      "score": 0,
+      "justification": "Reuse present but uneven; duplicated shapes (GPT stores)"
+    },
+    {
+      "ruleId": "C23",
+      "runId": "opus48-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C23",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Reuse present but uneven; rescan instead of store"
+    },
+    {
+      "ruleId": "C24",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C24",
+      "runId": "f5-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C24",
+      "runId": "gpt56-sol-uc",
+      "score": -1,
+      "justification": "Kevin: off-idiom vs repo despite Codex-specific knowledge"
+    },
+    {
+      "ruleId": "C24",
+      "runId": "opus48-high",
+      "score": 0,
+      "justification": "Too little shown"
+    },
+    {
+      "ruleId": "C24",
+      "runId": "opus46-medium",
+      "score": 0,
+      "justification": "Example diverges from server.go idiom"
+    },
+    {
+      "ruleId": "C25",
+      "runId": "f5-high",
+      "score": 1
+    },
+    {
+      "ruleId": "C25",
+      "runId": "f5-uc",
+      "score": 0,
+      "justification": "Weird patterns raise implementation risk"
+    },
+    {
+      "ruleId": "C25",
+      "runId": "gpt56-sol-uc",
+      "score": 1
+    },
+    {
+      "ruleId": "C25",
+      "runId": "opus48-high",
+      "score": -1,
+      "justification": "Kevin: untrustworthy — unverifiable plan is the sin"
+    },
+    {
+      "ruleId": "C25",
+      "runId": "opus46-medium",
+      "score": 1
+    }
+  ],
+  "totals": [
+    {
+      "runId": "f5-high",
+      "axis": "compliance",
+      "raw": 22,
+      "max": 25,
+      "pct": 88
+    },
+    {
+      "runId": "f5-uc",
+      "axis": "compliance",
+      "raw": 20,
+      "max": 25,
+      "pct": 80
+    },
+    {
+      "runId": "gpt56-sol-uc",
+      "axis": "compliance",
+      "raw": 18,
+      "max": 25,
+      "pct": 72
+    },
+    {
+      "runId": "opus48-high",
+      "axis": "compliance",
+      "raw": 12,
+      "max": 25,
+      "pct": 48
+    },
+    {
+      "runId": "opus46-medium",
+      "axis": "compliance",
+      "raw": 21,
+      "max": 25,
+      "pct": 84
+    },
+    {
+      "runId": "f5-high",
+      "axis": "quality",
+      "raw": 24,
+      "max": 25,
+      "pct": 96
+    },
+    {
+      "runId": "f5-uc",
+      "axis": "quality",
+      "raw": 18,
+      "max": 25,
+      "pct": 72
+    },
+    {
+      "runId": "gpt56-sol-uc",
+      "axis": "quality",
+      "raw": 6,
+      "max": 25,
+      "pct": 24
+    },
+    {
+      "runId": "opus48-high",
+      "axis": "quality",
+      "raw": 9,
+      "max": 25,
+      "pct": 36
+    },
+    {
+      "runId": "opus46-medium",
+      "axis": "quality",
+      "raw": 9,
+      "max": 25,
+      "pct": 36
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "2.0",
+  "skill": "concept",
+  "skillMd": "skills/concept/concept/SKILL.md",
+  "contextFiles": [],
+  "qualityContext": [],
+  "inputs": [
+    "routines/skill-eval/briefs/concept/login_intent.md"
+  ],
+  "runs": [
+    {
+      "id": "default.ctx-on.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-on.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=102 output_tokens=7120 cost_usd=0.33425984999999997 turns=4"
+      }
+    },
+    {
+      "id": "default.ctx-on.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-on.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=113 output_tokens=7319 cost_usd=0.29917425000000003 turns=5"
+      }
+    },
+    {
+      "id": "no-closing.ctx-on.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-on.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=93 output_tokens=6270 cost_usd=0.28514115 turns=5"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    },
+    {
+      "id": "no-closing.ctx-on.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-on.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=97 output_tokens=6529 cost_usd=0.2707359 turns=4"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    },
+    {
+      "id": "default.ctx-off.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-off.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=115 output_tokens=7314 cost_usd=0.2996616 turns=5"
+      }
+    },
+    {
+      "id": "default.ctx-off.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/default.ctx-off.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=117 output_tokens=7229 cost_usd=0.29731185000000004 turns=5"
+      }
+    },
+    {
+      "id": "no-closing.ctx-off.login_intent.opus-4-8.high.r1",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-off.login_intent.opus-4-8.high.r1.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=103 output_tokens=7007 cost_usd=0.30688305 turns=6"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    },
+    {
+      "id": "no-closing.ctx-off.login_intent.opus-4-8.high.r2",
+      "output": "sessions/skillroutine-eval/concept-2026-08-18/runs/no-closing.ctx-off.login_intent.opus-4-8.high.r2.md",
+      "skillMd": "sessions/skillroutine-eval/concept-2026-08-18/skills/no-closing.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-off",
+        "telemetry": "wall_s=109 output_tokens=7424 cost_usd=0.2938278 turns=5"
+      },
+      "variant": {
+        "name": "no-closing",
+        "disable": [
+          "SKILL-CONCEPT-CLOSING-*"
+        ]
+      }
+    }
+  ],
+  "output": "sessions/skillroutine-eval/concept-2026-08-18/eval.json",
+  "md": true
+}
