@@ -34,8 +34,50 @@ jobs:
         run: |
           make build-release GOOS=darwin GOARCH=arm64 VERSION="${GITHUB_REF_NAME#v}"
           make build-release GOOS=darwin GOARCH=amd64 VERSION="${GITHUB_REF_NAME#v}"
+      - name: Build windows payload
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist/bin/verifiers
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H=windowsgui -X main.version=$VERSION" -o dist/bin/configserver.exe ./cmd/configserver
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H=windowsgui" -o dist/bin/routinewrap.exe ./cmd/routinewrap
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/bin/acdsl.exe ./cmd/acdsl
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/bin/rules.exe ./cmd/rules
+          for d in cmd/acdsl/verifiers/*/; do
+            name=$(basename "$d")
+            GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o "dist/bin/verifiers/$name.exe" "./$d"
+          done
+      - name: Fetch third-party payloads (pinned)
+        run: |
+          curl -fsSL -o dist/jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-amd64.exe
+          curl -fsSL -o dist/peek-mcp.exe https://github.com/kevinhorst/peek-mcp/releases/download/v1.0.8/peek-mcp-windows-amd64.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-payload
+          path: dist/
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           files: bin/release/*
           generate_release_notes: true
+
+  installer:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-payload
+          path: dist
+      - name: Compile installer
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          iscc /DAppVersion=$version installer\windows\smine.iss
+      - name: Publish installer
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/smine-setup.exe

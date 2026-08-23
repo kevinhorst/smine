@@ -362,7 +362,12 @@ Routines wrap `claude -p` in launchd jobs: copy `routines/_templates/` into `rou
 
 ## Releases
 
-Tagged releases (`v*.*.*`) publish darwin arm64 and amd64 binaries (`smine-configserver-*` and siblings) via GitHub Actions; `make build-release GOOS=darwin GOARCH=arm64 VERSION=x.y.z` builds them locally into `bin/release/`.
+Tagged releases (`v*.*.*`) run through GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)), gated on the test job:
+
+- **darwin** — arm64 and amd64 binaries (`smine-configserver-*` and siblings) published as release assets; `make build-release GOOS=darwin GOARCH=arm64 VERSION=x.y.z` builds them locally into `bin/release/`.
+- **windows** — the same job cross-builds the windows payload (`configserver.exe`, `routinewrap.exe`, `acdsl.exe`, `rules.exe`, every verifier binary) and fetches pinned third-party payloads (`jq.exe`, `peek-mcp.exe`); a windows job then compiles `smine-setup.exe` from [installer/windows/smine.iss](installer/windows/smine.iss) with Inno Setup and attaches it to the same release.
+
+`make installer-check` compiles the installer script against a dummy payload via a dockerized `iscc` — run it before touching the installer or CI, so a tag run is never the first compile.
 
 ## License
 
