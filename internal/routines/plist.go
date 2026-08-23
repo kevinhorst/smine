@@ -3,7 +3,9 @@ package routines
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/kevinhorst/smine/internal/fsx"
 	"howett.net/plist"
 )
 
@@ -96,6 +98,39 @@ func parseSchedule(plistPath string) ([]CalendarInterval, bool, error) {
 	return intervals, true, nil
 }
 
+// PlistMeta reads the routine directory's single plist and returns its label
+// and environment — the routinewrap launcher's view. Parsing reuses parseEnv
+// so no second plist decoder exists.
+func PlistMeta(dir string) (string, map[string]string, error) {
+	matches, err := filepath.Glob(filepath.Join(dir, "*.plist"))
+	if err != nil {
+		return "", nil, fmt.Errorf("PlistMeta: Failed to glob %s: %w", dir, err)
+	}
+	if len(matches) != 1 {
+		return "", nil, fmt.Errorf("PlistMeta: Expected exactly one plist in %s, found %d", dir, len(matches))
+	}
+	plistPath := matches[0]
+
+	data, err := os.ReadFile(plistPath)
+	if err != nil {
+		return "", nil, fmt.Errorf("PlistMeta: Failed to read %s: %w", plistPath, err)
+	}
+	var content map[string]any
+	if _, err := plist.Unmarshal(data, &content); err != nil {
+		return "", nil, fmt.Errorf("PlistMeta: Failed to parse %s: %w", plistPath, err)
+	}
+	label, ok := content["Label"].(string)
+	if !ok || label == "" {
+		return "", nil, fmt.Errorf("PlistMeta: Missing Label in %s", plistPath)
+	}
+
+	env, err := parseEnv(plistPath)
+	if err != nil {
+		return "", nil, err
+	}
+	return label, env, nil
+}
+
 func parseEnv(plistPath string) (map[string]string, error) {
 	data, err := os.ReadFile(plistPath)
 	if err != nil {
@@ -152,7 +187,7 @@ func SetEnv(env map[string]string, plistPath string) error {
 	if err := os.WriteFile(tmpPath, rewritten, 0o644); err != nil {
 		return fmt.Errorf("SetEnv: Failed to write %s: %w", tmpPath, err)
 	}
-	if err := os.Rename(tmpPath, plistPath); err != nil {
+	if err := fsx.ReplaceFile(tmpPath, plistPath); err != nil {
 		return fmt.Errorf("SetEnv: Failed to replace %s: %w", plistPath, err)
 	}
 
@@ -183,7 +218,7 @@ func Reschedule(interval CalendarInterval, plistPath string) error {
 	if err := os.WriteFile(tmpPath, rewritten, 0o644); err != nil {
 		return fmt.Errorf("Reschedule: Failed to write %s: %w", tmpPath, err)
 	}
-	if err := os.Rename(tmpPath, plistPath); err != nil {
+	if err := fsx.ReplaceFile(tmpPath, plistPath); err != nil {
 		return fmt.Errorf("Reschedule: Failed to replace %s: %w", plistPath, err)
 	}
 

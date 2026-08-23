@@ -166,3 +166,27 @@ func TestReschedulePreservesUnrelatedKeys(t *testing.T) {
 	_, err = os.Stat(path + ".tmp")
 	assert.True(t, os.IsNotExist(err), "tmp file left behind")
 }
+
+func TestPlistMetaLabelAndEnv(t *testing.T) {
+	path := writePlist(t, plistHeader+`<plist version="1.0"><dict>
+		<key>Label</key><string>com.test.meta</string>
+		<key>EnvironmentVariables</key>
+		<dict><key>ROUTINE_GROUP</key><string>demo</string></dict>
+	</dict></plist>`)
+
+	label, env, err := PlistMeta(filepath.Dir(path))
+	require.NoError(t, err)
+	assert.Equal(t, "com.test.meta", label)
+	assert.Equal(t, map[string]string{"ROUTINE_GROUP": "demo"}, env)
+}
+
+func TestPlistMetaRequiresExactlyOnePlist(t *testing.T) {
+	dir := t.TempDir()
+	_, _, err := PlistMeta(dir)
+	require.ErrorContains(t, err, "exactly one plist")
+
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.plist"), []byte("x"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "b.plist"), []byte("x"), 0o644))
+	_, _, err = PlistMeta(dir)
+	require.ErrorContains(t, err, "exactly one plist")
+}

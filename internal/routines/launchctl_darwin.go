@@ -46,7 +46,7 @@ func RunNow(ctx context.Context, label string) (string, error) {
 
 // Start enables and loads the routine (launchctl enable + bootstrap). Enable
 // clears a persisted Stop override so the routine survives the next login's
-// BootstrapAll
+// SyncAll
 func Start(ctx context.Context, label, plistPath string) (string, error) {
 	output, err := shell.Run(ctx, "", "launchctl", "enable", guiTarget(label))
 	if err != nil {
@@ -62,7 +62,7 @@ func Start(ctx context.Context, label, plistPath string) (string, error) {
 }
 
 // Stop unloads the routine and persists the off state (launchctl bootout +
-// disable) so BootstrapAll does not revive it at the next server start
+// disable) so SyncAll does not revive it at the next server start
 func Stop(ctx context.Context, label string) (string, error) {
 	output, err := shell.Run(ctx, "", "launchctl", "bootout", guiTarget(label))
 	if err != nil {

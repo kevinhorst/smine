@@ -10,12 +10,14 @@ import (
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
-// BootstrapAll loads every non-degraded routine that is not already loaded
+// SyncAll loads every non-degraded routine that is not already loaded
 // and not disabled in launchd's per-service override store. Called once at
 // server startup: a logout tears down the gui domain and unloads every
 // routine, and the configserver LaunchAgent restarting at login is the
-// re-bootstrap trigger (D1). Per-routine failures are logged, never fatal (D7).
-func BootstrapAll(ctx context.Context, dir string) {
+// re-bootstrap trigger (D1). Per-routine failures are logged, never fatal
+// (D7). Windows implements the same name as a registration reconcile
+// (sched_windows.go) — registrations persist there, the gui domain does not.
+func SyncAll(ctx context.Context, dir string) {
 	list, err := Scan(dir)
 	if err != nil {
 		log.Printf("routines: bootstrap scan failed: %v", err)
