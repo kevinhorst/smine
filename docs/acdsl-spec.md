@@ -6,7 +6,7 @@
 
 ## 1. Abstract
 
-ACDSL is a rule-gating and context-projection system for coding agents, built around a deliberately small declarative domain-specific language. Each rule is one declaration line in that language, binding a path anchor (a regular expression over repository files) to a registered verifier program and a human rationale. The language is declarative and non-Turing-complete by constitution — it carries no expressions, composition, or control flow; all executable semantics live in the registered verifier programs and the engine.
+ACDSL is a rule-gating and context-projection system for coding agents, built around a deliberately small declarative domain-specific language. Each rule is one declaration line in that language, binding a path anchor (a regular expression over repository files) to a registered verifier program and a human rationale. The language is declarative and deliberately unexpressive — it carries no expressions, composition, or control flow; all executable semantics live in the registered verifier programs and the engine.
 
 "ACDSL" names the language and, in everyday use, the whole system; this specification covers both and keeps the two layers distinct (§1.1). The system's central mechanism is *one rule source, two renderings*: every rule is a single declaration line rendered both as agent-visible context (a comment block projected into the files the rule governs) and as a deterministic, executable gate (a registered verifier program run against those same files). Because both renderings derive from the same line, they cannot drift from each other — the failure mode that kills conventionally maintained style guides and ontologies.
 
