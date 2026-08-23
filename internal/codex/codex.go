@@ -11,6 +11,7 @@ import (
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
+	"github.com/kevinhorst/smine/internal/fsx"
 )
 
 var ErrNotFound = errors.New("codex: entry not found")
@@ -187,7 +188,7 @@ func Save(path string, c *Config) error {
 	if err := os.WriteFile(tmp, buf.Bytes(), 0644); err != nil {
 		return fmt.Errorf("Save: Failed to write %s: %w", tmp, err)
 	}
-	if err := os.Rename(tmp, path); err != nil {
+	if err := fsx.ReplaceFile(tmp, path); err != nil {
 		os.Remove(tmp)
 		return fmt.Errorf("Save: Failed to rename %s to %s: %w", tmp, path, err)
 	}
