@@ -19,13 +19,14 @@
 routines/*/.lock
 routines/*/results.jsonl
 routines/*/.cadence-stamp
+routines/*/.run-now-prompt
 # materialized from *.plist.template by install.sh; edited in place by the config server
 routines/*/com.smine.routine.*.plist
 
 # proposal vote sidecars (server-written, consumed by the smine-nightly apply stage)
-sessions/proposals/votes.jsonl
-sessions/proposals/votes-processing-*.jsonl
-sessions/proposals/votes-archive.jsonl
+proposals/votes.jsonl
+proposals/votes-processing-*.jsonl
+proposals/votes-archive.jsonl
 
 # scratch candidate list from a failed smine nightly (never a tracked artifact)
 sessions/.candidates.txt
@@ -39,3 +40,5 @@ bin/*
 # never track compiled binaries
 /configserver
 cmd/configserver/main
+
+.DS_Store

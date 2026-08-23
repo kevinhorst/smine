@@ -1,0 +1,6 @@
+# CRLF checkout breaks every bash script under Git Bash ($'\r': command not found).
+*.sh text eol=lf
+*.plist text eol=lf
+*.template text eol=lf
+# Batch launchers want CRLF for robustness under cmd.exe.
+*.bat text eol=crlf
