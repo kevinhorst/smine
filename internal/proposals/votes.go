@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/kevinhorst/smine/internal/fsx"
 )
 
-// Vote is one decision line in sessions/proposals/votes.jsonl — the sidecar
+// Vote is one decision line in proposals/votes.jsonl — the sidecar
 // the config server writes and the smine-nightly apply stage consumes. The
 // analyze skills never touch it.
 type Vote struct {
@@ -78,7 +80,7 @@ func SetVote(path string, vote *Vote) error {
 	if err := os.WriteFile(tmp, out, 0644); err != nil {
 		return fmt.Errorf("SetVote: Failed to write %s: %w", tmp, err)
 	}
-	if err := os.Rename(tmp, path); err != nil {
+	if err := fsx.ReplaceFile(tmp, path); err != nil {
 		os.Remove(tmp)
 		return fmt.Errorf("SetVote: Failed to rename %s to %s: %w", tmp, path, err)
 	}

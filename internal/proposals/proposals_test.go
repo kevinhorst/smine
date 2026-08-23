@@ -11,7 +11,7 @@ import (
 
 const validFile = `{
   "kind": "routines",
-  "source": "sessions/proposals/routines.json",
+  "source": "proposals/routines.json",
   "updated": "2026-07-11",
   "note": "Execution-constraint key.",
   "groups": [
@@ -63,7 +63,7 @@ func TestLoad(t *testing.T) {
 		assert.Empty(t, loadErrors)
 		require.Len(t, files, 1)
 		assert.Equal(t, "routines", files[0].Kind)
-		assert.Equal(t, "sessions/proposals/routines.json", files[0].Source)
+		assert.Equal(t, "proposals/routines.json", files[0].Source)
 		require.Len(t, files[0].Groups, 1)
 		group := files[0].Groups[0]
 		assert.Equal(t, "Proposals", group.Title)
@@ -91,7 +91,7 @@ func TestLoad(t *testing.T) {
 
 	t.Run("legacy-string-evidence-load-error", func(t *testing.T) {
 		dir := t.TempDir()
-		writeProposalsFile(t, dir, "legacy.json", `{"kind": "style", "groups": [{"title": "G", "proposals": [{"title": "p", "evidence": ["a string"]}]}]}`)
+		writeProposalsFile(t, dir, "legacy.json", `{"kind": "context", "groups": [{"title": "G", "proposals": [{"title": "p", "evidence": ["a string"]}]}]}`)
 
 		files, loadErrors, err := Load(dir)
 		require.NoError(t, err)
@@ -115,20 +115,20 @@ func TestLoad(t *testing.T) {
 
 	t.Run("sorted-by-kind", func(t *testing.T) {
 		dir := t.TempDir()
-		writeProposalsFile(t, dir, "z.json", `{"kind": "style", "groups": []}`)
-		writeProposalsFile(t, dir, "a.json", `{"kind": "workflows", "groups": []}`)
+		writeProposalsFile(t, dir, "z.json", `{"kind": "context", "groups": []}`)
+		writeProposalsFile(t, dir, "a.json", `{"kind": "routines", "groups": []}`)
 
 		files, loadErrors, err := Load(dir)
 		require.NoError(t, err)
 		assert.Empty(t, loadErrors)
 		require.Len(t, files, 2)
-		assert.Equal(t, "style", files[0].Kind)
-		assert.Equal(t, "workflows", files[1].Kind)
+		assert.Equal(t, "context", files[0].Kind)
+		assert.Equal(t, "routines", files[1].Kind)
 	})
 
 	t.Run("auto-apply-held-parsed", func(t *testing.T) {
 		dir := t.TempDir()
-		writeProposalsFile(t, dir, "style.json", `{"kind": "style", "groups": [{"title": "G", "proposals": [{"title": "held", "status": "proposed", "change": "c", "autoApplyHeld": {"date": "2026-07-30", "reason": "new routine"}}, {"title": "free", "status": "proposed", "change": "c"}]}]}`)
+		writeProposalsFile(t, dir, "context.json", `{"kind": "context", "groups": [{"title": "G", "proposals": [{"title": "held", "status": "proposed", "change": "c", "autoApplyHeld": {"date": "2026-07-30", "reason": "new routine"}}, {"title": "free", "status": "proposed", "change": "c"}]}]}`)
 
 		files, loadErrors, err := Load(dir)
 		require.NoError(t, err)
@@ -158,4 +158,42 @@ func TestLoad(t *testing.T) {
 		require.Len(t, files, 1)
 		assert.Equal(t, "routines", files[0].Kind)
 	})
+}
+
+const gateFile = `{
+  "kind": "context",
+  "groups": [
+    {
+      "title": "context/rules/go.md",
+      "proposals": [
+        {
+          "id": "gated-rule",
+          "title": "Gated rule",
+          "status": "proposed",
+          "change": "Add the gated rule.",
+          "gate": {"band": "A", "verifier": "func-signature", "anchor": "\\.go$"}
+        },
+        {
+          "id": "prose-rule",
+          "title": "Prose rule",
+          "status": "proposed",
+          "change": "Add the prose rule."
+        }
+      ]
+    }
+  ]
+}`
+
+func TestLoadParsesGate(t *testing.T) {
+	dir := t.TempDir()
+	writeProposalsFile(t, dir, "context.json", gateFile)
+
+	files, warnings, err := Load(dir)
+	require.NoError(t, err)
+	assert.Empty(t, warnings)
+	require.Len(t, files, 1)
+	entries := files[0].Groups[0].Proposals
+	require.Len(t, entries, 2)
+	assert.Equal(t, Gate{Anchor: `\.go$`, Band: "A", Verifier: "func-signature"}, entries[0].Gate)
+	assert.Empty(t, entries[1].Gate.Band)
 }

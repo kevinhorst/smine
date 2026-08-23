@@ -1,5 +1,5 @@
-// Package proposals loads sessions/proposals/<kind>.json — the sole
-// authoritative proposal format (schema: sessions/proposals/schema.json).
+// Package proposals loads proposals/<kind>.json — the sole
+// authoritative proposal format (schema: proposals/schema.json).
 package proposals
 
 import (
@@ -34,12 +34,22 @@ type Proposal struct {
 	Decided       string        `json:"decided"`
 	Evidence      []Evidence    `json:"evidence"`
 	Fields        []Field       `json:"fields"`
+	Gate          Gate          `json:"gate"`
 	Id            string        `json:"id"`
 	Proposed      string        `json:"proposed"`
 	Status        string        `json:"status"`
 	Tags          []string      `json:"tags"`
 	Target        string        `json:"target"`
 	Title         string        `json:"title"`
+}
+
+// Gate is a context-rule proposal's verification story (schema `gate`):
+// ACDSL band, the verifier (existing registry entry or sketch), and the
+// anchor the rule would govern. Zero value means absent (Band == "").
+type Gate struct {
+	Anchor   string `json:"anchor"`
+	Band     string `json:"band"`
+	Verifier string `json:"verifier"`
 }
 
 type Session struct {
