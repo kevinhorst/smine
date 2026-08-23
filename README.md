@@ -291,7 +291,7 @@ No fixed chain position; invoked on demand:
 | `close` | End-of-session cleanup: removes the session's pool worktree and `claude/*` branch, safety-gated; success kills the session |
 | `peek` | Show another session — conversation, plan, diff |
 | `jq` / `xlsx` | Cheap JSON extraction / spreadsheet work — mainly for agent use (the `no-human` skill package, rarely invoked by a human) |
-| `caveman` | Terse output style modifier the planning skills delegate to |
+| `caveman` | Terse output style modifier the planning skills delegate to minimal .md stolen from [caveman](https://github.com/juliusbrussee/caveman)|
 
 ### Composition (workflow piping)
 
