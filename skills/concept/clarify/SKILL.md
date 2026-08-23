@@ -2,7 +2,7 @@
 name: clarify
 description: Resolve a concept's open questions in plans/ into binding decisions, emptying the Open Questions section. Trigger on /clarify after a concept is checked in but questions remain.
 author: Kevin Horst
-version: 1.8
+version: 1.10
 ---
 
 # clarify
@@ -18,7 +18,7 @@ Ordering: clarify (and /fexplore) run BEFORE /fdesign. A clarify pass after an a
 **Use when:** a concept is checked in under `plans/` but open questions, TBDs, or contradictions remain — the deliverable is the concept with an empty Open Questions section.
 **Don't use when:** no concept exists yet — /concept first. The open question is which *solution approach* to take — /fexplore. Open questions surface after a plan is approved — that is a /fdesign refine driver, running clarify then invalidates the plan.
 **Preconditions:** concept documents in `plans/{slug}/concept/` following the /concept structure.
-**Workflow position:** concept → **clarify** → fexplore / fdesign (see `docs/skill-map.md`, smine repo).
+**Workflow position:** concept → **clarify** → fexplore / fdesign (see README.md § Skill map, smine repo).
 
 ## Phase 0 — Intake
 
@@ -74,7 +74,7 @@ Work the list in the confirmed order, batching questions whose answers are indep
 
 ## Stop conditions
 
-The `ALWAYS-EXEC-*` entries from `$AGENT_CONTEXT_DIR_DEFAULT/rules/implementing.md` apply. Clarify-specific:
+The `ACTION-IMPL-*` gate entries from `$AGENT_CONTEXT_DIR_DEFAULT/actions/implementing.md` apply. Clarify-specific:
 
 1. An answer invalidates the concept's Goals or a prior [USER] decision → stop and report; re-scoping the concept is the user's call, not a ripple.
 2. Two rejected proposals for the same question → stop proposing; present the trade-off with the evidence for each side and let the user decide.
@@ -85,15 +85,3 @@ The `ALWAYS-EXEC-*` entries from `$AGENT_CONTEXT_DIR_DEFAULT/rules/implementing.
 - Suggested: frontier / large
 - Reason: turning open questions into binding decisions
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.8 (2026-07-31): activity-scoped context — stop conditions as ALWAYS-EXEC entries in rules/implementing.md
-- v1.7 (2026-07-30): context redesign — stop conditions via ../fdesign/assets/stop-conditions.md
-- v1.6 (2026-07-30): reference rename — design-refine → the fdesign refine route
-- v1.5 (2026-07-24): renamed concept-clarify → clarify (leaf dir, frontmatter name, H1); live references swept repo-wide
-- v1.4 (2026-07-23): Phase 3 — one-field decisions reached in chat are written into the plan/spec docs in the same session
-- v1.3 (2026-07-16): concept paths under plans/{slug}/concept/
-- v1.2 (2026-07-15): renamed reference: feature-refine → design-refine
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-07-07): initial version

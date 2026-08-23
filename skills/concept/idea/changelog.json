@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.3",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter; investigation reference updated to /investigate"
+  },
+  {
+    "version": "1.2",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
     "version": "1.1",
     "date": "2026-07-26",
     "text": "Args section"

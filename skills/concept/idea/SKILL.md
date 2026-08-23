@@ -2,7 +2,8 @@
 name: idea
 description: Pre-concept exploration of a half-formed idea — critical stress-test or open possibility mapping. Trigger on /idea [critical|open] or "stress-test this idea" or "I have a wild idea". Args — critical|open: stance; explicit arg wins, else inferred from the dump, else ask.
 author: Kevin Horst
-version: 1.1
+version: 1.3
+argument-hint: "[critical|open]"
 ---
 
 # Idea
@@ -14,7 +15,7 @@ Pre-concept, dialogic exploration of a half-formed idea. The user dumps the idea
 **Use when:** an idea exists but no commitment to a feature does — the user wants it stress-tested ("stress-test", "pressure-test", "destroy this", "be brutal") or opened up ("what could this become", "I have a wild idea, how could it work") before any concept is drafted.
 **Don't use when:** the user is committed and wants the what/why written down — /concept. A stable concept needs its solution space compared — /fexplore. An external position needs adjudication against a closed question — /decision-support. General feedback or review requests without an adversarial or exploratory signal — answer directly.
 **Preconditions:** none — this is step 0 of the planning chain, before any artifact exists.
-**Workflow position:** **idea** *(optional)* → concept (see `docs/skill-map.md`, smine repo). A dead idea terminates the chain.
+**Workflow position:** **idea** *(optional)* → concept (see README.md § Skill map, smine repo). A dead idea terminates the chain.
 
 ## Args
 
@@ -88,7 +89,7 @@ The narrowest possible action that produces real signal on the load-bearing assu
 
 ### Evaluation rules (both modes)
 
-- Ground load-bearing external claims before asserting them. A fact about a third party, market, product, or person that the analysis leans on gets verified via WebSearch first — never asserted from memory. Scope: only claims the verdict rests on, not deep research; that routes to /deep-research or /investigation.
+- Ground load-bearing external claims before asserting them. A fact about a third party, market, product, or person that the analysis leans on gets verified via WebSearch first — never asserted from memory. Scope: only claims the verdict rests on, not deep research; that routes to /deep-research or /investigate.
 - Hit structural problems before technical ones. Viability before architecture.
 - Do not route around the hardest problem. If X is unsolved, do not evaluate Y and Z as if X is resolved.
 - Do not validate before attacking (critical) and do not celebrate before testing (open). No "interesting idea, but..." — start with the substance.
@@ -163,8 +164,3 @@ Then offer once to chain into /concept in the same session; on yes, invoke it ag
 - Suggested: frontier / high
 - Reason: adversarial/generative judgment on ungrounded ideas, live verification of load-bearing claims, holding the line across a multi-turn dialog
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.1 (2026-07-26): Args section
-- v1.0 (2026-07-22): initial version — consolidation of the pre-repo critical-idea-explorer (critical mode) plus new open mode, artifact close with /concept handoff, WebSearch grounding of load-bearing claims
