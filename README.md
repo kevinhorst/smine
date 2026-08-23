@@ -259,6 +259,14 @@ flowchart LR
 
 `/smine` is the default route — it mines and fans out; `/smine --no-batch` routes already-mined batches, `/smine --no-<dimension>` skips a dimension, `--max-proposals-per-dimension` / `--max-proposals-mined` cap nightly production. A dimension skill runs standalone only when a single dimension on one batch is wanted; `/smine-batch` is the raw miner alone. Each dimension keeps its own `analyzed-*.txt` ledger (historical filenames, unchanged).
 
+#### Cost
+
+Empirical numbers from ~30 days of nightly runs (all on Opus 4.8, medium reasoning effort): a full smine run analyzing 10 sessions (500-800k token context window per session, delivered via peek-mcp) averages **$10–15** in API-equivalent pricing. 
+A $5 routine budget failed consistently; $15 usually went through. As of 2026-08-23 that maps to a Team Premium plan's 5-hour usage window — a standard Team seat was not enough. 
+It is advised to run the smine routine at a window where usage is usually low, so it does not interfere with day to day work or other routines.
+
+The Goal in v1.2 is to deliver a detailed usage breakdown and bring the cost down significantly.
+
 ### Standalone skills
 
 No fixed chain position; invoked on demand:
