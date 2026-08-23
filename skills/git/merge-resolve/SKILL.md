@@ -2,7 +2,9 @@
 name: merge-resolve
 description: Merge two diverged git branches by resolving all conflicts once at final-tree level, verified by build, tests and parent diffs. Trigger on /merge-resolve or "merge main into my branch" or "these branches conflict / cherry-picks keep failing". Args — ours: branch to merge into (default current); theirs: branch to merge in.
 author: Kevin Horst
-version: 1.1
+version: 1.5
+argument-hint: "[ours] [theirs]"
+allowed-tools: Bash(~/.claude/skills/merge-resolve/scripts/merge_branch.sh *)
 ---
 
 # Merge Resolve
@@ -12,9 +14,9 @@ Merge two diverged branches by resolving all conflicts once at final-tree level.
 ## When to use
 
 **Use when:** two branches conflict and one must absorb the other; a cherry-pick/replay/rebase attempt at the same integration has already failed or stalled.
-**Don't use when:** resolving a single conflicted file the user already staged (just resolve it); planning a restructure → `/fchange`; auditing what a contract change broke → `/spec-drift`.
+**Don't use when:** resolving a single conflicted file the user already staged (just resolve it); planning a restructure → `/fdesign change`; auditing what a contract change broke → `/spec-drift`.
 **Preconditions:** both refs exist locally; working tree clean or only abortable in-flight state; project has a build/test command.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo); output feeds a normal merge/PR into the target branch.
+**Workflow position:** standalone (see README.md § Skill map, smine repo); output feeds a normal merge/PR into the target branch.
 
 ## Args
 
@@ -33,7 +35,7 @@ Merge two diverged branches by resolving all conflicts once at final-tree level.
 
 ## 3. Merge on a work branch
 
-- `git checkout -b merge/<theirs-slug>-<ours-slug> <ours>` (or merge directly on `ours` if the user says so), then `git merge <theirs>`.
+- `~/.claude/skills/merge-resolve/scripts/merge_branch.sh create <ours> <theirs>` — creates and checks out the deterministic work branch `merge/<theirs-slug>-<ours-slug>` (or merge directly on `ours` if the user says so), then `git merge <theirs>`.
 
 ## 4. Resolve per file — union of both intents
 
@@ -52,6 +54,10 @@ Merge two diverged branches by resolving all conflicts once at final-tree level.
 
 - Commit with the default `MERGE_MSG`. Report: files resolved, each semantic judgment call made (especially deleted mechanisms and behavior deltas), and the verification results.
 
+## 7. Cleanup
+
+- Once the merge result has landed on `<ours>` (fast-forward or real merge — confirm with the user when the landing is theirs to do): `~/.claude/skills/merge-resolve/scripts/merge_branch.sh cleanup <ours>` — deletes only `merge/*` branches already merged into `<ours>` (`git branch -d`, never `-D`); anything unmerged is kept and reported, never forced.
+
 ## Rules
 
 - Never resolve by replaying commits; always at final trees.
@@ -64,8 +70,3 @@ Merge two diverged branches by resolving all conflicts once at final-tree level.
 - Suggested: frontier / medium
 - Reason: semantic conflict classification and stopgap-vs-design judgment; mechanical phases are cheap but misjudged collisions ship silent regressions
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.1 (2026-07-27): moved under skills/git/ group; name and behavior unchanged
-- v1.0 (2026-07-26): Initial version — final-tree merge method distilled from the peek-mcp deep-analysis merge session.

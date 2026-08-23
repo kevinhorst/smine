@@ -1,5 +1,35 @@
 [
   {
+    "version": "3.2",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "3.1",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "3.0",
+    "date": "2026-08-19",
+    "text": "major: body migrated to entries via /fmt skill — 21 entries (VALIDATE 2, STRIP 2, IDENT 3, GROUP 4, COMMIT 2, RESULT 1, RULES 7), content unchanged; context: RULE-COMMIT-* declaration added (commit-message doctrine injected at invocation)"
+  },
+  {
+    "version": "2.1",
+    "date": "2026-08-13",
+    "text": "explicit Rules from mined sessions — never amend unless asked, honor inline gate waivers, and message hygiene extended (\"no desc\"/\"no dsc\" = subject only; no Claude attribution of any kind, restating the existing no-rule-IDs / no-co-author trailer)"
+  },
+  {
+    "version": "2.0",
+    "date": "2026-08-09",
+    "text": "degoified — directory-based grouping, stack-resolved validation (Makefile targets first), generated-file skip per repo convention; make targets added to allowed-tools"
+  },
+  {
+    "version": "1.9",
+    "date": "2026-08-06",
+    "text": "step 1b — strip ACDSL projection blocks before staging in registry-bearing repos; acdsl added to allowed-tools"
+  },
+  {
     "version": "1.8",
     "date": "2026-07-31",
     "text": "activity-scoped context — commit style guide moved to the pack (style/commits.md)"
