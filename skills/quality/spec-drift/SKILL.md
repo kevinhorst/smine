@@ -2,7 +2,8 @@
 name: spec-drift
 description: Report drift between a source of truth and the code, read-only, with per-claim evidence. Trigger on /spec-drift [scope] or "does the doc still match the code" or "audit this contract change". Args — scope: doc-mode target, absent means the repo's durable doc set; contract: changed identifier to audit in contract mode; cap: per-run verified-claim cap override.
 author: Kevin Horst
-version: 2.6
+version: 2.10
+argument-hint: "[scope] [contract] [cap]"
 allowed-tools: Read, Grep, Glob, Bash(grep *), Bash(git log *)
 ---
 
@@ -15,9 +16,9 @@ Verification is grounded in real code reads (grep-to-zero discipline), never in 
 ## When to use
 
 **Use when:** checking whether a spec/design doc set still matches the code — "does the doc still match the code", "audit spec vs implementation", "find stale docs", the nightly routine wrapper, invoked via /spec-drift [scope] (doc mode). Or one shared contract changed — a JSON tag, route, HTTP method, query param, Redis key format, file path, config key, or method name — and its consumers must be enumerated and classified: "X broke after the refactor/rename", "audit this contract change", "what consumes X", post-cherry-pick breakage on a shared identifier (contract mode). The output is a drift report, never a fix.
-**Don't use when:** the failing contract is not yet known — find the single bug's root cause with /diagnose-debug first (it hands off here once the contract is identified). A restructuring plan is wanted — /fchange. Mining *session batch reports* for rule/doc updates — /smine-style. Applying a fix — that is a follow-up session after the report is reviewed.
+**Don't use when:** the failing contract is not yet known — find the single bug's root cause with /diagnose-debug first (it hands off here once the contract is identified). A restructuring plan is wanted — /fdesign change. Mining *session batch reports* for rule/doc updates — /smine-context. Applying a fix — that is a follow-up session after the report is reviewed.
 **Preconditions:** doc mode — a doc set to audit (a durable doc, a `plans/` concept/design dir, or a `$AGENT_CONTEXT_DIR_DEFAULT/*` doc) and the code it describes, both readable in the current worktree. Contract mode — the changed contract (or the rename/move rule) is known and identifiable by a searchable form.
-**Workflow position:** standalone — /diagnose-debug may hand off into contract mode; every drift or broken-consumer finding hands off to a follow-up fix session (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone — /diagnose-debug may hand off into contract mode; every drift or broken-consumer finding hands off to a follow-up fix session (see README.md § Skill map, smine repo).
 
 ## Args
 
@@ -64,7 +65,7 @@ For each extracted claim, locate the implementing code by grep / symbol search a
 
 ### 3. Report
 
-Write a per-claim table, numbered so every item is addressable in a follow-up session. Reuse the `smine-style` evidence discipline — verbatim excerpts, real anchors, no reconstruction — rather than inventing a second report shape.
+Write a per-claim table, numbered so every item is addressable in a follow-up session. Reuse the `smine-context` evidence discipline — verbatim excerpts, real anchors, no reconstruction — rather than inventing a second report shape.
 
 ```markdown
 # Spec drift — <scope> (HEAD <short-sha>)
@@ -118,21 +119,10 @@ For a port — a Go port of a Django behavior, say — enumerate the reference b
 
 ## Nightly routine wrapper
 
-After the skill works, a routine wraps it (see `sessions/proposals/routines.json` #5): a local `claude -p` run over the configured repos' doc sets, report written to a dated file for morning review, no fixes applied. Auth resolves via non-bare `claude -p` + `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) under the Pro subscription. The routine is a separate build step — this skill never creates the schedule itself.
+After the skill works, a routine wraps it (see `proposals/routines.json` #5): a local `claude -p` run over the configured repos' doc sets, report written to a dated file for morning review, no fixes applied. Auth resolves via non-bare `claude -p` + `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) under the Pro subscription. The routine is a separate build step — this skill never creates the schedule itself.
 
 ## Model
 
 - Suggested: frontier / high
 - Reason: claim extraction and code-vs-doc adjudication plus exhaustive multi-language consumer enumeration and divergence classification
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v2.6 (2026-07-30): reference rename — smine-rules → smine-style
-- v2.5 (2026-07-30): allowed-tools permission manifest declared
-- v2.4 (2026-07-30): moved under skills/quality/ group; name and behavior unchanged
-- v2.3 (2026-07-27): reference rename — analyze-rules → smine-rules
-- v2.2 (2026-07-26): Args section
-- v2.1 (2026-07-24): reference merge: feature-refactor → feature-change
-- v2.0 (2026-07-23): absorbed contract-drift-audit as read-only contract mode (consumer enumeration + classification + fix-order report, no fixing); mode selection at intake; effort token normalized
-- v1.0 (2026-07-19): initial version

@@ -1,0 +1,17 @@
+[
+  {
+    "version": "1.2",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter; decision-support reference updated to /support-decision"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-08-21",
+    "text": "initial — verdict-first code analysis with conditional alternatives stage; closes the fexplore/fimpact gap from the code-analysis-alternatives session"
+  }
+]

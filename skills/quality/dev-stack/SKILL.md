@@ -2,7 +2,7 @@
 name: dev-stack
 description: Create or use a project-local e2e dev stack (docker-compose + Makefile + seeded data). Trigger on /dev-stack or "local end-to-end testing" or "docker-compose setup".
 author: Kevin Horst
-version: 1.2
+version: 1.3
 ---
 
 # Dev Stack
@@ -14,7 +14,7 @@ Goal: the agent can start the system locally and verify its changes end-to-end i
 **Use when:** a change needs e2e verification in a running system (docker-compose + Makefile + seeded data), or when full-stack verification is blocked because services are not running.
 **Don't use when:** unit/package-level coverage gaps — /coverage-increase. Diagnosing a bug that does not require running the stack — /diagnose-debug. Planning the feature itself — /fdesign.
 **Preconditions:** Docker available on the host; known services and datastores.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone (see README.md § Skill map, smine repo).
 
 ## 1. Reuse before building
 
@@ -57,9 +57,3 @@ Goal: the agent can start the system locally and verify its changes end-to-end i
 - Suggested: mid-tier / medium
 - Reason: compose/Makefile scaffolding follows known patterns
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.2 (2026-07-30): moved under skills/quality/ group; name and behavior unchanged
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-07-03): initial version

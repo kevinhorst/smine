@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.7",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-08-12",
+    "text": "stop-condition reference corrected — ACTION-IMPL-* gate entries in actions/implementing.md (retired ALWAYS-EXEC naming and rules/ path)"
+  },
+  {
     "version": "1.5",
     "date": "2026-07-31",
     "text": "activity-scoped context — stop conditions as ALWAYS-EXEC entries in rules/implementing.md"

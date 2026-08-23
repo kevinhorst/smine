@@ -1,5 +1,100 @@
 [
   {
+    "version": "7.3",
+    "date": "2026-08-23",
+    "text": "evalscript renamed to verifier in prose and the workflow script"
+  },
+  {
+    "version": "7.2",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "7.1",
+    "date": "2026-08-23",
+    "text": "final touches — declaration key renamed to acdsl-context (freed the native context: field); frontmatter gains allowed-tools manifest and argument-hint (author's native runtime fields context: fork/agent/background/effort consciously skipped — the dispatcher must run in-session, effort stays advisory); front/orchestrator unified to dispatcher across skill, workflow prompts, docs; bold title on every entry; When-to-use fields render as separate paragraphs; correctness-drop bolded"
+  },
+  {
+    "version": "7.0",
+    "date": "2026-08-23",
+    "text": "major: solo mode removed (never used; a single self-confirming context is the review shape the protocol replaces) — with it plan-mode/ExitPlanMode delivery, the solo reviewer-independence gate, auto-solo fallbacks, and the solo halves of intro/args/deliver; a single direction is now a valid railroad (workflow guard relaxed to >=1), plan-mode session or missing Workflow tool stops with a report (MODES-002). Full entry audit applied: cut duplicates (DIR DoD pointer, artifacts restatement, stacked-PR JSON attachment aspiration), merges (empty-snapshot rule into base derivation, front-range bridge into the invocation contract, ledger-ID footnote into the ledger gate, unverified display into the disposition entry), two calibrations moved to context (ACTION-REVIEW-TEST-005 test-mode identity constants, ACTION-REVIEW-QUALITY-008 expired temporal TODOs), remaining prose trimmed caveman-tight; 68 entries down to 54, gapless renumbering"
+  },
+  {
+    "version": "6.1",
+    "date": "2026-08-22",
+    "text": "dedup made semantic (user refutation of the file:line heuristic) — exact-match dedupeClaims replaced by a lightweight grouper agent per direction (text-only, no worktree, low effort) that groups same-defect claims; the script assembles deterministically: best-argued survivor, max group severity, merged_from provenance, unplaced claims kept; station dedup is cross-direction only; funnel produced/duplicates computed from claims_produced"
+  },
+  {
+    "version": "6.0",
+    "date": "2026-08-22",
+    "text": "major: skeleton restructure (fdesign change plan) — direction-merge agent deleted, script-side exact dedup replaces it, station is the single semantic consolidator (one serial hop and one agent per direction saved); refute becomes a loglevel severity threshold (blocker|major|minor|nit|info|none, default major); directions reduced to goal sentence + context requirement by entry family (checklists deleted, concept audit and generated-files checks moved to ACTION-REVIEW-SPEC-005 / QUALITY-007); Required Reading dissolved into a generic Context section; every wall entry split to one point per identifier (full renumbering, probe protocol its own topic); args gain worked examples; mermaid flow updated to the real gates and stages"
+  },
+  {
+    "version": "5.2",
+    "date": "2026-08-22",
+    "text": "second integration round from the author-skill critique — per-candidate refutation stage between direction merge and station (fresh refuter per BLOCKER/MAJOR candidate by default, refute arg all|blk-maj|station, verdicts binding at the station); experimental chunked fan-out (chunks arg: derived layers or explicit groups, chunk-scoped lanes, contracts chunk-exempt); size cap maxFiles 30 / maxLines 2000 over reviewed code only with chunked-run or layer-run split proposal (PROC-008); base-health gate before round 1, waivable via base-red: expected (PROC-009); risk-map taxonomy moved to ACTION-REVIEW-RISK-* context entries with in-skill fallback; falsifiability bar with worked example (TPL-005); no spec => correctness direction dropped instead of degraded; recommendation glosses"
+  },
+  {
+    "version": "5.1",
+    "date": "2026-08-21",
+    "text": "never-prompt gate (EXEC-005) — the review never calls AskUserQuestion; base derived autonomously (given, else tracked upstream, else mainline, stated), assumptions stated and carried, unresolvable inputs and empty diffs end with a report; the only pause is the station-protocol human gate"
+  },
+  {
+    "version": "5.0",
+    "date": "2026-08-21",
+    "text": "major: formal merge of the author's aqms-review-wip SKILL.md — dynamic scope arg (branch|wip|all + paths, dynamic default) via snapshot commits so uncommitted and untracked work reviews through the unchanged worktree machinery; 5-level consequence-based severity (BLOCKER/MAJOR/MINOR/NIT/INFO, WARNING retired) with <direction>-<SEV>-<n> ids; per-finding fix route (human|auto-fix|runner-fix) consumed by fix application; unverified disposition kept with concrete missing precondition; adversarial refutation framing with both-directions test checks on the manual path; risk map (PROC-007) driving attention and diff-proportional direction selection with auto-added security; wrong-base heuristic in the guard; station runs build+tests once, names permanent checks for recurring classes, escalates undemonstrated high-risk defects to the top, and ends review.md with the claim funnel; solo reviewer-independence gate (EXEC-004); no-spec degradation for correctness; When-to-use widened — THE review skill, /code-review boundary removed"
+  },
+  {
+    "version": "4.2",
+    "date": "2026-08-20",
+    "text": "description rewritten to repo format under the new brevity caps (sentence <=160, total <=450 chars)"
+  },
+  {
+    "version": "4.1",
+    "date": "2026-08-20",
+    "text": "claim semantics (author feedback) — lane findings are claims with a mandatory confirmation pass in a required evidence field (first confirmation, still in question); station re-verifies every claim regardless of severity (second confirmation), deterministically in ACDSL repos via per-defect task-lifetime probe rules (>=2 authoring attempts, fail-fixture validity check, check -rule verdict); only twice-confirmed claims enter the review body, refuted claims are debunked and removed; probe artifacts persist with the round"
+  },
+  {
+    "version": "4.0",
+    "date": "2026-08-19",
+    "text": "major: body migrated to entries via /fmt skill — 62 entries (DIR 6, MODES 4, ROUND 5, EXEC 3, READ 4, PROC 6, STATION 7, SEC 4, STACK 3, OUT 10, DELIVER 6, TPL 4 payloads), content unchanged; Model effort normalized large→high"
+  },
+  {
+    "version": "3.11",
+    "date": "2026-08-12",
+    "text": "migrated to the context: declaration — orchestrator doctrine injected at invocation; lanes read per-direction files (no SubagentStart doctrine injection anymore); stale rules/-vs-actions/ paths and ALWAYS-* entry names corrected"
+  },
+  {
+    "version": "3.10",
+    "date": "2026-08-11",
+    "text": "the station review persists to the repo — the front copies round-{r}/review.{json,md} from the scratchpad into plans/{slug}/reviews/round-{r}/ after every round (workflow script unchanged)"
+  },
+  {
+    "version": "3.9",
+    "date": "2026-08-10",
+    "text": "station protocol — fixes applied on the review branch by default (orchestrator inline or same-worktree runner), cross-branch merge-back handoff now opt-in; mermaid, Modes, fan-out, exec-requirements, description reworded"
+  },
+  {
+    "version": "3.8",
+    "date": "2026-08-10",
+    "text": "lane safety — reworded the pristine instruction (projection-hook dirt is expected) and forbade tree-mutating git commands on the lane, direction-merge, and station-merge prompts"
+  },
+  {
+    "version": "3.7",
+    "date": "2026-08-09",
+    "text": "language-agnosticism sweep — concurrency-primitive phrasing in critical fallback list and concept audit, generated-file excludes per repo convention"
+  },
+  {
+    "version": "3.6",
+    "date": "2026-08-09",
+    "text": "identity-grammar citation sweep (ACTION-IMPL-INTEG family)"
+  },
+  {
+    "version": "3.5",
+    "date": "2026-08-09",
+    "text": "ACDSL context wording — SessionStart delivery, gate output as review evidence; description gains Trigger on clause (ACDSL-SKILL-002 gate)"
+  },
+  {
     "version": "3.4",
     "date": "2026-07-31",
     "text": "diff range self-resolved — baseCommit pinned to the merge-base fork point (never the base tip); lane premise aborts explicit (required aborted flag), aborted lanes excluded from merges, fully-aborted rounds return abortedLanes loudly; front re-resolves and re-dispatches once on a premise-failed round"

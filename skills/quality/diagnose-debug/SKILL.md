@@ -2,7 +2,7 @@
 name: diagnose-debug
 description: Produce a verified root-cause diagnosis for approval — a diagnosis, not a fix. Trigger on /diagnose-debug or "find out why X" or pasted stack traces/logs.
 author: Kevin Horst
-version: 1.5
+version: 1.7
 ---
 
 # Debug
@@ -16,7 +16,7 @@ Static constraints are not restated here: `AGENTS.md` and the style guides under
 **Use when:** the cause of a bug, error, or unexplained behavior is unknown — pasted stack traces, Sentry errors, raw logs, any "find out why X" ask. The output is a diagnosis, not a fix.
 **Don't use when:** the cause is already known and the fix is trivial — just fix it directly. The problem is a plan or design question — /fdesign or /fexplore. The task is writing tests for existing code — /coverage-increase.
 **Preconditions:** an observable symptom with evidence (logs, traces, repro steps, or environment comparison).
-**Workflow position:** standalone — the approved diagnosis hands off to direct implementation or a /fdesign plan for non-trivial fixes (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone — the approved diagnosis hands off to direct implementation or a /fdesign plan for non-trivial fixes (see README.md § Skill map, smine repo).
 
 ## Phase 0 — Intake
 
@@ -90,7 +90,7 @@ Then STOP and ask before fixing. Classification matters: "not a bug" is a valid,
 
 ## Stop conditions
 
-The `ALWAYS-EXEC-*` entries from `$AGENT_CONTEXT_DIR_DEFAULT/rules/implementing.md` apply (ALWAYS-EXEC-002: second failed fix → stop, research, redesign). Debug-specific:
+The `ACTION-IMPL-*` gate entries from `$AGENT_CONTEXT_DIR_DEFAULT/actions/implementing.md` apply (ACTION-IMPL-002: second failed fix → stop, research, redesign). Debug-specific:
 
 1. A hypothesis contradicts a user-stated fact → discard it, do not present it.
 2. Two hypotheses disproven → stop guessing. Collect richer evidence instead: request logs, add temporary instrumentation (and remove it once the question is answered), or reproduce.
@@ -101,12 +101,3 @@ The `ALWAYS-EXEC-*` entries from `$AGENT_CONTEXT_DIR_DEFAULT/rules/implementing.
 - Suggested: frontier / large
 - Reason: root-cause reasoning over unfamiliar failures
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.5 (2026-07-31): activity-scoped context — stop conditions as ALWAYS-EXEC entries in rules/implementing.md
-- v1.4 (2026-07-30): context redesign — stop conditions via ../fdesign/assets/stop-conditions.md
-- v1.3 (2026-07-30): moved under skills/quality/ group; name and behavior unchanged
-- v1.2 (2026-07-23): Phase 1 evidence — payload-before-layers, disk-over-diff, config-surface proof, live-probe, `gh` issue-status verification; Phase 2 — never blame user env/stale binary, correction-as-rule grep-sweep; Phase 3 — "not possible cleanly" acceptable, no DB writes on render
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-07-05): initial version
