@@ -2,19 +2,19 @@
 name: caveman
 description: >
   Ultra-compressed communication mode. Cuts output tokens ~65% by speaking like a terse
-  caveman while keeping full technical accuracy. Manual invocation only via /caveman.
-disable-model-invocation: true
+  caveman while keeping full technical accuracy. Trigger on /caveman or a caveman
+  style arg passed to a planning skill.
 author: JuliusBrussee
-version: 1.5
+version: 1.8
 ---
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
 
 ## When to use
 
-**Use when:** ultra-compressed output is wanted — cuts tokens ~65%. Manual invocation only via /caveman. Also used as a style modifier by planning skills via the `caveman` arg.
+**Use when:** ultra-compressed output is wanted — cuts tokens ~65%. Invoked via /caveman, or as a style modifier by planning skills via the `caveman` arg.
 **Don't use when:** the task needs normal-prose output — caveman is opt-in only (`disable-model-invocation: true`). Security warnings, irreversible-action confirmations, and ambiguity-prone sequences auto-drop caveman temporarily (see Auto-Clarity below).
-**Workflow position:** standalone style modifier — the planning skills (fdesign incl. its refine route, fchange, fmt, coverage-increase) delegate to this skill when `caveman` is passed (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone style modifier — the planning skills (fdesign incl. its change and refine routes, fmt, coverage-increase) delegate to this skill when `caveman` is passed (see README.md § Skill map, smine repo).
 
 ## Persistence
 
@@ -66,12 +66,3 @@ Code/commits/PRs: write normal. "stop caveman" or "normal mode": revert. Mode pe
 - Suggested: small
 - Reason: output-style instruction, no reasoning demands
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.5 (2026-07-30): moved under skills/fmt/ group; delegator list: design-refine → fdesign refine route
-- v1.4 (2026-07-24): reference merge: feature-refine + feature-refactor → feature-change in delegating-skills list
-- v1.3 (2026-07-19): reference rename: refactor → feature-refactor; moved under skills/util/
-- v1.2 (2026-07-15): delegating-skills list: design-refine added (rename), new feature-refine added
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-07-10): initial version

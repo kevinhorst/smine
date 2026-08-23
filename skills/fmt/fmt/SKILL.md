@@ -1,8 +1,10 @@
 ---
 name: fmt
-description: Reformat a plan or concept without changing its content — arg-routed by target. Trigger on /fmt plan <plan file> or /fmt concept <slug> <audience>. Args — plan|concept: route selector, inferred when unambiguous; plan file: plan to migrate to style/plan.md; mode: upward familiarity re-render only; caveman: compress prose, requires caveman skill; slug + audience: concept plus business|frontend-integration|custom.
+description: Reformat a plan, concept, or skill without changing its content — arg-routed by target. Trigger on /fmt plan <plan file>, /fmt concept <slug> <audience>, or /fmt skill <name>. Args — plan|concept|skill: route selector, inferred when unambiguous; plan file: plan to migrate to rules/plan.md; mode: upward familiarity re-render; caveman: compress prose; slug + audience: business|frontend-integration|custom; name: skill leaf to migrate.
 author: Kevin Horst
-version: 1.5
+version: 1.12
+argument-hint: "[plan|concept|skill] [target] [mode] [caveman] [audience]"
+acdsl-context: RULE-PLAN-*
 ---
 
 # fmt
@@ -11,38 +13,40 @@ One skill, two format-only routes over an existing artifact — never a content 
 
 ## When to use
 
-**Use when:** an existing plan must migrate to `style/plan.md` or up-convert its familiarity mode (`/fmt plan`), or an existing concept must be handed to a stakeholder who does not read the developer concept (`/fmt concept`).
-**Don't use when:** the content must change — /concept (extend a concept), /clarify (drain concept questions), /fdesign refine (rethink a plan). The file is neither a plan nor a concept — stop.
-**Preconditions:** the target artifact exists (a plan file for the plan route; `plans/{slug}/concept/` for the concept route). `style/plan.md` available for the plan route.
-**Workflow position:** side-branch — `/fmt plan` off fdesign (incl. its refine route), `/fmt concept` off concept (see `docs/skill-map.md`, smine repo).
+**Use when:** an existing plan must migrate to `rules/plan.md` or up-convert its familiarity mode (`/fmt plan`), or an existing concept must be handed to a stakeholder who does not read the developer concept (`/fmt concept`), or an existing prose skill body must become entries without changing what it says (`/fmt skill`).
+**Don't use when:** the content must change — /concept (extend a concept), /clarify (drain concept questions), /fdesign refine (rethink a plan), /skillroutine-create (change what a skill does). The file is neither a plan, a concept, nor a skill — stop.
+**Preconditions:** the target artifact exists (a plan file for the plan route; `plans/{slug}/concept/` for the concept route; `skills/**/<name>/SKILL.md` for the skill route). `rules/plan.md` available for the plan route.
+**Workflow position:** side-branch — `/fmt plan` off fdesign (incl. its refine route), `/fmt concept` off concept, `/fmt skill` off skillroutine-create (see README.md § Skill map, smine repo).
 
 ## Args
 
-- `plan | concept`: route selector — explicit token always wins; otherwise inferred from the argument, ambiguous → ask.
-- plan file: plan route, positional — the plan to migrate to style/plan.md.
+- `plan | concept | skill`: route selector — explicit token always wins; otherwise inferred from the argument, ambiguous → ask.
+- plan file: plan route, positional — the plan to migrate to rules/plan.md.
 - `mode`: plan route, upward only — re-render at a higher familiarity mode (`unfamiliar → familiar → owned`); a downward request STOPs.
 - `caveman`: plan route — compress prose after structure migration; requires the caveman skill installed, else STOP.
 - slug + audience: concept route, positional — concept slug plus audience `business | frontend-integration | custom` (custom names its own selection at intake).
+- name: skill route, positional — the leaf name of the repo skill to migrate to entries.
 
 ## Routing
 
 - `/fmt plan <plan file>` → the **Plan route**. A `plans/**` markdown file with a Decisions/Changes structure infers this route.
 - `/fmt concept <slug> <audience>` → the **Concept route**. A slug plus a named audience infers this route.
-- An explicit target token (`plan` / `concept`) always wins. When only an argument is given and it is unambiguous, infer as above; ambiguous → ask which route before doing anything.
+- `/fmt skill <name>` → the **Skill route**. A bare skill leaf name (a dir under `skills/**` with a SKILL.md) infers this route.
+- An explicit target token (`plan` / `concept` / `skill`) always wins. When only an argument is given and it is unambiguous, infer as above; ambiguous → ask which route before doing anything.
 
-mirrors: skillroutine-create's format rules — frontmatter, When-to-use routing, Model + Changelog sections, the three version surfaces.
+mirrors: skillroutine-create's format rules — frontmatter, When-to-use routing, Model section, the two version surfaces.
 
 ---
 
 ## Plan route
 
-Produces one artifact: the same plan, migrated to the current `style/plan.md`. Content identity: every fact, decision, code block, test case, and checklist item survives — words move, they never change. Rethinking content is /fdesign refine; this route is the standalone form of the fdesign refine route's format-migration driver.
+Produces one artifact: the same plan, migrated to the current `rules/plan.md`. Content identity: every fact, decision, code block, test case, and checklist item survives — words move, they never change. Rethinking content is /fdesign refine; this route is the standalone form of the fdesign refine route's format-migration driver.
 
-`$AGENT_CONTEXT_DIR_DEFAULT/style/plan.md` is the spec, not a guideline: read it before touching the plan (it usually arrives via the review-context hook). If it is missing there AND not injected, STOP — there is nothing authoritative to reformat against; suggest seeding via the smine `sync_context.sh`.
+`$AGENT_CONTEXT_DIR_DEFAULT/rules/plan.md` is the spec, not a guideline: read it before touching the plan (its `RULE-PLAN-*` entries arrive via this skill's context declaration at invocation). If it is missing there AND not injected, STOP — there is nothing authoritative to reformat against; suggest seeding via the smine `sync_context.sh`. In ACDSL repos, ACDSL-PLAN-001 gates design-plan structure — a red plan-format gate is exactly what `/fmt plan` remediates.
 
 ### Phase 0 — Intake
 
-- Name the plan file. Classify it: feature plan or refactor plan — that picks the section order from style/plan.md.
+- Name the plan file. Classify it: feature plan or refactor plan — that picks the section order from rules/plan.md.
 - **`caveman` arg (optional):** after the structure migration, compress the prose per the `caveman` skill (technical content byte-perfect). Requires `~/.claude/skills/caveman` — STOP with "caveman requested but skill not installed" if missing. Without the arg, the migration is fully content-identical.
 - **`mode` arg (optional, up-conversion only):** re-render the plan at a higher familiarity mode — `unfamiliar → familiar → owned`, strictly upward. Up-conversion only deletes prose (flow traces, term explanations, explanatory bullets); code blocks and diffs are mode-invariant and stay byte-identical. A downward request STOPs — it would invent explanations on stale grounding; route to /fdesign refine.
   - The plan's args line is updated to the new mode; the Changelog row records `local: mode <from>→<to>`.
@@ -50,7 +54,7 @@ Produces one artifact: the same plan, migrated to the current `style/plan.md`. C
 
 ### Phase 1 — Format audit
 
-Walk style/plan.md rule by rule against the plan and collect violations as a checklist. The usual suspects:
+Walk rules/plan.md rule by rule against the plan and collect violations as a checklist. The usual suspects:
 
 - section order wrong; Assumptions / Changelog / args line missing
 - doc-assumption findings sitting inside Baseline instead of the Assumptions section
@@ -80,13 +84,13 @@ Apply the fixes mechanically, in place. With a `mode` arg, content identity appl
 ### Plan-route self-check gate
 
 - [ ] Content identity: fenced code blocks are byte-identical and their count is unchanged; every F/D ID, decision, test case, verification item, and stop condition from the original is present.
-- [ ] The plan now passes style/plan.md's presentation checks: section order, args line (if non-default args are recorded), stacked cells, no semicolon chains, every F/D/§ reference an internal link, anchors on ID cells.
+- [ ] The plan now passes rules/plan.md's presentation checks: section order, args line (if non-default args are recorded), stacked cells, no semicolon chains, every F/D/§ reference an internal link, anchors on ID cells.
 - [ ] Changelog row appended; no other Changelog rows touched.
 - [ ] No invented content: every gap found in Phase 2 appears in the chat report, none was filled in.
 
 ### Plan-route stop conditions
 
-1. `style/plan.md` unavailable (not in the repo pack, not injected) → stop; suggest `sync_context.sh`.
+1. `rules/plan.md` unavailable (not in the repo pack, not injected) → stop; suggest `sync_context.sh`.
 2. `caveman` requested but `~/.claude/skills/caveman` missing → stop.
 3. A format fix cannot be applied without a content decision (ambiguous section for a stray paragraph, prose-only change with no code) → flag and continue; if the gaps dominate the plan, stop and recommend /fdesign refine instead.
 4. The file is not a plan (no Decisions/Changes structure to migrate) → stop and report.
@@ -120,17 +124,40 @@ Preconditions: a concept under `plans/{slug}/concept/`. Not for changing concept
 - Renderings are overwritten on re-run; they are never edited by hand and never feed back into the concept.
 - A change to the developer concept invalidates the renderings — regenerate, don't patch.
 
+## Skill route
+
+Migrate a prose skill body to entries — content unchanged, every instruction addressable (grammar: skillroutine-create → Repo skill format; gate ACDSL-SKILL-005; inspect with `rules render-skill --list-entries`).
+
+### Phase 0 — Intake
+
+- Arg: the leaf name; locate `skills/**/<name>/SKILL.md`; read the entry grammar in skillroutine-create's Repo skill format section.
+- Refuse a skill that already carries entries (that is an edit, not a migration).
+
+### Phase 1 — Inventory
+
+- Walk the body; for each `##`/`###` section choose a TOPIC tag (short, upper-case, ≤12 chars, unique in the skill); metadata sections (When to use, Args, Model) are left as they are.
+- List every instruction line — numbered steps, top-level bullets, one-sentence directive paragraphs — in reading order with its intended ID `SKILL-<NAME>-<TOPIC>-NNN` and class (`step` for sequenced instructions, `review` for guidelines, `gate`/`hook`/`lint`/`manual` when the instruction is one); templates/examples → `payload` entries under `TPL`.
+- Present the inventory as a table (ID · class · statement · source line) and STOP for the user's confirmation — the inventory is the contract.
+
+### Phase 2 — Rewrite
+
+- Rewrite each instruction as its entry headline; explanatory sentences that followed an instruction move to `* Why:`; conditions to `* Applies:`.
+- A fence-bearing template becomes a `[payload]` entry with a one-line statement (the former lead-in sentence) followed by the fence; a fence containing fences uses four backticks.
+- No wording changes beyond the headline form; no reordering; no removed sentences — every original sentence is either a headline, a Why/Applies bullet, or left in place as prose that is not an instruction.
+
+### Phase 3 — Gate & report
+
+- Bump the two version surfaces; run `go run ./cmd/acdsl check` (ACDSL-SKILL-005) and `go run ./cmd/rules render-skill --list-entries <SKILL.md>` — expect the inventory count.
+- Report: entries by topic, payload count, lines before/after, and the diff.
+
+### Skill-route rules
+
+- Meaning-preserving: a reviewer diff shows only headline/bullet reshaping.
+- One inventory confirmation, no piecemeal questions.
+- Never invent instructions to fill a section; a section with none stays prose.
+
 ## Model
 
 - Suggested: frontier / large (concept route needs audience judgment); the mechanical plan route runs fine at mid-tier / medium
 - Reason: audience judgment plus strict content identity (concept route); exhaustive format migration with no content decisions (plan route)
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.5 (2026-07-31): activity-scoped context — plan spec at $AGENT_CONTEXT_DIR_DEFAULT/style/plan.md; missing-spec stop suggests sync_context.sh again
-- v1.4 (2026-07-30): context redesign — plan-format.md read from ../fdesign/assets/ (ships with fdesign); missing-spec stop suggests sync_skills.sh
-- v1.3 (2026-07-30): skills/fmt/ became a group dir (fmt + caveman); reference rename design-refine → the fdesign refine route
-- v1.2 (2026-07-27): reference rename — couchskill-create → skillroutine-create
-- v1.1 (2026-07-26): Args section
-- v1.0 (2026-07-24): merges reformat-concept v1.0 + reformat-plan v1.5 into one arg-routed skill (`plan` | `concept` routes); behavior within each route unchanged
