@@ -137,6 +137,20 @@ func TestStoreReload(t *testing.T) {
 		assert.False(t, ok)
 	})
 
+	t.Run("normalizes-divergent-scope", func(t *testing.T) {
+		root := t.TempDir()
+		divergent := `{"batch": {"scope": "aqms", "number": 1, "file": "b1.md"}, "sessions": [{"id": "65a26e92-4c98-4879-82ce-35e644cd0ab5"}]}`
+		writeScope(t, root, "work", map[string]string{"batch-01.json": divergent}, 0)
+
+		store := NewStore(root)
+		require.NoError(t, store.Reload())
+
+		batch, ok := store.Batch("work", 1)
+		require.True(t, ok)
+		assert.Equal(t, "work", batch.Batch.Scope)
+		assert.Equal(t, SessionRef{BatchNumber: 1, Scope: "work"}, store.SessionRefs()["65a26e92-4c98-4879-82ce-35e644cd0ab5"])
+	})
+
 	t.Run("malformed-file-skipped-and-recorded", func(t *testing.T) {
 		root := t.TempDir()
 		writeScope(t, root, "personal", map[string]string{
@@ -158,19 +172,6 @@ func TestStoreReload(t *testing.T) {
 		store := NewStore(filepath.Join(t.TempDir(), "does-not-exist"))
 		require.NoError(t, store.Reload())
 		assert.Empty(t, store.Scopes())
-	})
-
-	t.Run("proposals-dir-skipped", func(t *testing.T) {
-		root := t.TempDir()
-		writeScope(t, root, "personal", map[string]string{"batch-01.json": validBatch}, 0)
-		writeScope(t, root, "proposals", map[string]string{"routines.json": `{"kind": "routines"}`}, 0)
-
-		store := NewStore(root)
-		require.NoError(t, store.Reload())
-
-		scopes := store.Scopes()
-		require.Len(t, scopes, 1)
-		assert.Equal(t, "personal", scopes[0].Name)
 	})
 
 	t.Run("scope-without-json-counts-md-reports", func(t *testing.T) {

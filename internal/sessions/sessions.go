@@ -134,8 +134,7 @@ func (s *Store) Reload() error {
 	}
 
 	for _, scopeDir := range scopeDirs {
-		// proposals is a sibling data dir (internal/proposals), not a scope.
-		if !scopeDir.IsDir() || scopeDir.Name() == "proposals" {
+		if !scopeDir.IsDir() {
 			continue
 		}
 		info := &ScopeInfo{Name: scopeDir.Name()}
@@ -169,6 +168,9 @@ func (s *Store) Reload() error {
 				info.LoadErrors = append(info.LoadErrors, fmt.Sprintf("%s: %v", f.Name(), err))
 				continue
 			}
+			// The directory is the scope's identity; older work-scope batches
+			// carry the organisation's own name (e.g. "aqms") in the JSON.
+			batch.Batch.Scope = scopeDir.Name()
 			batch.sourcePath = path
 			info.Batches = append(info.Batches, &batch)
 		}
