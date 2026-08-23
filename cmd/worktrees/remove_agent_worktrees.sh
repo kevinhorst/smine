@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Remove claude/* agent worktrees (and stray .codex/worktrees checkouts).
+# Remove agent worktrees — claude/* and claude-routines/* branches (and stray
+# .codex/worktrees checkouts).
 #
 # Usage:
-#   remove_agent_worktrees.sh [--force] [--delete-branch] [claude/<branch>]
+#   remove_agent_worktrees.sh [--force] [--delete-branch] [claude/<branch> | claude-routines/<branch>]
 #
-# With a claude/<branch> target only that branch's worktree is considered;
+# With a branch target only that branch's worktree is considered;
 # the detached .codex/worktrees sweep runs only in the untargeted invocation.
 # A target with no attached worktree is reported explicitly, never silently.
 #
@@ -23,7 +24,7 @@
 # With --force everything is removed regardless of state.
 #
 # Without --delete-branch, branches are never deleted, only worktrees. With
-# --delete-branch (requires a claude/<branch> target) the branch itself is
+# --delete-branch (requires a branch target) the branch itself is
 # deleted afterwards, under the same safety rules: only when its worktree
 # (if any) was removed and the work lives on a non-claude branch — or
 # unconditionally with --force.
@@ -40,13 +41,13 @@ for arg in "$@"; do
   case "$arg" in
     --force) force=1 ;;
     --delete-branch) delete_branch=1 ;;
-    claude/*) target="$arg" ;;
-    *) echo "usage: $(basename "$0") [--force] [--delete-branch] [claude/<branch>]"; exit 1 ;;
+    claude/* | claude-routines/*) target="$arg" ;;
+    *) echo "usage: $(basename "$0") [--force] [--delete-branch] [claude/<branch> | claude-routines/<branch>]"; exit 1 ;;
   esac
 done
 
 if [ "$delete_branch" -eq 1 ] && [ -z "$target" ]; then
-  echo "usage: --delete-branch requires a claude/<branch> target"
+  echo "usage: --delete-branch requires a branch target"
   exit 1
 fi
 
@@ -71,7 +72,7 @@ skipped=0
 matched=0
 target_skipped=0
 
-# claude/* branch worktrees
+# agent-branch worktrees (claude/*, claude-routines/*)
 while IFS=$'\t' read -r path branch; do
   if [ -n "$target" ] && [ "$branch" != "$target" ]; then
     continue
@@ -103,7 +104,7 @@ while IFS=$'\t' read -r path branch; do
     remove "$path"
   fi
 done < <(git worktree list --porcelain |
-  awk '/^worktree /{path=$2} sub(/^branch refs\/heads\//, "", $0) && $0 ~ /^claude\//{print path "\t" $0}')
+  awk '/^worktree /{path=$2} sub(/^branch refs\/heads\//, "", $0) && $0 ~ /^claude(-routines)?\//{print path "\t" $0}')
 
 # A targeted run must never end silently — detached checkouts and
 # already-removed worktrees would otherwise look like a display bug.

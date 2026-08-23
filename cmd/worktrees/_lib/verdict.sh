@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Shared verdict logic for agent-branch safety: candidate discovery, FROM
-# resolution, cherry sets, the layered applied-probe
-# (picked | applied | applied-resolved | unpicked), and the containment list
-# both print_agent_worktrees_status.sh and remove_agent_worktrees.sh derive
+# resolution, cherry sets, the layered applied-probe, the candidate-wide
+# twin sweep (picked | applied | applied-resolved | picked-resolved |
+# unpicked | unpicked-notwin), and the containment list both
+# print_agent_worktrees_status.sh and remove_agent_worktrees.sh derive
 # Safe from.
 #
 # Sourced, not executed. Callers run under `set -euo pipefail`, call
@@ -11,13 +12,14 @@
 #
 # bash 3.2: parallel indexed arrays throughout, no associative arrays.
 
-# All local non-claude branches — where harvested work could live.
+# All local non-agent branches (not claude/*, not claude-routines/*) — where
+# harvested work could live.
 candidates=()
 load_candidates() {
   local candidate_branch
   candidates=()
   while IFS= read -r candidate_branch; do
-    case "$candidate_branch" in claude/*) continue ;; esac
+    case "$candidate_branch" in claude/* | claude-routines/*) continue ;; esac
     candidates+=("$candidate_branch")
   done < <(git for-each-ref --format='%(refname:short)' refs/heads/)
 }
@@ -33,7 +35,7 @@ resolve_from() {
   short=${created#refs/remotes/}
   short=${short#refs/heads/}
   case "$short" in
-    '' | HEAD | claude/*) return 0 ;;
+    '' | HEAD | claude/* | claude-routines/*) return 0 ;;
   esac
   for ref in "refs/heads/$short" "refs/remotes/$short"; do
     if git show-ref -q --verify "$ref"; then
@@ -195,33 +197,180 @@ probe_verdict() {
   git -C "$probe_wt" cherry-pick --abort >/dev/null 2>&1 ||
     git -C "$probe_wt" reset --hard HEAD >/dev/null 2>&1
   # Conflict: disambiguate via the range-diff interdiff (see the function above).
+  # An empty merge_base..from range (FROM never moved past the merge-base)
+  # means nothing on FROM could pair with the commit — the conflict is
+  # genuine, and range-diff would die with a usage error on the empty range.
   merge_base=$(git merge-base "$hash" "$from")
+  if [ "$merge_base" = "$(git rev-parse "$from")" ]; then
+    verdict=unpicked
+    probe_ms=$((probe_ms + $(now_ms) - started))
+    return 0
+  fi
   agent_adds=$(git show --numstat --format= "$hash" | awk '{ added += $1 } END { print added + 0 }')
   verdict=$(git range-diff "$merge_base..$from" "$hash^..$hash" 2>/dev/null |
     interdiff_addition_verdict "$agent_adds")
   probe_ms=$((probe_ms + $(now_ms) - started))
 }
 
-# Memoized probe: hashes are globally unique, so the memo needs no FROM key.
+# Index of a branch in candidates[], -1 when it is not a local candidate
+# (e.g. a remote-tracking FROM).
+candidate_index() {
+  local branch=$1 index
+  for index in "${!candidates[@]}"; do
+    if [ "${candidates[$index]}" = "$branch" ]; then
+      echo "$index"
+      return
+    fi
+  done
+  echo -1
+}
+
+# hash↔candidate explanations ("<idx> <hash>" pairs) recorded by verdict_for
+# and twin_sweep: the commit's change is present on that candidate — exactly
+# (patch-id), by FROM probe, or as a range-diff-paired subject twin. Consumed
+# by the per-candidate IN stars in evaluate_branch. Hash↔candidate facts are
+# branch-independent, so the memo survives multi-branch callers.
+explained_pairs=()
+mark_explained() {
+  explained_pairs+=("$1 $2")
+}
+is_explained() {
+  local pair="$1 $2" p
+  for p in ${explained_pairs[@]+"${explained_pairs[@]}"}; do
+    if [ "$p" = "$pair" ]; then return 0; fi
+  done
+  return 1
+}
+
+# Candidate-wide explanation sweep for one commit the FROM probe could not
+# place (verdict was unpicked). Patch-id equivalence breaks on any manual
+# conflict resolution, so a conflict-resolved pick to main reads unpicked
+# forever under git cherry alone — this sweep looks for the landed twin:
+# for each candidate (FROM first), exact patch presence (cherry '-') counts
+# as picked; otherwise a subject twin — a commit with the IDENTICAL subject
+# line since the merge-base — that git range-diff pairs (=/!) with the agent
+# commit counts as picked-resolved (drift in the added lines is exactly what
+# a manual resolution produces; the pairing itself is the equivalence check,
+# per the diagnosis decisions — no added-line thresholds).
+# Results in the globals:
+#   verdict            picked | picked-resolved | unpicked | unpicked-notwin
+#   verdict_candidate  branch carrying the twin (picked-resolved), or the
+#                      branch whose twin was rejected (unpicked), else ''
+#   verdict_twin       the twin sha, else ''
+# unpicked-notwin is the exhausted flavor: no subject twin exists on ANY
+# candidate — a transfer under a reworded subject, a squash, or heavy
+# modification is invisible to this detector and must be verified manually.
+verdict_candidate=''
+verdict_twin=''
+twin_sweep() {
+  local hash=$1 from=$2 index candidate_branch subject mb twin
+  local picked_found=0 resolved_found=0 twin_seen=0
+  local rejected_candidate='' rejected_twin=''
+  verdict_candidate=''
+  verdict_twin=''
+  subject=$(git log -1 --format=%s "$hash")
+  while IFS= read -r index; do
+    candidate_branch=${candidates[$index]}
+    if ! printf '%s\n' "${cherry_plus[$index]}" | grep -qx "$hash"; then
+      # Patch-present on this candidate (git cherry '-'): exact pick.
+      mark_explained "$index" "$hash"
+      picked_found=1
+      continue
+    fi
+    [ -z "$subject" ] && continue
+    mb=$(git merge-base "$hash" "$candidate_branch" 2>/dev/null) || continue
+    while IFS= read -r twin; do
+      [ -z "$twin" ] && continue
+      [ "$twin" = "$hash" ] && continue
+      # --grep is a substring match even with -F: require the exact subject.
+      if [ "$(git log -1 --format=%s "$twin")" != "$subject" ]; then continue; fi
+      twin_seen=1
+      if git range-diff "$twin^..$twin" "$hash^..$hash" 2>/dev/null |
+          grep -qE '^ *[0-9]+: +[0-9a-f]+ +[=!] +[0-9]+: +[0-9a-f]+'; then
+        mark_explained "$index" "$hash"
+        if [ "$resolved_found" -eq 0 ]; then
+          resolved_found=1
+          verdict_candidate=$candidate_branch
+          verdict_twin=$twin
+        fi
+        break
+      fi
+      if [ -z "$rejected_twin" ]; then
+        rejected_candidate=$candidate_branch
+        rejected_twin=$twin
+      fi
+    done < <(git log --format=%H --fixed-strings --grep="$subject" "$mb..$candidate_branch" 2>/dev/null)
+  done < <(ordered_indices "$from")
+
+  if [ "$picked_found" -eq 1 ]; then
+    verdict=picked
+  elif [ "$resolved_found" -eq 1 ]; then
+    verdict=picked-resolved
+  elif [ "$twin_seen" -eq 1 ]; then
+    verdict=unpicked
+    verdict_candidate=$rejected_candidate
+    verdict_twin=$rejected_twin
+  else
+    verdict=unpicked-notwin
+  fi
+}
+
+# Memoized probe + twin sweep: hashes are globally unique, so the memo needs
+# no FROM key. A FROM-probe explanation (applied/applied-resolved) marks the
+# local FROM candidate explained so the IN stars see it.
 verdict_hashes=()
 verdict_values=()
+verdict_candidates=()
+verdict_twins=()
 verdict_for() {
-  local hash=$1 from=$2 index
+  local hash=$1 from=$2 index from_index
   for index in "${!verdict_hashes[@]}"; do
     if [ "${verdict_hashes[$index]}" = "$hash" ]; then
       verdict=${verdict_values[$index]}
+      verdict_candidate=${verdict_candidates[$index]}
+      verdict_twin=${verdict_twins[$index]}
       return 0
     fi
   done
   probe_verdict "$hash" "$from"
+  verdict_candidate=''
+  verdict_twin=''
+  case "$verdict" in
+    applied | applied-resolved)
+      from_index=$(candidate_index "$from")
+      if [ "$from_index" -ge 0 ]; then mark_explained "$from_index" "$hash"; fi
+      ;;
+    unpicked)
+      twin_sweep "$hash" "$from"
+      ;;
+  esac
   verdict_hashes+=("$hash")
   verdict_values+=("$verdict")
+  verdict_candidates+=("$verdict_candidate")
+  verdict_twins+=("$verdict_twin")
+}
+
+# True when every '+' commit of candidate index $1 is explained on it —
+# the candidate contains all of the branch's work, partly via probe or twin
+# verdicts. Only probed hashes carry explanations, so this stays conservative.
+candidate_fully_explained() {
+  local index=$1 hash
+  [ -z "${cherry_plus[$index]}" ] && return 1
+  while IFS= read -r hash; do
+    [ -z "$hash" ] && continue
+    if ! is_explained "$index" "$hash"; then return 1; fi
+  done <<< "${cherry_plus[$index]}"
+  return 0
 }
 
 # Full safety evaluation for one branch. Requires load_candidates. Results:
-#   eval_unpicked  UNPICKED count (unpicked-verdict intersection commits)
-#   eval_verdicts  VERDICTS summary (applied:n,resolved:n) or '-'
-#   eval_in        IN list incl. FROM upgrade entries, or ''
+#   eval_unpicked  UNPICKED count (intersection commits still unpicked or
+#                  unpicked-notwin after the probe and the twin sweep)
+#   eval_verdicts  VERDICTS summary (applied:n,resolved:n,picked-resolved:n)
+#                  or '-'
+#   eval_in        IN list: plain entries for exact containment, starred
+#                  entries (X*) where containment came from probe/twin
+#                  verdicts, FROM first, or ''
 # FROM's '+' set is the probe target set; the intersection (patch-present in
 # no local candidate) stays the UNPICKED base so a commit picked into any
 # local branch keeps UNPICKED at 0 exactly as before.
@@ -229,8 +378,9 @@ eval_unpicked=0
 eval_verdicts=-
 eval_in=''
 evaluate_branch() {
-  local branch=$1 from=$2 hash from_plus candidate_branch
-  local applied_n=0 resolved_n=0 unpicked_n=0 is_candidate=0 all_transferred=1
+  local branch=$1 from=$2 hash from_plus candidate_branch index
+  local applied_n=0 resolved_n=0 picked_resolved_n=0 unpicked_n=0
+  local is_candidate=0 all_transferred=1
   compute_cherry_sets "$branch"
   eval_in=$(contained_in "$branch" "$from")
   eval_unpicked=$(unpicked_anywhere | sed '/^$/d' | wc -l | tr -d ' ')
@@ -255,17 +405,21 @@ evaluate_branch() {
     case "$verdict" in
       applied) applied_n=$((applied_n + 1)) ;;
       applied-resolved) resolved_n=$((resolved_n + 1)) ;;
-      unpicked) all_transferred=0 ;;
+      picked-resolved) picked_resolved_n=$((picked_resolved_n + 1)); all_transferred=0 ;;
+      picked | unpicked | unpicked-notwin) all_transferred=0 ;;
     esac
   done <<< "$from_plus"
 
-  # UNPICKED: intersection commits the probe did not upgrade. Intersection
-  # hashes absent from FROM's '+' set are patch-present on FROM => picked.
+  # UNPICKED: intersection commits neither the probe nor the twin sweep
+  # explained. Intersection hashes absent from FROM's '+' set are
+  # patch-present on FROM => picked.
   while IFS= read -r hash; do
     [ -z "$hash" ] && continue
     if printf '%s\n' "$from_plus" | grep -qx "$hash"; then
       verdict_for "$hash" "$from"
-      if [ "$verdict" = unpicked ]; then unpicked_n=$((unpicked_n + 1)); fi
+      case "$verdict" in
+        unpicked | unpicked-notwin) unpicked_n=$((unpicked_n + 1)) ;;
+      esac
     fi
   done < <(unpicked_anywhere)
   eval_unpicked=$unpicked_n
@@ -273,9 +427,32 @@ evaluate_branch() {
   local summary=''
   [ "$applied_n" -gt 0 ] && summary="applied:$applied_n"
   [ "$resolved_n" -gt 0 ] && summary="${summary:+$summary,}resolved:$resolved_n"
+  [ "$picked_resolved_n" -gt 0 ] && summary="${summary:+$summary,}picked-resolved:$picked_resolved_n"
   eval_verdicts=${summary:--}
 
+  # Rebuild IN with per-candidate stars: a candidate whose every '+' commit
+  # is explained (FROM probe or twin sweep) contains all the work even though
+  # the patch-ids drifted — that is exactly the conflict-resolved-pick case.
+  local in_out=''
+  while IFS= read -r index; do
+    candidate_branch=${candidates[$index]}
+    if git merge-base --is-ancestor "$branch" "$candidate_branch" ||
+        [ -z "${cherry_plus[$index]}" ]; then
+      in_out+="${in_out:+,}$candidate_branch"
+    elif candidate_fully_explained "$index"; then
+      in_out+="${in_out:+,}$candidate_branch*"
+    fi
+  done < <(ordered_indices "$from")
+  eval_in=$in_out
+
+  # A remote-tracking FROM is not a candidate: its probe upgrade is prepended
+  # here. A local FROM already earned its star via candidate_fully_explained.
   if [ "$all_transferred" -eq 1 ]; then
-    eval_in="$from*${eval_in:+,$eval_in}"
+    for candidate_branch in "${candidates[@]}"; do
+      if [ "$candidate_branch" = "$from" ]; then is_candidate=1; fi
+    done
+    if [ "$is_candidate" -eq 0 ]; then
+      eval_in="$from*${eval_in:+,$eval_in}"
+    fi
   fi
 }

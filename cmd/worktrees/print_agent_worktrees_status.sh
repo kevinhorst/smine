@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# State of every claude/* agent branch relative to the rest of the repo.
+# State of every agent branch (claude/*, claude-routines/*) relative to the
+# rest of the repo.
 #
 # Usage:
 #   print_agent_worktrees_status.sh
 #   print_agent_worktrees_status.sh <number|branch> <unpicked|ahead|behind>
 #
 # Without args, prints the overview table (each branch gets a #).
-# With a row <number> or a claude/* branch name and a class, lists the
+# With a row <number> or an agent branch name and a class, lists the
 # individual commits for that branch.
 #
 # FROM      branch this one was created from, taken from the branch reflog
@@ -19,23 +20,30 @@
 # AHEAD     commits on the agent branch missing from FROM ("-" = FROM unknown)
 # BEHIND    commits on FROM missing from the agent branch ("-" = FROM unknown)
 # UNPICKED  ahead-commits whose patch is in NO non-claude branch AND whose
-#           change the applied-probe could not find on FROM (re-pick +
-#           range-diff; see VERDICTS) — genuinely untransferred work
-# VERDICTS  applied-probe summary for commits missing from FROM by patch-id:
-#           applied:<n> (clean empty re-pick) and resolved:<n> (conflicted
-#           re-pick paired by range-diff); "-" when nothing needed probing
+#           change neither the applied-probe (re-pick + range-diff on FROM)
+#           nor the twin sweep (exact-subject commit paired by range-diff on
+#           any candidate) could place — genuinely untransferred work
+# VERDICTS  probe summary for commits missing from FROM by patch-id:
+#           applied:<n> (clean empty re-pick on FROM), resolved:<n>
+#           (conflicted re-pick on FROM paired by range-diff), and
+#           picked-resolved:<n> (landed on a candidate as a subject twin with
+#           manual conflict resolution — counted as picked, but a later merge
+#           or re-pick of this branch will conflict against the resolved
+#           version); "-" when nothing needed probing
 # MERGED    the non-claude branch whose first-parent history contains a merge
 #           commit that merged this branch's tip — an actual merge, never
 #           containment; "-" when the tip was never merged (fast-forward or
 #           cherry-pick transfers stay "-")
 # IN        every non-claude branch that already contains ALL of this branch's
 #           work (tip is an ancestor, or every ahead-commit is patch-present),
-#           comma-separated, FROM first. FROM itself is added when its cherry
-#           '+' set is empty (exact) or every '+' commit probes as applied/
-#           applied-resolved (marked FROM*); "-" = the work exists nowhere else
+#           comma-separated, FROM first. A starred entry (X*) means
+#           containment came from probe/twin verdicts (applied,
+#           applied-resolved, picked-resolved) instead of exact patch-ids;
+#           "-" = the work exists nowhere else
 #
-# DIRTY=0, UNTRACKED=0 and IN != "-" => safe to remove
-# (cmd/worktrees/remove_agent_worktrees.sh)
+# Safe to remove: IN != "-" plus, when a worktree is checked out, DIRTY=0 and
+# UNTRACKED=0. A branch without a worktree is judged on containment alone.
+# (cmd/worktrees/remove_agent_worktrees.sh, internal/repos/status.go)
 
 set -euo pipefail
 
@@ -56,10 +64,11 @@ fi
 branches=()
 while IFS= read -r b; do
   branches+=("$b")
-done < <(git for-each-ref --format='%(refname:short)' refs/heads/claude/)
+done < <(git for-each-ref --format='%(refname:short)' \
+  refs/heads/claude/ refs/heads/claude-routines/)
 
 if [ ${#branches[@]} -eq 0 ]; then
-  echo "No claude/* branches found."
+  echo "No agent branches (claude/*, claude-routines/*) found."
   exit 0
 fi
 
@@ -92,7 +101,7 @@ merged_into() {
 }
 
 if [ "$mode" = detail ]; then
-  if [[ $selected == claude/* ]]; then
+  if [[ $selected == claude/* || $selected == claude-routines/* ]]; then
     branch=''
     for b in "${branches[@]}"; do
       if [ "$b" = "$selected" ]; then branch=$b; fi
@@ -165,6 +174,16 @@ if [ "$mode" = detail ]; then
             git log -1 --format='%h  %cd  %s  (applied on '"$from"')' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
           applied-resolved)
             git log -1 --format='%h  %cd  %s  (applied on '"$from"', conflict resolved)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
+          picked-resolved)
+            git log -1 --format='%h  %cd  %s  (picked on '"$verdict_candidate"' as '"$(git rev-parse --short "$verdict_twin")"', conflict resolved manually — not auto-reconcilable)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
+          unpicked)
+            # A subject twin exists but range-diff refused to pair it: the
+            # content genuinely differs from what landed there.
+            git log -1 --format='%h  %cd  %s  (twin '"$(git rev-parse --short "$verdict_twin")"' on '"$verdict_candidate"' differs — content not transferred)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
+          unpicked-notwin)
+            # Twin search exhausted: a transfer under a reworded subject, a
+            # squash, or heavy modification is invisible to detection.
+            git log -1 --format='%h  %cd  %s  (no twin on any local branch — reworded/squashed transfers are invisible; verify via git log --all --grep before treating as lost)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
           *)
             git log -1 --format='%h  %cd  %s' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
         esac
