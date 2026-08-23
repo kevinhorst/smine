@@ -1,5 +1,80 @@
 [
   {
+    "version": "3.5",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "3.4",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "3.3",
+    "date": "2026-08-23",
+    "text": "acdsl-context: key rename — the ACDSL declaration key moved off Claude Code's native context: frontmatter field; prose references updated"
+  },
+  {
+    "version": "3.2",
+    "date": "2026-08-21",
+    "text": "Phase 4 — Approval handoff: on plan approval the default continuation is /fimplement in the same session, without asking; only an explicit contrary statement makes approval terminal"
+  },
+  {
+    "version": "3.1",
+    "date": "2026-08-20",
+    "text": "description rewritten under the brevity caps; Hot items template requires a rendered mockup/screenshot for UI-touching changes (ACTION-CONCEPT-HOT-007)"
+  },
+  {
+    "version": "3.0",
+    "date": "2026-08-19",
+    "text": "major: body migrated to entries via /fmt skill — 24 entries (INTAKE 8, GROUND 6, DECIDE 5, WRITE 4, TPL 1 payload), content unchanged; the plan-template fence, previously unclosed at EOF, is now a closed four-backtick payload fence"
+  },
+  {
+    "version": "2.14",
+    "date": "2026-08-18",
+    "text": "absorbs fchange v1.14 as the change route (/fdesign change <drivers>) — C0 intake with internal impact classification, C1 ground inventories, C2 decide extras, change-route stops, route-conditional gate items; one union plan template with [new]/[change] sections (N/A — <other> route), two titles, route: change on the args line; change plans persist to design/change-<topic>.md; fchange retired"
+  },
+  {
+    "version": "2.13",
+    "date": "2026-08-13",
+    "text": "plan-quality doctrine from mined sessions — Phase-4 gate items (simplicity = fewest concepts + SSOT not smallest diff, replacement-vs-supplement, pasted artifacts immutable, UI plans carry a rendered mockup), Phase-1 premise-validation step, Phase-0 errata-supersede-spec, and a Design-type doctrine section (diagnosis trace, viability, handoff docs, model bake-off)"
+  },
+  {
+    "version": "2.12",
+    "date": "2026-08-12",
+    "text": "migrated to the context: declaration — doctrine, plan-format, and fact entries injected at invocation by the skill-context hook; SessionStart-injection wording retired"
+  },
+  {
+    "version": "2.11",
+    "date": "2026-08-11",
+    "text": "Test runbook is opt-in — default plans carry a scenario index only, full tool-native request files require the runbook arg or a user ask (no popup); context-path naming corrected (rules/plan.md, doctrine chapters under actions/)"
+  },
+  {
+    "version": "2.10",
+    "date": "2026-08-10",
+    "text": "Phase-5 approval handoff no longer routes via AskUserQuestion — approval means implement (via /fimplement in-session), plan-only is explicit; the skill never calls AskUserQuestion"
+  },
+  {
+    "version": "2.9",
+    "date": "2026-08-09",
+    "text": "language-agnosticism sweep — \"governed files\" wording, vendored bin/acdsl note on project -plan, concurrency-primitive phrasing in the gate checklist"
+  },
+  {
+    "version": "2.8",
+    "date": "2026-08-09",
+    "text": "ACDSL is the referenced context system — SessionStart delivery wording, gates authoritative, project -plan per planned file in Ground"
+  },
+  {
+    "version": "2.7",
+    "date": "2026-08-07",
+    "text": "contract files are *.acdsl — path-agnostic, plans/{slug}/design/ is convention only; retire by renaming away from .acdsl"
+  },
+  {
+    "version": "2.6",
+    "date": "2026-08-07",
+    "text": "task-contract emission — plans in ACDSL repos persist design/contract.md; gate via check -lifetime task"
+  },
+  {
     "version": "2.5",
     "date": "2026-07-31",
     "text": "hot-class gates read from rules/concepting.md"

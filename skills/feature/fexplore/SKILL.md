@@ -2,7 +2,8 @@
 name: fexplore
 description: Survey all sensible solutions for a feature — an evaluated solution space with a recommendation. Trigger on /fexplore or "explore solutions/options/approaches". Args — mode: unfamiliar|familiar|owned explanation depth.
 author: Kevin Horst
-version: 1.6
+version: 1.9
+argument-hint: "[mode]"
 ---
 
 # fexplore
@@ -16,7 +17,7 @@ Static constraints are not restated here: `AGENTS.md`, the style guides under `$
 **Use when:** the solution space is open or contested — a performance concern, a rejected first design, a new constraint, a user candidate to evaluate — or the user asks to "explore solutions/options/approaches".
 **Don't use when:** the solution is already chosen or the space is narrow — go straight to /fdesign. The concept still has space-changing open questions — /clarify first (explore-specific stop condition #1). The deliverable is a plan or code — this skill produces neither.
 **Preconditions:** a stable concept in `plans/{slug}/concept/` (questions drained).
-**Workflow position:** clarify → **fexplore** → fdesign, which records the chosen option as a `[USER]` decision citing `exploration.md` (see `docs/skill-map.md`, smine repo).
+**Workflow position:** clarify → **fexplore** → fdesign, which records the chosen option as a `[USER]` decision citing `exploration.md` (see README.md § Skill map, smine repo).
 
 ## Args
 
@@ -76,41 +77,3 @@ Write `plans/{slug}/design/exploration.md`:
 
 ## Rejected
 <one line per rejected option with the killing reason — the refuted register, so nobody re-explores them>
-
-## Changelog
-<Date | Trigger | What changed — per style/plan.md>
-```
-
-The recommendation is input to /fdesign, recorded there as a `[USER]` decision citing this doc once the user confirms it.
-
-## Self-check gate
-
-- [ ] Every option's verdict traces to constraints or anchored facts — no vibes-based rankings.
-- [ ] The user's candidate was evaluated under the user's premise, with the like-for-like comparison shown.
-- [ ] Rejected register complete: every family that was considered appears, with its reason.
-- [ ] No implementation planning leaked in — file-level precision belongs to fdesign.
-- [ ] Artifact in English; passes style/plan.md presentation rules.
-
-## Stop conditions
-
-The `ALWAYS-EXEC-*` entries from `$AGENT_CONTEXT_DIR_DEFAULT/rules/implementing.md` apply. Explore-specific:
-
-1. The concept still has open questions that change the solution space → stop; run /clarify first.
-2. Two finalists within noise → stop ranking; present both as an OPEN decision with the trade-off.
-3. An option requires re-scoping the concept's goals → stop and report; that is the user's call.
-
-## Model
-
-- Suggested: frontier / large
-- Reason: open solution-space survey needs breadth + judgment
-- Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.6 (2026-07-31): activity-scoped context — style/ guides and rules/ activity chapters replace skill assets; stops and hot classes as ALWAYS-EXEC/HOT entries
-- v1.5 (2026-07-30): context redesign — planning assets via ../fdesign/assets/, doctrine entries under rules/
-- v1.4 (2026-07-26): Args section
-- v1.3 (2026-07-24): renamed feature-explore → fexplore (leaf dir, frontmatter name, H1); live references swept repo-wide
-- v1.2 (2026-07-16): exploration.md moves to plans/{slug}/design/
-- v1.1 (2026-07-13): When-to-use section (routing, preconditions, workflow position)
-- v1.0 (2026-07-10): initial version

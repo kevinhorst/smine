@@ -1,8 +1,9 @@
 ---
 name: fimpact
-description: Evaluate the consequences of a given change against qualitative axes — maintainability/understanding/complexity, security, business impact, and any axis named at intake. The output is a per-axis assessment with a verdict, never a fix, never a defect hunt. Trigger on "what are the consequences/impact of this change", "evaluate this change", or before committing to a contested change.
+description: Evaluate a change's consequences against qualitative axes — maintainability, security, business impact, plus any named at intake — a verdict, never a fix. Trigger on "what are the consequences/impact of this change" or "evaluate this change". Args — change: the diff, plan, or description to evaluate; axes: additional impact axes named at intake.
 author: Mustafa Karademir
-version: 1.2
+version: 1.6
+argument-hint: "[change] [axes]"
 ---
 
 # fimpact
@@ -14,7 +15,7 @@ Given a change — a diff, a plan, or a described change — evaluate it thoroug
 **Use when:** weighing a proposed or pending change; a change is contested and needs a structured assessment; answering "what are the consequences of X".
 **Don't use when:** hunting defects or verifying the change doesn't break anything — /railroad-review. Designing the change — /fdesign. Diagnosing an existing failure — /diagnose-debug.
 **Preconditions:** an identifiable change: a diff, a plan, or a precise description of what would change.
-**Workflow position:** standalone (see `docs/skill-map.md`, smine repo).
+**Workflow position:** standalone (see README.md § Skill map, smine repo).
 
 ## Args
 
@@ -45,9 +46,3 @@ One report: per-axis sections in table order, each with verdict + evidence; a fi
 - Suggested: frontier / large
 - Reason: cross-axis judgment on repo-wide evidence
 - Tested unviable: — (none yet)
-
-## Changelog
-
-- v1.2 (2026-07-26): Args section
-- v1.1 (2026-07-24): renamed feature-impact → fimpact (leaf dir, frontmatter name, H1); live references swept repo-wide
-- v1.0 (2026-07-16): initial version

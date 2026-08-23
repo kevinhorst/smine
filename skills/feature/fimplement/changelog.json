@@ -1,5 +1,55 @@
 [
   {
+    "version": "1.23",
+    "date": "2026-08-23",
+    "text": "added argument-hint frontmatter"
+  },
+  {
+    "version": "1.22",
+    "date": "2026-08-23",
+    "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
+  },
+  {
+    "version": "1.21",
+    "date": "2026-08-23",
+    "text": "acdsl-context: key rename — the ACDSL declaration key moved off Claude Code's native context: frontmatter field; prose references updated"
+  },
+  {
+    "version": "1.20",
+    "date": "2026-08-20",
+    "text": "description compressed under the brevity caps"
+  },
+  {
+    "version": "1.19",
+    "date": "2026-08-18",
+    "text": "reference rename — fchange → fdesign change (fchange retired into the fdesign change route)"
+  },
+  {
+    "version": "1.18",
+    "date": "2026-08-13",
+    "text": "Phase-4 done-gate — stop all session-started background processes (dev servers, listeners, watchers) and verify no orphaned port listeners remain before offering to commit"
+  },
+  {
+    "version": "1.17",
+    "date": "2026-08-12",
+    "text": "migrated to the context: declaration — doctrine, commit-format, and fact entries injected at invocation by the skill-context hook; SessionStart-injection wording retired"
+  },
+  {
+    "version": "1.16",
+    "date": "2026-08-11",
+    "text": "Test runbook execution is opt-in — runs only when the plan carries full request files (args line runbook) or the user asks; a scenario-index-only section executes nothing; context-path naming corrected (rules/commits.md, doctrine chapters under actions/)"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-08-10",
+    "text": "reframed as the contract-optional implementation skill — a plan is honored as a binding contract when present, else best-effort under context + code-style; a missing/contract-light input no longer STOPs (stop 7 inverted, 9 softened); the invocation is the tracked start-of-implementation signal"
+  },
+  {
+    "version": "1.14",
+    "date": "2026-08-09",
+    "text": "ACDSL is the referenced context system — SessionStart delivery wording; green acdsl check (and -lifetime task for contracts) is part of done"
+  },
+  {
     "version": "1.13",
     "date": "2026-07-31",
     "text": "hot-class gates named under rules/concepting.md"
