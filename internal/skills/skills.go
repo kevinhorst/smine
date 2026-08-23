@@ -35,16 +35,23 @@ type frontmatter struct {
 }
 
 type Skill struct {
-	AllowedTools string // frontmatter allowed-tools, empty when absent
-	Author       string // frontmatter author, empty when absent
+	AllowedTools string     // frontmatter allowed-tools, empty when absent
+	Args         []SkillArg // parsed from the description's "Args — name: doc; …" segment
+	Author       string     // frontmatter author, empty when absent
 	Description  string
 	Files        []string // sibling files, relative paths within the skill dir
 	Group        string
 	Name         string // directory name
 	Origin       string // OriginRepo | OriginHome
 	Path         string // absolute skill dir
+	Summary      string // description up to the ". Trigger on" marker, full description without one
 	Synced       bool   // a same-named skill at the same version exists in the other root
 	Version      string // frontmatter version, empty when absent
+}
+
+type SkillArg struct {
+	Doc  string
+	Name string
 }
 
 func DefaultHomePath() string {
@@ -172,6 +179,7 @@ func scanRoot(root, origin string) ([]Skill, error) {
 		skill.Author = fm.Author
 		skill.Description = fm.Description
 		skill.Version = fm.Version
+		skill.Summary, skill.Args = splitDescription(fm.Description)
 
 		err = filepath.WalkDir(skillDir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil || d.IsDir() {
@@ -221,6 +229,33 @@ func parseFrontmatter(content string) frontmatter {
 		}
 	}
 	return fm
+}
+
+// splitDescription derives the compact display fields from the repo
+// description convention: "<sentence>. Trigger on <…>. Args — <n>: <doc>; …".
+func splitDescription(description string) (string, []SkillArg) {
+	summary := description
+	if i := strings.Index(description, ". Trigger on "); i >= 0 {
+		summary = description[:i+1]
+	}
+
+	var args []SkillArg
+	if i := strings.Index(description, "Args — "); i >= 0 {
+		segment := strings.TrimSuffix(strings.TrimSpace(description[i+len("Args — "):]), ".")
+		for _, part := range strings.Split(segment, ";") {
+			part = strings.TrimSpace(part)
+			if part == "" {
+				continue
+			}
+			name, doc, _ := strings.Cut(part, ": ")
+			arg := SkillArg{
+				Doc:  doc,
+				Name: name,
+			}
+			args = append(args, arg)
+		}
+	}
+	return summary, args
 }
 
 func foldedValue(index *int, lines []string, value string) string {

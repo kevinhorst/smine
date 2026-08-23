@@ -3,7 +3,9 @@ package skills
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -164,6 +166,130 @@ func TestScanGrouped(t *testing.T) {
 	require.True(t, ok)
 	assert.Empty(t, top.Group)
 	assert.Empty(t, homeJq.Group, "home root is flat, never grouped")
+}
+
+func TestSplitDescription(t *testing.T) {
+	type testCase struct {
+		_id              string
+		_expectedArgs    []SkillArg
+		_expectedSummary string
+
+		description string
+	}
+
+	tests := make([]*testCase, 0)
+
+	// full-convention
+	tests = append(tests, &testCase{
+		_id: "full-convention",
+		_expectedArgs: []SkillArg{
+			{Doc: "recent-turn count (default 5)", Name: "n"},
+			{Doc: "mode token", Name: "list|plan|diff"},
+		},
+		_expectedSummary: "Show the latest session — turns, plan, diff, or list.",
+
+		description: "Show the latest session — turns, plan, diff, or list. Trigger on /peek [n]. Args — n: recent-turn count (default 5); list|plan|diff: mode token.",
+	})
+
+	// no-args-segment
+	tests = append(tests, &testCase{
+		_id:              "no-args-segment",
+		_expectedArgs:    nil,
+		_expectedSummary: "Review code changes against project conventions.",
+
+		description: "Review code changes against project conventions. Trigger on /railroad-review or \"review this branch\".",
+	})
+
+	// no-trigger-marker
+	tests = append(tests, &testCase{
+		_id:              "no-trigger-marker",
+		_expectedArgs:    nil,
+		_expectedSummary: "Compress prose to the bare minimum.",
+
+		description: "Compress prose to the bare minimum.",
+	})
+
+	// trailing-whitespace-and-period
+	tests = append(tests, &testCase{
+		_id: "trailing-whitespace-and-period",
+		_expectedArgs: []SkillArg{
+			{Doc: "the one flag", Name: "flag"},
+		},
+		_expectedSummary: "Do the thing.",
+
+		description: "Do the thing. Trigger on /thing. Args — flag: the one flag. ",
+	})
+
+	// arg-doc-with-colon
+	tests = append(tests, &testCase{
+		_id: "arg-doc-with-colon",
+		_expectedArgs: []SkillArg{
+			{Doc: "route selector: plan or skill", Name: "target"},
+		},
+		_expectedSummary: "Reformat a target.",
+
+		description: "Reformat a target. Trigger on /fmt. Args — target: route selector: plan or skill.",
+	})
+
+	// empty-description
+	tests = append(tests, &testCase{
+		_id:              "empty-description",
+		_expectedArgs:    nil,
+		_expectedSummary: "",
+
+		description: "",
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			summary, args := splitDescription(test.description)
+			assert.Equal(t, test._expectedSummary, summary)
+			assert.Equal(t, test._expectedArgs, args)
+		})
+	}
+}
+
+func TestDescriptionConvention(t *testing.T) {
+	const (
+		maxDescriptionLen = 450
+		maxSummaryLen     = 160
+	)
+	exempt := map[string]bool{
+		"caveman": true,
+		"jq":      true,
+		"xlsx":    true,
+	}
+
+	repoSkillsRoot := filepath.Join("..", "..", "skills")
+	require.DirExists(t, repoSkillsRoot)
+
+	checked := 0
+	err := filepath.WalkDir(repoSkillsRoot, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || d.Name() != "SKILL.md" {
+			return err
+		}
+		name := filepath.Base(filepath.Dir(path))
+		if exempt[name] {
+			return nil
+		}
+
+		data, readErr := os.ReadFile(path)
+		require.NoError(t, readErr)
+		fm := parseFrontmatter(string(data))
+		summary, _ := splitDescription(fm.Description)
+		checked++
+
+		assert.Containsf(t, fm.Description, ". Trigger on ", "%s: description misses the '. Trigger on' marker", name)
+		assert.LessOrEqualf(t, utf8.RuneCountInString(fm.Description), maxDescriptionLen, "%s: description exceeds %d chars", name, maxDescriptionLen)
+		assert.LessOrEqualf(t, utf8.RuneCountInString(summary), maxSummaryLen, "%s: first sentence exceeds %d chars", name, maxSummaryLen)
+		if strings.Contains(string(data), "\n## Args") {
+			assert.Containsf(t, fm.Description, "Args — ", "%s: has an Args section but no 'Args —' description segment", name)
+		}
+		return nil
+	})
+	require.NoError(t, err)
+	assert.Greater(t, checked, 20, "repo skill sweep found implausibly few skills")
 }
 
 func TestParseFrontmatterFolded(t *testing.T) {
