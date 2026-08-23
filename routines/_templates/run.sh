@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Routine wrapper template — copy to routines/<name>/run.sh and edit PROMPT.
-# Requires flock (brew install flock): launchd never overlaps two runs.
+# Requires flock (brew install flock; macOS only — Windows runs under
+# routinewrap.exe, which holds the locks): the scheduler never overlaps runs.
 
 set -uo pipefail
 
@@ -9,9 +10,27 @@ repo_root="$(cd "$routine_dir/../.." && pwd)"
 results="$routine_dir/results.jsonl"
 
 PROMPT='<the claude -p prompt>'
+# Operator extension (configure widget: Extra prompt) appended to the main prompt.
+[ -n "${ROUTINE_EXTRA_PROMPT:-}" ] && PROMPT="$PROMPT $ROUTINE_EXTRA_PROMPT"
+# One-shot Run-Now extension written by the config server; consumed and deleted here.
+if [ -s "$routine_dir/.run-now-prompt" ]; then
+  PROMPT="$PROMPT $(cat "$routine_dir/.run-now-prompt")"
+  rm -f "$routine_dir/.run-now-prompt"
+fi
 
-exec 9>"$routine_dir/.lock"
-flock -n 9 || { echo "already running"; exit 0; }
+source "$repo_root/routines/_lib/platform.sh"
+routine_self_lock || { echo "already running"; exit 0; }
+
+if [[ -n "${ROUTINE_TOKEN:-}" ]]; then
+  token_file="$HOME/.config/claude-routine/tokens/$ROUTINE_TOKEN"
+else
+  token_file="$HOME/.config/claude-routine/token"
+fi
+if [[ ! -s "$token_file" ]]; then
+  echo "token file missing or empty: $token_file" >&2
+  exit 78
+fi
+export CLAUDE_CODE_OAUTH_TOKEN="$(cat "$token_file")"
 
 source "$repo_root/routines/_lib/cadence.sh"
 routine_cadence_gate || exit 0
@@ -22,7 +41,14 @@ routine_cadence_gate || exit 0
 source "$repo_root/routines/_lib/worktree.sh"
 source "$repo_root/routines/_lib/skill.sh"
 routine_group_lock || { echo "group lock timeout: $ROUTINE_GROUP" >&2; exit 75; }
-wt="$(routine_worktree_create)" || { echo "worktree create failed" >&2; exit 70; }
+wt="$(routine_worktree_create)"; create_rc=$?
+if [[ "$create_rc" -eq 3 ]]; then
+  echo "open-instance limit reached for $ROUTINE_GROUP (ROUTINE_MAX_OPEN_BRANCHES=$ROUTINE_MAX_OPEN_BRANCHES); merge a $ROUTINE_BRANCH_PREFIX-* branch before the next run" >&2
+  exit 0
+elif [[ "$create_rc" -ne 0 || -z "$wt" ]]; then
+  echo "worktree create failed" >&2
+  exit 70
+fi
 cd "$wt"
 
 SKILL='<skill name invoked by PROMPT>'
@@ -36,7 +62,7 @@ fi
 
 exit_status=0
 # ${arr[@]+...} guards empty-array expansion under set -u on bash 3.2 (launchd PATH).
-output=$(claude -p "$PROMPT" \
+output=$(routine_run_claude "${ROUTINE_STAGE_TIMEOUT_S:-7200}" claude -p "$PROMPT" \
   ${allowed_flags[@]+"${allowed_flags[@]}"} \
   --model "${ROUTINE_MODEL:-claude-opus-4-8[1m]}" \
   --permission-mode "${ROUTINE_PERMISSION_MODE:-acceptEdits}" \

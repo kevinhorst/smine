@@ -1,51 +1,79 @@
 #!/usr/bin/env bash
 # Worktree/branch plumbing shared by routine wrappers. Sourced by
 # routines/<name>/run.sh after the token gate and self-flock; requires git on
-# PATH and the caller's $repo_root and $routine_dir. All state lives on the
-# group branch routine/$ROUTINE_GROUP — the checkout's working tree is never
-# touched.
+# PATH and the caller's $repo_root and $routine_dir. Each run's state lives on
+# a fresh dated branch claude-routines/$ROUTINE_GROUP-<UTC-date> — the
+# checkout's working tree is never touched.
 #
-# Groups: routines that form one chain share a group (one worktree, one
-# branch) and serialize on the group lock; independent routines keep the
+# Groups: routines that form one chain share a group (one worktree path, one
+# branch lineage) and serialize on the group lock; independent routines keep the
 # default group (their own name) and run concurrently with every other group.
-# Nothing ever touches a sibling group's worktree.
+# Nothing ever touches a sibling group's worktree or branches.
 #
-# Local contract: routine output is committed on the group branch locally — no
-# fetch, no push, no PR, no gh. Reviewing and locally merging the branch closes
-# a run; resetting it to main discards one.
+# Local contract: routine output is committed on the run's dated branch locally
+# — no fetch, no push, no PR, no gh. Reviewing and locally merging the newest
+# branch closes a run and prunes its merged ancestors; discarding a run is
+# deleting its branch.
 
 ROUTINE_GROUP="${ROUTINE_GROUP:-$(basename "$routine_dir")}"
-ROUTINE_BRANCH="${ROUTINE_BRANCH:-routine/$ROUTINE_GROUP}"
+ROUTINE_BRANCH_PREFIX="${ROUTINE_BRANCH_PREFIX:-claude-routines/$ROUTINE_GROUP}"
 ROUTINE_WT_ROOT="${ROUTINE_WT_ROOT:-$HOME/.cache/claude-routine/worktrees}"
+# Cap on un-merged dated branches for the group; empty = unlimited. At the cap
+# routine_worktree_create returns 3 and mints nothing (caller skips the run).
+ROUTINE_MAX_OPEN_BRANCHES="${ROUTINE_MAX_OPEN_BRANCHES:-}"
 
 # Serializes members of one group (shared branch + worktree) for the whole
 # run; the lock is held on fd 7 until the wrapper process exits. Different
 # groups never contend. Returns 1 on timeout (2h).
 routine_group_lock() {
+  [ "${ROUTINE_LOCKS_HELD:-0}" = "1" ] && return 0
   mkdir -p "$ROUTINE_WT_ROOT"
   exec 7>"$ROUTINE_WT_ROOT/.$ROUTINE_GROUP.lock"
   flock -w 7200 7
 }
 
-# True when the branch holds ≥1 commit main lacks and every one is a failure
-# commit (subject carries the [failed] marker from routine_worktree_publish).
-# Such a branch has no reviewable output, so create resets it to main rather
-# than stacking the next run on top of dead failed runs. A single real (or
-# manual merge) commit among them makes this false — the branch is kept.
+# True when $1 holds ≥1 commit main lacks and every one is a failure commit
+# (subject carries the [failed] marker from routine_worktree_publish). Such a
+# chain has no reviewable output, so create discards it and bases the next run
+# on main rather than stacking on dead failed runs. A single real (or manual
+# merge) commit among them makes this false — the chain is kept.
 routine_branch_only_failures() {
   local subjects
-  subjects="$(git -C "$repo_root" log --format=%s "main..$ROUTINE_BRANCH" 2>/dev/null)" || return 1
+  subjects="$(git -C "$repo_root" log --format=%s "main..$1" 2>/dev/null)" || return 1
   [[ -n "$subjects" ]] || return 1
   ! grep -qv '\[failed\]' <<<"$subjects"
 }
 
-# Resets or reuses the group branch and checks it out into a fresh worktree.
-# Reuse iff the branch holds a reviewable commit main lacks; merged (= ancestor
-# of main), missing, or holding only failed runs -> reset to main. Removes only
-# the group's own stale worktree (leftover of a failed prior run) — never a
-# sibling group's. Echoes the worktree path; returns 1 on failure.
+# Dated group branches, newest commit first (the chain tip is line 1). The
+# dated suffix carries no slash, so the refs/heads glob matches cleanly.
+routine_group_branches() {
+  git -C "$repo_root" for-each-ref --sort=-committerdate \
+    --format='%(refname:short)' "refs/heads/$ROUTINE_BRANCH_PREFIX-*"
+}
+
+# Delete every dated group branch already merged into main (an accepted run).
+# Never touches a checked-out branch — create removed the group's own worktree
+# first, and sibling groups carry a different prefix.
+routine_prune_merged() {
+  local branch
+  while IFS= read -r branch; do
+    [[ -n "$branch" ]] || continue
+    if git -C "$repo_root" merge-base --is-ancestor "$branch" main; then
+      git -C "$repo_root" branch -D "$branch" >/dev/null 2>&1 || true
+    fi
+  done < <(routine_group_branches)
+}
+
+# Mints a fresh dated branch for this run and checks it out into the group
+# worktree. Never reuses a branch: the run stacks on the newest un-merged dated
+# branch (chain tip) so votes, proposal edits, and archives accumulate linearly
+# — or on main when none survives. Prunes merged branches first; an all-[failed]
+# chain is discarded and the run starts from main. Honors
+# ROUTINE_MAX_OPEN_BRANCHES: at the cap it mints nothing and returns 3. Removes
+# only the group's own stale worktree — never a sibling group's. Echoes the
+# worktree path; returns 1 on failure, 3 on limit.
 routine_worktree_create() {
-  local wt
+  local wt base tip day new count branch n
   wt="$ROUTINE_WT_ROOT/$ROUTINE_GROUP"
 
   if [[ -e "$wt" ]]; then
@@ -53,18 +81,41 @@ routine_worktree_create() {
   fi
   git -C "$repo_root" worktree prune
 
-  if ! git -C "$repo_root" rev-parse --quiet --verify "$ROUTINE_BRANCH" >/dev/null \
-      || git -C "$repo_root" merge-base --is-ancestor "$ROUTINE_BRANCH" main \
-      || routine_branch_only_failures; then
-    git -C "$repo_root" branch -f --no-track "$ROUTINE_BRANCH" main || return 1
+  routine_prune_merged
+
+  base="main"
+  tip="$(routine_group_branches | head -n1)"
+  if [[ -n "$tip" ]]; then
+    if routine_branch_only_failures "$tip"; then
+      while IFS= read -r branch; do
+        [[ -n "$branch" ]] && git -C "$repo_root" branch -D "$branch" >/dev/null 2>&1 || true
+      done < <(routine_group_branches)
+    else
+      base="$tip"
+    fi
   fi
 
+  if [[ -n "$ROUTINE_MAX_OPEN_BRANCHES" ]]; then
+    count="$(routine_group_branches | grep -c . || true)"
+    if [[ "$count" -ge "$ROUTINE_MAX_OPEN_BRANCHES" ]]; then
+      return 3
+    fi
+  fi
+
+  day="$(date -u +%F)"
+  new="$ROUTINE_BRANCH_PREFIX-$day"
+  n=2
+  while git -C "$repo_root" rev-parse --quiet --verify "refs/heads/$new" >/dev/null; do
+    new="$ROUTINE_BRANCH_PREFIX-$day-$n"
+    n=$((n + 1))
+  done
+
   mkdir -p "$ROUTINE_WT_ROOT"
-  git -C "$repo_root" worktree add "$wt" "$ROUTINE_BRANCH" >/dev/null || return 1
+  git -C "$repo_root" worktree add --quiet -b "$new" "$wt" "$base" || return 1
   printf '%s\n' "$wt"
 }
 
-# Commits whatever the claude run left behind on the group branch, then
+# Commits whatever the claude run left behind on the run's dated branch, then
 # removes the worktree. $1 = claude exit status. A .routine-commit-body file
 # at the worktree root becomes the commit message body and never enters the
 # commit. No push, no PR — local merge is the acceptance act. On failure the
@@ -81,7 +132,7 @@ routine_worktree_publish() {
   fi
 
   # A non-zero claude exit marks the commit subject with [failed] so the next
-  # create can reset a branch that holds only failed runs (see
+  # create can discard a chain that holds only failed runs (see
   # routine_branch_only_failures) instead of letting them block review forever.
   local marker=""
   [[ "$claude_exit" -ne 0 ]] && marker="[failed] "

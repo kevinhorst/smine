@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.smine.routine.skill-eval</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>__REPO_DIR__/routines/skill-eval/run.sh</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>ROUTINE_CADENCE_DAYS</key>
+		<string></string>
+		<key>ROUTINE_MAX_BUDGET_USD</key>
+		<string>15</string>
+		<key>ROUTINE_MAX_OPEN_BRANCHES</key>
+		<string></string>
+		<key>ROUTINE_EVAL_SKILL</key>
+		<string>concept</string>
+		<key>ROUTINE_EVAL_CONTEXT_ARMS</key>
+		<string>on,off</string>
+		<key>ROUTINE_EVAL_VARIANTS</key>
+		<string>no-closing=SKILL-CONCEPT-CLOSING-*</string>
+		<key>ROUTINE_EVAL_MODELS</key>
+		<string></string>
+		<key>ROUTINE_EVAL_EFFORTS</key>
+		<string>high</string>
+		<key>ROUTINE_EVAL_REPLICAS</key>
+		<string>2</string>
+		<key>ROUTINE_EVAL_BRIEFS</key>
+		<string></string>
+		<key>ROUTINE_EVAL_CELL_BUDGET_USD</key>
+		<string>5</string>
+		<key>ROUTINE_EVAL_CELL_TIMEOUT_S</key>
+		<string>1200</string>
+	</dict>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-skill-eval.err.log</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-skill-eval.out.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>5</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+</dict>
+</plist>

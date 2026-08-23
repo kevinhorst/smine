@@ -13,6 +13,8 @@
 	<dict>
 		<key>ROUTINE_CADENCE_DAYS</key>
 		<string></string>
+		<!-- ROUTINE_TIMEOUT_S: Windows-only backstop deadline enforced by
+		     routinewrap.exe; defaults to 46800s (13h) when omitted. -->
 	</dict>
 	<key>StartCalendarInterval</key>
 	<dict>
