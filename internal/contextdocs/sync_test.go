@@ -69,3 +69,11 @@ func TestChooseFolder(t *testing.T) {
 		assert.NotErrorIs(t, err, ErrCanceled)
 	})
 }
+
+// TestFolderDialogScript pins the Windows picker template: the TopMost owner
+// form passed to ShowDialog is what brings the dialog to the foreground when
+// the server is a background windowsgui process (addendum A6).
+func TestFolderDialogScript(t *testing.T) {
+	assert.Contains(t, folderDialogScript, "ShowDialog($owner)")
+	assert.Contains(t, folderDialogScript, "TopMost=$true")
+}
