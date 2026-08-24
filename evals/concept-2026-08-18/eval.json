@@ -205,7 +205,7 @@
     {
       "id": "FACT-REPO-STACK-001",
       "axis": "context",
-      "rule": "Go 1.26 module github.com/kevinhorst/smine; make audit is the only quality gate.",
+      "rule": "Go 1.26 module github.com/kevinhorst/claude-configs; make audit is the only quality gate.",
       "source": "context/context.json:FACT-REPO-STACK-001"
     }
   ],
