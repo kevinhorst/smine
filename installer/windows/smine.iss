@@ -36,7 +36,7 @@ Source: "..\..\dist\jq.exe";               DestDir: "{app}"
 Source: "..\..\dist\peek-mcp.exe";         DestDir: "{app}"
 
 [Run]
-Filename: "{code:RepoBin}\configserver.exe"; Parameters: "-install"; \
+Filename: "{code:RepoBin}\configserver.exe"; Parameters: "-install{code:ProfileArg}"; \
   WorkingDir: "{code:RepoDir}"; Flags: waituntilterminated; \
   StatusMsg: "Registering tasks and syncing settings..."
 Filename: "http://127.0.0.1:6001/"; Flags: shellexec postinstall skipifsilent; \
@@ -45,6 +45,7 @@ Filename: "http://127.0.0.1:6001/"; Flags: shellexec postinstall skipifsilent; \
 [Code]
 var
   RepoPage: TInputDirWizardPage;
+  ProfilePage: TInputOptionWizardPage;
 
 function GitPath(): string;
 begin
@@ -60,6 +61,23 @@ begin
     False, '');
   RepoPage.Add('');
   RepoPage.Values[0] := ExpandConstant('{%USERPROFILE}\smine');
+  // Presentation profile: hard-coded selection; the id maps to a repo
+  // template (settings\claude_code\presentation-profile.<id>.md) that
+  // configserver -install copies to %USERPROFILE%\.claude\context\global\.
+  ProfilePage := CreateInputOptionPage(RepoPage.ID,
+    'Presentation profile', 'Who is this machine set up for?',
+    'Select how smine presents itself on this machine. This can be changed later by replacing the profile file.',
+    True, False);
+  ProfilePage.Add('Default - English, developer');
+  ProfilePage.Add('Deutsch - nicht-technisch (German, non-developer)');
+  ProfilePage.Values[0] := True;
+end;
+
+function ProfileArg(Param: string): string;
+begin
+  Result := '';
+  if (ProfilePage <> nil) and ProfilePage.Values[1] then
+    Result := ' -presentation-profile=de';
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

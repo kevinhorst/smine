@@ -4,7 +4,8 @@ param(
     [string]$Addr = "127.0.0.1:6001",
     [switch]$InitWelcome,
     [int]$PeekPort = 4242,
-    [int]$PeekControlPort = 42442
+    [int]$PeekControlPort = 42442,
+    [string]$PresentationProfile = ""
 )
 $ErrorActionPreference = "Stop"
 $RepoDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -59,7 +60,7 @@ try {
     $eap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     $initWelcomeArg = if ($InitWelcome) { "true" } else { "false" }
-    & bin\configserver.exe -install -addr $Addr -init-welcome=$initWelcomeArg -peek-port $PeekPort -peek-control-port $PeekControlPort 2>&1 | ForEach-Object { "$_" }
+    & bin\configserver.exe -install -addr $Addr -init-welcome=$initWelcomeArg -peek-port $PeekPort -peek-control-port $PeekControlPort -presentation-profile $PresentationProfile 2>&1 | ForEach-Object { "$_" }
     $ErrorActionPreference = $eap
     if ($LASTEXITCODE -ne 0) { throw "configserver -install failed (exit $LASTEXITCODE)" }
 } finally {

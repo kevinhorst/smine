@@ -58,6 +58,16 @@ else
   echo "skip: settings/hooks/skills sync (--no-sync)"
 fi
 
+# Per-install presentation profile: opt-in copy of a repo template
+# (settings/claude_code/presentation-profile.<id>.md) to the machine-global
+# path every consumer reads (global-context hook, config server, nightly).
+if [ -n "${SMINE_PRESENTATION_PROFILE:-}" ]; then
+  echo "-> Installing presentation profile ($SMINE_PRESENTATION_PROFILE) ..."
+  mkdir -p "$HOME/.claude/context/global"
+  cp "$REPO_DIR/settings/claude_code/presentation-profile.$SMINE_PRESENTATION_PROFILE.md" \
+     "$HOME/.claude/context/global/presentation-profile.md"
+fi
+
 echo "-> Materializing routine plists ..."
 for template in "$REPO_DIR"/routines/*/*.plist.template; do
   [ -e "$template" ] || continue
