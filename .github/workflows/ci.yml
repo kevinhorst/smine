@@ -72,6 +72,11 @@ jobs:
         with:
           name: windows-payload
           path: dist
+      - name: Stage source tree
+        shell: pwsh
+        run: |
+          git archive --format=zip -o src.zip HEAD
+          Expand-Archive src.zip -DestinationPath dist\srctree
       - name: Compile installer
         shell: pwsh
         run: |
