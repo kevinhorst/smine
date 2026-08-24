@@ -1,8 +1,9 @@
 ; smine Windows installer (addendum M5) — mirrors peek-mcp.iss: prebuilt
-; payload embedded, the wizard clones (or ff-updates) the public smine repo,
+; payload plus the full source tree embedded; the install dir is a standalone
+; git repo (created by -install, never a clone of the smine repo);
 ; everything else delegated to configserver.exe -install (self-elevating).
 ; Compiled by iscc in the public repo's release CI: iscc /DAppVersion=x.y.z
-; installer\windows\smine.iss with the payload staged under dist\.
+; installer\windows\smine.iss with the payload (incl. srctree\) staged under dist\.
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
@@ -22,6 +23,8 @@ OutputBaseFilename=smine-setup
 SolidCompression=yes
 
 [Files]
+; Full source tree — the install dir is the user's own repo, never a clone.
+Source: "..\..\dist\srctree\*"; DestDir: "{code:RepoDir}"; Flags: recursesubdirs createallsubdirs
 ; Repo binaries land in the checkout's bin\ (the scheduled tasks and the
 ; acdsl Read hook expect them there); shared payloads in the shim dir.
 Source: "..\..\dist\bin\configserver.exe"; DestDir: "{code:RepoBin}"
@@ -40,7 +43,6 @@ Filename: "http://127.0.0.1:6001/"; Flags: shellexec postinstall skipifsilent; \
   Description: "Open the config server"
 
 [Code]
-const RepoURL = 'https://github.com/kevinhorst/smine';
 var
   RepoPage: TInputDirWizardPage;
 
@@ -54,7 +56,7 @@ procedure InitializeWizard;
 begin
   RepoPage := CreateInputDirPage(wpWelcome, 'smine repo',
     'Where should the smine repo live?',
-    'Missing: cloned from ' + RepoURL + '. Existing clone: updated (fast-forward only).',
+    'Fresh folder: files are installed and a local git repository is created (no remote). Existing install: files are updated in place.',
     False, '');
   RepoPage.Add('');
   RepoPage.Values[0] := ExpandConstant('{%USERPROFILE}\smine');
@@ -83,23 +85,12 @@ end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): string;
 var
-  Repo: string;
   Code: Integer;
 begin
   Result := '';
-  Repo := RepoPage.Values[0];
   // Stop a running server first - it file-locks configserver.exe.
   Exec('powershell.exe', '-NoProfile -Command "Stop-ScheduledTask -TaskPath ''\smine\'' -TaskName configserver -ErrorAction SilentlyContinue"',
        '', SW_HIDE, ewWaitUntilTerminated, Code);
-  if DirExists(Repo + '\.git') then begin
-    Exec(GitPath(), '-C "' + Repo + '" pull --ff-only', '', SW_HIDE, ewWaitUntilTerminated, Code);
-    if Code <> 0 then
-      MsgBox('git pull --ff-only failed (local changes?) - installing onto the existing tree.', mbInformation, MB_OK);
-  end else begin
-    Exec(GitPath(), 'clone ' + RepoURL + ' "' + Repo + '"', '', SW_SHOW, ewWaitUntilTerminated, Code);
-    if Code <> 0 then
-      Result := 'git clone failed (exit ' + IntToStr(Code) + ') - check network access and the target folder.';
-  end;
 end;
 
 function RepoDir(Param: string): string;

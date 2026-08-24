@@ -2,6 +2,7 @@
 # everything else to configserver.exe -install (macOS: use ./install.sh).
 param(
     [string]$Addr = "127.0.0.1:6001",
+    [switch]$InitWelcome,
     [int]$PeekPort = 4242,
     [int]$PeekControlPort = 42442
 )
@@ -57,7 +58,8 @@ try {
     #    keeps PS 5.1 from throwing on native stderr lines.
     $eap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & bin\configserver.exe -install -addr $Addr -peek-port $PeekPort -peek-control-port $PeekControlPort 2>&1 | ForEach-Object { "$_" }
+    $initWelcomeArg = if ($InitWelcome) { "true" } else { "false" }
+    & bin\configserver.exe -install -addr $Addr -init-welcome=$initWelcomeArg -peek-port $PeekPort -peek-control-port $PeekControlPort 2>&1 | ForEach-Object { "$_" }
     $ErrorActionPreference = $eap
     if ($LASTEXITCODE -ne 0) { throw "configserver -install failed (exit $LASTEXITCODE)" }
 } finally {

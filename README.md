@@ -46,21 +46,22 @@ flowchart TD
 
 ## Installation (macOS)
 
-- **Fork the repository**
-- `git clone` the fork
-- `install.sh` — installs [peek-mcp](https://github.com/kevinhorst/peek-mcp) ≥ 1.2.0 (`--no-peek` to skip), optionally serena (`--serena`), builds `bin/configserver`, materializes the routine plists from `routines/*/*.plist.template` (gitignored; edited later via the config server's Routines page), and runs the server as LaunchAgent `com.smine.configserver` on `:6001` (logs in `~/Library/Logs/`). Stop with `launchctl bootout gui/$(id -u)/com.smine.configserver` — launchd restarts the process after a plain `kill`.
+- Download the source archive (`Source code (tar.gz)`) from the [latest release](https://github.com/kevinhorst/smine/releases/latest) and extract it to a folder of your choice — the folder's name and location are yours; the extracted tree is the install.
+- `install.sh` — first initializes the folder as a standalone git repository (branch `main`, one initial commit, no remote) unless `.git` already exists, then installs [peek-mcp](https://github.com/kevinhorst/peek-mcp) ≥ 1.2.0 (`--no-peek` to skip), optionally serena (`--serena`), builds `bin/configserver`, materializes the routine plists from `routines/*/*.plist.template` (gitignored; edited later via the config server's Routines page), and runs the server as LaunchAgent `com.smine.configserver` on `:6001` (logs in `~/Library/Logs/`). Stop with `launchctl bootout gui/$(id -u)/com.smine.configserver` — launchd restarts the process after a plain `kill`.
 - For the nightly routine (`routines/smine-nightly/`, the loop's primary driver): `brew install flock coreutils`, then write a token from `claude setup-token` to `~/.config/claude-routine/token` (0600) — or add labeled per-account tokens via the config server's Configure widget (`~/.config/claude-routine/tokens/<label>`, selected per routine via the Token setting). The config server auto-bootstraps the routine at startup; without the token a run exits 78 and does nothing. Operations manual: [routines/README.md](routines/README.md).
 - Then run the [sync scripts](#sync-scripts) to deploy settings, skills, and context.
 
+The install dir is your own repository — it is not connected to this GitHub repo. To push it anywhere, add your own remote: `git remote add origin <url>`. Updates never run git for you; commit your local changes before updating.
+
 ## Installation (Windows)
 
-Quick start: download `smine-setup.exe` from the [latest release](https://github.com/kevinhorst/smine/releases/latest) and run it — the wizard clones the repo (default `%USERPROFILE%\smine`; an existing clone is fast-forward-updated), lays down prebuilt binaries, and delegates everything else to `configserver.exe -install`. The setup exe is unsigned; SmartScreen may warn on first run — choose **More info → Run anyway**, or `Unblock-File smine-setup.exe` in PowerShell.
+Quick start: download `smine-setup.exe` from the [latest release](https://github.com/kevinhorst/smine/releases/latest) and run it — the wizard lays down the full source tree and prebuilt binaries into the chosen folder (default `%USERPROFILE%\smine`) and delegates everything else to `configserver.exe -install`, which initializes the folder as a standalone git repository (no remote) when fresh; an existing install has its files updated in place — commit local changes first and review the update with `git status`. The setup exe is unsigned; SmartScreen may warn on first run — choose **More info → Run anyway**, or `Unblock-File smine-setup.exe` in PowerShell.
 
 Prerequisites by install path:
 
 | Path | Needs | Bundled / handled |
 |---|---|---|
-| `smine-setup.exe` | Git for Windows (wizard offers winget), a Claude runtime (see below) | Go not needed; jq.exe, peek-mcp.exe, all smine binaries ship in the installer; repo cloned by the wizard |
+| `smine-setup.exe` | Git for Windows (wizard offers winget), a Claude runtime (see below) | Go not needed; jq.exe, peek-mcp.exe, all smine binaries ship in the installer; repo files ship in the installer |
 | From source (`install.ps1`) | Git for Windows, Go, jq (installed via winget after a consent prompt) | builds the binaries itself, then delegates to `configserver.exe -install` |
 
 The from-source path runs from the repo root via `.\install.bat` — a thin launcher that runs `install.ps1` under `-ExecutionPolicy Bypass` (a PowerShell script cannot lift the default `Restricted` policy itself). It forwards `-Addr`, `-PeekPort`, `-PeekControlPort`.
@@ -70,6 +71,8 @@ The from-source path runs from the repo root via `.\install.bat` — a thin laun
 Claude runtime: **Claude Desktop or the claude CLI** (native installer or npm). A `claude` already visible from Git Bash wins; otherwise the installer deploys a shim at `%LOCALAPPDATA%\smine\bin\claude` that re-resolves Claude Desktop's bundled `claude.exe` at each call — Desktop updates need no re-install. Neither found is a warning, not an error: the install completes and routines simply won't run until a runtime appears. Log off and back on (or restart the config server) once, so the routine runtime picks up the new PATH entry. `install.ps1` prompts once for the routine OAuth token (from `claude setup-token`) and writes it to `%USERPROFILE%\.config\claude-routine\token`; skipping leaves routines exiting 78 until the file exists.
 
 Git Bash is the one supplied by Git for Windows — no WSL. The server and routine wrapper run fully detached (windowsgui subsystem — no console window, no Quick-Edit freezes). Logs: `%LOCALAPPDATA%\claude-routine\logs\` — `configserver.log` for the server, `<routine label>.out.log`/`.err.log` per routine. Follow live with `Get-Content <log> -Wait`.
+
+The install dir is your own repository — it is not connected to this GitHub repo. To push it anywhere, add your own remote: `git remote add origin <url>`. Updates never run git for you; commit your local changes before updating.
 
 ## Sync scripts
 
@@ -207,6 +210,7 @@ flowchart TD
     RR -- "station review<br>+ human gate" --> MERGE["fix handoff to a<br>separate agent/session"]
     MERGE -- "merge-back, clean-slate<br>round + rejection ledger" --> RR
     RR -- "two consecutive clean rounds" --> PPC["package-commit"]
+    RR -. "handoff to the<br>human reviewer" .-> DODR["dod-report<br>4 questions + [DoD] walk"]
     classDef discarded fill-opacity:0.35,stroke-opacity:0.35,color:#999;
     class OB,OC discarded;
 ```
@@ -261,8 +265,8 @@ flowchart LR
 
 #### Cost
 
-Empirical numbers from ~30 days of nightly runs (all on Opus 4.8, medium reasoning effort): a full smine run analyzing 10 sessions (500-800k token context window per session, delivered via peek-mcp) averages **$10–15** in API-equivalent pricing. 
-A $5 routine budget failed consistently; $15 usually went through. As of 2026-08-23 that maps to a Team Premium plan's 5-hour usage window — a standard Team seat was not enough. 
+Empirical numbers from ~30 days of nightly runs (all on Opus 4.8, medium reasoning effort): a full smine run analyzing 10 sessions (500-800k token context window per session, delivered via peek-mcp) averages **$10–15** in API-equivalent pricing.
+A $5 routine budget failed consistently; $15 usually went through. As of 2026-08-23 that maps to a Team Premium plan's 5-hour usage window — a standard Team seat was not enough.
 It is advised to run the smine routine at a window where usage is usually low, so it does not interfere with day to day work or other routines.
 
 The Goal in v1.2 is to deliver a detailed usage breakdown and bring the cost down significantly.
@@ -276,6 +280,7 @@ No fixed chain position; invoked on demand:
 | `diagnose-debug` | Verified root-cause diagnosis before any fix |
 | `spec-drift` | Read-only drift report — doc mode diffs a doc set against the code, contract mode classifies every consumer of one changed contract with a fix order |
 | `railroad-review` | Multi-agent station-protocol review over any scope (committed range or uncommitted snapshot) |
+| `dod-report` | Reviewer-handoff DoD report — why/validated/tested plus a `[DoD]`-marked entry walk; downstream of `railroad-review`, standalone-capable |
 | `code-verdict` | Problem-or-fine verdict on scoped existing code; alternatives only on a confirmed problem, escalates to `fexplore` when feature-level |
 | `support-decision` | Read-only adjudication of an external position against the actual code/spec |
 | `fimpact` | Per-axis change evaluation (maintainability, security, business impact, …) |

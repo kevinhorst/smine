@@ -7,17 +7,21 @@ ADDR_PORT="${CONFIGSERVER_PORT:-6001}"
 INSTALL_PEEK=1
 INSTALL_SERENA=0
 RUN_SYNC=1
+INIT_WELCOME=false
 for arg in "$@"; do
   case "$arg" in
-    --no-peek)   INSTALL_PEEK=0 ;;
-    --serena)    INSTALL_SERENA=1 ;;
-    --no-sync)   RUN_SYNC=0 ;;
+    --no-peek)      INSTALL_PEEK=0 ;;
+    --serena)       INSTALL_SERENA=1 ;;
+    --no-sync)      RUN_SYNC=0 ;;
+    --init-welcome) INIT_WELCOME=true ;;
     *)
-      echo "usage: $0 [--no-peek] [--serena] [--no-sync]" >&2
+      echo "usage: $0 [--no-peek] [--serena] [--no-sync] [--init-welcome]" >&2
       exit 1
       ;;
   esac
 done
+
+bash "$REPO_DIR/cmd/sync/ensure_git_repo.sh" "$REPO_DIR"
 
 if [ "$INSTALL_PEEK" = 1 ]; then
   echo "-> Installing peek-mcp ..."
@@ -77,11 +81,13 @@ sed -e "s|__REPO_DIR__|$REPO_DIR|g" \
     -e "s|__PORT__|$ADDR_PORT|g" \
     -e "s|__HOME__|$HOME|g" \
     -e "s|__PATH__|$PATH|g" \
+    -e "s|__INIT_WELCOME__|$INIT_WELCOME|g" \
   "$REPO_DIR/cmd/configserver/$LABEL.plist.template" > "$AGENT_PLIST"
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 
 # Legacy agents under other labels KeepAlive-respawn a stale binary and win
+# the port race against $LABEL (observed: com.kevinhorst.configserver) —
 # bootout any foreign LaunchAgent whose plist runs a configserver binary.
 for legacy_plist in "$HOME/Library/LaunchAgents"/*.plist; do
   [ -e "$legacy_plist" ] || continue
