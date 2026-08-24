@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.11",
+    "date": "2026-08-23",
+    "text": "allowed-tools manifest for headless runs (Skill/Task/peek-mcp/Bash union); Workflow demoted to the manual-run alternative — the direct pipeline is the primary path"
+  },
+  {
     "version": "1.10",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"
