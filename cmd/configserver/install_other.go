@@ -9,8 +9,9 @@ import (
 
 // runInstall exists only on Windows (plan D18) — install.sh is the macOS
 // path and two installers for one platform would drift.
-func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, peekControlPort int) int {
+func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, peekControlPort int, presentationProfileId string) int {
 	_ = ctx
+	_ = presentationProfileId
 	fmt.Printf("-install is windows-only; use ./install.sh (addr %s, peek %d/%d)\n",
 		addr, peekPort, peekControlPort)
 	return 2

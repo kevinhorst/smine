@@ -47,6 +47,8 @@ func main() {
 	peekStart := flag.Bool("peek-start", true, "spawn peek-mcp when the port is not serving")
 	reposPath := flag.String("repos", "repos.json", "path to the repo registry file")
 	initWelcome := flag.Bool("init-welcome", false, "always show the Welcome nav entry and setup tile, even when all setup checks are green")
+	presentationPath := flag.String("presentation", server.DefaultPresentationPath(), "path to the per-install presentation profile (missing file = English/developer defaults)")
+	presentationProfile := flag.String("presentation-profile", "", "windows install: presentation profile template id to install (e.g. de); empty installs none")
 	install := flag.Bool("install", false, "windows: register logon task + routines, then exit (macOS: use install.sh)")
 	logFile := flag.String("logfile", "", "append all output to this file (the Windows logon task passes it; the binary is windowsgui-subsystem there, so a console is never attached)")
 	routinesDir := flag.String("routines", "routines", "path to the routines directory")
@@ -103,7 +105,7 @@ func main() {
 	defer cancel()
 
 	if *install {
-		os.Exit(runInstall(ctx, *addr, *initWelcome, *peekPort, *peekControlPort))
+		os.Exit(runInstall(ctx, *addr, *initWelcome, *peekPort, *peekControlPort, *presentationProfile))
 	}
 
 	endpoint := ""
@@ -132,6 +134,7 @@ func main() {
 		InitWelcome:        *initWelcome,
 		PeekDashboardURL:   dashboardURL,
 		PeekEndpoint:       endpoint,
+		PresentationPath:   *presentationPath,
 		ProposalsDir:       *proposalsDir,
 		ReposPath:          *reposPath,
 		RoutinesDir:        *routinesDir,

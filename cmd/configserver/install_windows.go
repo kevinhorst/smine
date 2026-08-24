@@ -69,7 +69,7 @@ const serverTaskTemplate = `<?xml version="1.0"?>
 // and a second concurrent SyncAll from this process races it on
 // Register-ScheduledTask (observed: all three routines "sync failed" in the
 // server log while the installer's copies won).
-func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, peekControlPort int) int {
+func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, peekControlPort int, presentationProfileId string) int {
 	repoDir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "install: getwd: %v\n", err)
@@ -95,6 +95,10 @@ func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, pe
 	claudeFound := deployClaude(ctx, repoDir, shimDir, bash)
 	deployPeek(repoDir, shimDir)
 	if err := runSyncs(ctx, repoDir, bash); err != nil {
+		fmt.Fprintf(os.Stderr, "install: %v\n", err)
+		return 1
+	}
+	if err := installPresentationProfile(repoDir, presentationProfileId); err != nil {
 		fmt.Fprintf(os.Stderr, "install: %v\n", err)
 		return 1
 	}
@@ -326,6 +330,33 @@ func deployPeek(repoDir, shimDir string) {
 		return
 	}
 	fmt.Printf("-> peek-mcp: %s\n", source)
+}
+
+// installPresentationProfile copies the selected repo template to the
+// per-install profile path; an empty id installs nothing (plan D11).
+func installPresentationProfile(repoDir, profileId string) error {
+	if profileId == "" {
+		return nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("installPresentationProfile: %w", err)
+	}
+	source := filepath.Join(repoDir, "settings", "claude_code", "presentation-profile."+profileId+".md")
+	content, err := os.ReadFile(source)
+	if err != nil {
+		return fmt.Errorf("installPresentationProfile: template %q: %w", profileId, err)
+	}
+	targetDir := filepath.Join(home, ".claude", "context", "global")
+	if err := os.MkdirAll(targetDir, 0o755); err != nil {
+		return fmt.Errorf("installPresentationProfile: %w", err)
+	}
+	target := filepath.Join(targetDir, "presentation-profile.md")
+	if err := os.WriteFile(target, content, 0o644); err != nil {
+		return fmt.Errorf("installPresentationProfile: %w", err)
+	}
+	fmt.Printf("-> Presentation profile installed: %s (%s)\n", target, profileId)
+	return nil
 }
 
 // runSyncs applies settings/hooks/skills through Git Bash — shell.Run's .sh
