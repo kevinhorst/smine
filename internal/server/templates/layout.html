@@ -25,6 +25,7 @@
 {{define "nav"}}
 <nav>
   <a href="/" {{if eq .Page "overview"}}class="active"{{end}}>Overview</a>
+  {{if initWelcome}}<a href="/welcome" {{if eq .Page "welcome"}}class="active"{{end}}>Welcome</a>{{end}}
   <a href="/config/claude" {{if or (eq .Page "config-claude") (eq .Page "config-codex")}}class="active"{{end}}>Config</a>
   <a href="/sessions" {{if eq .Page "sessions"}}class="active"{{end}}>Sessions</a>
   <a href="/proposals" {{if eq .Page "proposals"}}class="active"{{end}}>Proposals</a>

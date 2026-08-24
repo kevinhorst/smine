@@ -1,0 +1,27 @@
+{{define "_welcome_checks.html"}}
+<div class="welcome-progress">setup checks: <span class="welcome-progress-count">{{.CountOk}}</span>/{{.Total}} green — the nightly routine needs all of them</div>
+{{range .Groups}}
+<h2>{{.Name}}</h2>
+{{range .Checks}}
+<div class="card{{if not .Ok}} card-error{{end}}" id="check-{{.Id}}">
+  <div class="check-row">
+    {{if .Ok}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">missing</span>{{end}}
+    <span class="check-name">{{.Name}}</span>
+    <span class="check-detail">{{.Detail}}</span>
+    {{if and (eq .Id "routine-token") $.CanVerify}}
+    <button class="verify-button" hx-post="/welcome/verify-token" hx-target="#verify-result" hx-swap="innerHTML"
+            hx-indicator="#verify-indicator" hx-disabled-elt="this"
+            hx-confirm="This performs one paid claude API call. Continue?">Verify token</button>
+    <span id="verify-indicator" class="htmx-indicator">verifying — one claude call, ~10s…</span>
+    {{end}}
+  </div>
+  {{if not .Ok}}
+  <div class="fix"><span class="fix-label">fix:</span> {{.Fix}}</div>
+  {{end}}
+  {{if eq .Id "routine-token"}}
+  <div id="verify-result" hx-preserve="true"></div>
+  {{end}}
+</div>
+{{end}}
+{{end}}
+{{end}}

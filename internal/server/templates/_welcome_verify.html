@@ -1,0 +1,11 @@
+{{define "_welcome_verify.html"}}
+<div class="check-row verify-result">
+  {{if .Check.Ok}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">failed</span>{{end}}
+  <span class="check-name">{{.Check.Name}}</span>
+  <span class="check-detail">{{.Check.Detail}}{{if .SessionId}} · session <code title="{{.SessionId}}">{{.ShortId}}</code>{{if .PeekIndexed}} — indexed by peek{{else}} — not yet indexed by peek{{end}}{{end}}</span>
+  {{if .SessionId}}{{with peekSessionURL .SessionId}}<a class="meta" href="{{.}}" title="open in peek">open in peek</a>{{end}}{{end}}
+</div>
+{{if not .Check.Ok}}
+<div class="fix"><span class="fix-label">fix:</span> {{.Check.Fix}}</div>
+{{end}}
+{{end}}

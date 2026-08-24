@@ -29,6 +29,14 @@
   </div>
   {{end}}
   {{if and .Proposal.Id .Proposal.Status}}
+  {{if .Disabled}}
+  <div class="card-row vote-disabled" title="example — voting works on the Proposals page">
+    <input type="text" disabled placeholder="comment (rejection reason or agent instruction)">
+    <button type="button" disabled>+</button>
+    <button type="button" disabled>−</button>
+    <button type="button" disabled>postpone</button>
+  </div>
+  {{else}}
   <form class="card-row" hx-post="/api/proposals/{{.Kind}}/{{pathEscape .Proposal.Id}}/vote"
         hx-target="closest .card" hx-swap="outerHTML">
     <input type="text" name="comment" maxlength="500"
@@ -37,6 +45,7 @@
     <button type="submit" name="vote" value="-">−</button>
     <button type="submit" name="vote" value="p">postpone</button>
   </form>
+  {{end}}
   {{end}}
   {{if or .Proposal.Fields .Proposal.Gate.Band .Evidence}}
   <details class="card-more">

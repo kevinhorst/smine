@@ -1,0 +1,55 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{.Title}}</h1>
+<div class="tabs">
+  <a href="/welcome" {{if eq .Tab "setup"}}class="active"{{end}}>Setup{{if eq .Tab "setup"}} ({{.Checks.CountOk}}/{{.Checks.Total}}){{end}}</a>
+  <a href="/welcome?tab=tutorial" {{if eq .Tab "tutorial"}}class="active"{{end}}>Tutorial</a>
+</div>
+{{if eq .Tab "setup"}}
+<div hx-get="/welcome/checks" hx-trigger="every 10s" hx-swap="innerHTML">
+{{template "_welcome_checks.html" .Checks}}
+</div>
+{{else}}
+<h2>the feedback loop</h2>
+<div class="welcome-section">
+  <p>smine mines your own past agent sessions for evidence, turns the findings into proposals, and — once you vote —
+  deploys the accepted ones as skill rules and context docs. The next session runs under the improved instructions.</p>
+  <p>The loop: sessions in your project repos → <strong>peek-mcp</strong> exposes them → the nightly <strong>smine</strong>
+  run mines transcript batches (<a href="/sessions">Sessions</a>) → ranked proposals land in the store
+  (<a href="/proposals">Proposals</a>) → you vote → the nightly apply stage implements accepted votes → sync deploys
+  the result. The <a href="/routines">Routines</a> page drives and monitors the nightly run.</p>
+  <p class="welcome-try">Try it: run <code>/smine</code> in any Claude Code session — or finish the Setup tab and let tonight's run do it.</p>
+</div>
+<h2>acdsl &amp; the context system</h2>
+<div class="welcome-section">
+  <p>Context docs are typed entries — <code>ACTION-*</code> (process directives), <code>RULE-*</code> (artifact-shape guides),
+  <code>FACT-*</code> (repo facts) — deployed into your target repos so every agent session runs under them.
+  ACDSL is the machine-checkable slice: one rule = identity + anchor + verifier + why, projected into governed files
+  as comment blocks and executed as a deterministic gate. One rule source, two renderings — they cannot drift.</p>
+  <p>A minimal bootstrap is one rule line, its verifier registration and a pass/fail fixture pair:</p>
+  <pre class="welcome-code">// acdsl/rules.acdsl — one declaration line
+//acdsl: ACDSL-MYREPO-001 verifier=no-todo anchor=^internal/.*\.go$ why=TODOs rot — track work in issues
+
+// acdsl/registry.json — the verifier the rule names
+{
+  "no-todo": {
+    "argv": ["grep", "-L", "TODO"],
+    "timeout_s": 10,
+    "description": "flags files containing TODO markers"
+  }
+}
+
+// acdsl/testdata/ACDSL-MYREPO-001/{pass,fail}/ — fixtures proving the verifier</pre>
+  <p class="welcome-try">Try it: open <a href="/context">Context</a>, pick your repo and hit Sync — the gate slice ships
+  with a prebuilt binary and the deployed read hook activates it automatically.</p>
+</div>
+<h2>proposals</h2>
+<div class="welcome-section">
+  <p>Proposals are the mining output: one proposal = one change = one vote. Lifecycle: mine → consolidate → your vote on
+  the <a href="/proposals">Proposals</a> page → the nightly apply stage archives rejected ones and implements accepted ones.
+  This is what a proposal card looks like (example — controls inert):</p>
+  {{template "_proposal_card.html" .Proposal}}
+  <p class="welcome-try">Try it: your first real proposals appear after the first nightly run.</p>
+</div>
+{{end}}
+{{template "foot" .}}

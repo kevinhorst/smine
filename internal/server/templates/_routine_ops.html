@@ -1,8 +1,9 @@
 {{define "_routine_ops.html"}}
 {{/* Ops act on the routine selected via the rt-select radios; the script
      below fills in hx-post and the disabled states (mirrors repo_detail's
-     worktree-ops card). Row swaps uncheck the radio, so htmx:afterSwap
-     resets the cards to the disabled no-selection state. The Configure
+     worktree-ops card). Row swaps re-render the radio unchecked, so
+     htmx:afterSwap restores the remembered selection (ops.dataset.sel)
+     before falling back to the disabled no-selection state. The Configure
      button opens the selected routine's configuration in
      #routine-configure; selection alone never opens it. */}}
 <div id="routine-ops">
@@ -67,6 +68,13 @@
     var radios = document.querySelectorAll('input[name="rt-select"]');
     if (radios.length === 1 && !radios[0].checked) radios[0].checked = true;
     var sel = document.querySelector('input[name="rt-select"]:checked');
+    // Row polling swaps the <tr> outerHTML, which re-renders its radio
+    // unchecked mid-run; restore the remembered selection so the ops stay
+    // usable while a run is active.
+    if (!sel && ops.dataset.sel) {
+      var remembered = document.querySelector('input[name="rt-select"][value="' + ops.dataset.sel + '"]');
+      if (remembered) { remembered.checked = true; sel = remembered; }
+    }
     ops.querySelectorAll('form[data-op]').forEach(function (form) {
       var button = form.querySelector('button');
       if (!sel) { button.disabled = true; return; }

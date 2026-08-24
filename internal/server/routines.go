@@ -644,7 +644,10 @@ func intervalFromForm(r *http.Request) (routines.CalendarInterval, error) {
 }
 
 // reloadRoutine bounces a loaded job so launchd picks up the rewritten
-// schedule; an unloaded routine needs nothing.
+// schedule; an unloaded routine needs nothing. A job with a live instance is
+// never bounced — the bounce is a bootout, which kills the running process
+// tree mid-run; the saved file keeps its changes and the reload happens on
+// the next Reschedule/Save/Stop once the run has ended.
 func (s *Server) reloadRoutine(ctx context.Context, routine *routines.Routine) (string, error) {
 	loaded, err := routines.IsLoaded(ctx, routine.Label)
 	if err != nil {
@@ -652,6 +655,14 @@ func (s *Server) reloadRoutine(ctx context.Context, routine *routines.Routine) (
 	}
 	if !loaded {
 		return "", nil
+	}
+
+	running, err := routines.IsRunning(ctx, routine.Label)
+	if err != nil {
+		return "", err
+	}
+	if running {
+		return "saved, but a run is active — reload skipped so the run survives; save again (or Stop/Start) after it finishes to apply the change", nil
 	}
 
 	stopOutput, err := routines.Stop(ctx, routine.Label)

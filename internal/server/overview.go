@@ -83,6 +83,9 @@ const (
 
 func (s *Server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	var tiles []overviewTile
+	if welcome, show := s.welcomeTile(r.Context()); show {
+		tiles = append(tiles, welcome)
+	}
 	tiles = append(tiles, s.sessionTiles(parseWindow(r))...)
 	tiles = append(tiles, s.settingsTiles()...)
 	tiles = append(tiles, s.skillTiles()...)
@@ -491,6 +494,32 @@ func (s *Server) routineTile(ctx context.Context) overviewTile {
 		Label:  "Routines",
 		Value:  fmt.Sprintf("%d/%d active", active, len(list)),
 	}
+}
+
+// welcomeTile summarizes the setup checks; runSetupChecks bounds its own
+// peek probe, so a down peek cannot stall the dashboard. The tile hides once
+// every check is green — the Welcome surface disappears when setup is done —
+// unless the install opted in with --init-welcome (debugging).
+func (s *Server) welcomeTile(ctx context.Context) (overviewTile, bool) {
+	checks := s.runSetupChecks(ctx)
+	ok := 0
+	detail := "all green"
+	for _, check := range checks {
+		if check.Ok {
+			ok++
+		} else if detail == "all green" {
+			detail = "next: " + check.Name
+		}
+	}
+
+	tile := overviewTile{
+		Id:     "welcome",
+		Detail: detail,
+		Href:   "/welcome",
+		Label:  "Setup",
+		Value:  fmt.Sprintf("%d/%d checks", ok, len(checks)),
+	}
+	return tile, ok < len(checks) || s.initWelcome
 }
 
 func countWorkflowScripts(files []string) int {

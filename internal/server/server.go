@@ -39,6 +39,7 @@ type Options struct {
 	ContextDir         string
 	EvalsDir           string
 	ExamplesDir        string
+	InitWelcome        bool
 	PeekDashboardURL   string
 	PeekEndpoint       string
 	ProposalsDir       string
@@ -67,6 +68,7 @@ type Server struct {
 	disabledHooks      *disabledHookStore
 	evalsDir           string
 	examplesDir        string
+	initWelcome        bool
 	peekClient         *peek.Client
 	proposalsDir       string
 	repoLocks          *repos.Locks
@@ -133,6 +135,11 @@ func New(opts *Options) (*Server, error) {
 		},
 		"peekDashboardURL": func() string {
 			return opts.PeekDashboardURL
+		},
+		// initWelcome gates the Welcome nav entry: hidden once setup is done
+		// unless the install opted in (--init-welcome) for debugging.
+		"initWelcome": func() bool {
+			return opts.InitWelcome
 		},
 		// appVersion feeds the nav brand; ldflags -X main.version stamps it.
 		"appVersion": func() string {
@@ -212,6 +219,7 @@ func New(opts *Options) (*Server, error) {
 		disabledHooks:      disabledHooks,
 		evalsDir:           opts.EvalsDir,
 		examplesDir:        opts.ExamplesDir,
+		initWelcome:        opts.InitWelcome,
 		peekClient:         peek.NewClient(opts.PeekEndpoint),
 		proposalsDir:       opts.ProposalsDir,
 		repoLocks:          repos.NewLocks(),
@@ -293,6 +301,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("DELETE /api/config/{target}/{key}/items/{index}", s.handleConfigItemRemove)
 	mux.HandleFunc("POST /api/config/codex/{key}/toggle", s.handleConfigCodexToggle)
 	mux.HandleFunc("GET /docs/checklist", s.handleChecklistPage)
+	mux.HandleFunc("GET /welcome", s.handleWelcome)
+	mux.HandleFunc("GET /welcome/checks", s.handleWelcomeChecks)
+	mux.HandleFunc("POST /welcome/verify-token", s.handleWelcomeVerifyToken)
 	mux.HandleFunc("POST /api/checklist/{number}/status", s.handleChecklistStatus)
 	mux.HandleFunc("GET /scripts/skills", s.handleSkillsIndex)
 	mux.HandleFunc("POST /scripts/skills/sync", s.handleSkillsSync)

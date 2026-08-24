@@ -130,6 +130,7 @@ type stateNote struct {
 }
 
 type proposalView struct {
+	Disabled       bool
 	Evidence       []evidenceView
 	IsRevert       bool
 	Kind           string
