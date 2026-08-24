@@ -17,14 +17,18 @@ DOCS_DIR="${AGENT_CONTEXT_DIR_DEFAULT:-docs}"
 [ "${GLOBAL_CONTEXT_ENABLED:-1}" = "0" ] && exit 0
 
 found=0
-for f in "$DOCS_DIR"/global/*.md; do
-  [ -f "$f" ] || continue
-  if [ "$found" = 0 ]; then
-    echo "===== GLOBAL CONTEXT (injected by hook) ====="
+# Machine-global content ($HOME/.claude/context/global) first — the
+# presentation profile lives there — then the repo-local docs dir.
+for dir in "$HOME/.claude/context/global" "$DOCS_DIR/global"; do
+  for f in "$dir"/*.md; do
+    [ -f "$f" ] || continue
+    if [ "$found" = 0 ]; then
+      echo "===== GLOBAL CONTEXT (injected by hook) ====="
+      echo ""
+      found=1
+    fi
+    echo "===== $f ====="
+    cat "$f"
     echo ""
-    found=1
-  fi
-  echo "===== $f ====="
-  cat "$f"
-  echo ""
+  done
 done
