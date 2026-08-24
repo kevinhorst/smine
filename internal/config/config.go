@@ -24,8 +24,9 @@ type HookGroup struct {
 }
 
 type Permissions struct {
-	Allow []string `json:"allow,omitempty"`
-	Ask   []string `json:"ask,omitempty"`
+	AdditionalDirectories []string `json:"additionalDirectories,omitempty"`
+	Allow                 []string `json:"allow,omitempty"`
+	Ask                   []string `json:"ask,omitempty"`
 }
 
 // Settings wraps the settings.json document. Typed views decode from and
@@ -145,6 +146,35 @@ func McpServerNames(path string) ([]string, error) {
 		return nil, fmt.Errorf("McpServerNames: Failed to parse %s: %w", path, err)
 	}
 	return slices.Sorted(maps.Keys(file.McpServers)), nil
+}
+
+// McpServer returns one registered server's command and args from Claude
+// Code's ~/.claude.json. A missing file or unregistered name is an error —
+// callers probing config health want the reason, not an empty value.
+func McpServer(path, name string) (string, []string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", nil, fmt.Errorf("McpServer: Failed to read %s: %w", path, err)
+	}
+
+	var file mcpServerFile
+	if err := json.Unmarshal(data, &file); err != nil {
+		return "", nil, fmt.Errorf("McpServer: Failed to parse %s: %w", path, err)
+	}
+	server, ok := file.McpServers[name]
+	if !ok {
+		return "", nil, fmt.Errorf("McpServer: No %q entry in %s", name, path)
+	}
+	return server.Command, server.Args, nil
+}
+
+type mcpServerEntry struct {
+	Args    []string `json:"args"`
+	Command string   `json:"command"`
+}
+
+type mcpServerFile struct {
+	McpServers map[string]mcpServerEntry `json:"mcpServers"`
 }
 
 func DefaultClaudeJsonPath() string {
