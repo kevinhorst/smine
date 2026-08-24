@@ -1,5 +1,25 @@
 [
   {
+    "version": "8.2",
+    "date": "2026-08-24",
+    "text": "probe artifact diet: review.json gains a required probes[] index (id, script, fixture, verdict, finding_id — refuter probes mapped in via the new REFUTER_SCHEMA fixture field) and review.md a Probes table before the funnel line (OUT-010); probes/ persists exactly scripts, fixtures/, registry.json, and the probes.acdsl mirror — verdicts.md dropped (content lives in probes[]) and the validity-check files lists are written to the system temp dir, never persisted (they were orphaned listNN.txt sidecars nothing re-read)"
+  },
+  {
+    "version": "8.1",
+    "date": "2026-08-24",
+    "text": "ROUND-017 DoD walk now driven by [DoD] entry markers instead of reviewing.md membership — the set is queried via rules entries --marker DoD (or jq over context.json .markers), covering DoD criteria that live outside reviewing.md (e.g. ACTION-IMPL-INTEG-001) and excluding non-criterion entries (ACTION-REVIEW-RISK-*)"
+  },
+  {
+    "version": "8.0",
+    "date": "2026-08-24",
+    "text": "major: intake arg surface collapsed to bracket syntax — scope absorbs base (scope: branch[develop]; explicit base supersedes derivation, unresolvable stops and reports, bracket-less falls back to derivation with an explicit chat warning); chunks absorbs maxFiles/maxLines as chunk-size bounds (chunks: layers[30:200]) and gains the languages partition mode; over-bounds now partitions automatically instead of stop-and-report — the total review cap is gone (PROC-008 gate to step); lanes absorbs laneModel/laneEffort (lanes: 2[opus-medium], bracket tokens resolved by effort vocabulary); refute renamed refute-level with the loglevel analogy spelled out; base-red: expected replaced by the boolean expect-base-red flag. Workflow interface unchanged — the dispatcher unpacks the brackets into the decomposed args (MODES-003)"
+  },
+  {
+    "version": "7.4",
+    "date": "2026-08-24",
+    "text": "directions intake arg — explicit set overrides MODES-004 dynamic selection; arg surfaces fixed: argument-hint rewritten to the real args, paths/directions added to the description, lanes count split from laneModel/laneEffort, base and spec declared in Args"
+  },
+  {
     "version": "7.3",
     "date": "2026-08-23",
     "text": "evalscript renamed to verifier in prose and the workflow script"
@@ -42,7 +62,7 @@
   {
     "version": "5.0",
     "date": "2026-08-21",
-    "text": "major: formal merge of the author's aqms-review-wip SKILL.md — dynamic scope arg (branch|wip|all + paths, dynamic default) via snapshot commits so uncommitted and untracked work reviews through the unchanged worktree machinery; 5-level consequence-based severity (BLOCKER/MAJOR/MINOR/NIT/INFO, WARNING retired) with <direction>-<SEV>-<n> ids; per-finding fix route (human|auto-fix|runner-fix) consumed by fix application; unverified disposition kept with concrete missing precondition; adversarial refutation framing with both-directions test checks on the manual path; risk map (PROC-007) driving attention and diff-proportional direction selection with auto-added security; wrong-base heuristic in the guard; station runs build+tests once, names permanent checks for recurring classes, escalates undemonstrated high-risk defects to the top, and ends review.md with the claim funnel; solo reviewer-independence gate (EXEC-004); no-spec degradation for correctness; When-to-use widened — THE review skill, /code-review boundary removed"
+    "text": "major: formal merge of the author's work-review-wip SKILL.md — dynamic scope arg (branch|wip|all + paths, dynamic default) via snapshot commits so uncommitted and untracked work reviews through the unchanged worktree machinery; 5-level consequence-based severity (BLOCKER/MAJOR/MINOR/NIT/INFO, WARNING retired) with <direction>-<SEV>-<n> ids; per-finding fix route (human|auto-fix|runner-fix) consumed by fix application; unverified disposition kept with concrete missing precondition; adversarial refutation framing with both-directions test checks on the manual path; risk map (PROC-007) driving attention and diff-proportional direction selection with auto-added security; wrong-base heuristic in the guard; station runs build+tests once, names permanent checks for recurring classes, escalates undemonstrated high-risk defects to the top, and ends review.md with the claim funnel; solo reviewer-independence gate (EXEC-004); no-spec degradation for correctness; When-to-use widened — THE review skill, /code-review boundary removed"
   },
   {
     "version": "4.2",

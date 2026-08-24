@@ -313,6 +313,7 @@ const REFUTER_SCHEMA = {
     verdict: { type: 'string', description: 'confirmed (survived refutation, artifact in hand) | debunked (refuted) | unverified (survives but not demonstrable here)' },
     reason: { type: 'string', description: 'debunked: what refuted it; unverified: the concrete missing precondition, never "not demonstrated"; confirmed: one line on the decisive artifact' },
     probe: { type: 'string', description: 'ACDSL repos: the probe rule id that decided the verdict, or "none: <why unprobeable after 2 attempts>"; "manual: <kind>" otherwise' },
+    fixture: { type: 'string', description: 'the minimal fail fixture the probe went RED on in the validity check, path under the round dir — absent on the manual path' },
     evidence: { type: 'string', description: 'what was run/read and what it showed — the decisive lines inline' },
     artifacts: { type: 'array', items: { type: 'string' }, description: 'absolute paths of the artifacts written under the round dir, named for the finding' },
   },
@@ -335,8 +336,10 @@ function refuterPrompt(direction, finding, branch) {
     `railroad-probes-r${r}.acdsl at your worktree root (\`//acdsl:<PROBE-ID> <script> anchor="^<defect file, regex-escaped>$" ` +
     `lifetime="task" why="<the claim>"\`), an executable under ${roundDir}/probes/ (exit 0 clean, exit 1 + "file:line: message" ` +
     `on hit), an entry in a merged registry at ${roundDir}/probes/registry-${findingSlug(finding.finding_id)}.json. ` +
-    `VALIDITY FIRST: the probe must exit 1 on a minimal fail fixture under ${roundDir}/probes/fixtures/ before the real run; ` +
-    `two attempts before declaring the claim unprobeable. RED on the claimed file -> verdict "confirmed"; GREEN -> "debunked".\n` +
+    `VALIDITY FIRST: the probe must exit 1 on a minimal fail fixture under ${roundDir}/probes/fixtures/ before the real run — ` +
+    `run it against a hand-built files list written under the system temp dir, NEVER under ${roundDir}/probes/ (transient ` +
+    `scaffolding, not a review artifact); report the fixture's path in the fixture field. ` +
+    `Two attempts before declaring the claim unprobeable. RED on the claimed file -> verdict "confirmed"; GREEN -> "debunked".\n` +
     `- Otherwise (or unprobeable): the cheapest settling artifact, in preference order — a failing test, a command with ` +
     `actual and expected output, a reproduction sequence with the observed result. A test demonstrates the claim only if it ` +
     `fails on the current tree FOR THE REASON THE CLAIM STATES and passes with the proposed fix — check both directions and ` +
@@ -423,7 +426,7 @@ if (!finishedDirections.length) {
 // worktree branch into the claude/* namespace so any leftover is visible to tooling.
 const CONSOLIDATION_SCHEMA = {
   type: 'object',
-  required: ['dispositions', 'ranked_plan', 'unverified', 'funnel', 'permanent_checks', 'build_test', 'debunked', 'resolved', 'intentional_deviations', 'coverage_gaps', 'definition_of_done', 'recommendation', 'handoff_json', 'handoff_md', 'probes_dir'],
+  required: ['dispositions', 'ranked_plan', 'unverified', 'funnel', 'permanent_checks', 'build_test', 'debunked', 'resolved', 'intentional_deviations', 'coverage_gaps', 'definition_of_done', 'recommendation', 'handoff_json', 'handoff_md', 'probes', 'probes_dir'],
   properties: {
     dispositions: {
       type: 'array',
@@ -501,7 +504,22 @@ const CONSOLIDATION_SCHEMA = {
     recommendation: { type: 'string', description: 'APPROVE | CONDITIONAL | REJECT' },
     handoff_json: { type: 'string', description: 'absolute path of the round\'s consolidated review.json' },
     handoff_md: { type: 'string', description: 'absolute path of the round\'s consolidated review.md' },
-    probes_dir: { type: 'string', description: 'absolute path of round-{r}/probes/ with the probe rules, scripts, fixtures, registry, and verdicts — empty string when the repo has no ACDSL or no probes were authored' },
+    probes: {
+      type: 'array',
+      description: 'one entry per authored probe (station and refuter probes alike) — THE probe→fixture→verdict index; there is no sidecar verdicts file. Empty in non-ACDSL repos or when no probes were authored',
+      items: {
+        type: 'object',
+        required: ['id', 'script', 'fixture', 'verdict', 'finding_id'],
+        properties: {
+          id: { type: 'string', description: 'the probe rule id (e.g. PROBE-R4-03)' },
+          script: { type: 'string', description: 'the probe executable, path relative to probes_dir' },
+          fixture: { type: 'string', description: 'the minimal fail fixture the probe went RED on in the validity check, path relative to probes_dir' },
+          verdict: { type: 'string', description: 'the real-tree result: "RED on <file:line>" | "GREEN"' },
+          finding_id: { type: 'string', description: 'the finding this probe settled' },
+        },
+      },
+    },
+    probes_dir: { type: 'string', description: 'absolute path of round-{r}/probes/ with the probe rules (probes.acdsl), scripts, fixtures, and registry — empty string when the repo has no ACDSL or no probes were authored' },
   },
 }
 
@@ -530,7 +548,7 @@ const consolidation = await agent(
   `4. Complete the SECOND confirmation for every claim — all severities, NITs included. Direction reports may carry ` +
   `refuter_verdicts: fresh per-candidate refuters already performed the second confirmation for those claims. Their ` +
   `verdicts are BINDING — map confirmed/debunked/unverified straight into the disposition, carrying the refuter's reason, ` +
-  `probe, and artifacts — unless a verdict is internally inconsistent with the code in front of you; then re-verify ` +
+  `probe, fixture, and artifacts — unless a verdict is internally inconsistent with the code in front of you; then re-verify ` +
   `yourself and say so in the disposition reason. Every claim WITHOUT a refuter verdict you re-verify yourself: each ` +
   `arrives once-confirmed by its lane (its evidence field) and is still in question. Be ADVERSARIAL: attempt ` +
   `to REFUTE each claim — "could not reproduce" is a successful result, and you never manufacture evidence. A claim that ` +
@@ -547,15 +565,19 @@ const consolidation = await agent(
   `acdsl/registry.json, overlay its acdsl/registry.local.json if present, add your probe entries with ABSOLUTE argv ` +
   `paths and timeout_s <= 60.\n` +
   `   VALIDITY FIRST: write a minimal fail fixture under ${roundDir}/probes/fixtures/ reproducing the defect pattern and ` +
-  `run the probe executable directly against a hand-built files list containing it — the probe MUST exit 1 there. A probe ` +
-  `that cannot detect its own fixture is a failed attempt; fix it or write a new one (that is the second attempt).\n` +
+  `run the probe executable directly against a hand-built files list containing it — the probe MUST exit 1 there. The ` +
+  `files list is transient scaffolding: write it under the system temp dir, NEVER under ${roundDir}/probes/ — it is not a ` +
+  `review artifact. A probe that cannot detect its own fixture is a failed attempt; fix it or write a new one (that is ` +
+  `the second attempt).\n` +
   `   VERDICT: run \`<acdsl binary> check -rule <PROBE-ID> -registry ${roundDir}/probes/registry.json\` from your worktree ` +
   `root (go run ./cmd/acdsl in this repo, bin/acdsl when vendored). RED on the claimed file = deterministically reproduced ` +
   `-> "confirmed", record the probe id in the disposition's probe field. GREEN (after the fixture proved the probe works) ` +
   `= refuted -> "debunked" with the probe id and reason. Already fixed by a specific commit -> resolved[] with the hash. ` +
   `Unprobeable after two attempts -> fall back to manual re-read of the current tree; set probe to "none: <why>".\n` +
-  `   Persist everything under ${roundDir}/probes/ (rule lines mirrored as probes.acdsl, scripts, fixtures, registry, a ` +
-  `verdicts.md with each probe's fixture and tree results) and set probes_dir accordingly. NON-ACDSL repos: manual ` +
+  `   Persist under ${roundDir}/probes/ EXACTLY: the rule lines mirrored as probes.acdsl, the scripts, fixtures/, and ` +
+  `registry.json — nothing else: no verdicts.md, no files-list sidecars. Each probe's fixture and tree verdict are ` +
+  `recorded in the structured output's probes[] instead (refuter probes included — map their probe/fixture pairs in). ` +
+  `Set probes_dir accordingly. NON-ACDSL repos: manual ` +
   `re-read of PRIMARY SOURCES for every claim, probe field "manual: no acdsl", probes_dir empty — settle each claim with ` +
   `the cheapest artifact that does it, in preference order: a failing test, a command with actual and expected output, a ` +
   `reproduction sequence with the observed result; a test demonstrates a claim only if it fails on the current tree FOR ` +
@@ -580,7 +602,9 @@ const consolidation = await agent(
   `12. Walk the Definition of Done (per the skill) and mark each criterion PASS/FAIL/N/A — DoD is not a direction.\n` +
   `13. Write the consolidated review as BOTH ${roundDir}/review.json (this structured output verbatim) and ` +
   `${roundDir}/review.md (findings table with Direction and Route columns, coverage statement listing all reviewed files ` +
-  `vs the diff, DoD table, build/test results, recommendation, and the funnel as the LAST LINE — per the skill's Output ` +
+  `vs the diff, DoD table, build/test results, a Probes section — one table row per probes[] entry: id, finding, script, ` +
+  `fixture, tree verdict, so the reviewer navigates from the review doc to each probe and its fixture — recommendation, ` +
+  `and the funnel as the LAST LINE — per the skill's Output ` +
   `Format). The findings table lists confirmed (twice-confirmed) claims, each citing its probe, plus unverified claims ` +
   `flagged "unverified" with their missing precondition; debunked and resolved claims appear in their own sections, never ` +
   `in the findings table. ESCALATE, DON'T BURY: a suspected defect in migrations, auth, concurrency, money, a public API ` +
