@@ -151,7 +151,9 @@ func checkFrontmatter(file string, lines []string, out io.Writer) int {
 	return violations
 }
 
-var permissionRuleRe = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*(\(.+\))?$`)
+// Hyphens occur in MCP tool names whenever the server name carries one
+// (mcp__peek-mcp__session_list).
+var permissionRuleRe = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]*(\(.+\))?$`)
 
 func checkAllowedTools(file string, lines []string, out io.Writer) int {
 	values, lineNos := frontmatter(lines)

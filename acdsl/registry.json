@@ -108,5 +108,10 @@
     "argv": ["go", "run", "./cmd/acdsl/verifiers/planformat"],
     "timeout_s": 20,
     "description": "lintable subset of style/plan.md over design plans: TLDR first, Changelog present, canonical section order"
+  },
+  "runbook-format": {
+    "argv": ["go", "run", "./cmd/acdsl/verifiers/runbookformat"],
+    "timeout_s": 20,
+    "description": "fails when a Bruno runbook request file lacks a non-empty docs block or an assert block (rules/runbooks.md lintable subset)"
   }
 }
