@@ -22,6 +22,13 @@ func TokenDir() (string, error) {
 	return filepath.Join(home, ".config", "claude-routine", "tokens"), nil
 }
 
+// LegacyTokenPath returns the single-file token that predates labeled
+// tokens — the sibling named "token" of the token store dir. run.sh still
+// falls back to it when no ROUTINE_TOKEN label is set.
+func LegacyTokenPath(dir string) string {
+	return filepath.Join(filepath.Dir(dir), "token")
+}
+
 // ListTokenLabels lists stored token labels sorted; a missing dir is an
 // empty store, not an error.
 func ListTokenLabels(dir string) ([]string, error) {

@@ -50,6 +50,17 @@ func IsLoaded(ctx context.Context, label string) (bool, error) {
 	return state != "NotFound" && state != "Disabled", nil
 }
 
+// IsRunning reports whether the task has a live instance — Task Scheduler
+// exposes it directly as the Running state. Used by the reload guard to
+// avoid killing an active run.
+func IsRunning(ctx context.Context, label string) (bool, error) {
+	state, err := taskState(ctx, label)
+	if err != nil {
+		return false, fmt.Errorf("IsRunning: %s: %w", label, err)
+	}
+	return state == "Running", nil
+}
+
 // Start registers (or force-re-registers) the routine's task from its plist
 // and enables it — the analog of launchctl enable + bootstrap. The plist is
 // never handed to the OS; it is translated to Task XML here (plan D1).

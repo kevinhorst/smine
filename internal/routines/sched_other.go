@@ -19,6 +19,12 @@ func IsLoaded(ctx context.Context, label string) (bool, error) {
 	return false, nil
 }
 
+// IsRunning reports false everywhere: nothing can run without a scheduler
+// backend.
+func IsRunning(ctx context.Context, label string) (bool, error) {
+	return false, nil
+}
+
 // RunNow is unsupported without a scheduler backend.
 func RunNow(ctx context.Context, label string) (string, error) {
 	return "", errUnsupported

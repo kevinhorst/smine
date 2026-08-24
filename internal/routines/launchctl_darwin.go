@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/kevinhorst/smine/internal/shell"
 )
@@ -31,6 +32,29 @@ func IsLoaded(ctx context.Context, label string) (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("IsLoaded: %s: %w", label, err)
+}
+
+// IsRunning reports whether the loaded job has a live instance. Unlike
+// IsLoaded this has to read `launchctl print` output (the `pid = <n>` line is
+// the only signal a run is in flight); the format caveat of D23 applies, so
+// an unmatched output degrades to "not running" — the safe direction for the
+// reload guard, which only uses this to avoid killing an active run.
+func IsRunning(ctx context.Context, label string) (bool, error) {
+	output, err := shell.Run(ctx, "", "launchctl", "print", guiTarget(label))
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == notFoundExit {
+			return false, nil
+		}
+		return false, fmt.Errorf("IsRunning: %s: %w", label, err)
+	}
+
+	for _, line := range strings.Split(output, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "pid = ") {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // RunNow kickstarts the loaded job; completion is not synchronous — the row
