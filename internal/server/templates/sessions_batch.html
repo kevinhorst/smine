@@ -10,13 +10,13 @@
   </ul>
   {{end}}
   {{if .Batch.Batch.SourceNote}}<span class="meta">{{.Batch.Batch.SourceNote}}</span>{{end}}
-  <span class="meta">Created: {{.Batch.Batch.AnalyzedDate}}</span>
+  <span class="meta">{{t "Created:"}} {{.Batch.Batch.AnalyzedDate}}</span>
 </div>
 
 {{template "_batch_body.html" .}}
 
 {{if .Batch.Arcs}}
-<h2>Arcs</h2>
+<h2>{{t "Arcs"}}</h2>
 {{range .Batch.Arcs}}
 <div class="card">
   <span class="label">

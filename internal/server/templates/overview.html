@@ -1,11 +1,11 @@
 {{template "head" .}}
 {{template "nav" .}}
-<h1>Overview</h1>
+<h1>{{t "Overview"}}</h1>
 <div class="tiles" id="overview-tiles">
   {{range .Tiles}}
   {{if .Split}}
   <div class="tile" draggable="true" data-tile-id="{{.Id}}">
-    <span class="tile-label">{{.Label}}</span>
+    <span class="tile-label">{{t .Label}}</span>
     <span class="tile-value tile-value-split">
       <a class="split-frustration" href="{{.Split.FrustrationHref}}">{{.Split.FrustrationValue}}</a>
       <span class="tile-value-sep">/</span>
@@ -21,13 +21,13 @@
       {{range .Filters}}<a class="tile-filter-link{{if .Active}} tile-filter-active{{end}}" href="{{.URL}}">{{.Label}}</a>{{end}}
     </span>
     {{end}}
-    {{if .Detail}}<span class="tile-detail">{{.Detail}}</span>{{end}}
+    {{if .Detail}}<span class="tile-detail">{{t .Detail}}</span>{{end}}
   </div>
   {{else}}
   <a class="tile" href="{{.Href}}" draggable="true" data-tile-id="{{.Id}}">
-    <span class="tile-label">{{.Label}}</span>
+    <span class="tile-label">{{t .Label}}</span>
     <span class="tile-value">{{.Value}}</span>
-    {{if .Detail}}<span class="tile-detail">{{.Detail}}</span>{{end}}
+    {{if .Detail}}<span class="tile-detail">{{t .Detail}}</span>{{end}}
   </a>
   {{end}}
   {{end}}

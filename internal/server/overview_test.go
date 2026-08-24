@@ -374,3 +374,19 @@ func TestParseWindow(t *testing.T) {
 		})
 	}
 }
+
+func TestOverviewNonDeveloper(t *testing.T) {
+	server := newTestServer(t, &Options{PresentationPath: writeGermanProfile(t)})
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	body := recorder.Body.String()
+	assert.Contains(t, body, "Ausgewertete Sitzungen")
+	assert.Contains(t, body, "Vorschläge")
+	assert.NotContains(t, body, ">Checklist</span>")
+	assert.NotContains(t, body, ">Repos</span>")
+	assert.NotContains(t, body, ">Skills</span>")
+	assert.NotContains(t, body, ">Hooks</span>")
+}

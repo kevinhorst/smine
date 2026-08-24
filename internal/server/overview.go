@@ -83,6 +83,15 @@ const (
 
 func (s *Server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	var tiles []overviewTile
+	// Non-developer installs see only the session and proposal tiles — the
+	// remaining tiles expose engine internals (plan D6).
+	if !s.profile.isDeveloperAudience() {
+		tiles = append(tiles, s.sessionTiles(parseWindow(r))...)
+		tiles = append(tiles, s.proposalsTile())
+		data := overviewPage{Page: pageOverview, Tiles: tiles, Title: translate(s.profile.Language, "Overview")}
+		s.renderFragment(w, tmplOverview, data)
+		return
+	}
 	if welcome, show := s.welcomeTile(r.Context()); show {
 		tiles = append(tiles, welcome)
 	}

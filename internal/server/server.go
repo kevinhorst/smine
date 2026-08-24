@@ -42,6 +42,7 @@ type Options struct {
 	InitWelcome        bool
 	PeekDashboardURL   string
 	PeekEndpoint       string
+	PresentationPath   string
 	ProposalsDir       string
 	ReposPath          string
 	RoutinesDir        string
@@ -70,6 +71,7 @@ type Server struct {
 	examplesDir        string
 	initWelcome        bool
 	peekClient         *peek.Client
+	profile            *presentationProfile
 	proposalsDir       string
 	repoLocks          *repos.Locks
 	repoRegistry       *repos.Registry
@@ -86,6 +88,7 @@ type Server struct {
 }
 
 func New(opts *Options) (*Server, error) {
+	profile := loadPresentationProfile(opts.PresentationPath)
 	funcs := template.FuncMap{
 		// baseName shortens worktree paths to their directory name; the
 		// detail table compares it against the branch slug to expose
@@ -141,6 +144,18 @@ func New(opts *Options) (*Server, error) {
 		"initWelcome": func() bool {
 			return opts.InitWelcome
 		},
+		// t overlays the profile language onto English source strings;
+		// identity when no catalog entry exists or the language is English
+		// (plan D5).
+		"t": func(text string) string {
+			return translate(profile.Language, text)
+		},
+		"langAttr": func() string {
+			return profile.Language
+		},
+		// isDeveloperAudience gates internals-exposing nav entries and
+		// proposal-card parts (plan D6).
+		"isDeveloperAudience": profile.isDeveloperAudience,
 		// appVersion feeds the nav brand; ldflags -X main.version stamps it.
 		"appVersion": func() string {
 			return opts.Version
@@ -221,6 +236,7 @@ func New(opts *Options) (*Server, error) {
 		examplesDir:        opts.ExamplesDir,
 		initWelcome:        opts.InitWelcome,
 		peekClient:         peek.NewClient(opts.PeekEndpoint),
+		profile:            profile,
 		proposalsDir:       opts.ProposalsDir,
 		repoLocks:          repos.NewLocks(),
 		repoRegistry:       registry,

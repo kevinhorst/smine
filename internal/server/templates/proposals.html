@@ -1,9 +1,9 @@
 {{template "head" .}}
 {{template "nav" .}}
-<h1>Proposals</h1>
+<h1>{{t "Proposals"}}</h1>
 <div class="tabs">
-  <a href="/proposals" {{if eq .Tab "open"}}class="active"{{end}}>Open</a>
-  <a href="/proposals?tab=notes" {{if eq .Tab "notes"}}class="active"{{end}}>Notes</a>
+  <a href="/proposals" {{if eq .Tab "open"}}class="active"{{end}}>{{t "Open"}}</a>
+  <a href="/proposals?tab=notes" {{if eq .Tab "notes"}}class="active"{{end}}>{{t "Notes"}}</a>
 </div>
 <div id="proposals-body">
 {{if .LoadErrors}}
@@ -15,13 +15,13 @@
 </div>
 {{end}}
 {{if not .Files}}
-<div class="empty">No proposal JSONs found (proposals/*.json).</div>
+<div class="empty">{{t "No proposal JSONs found (proposals/*.json)."}}</div>
 {{end}}
 {{if and .Files (not .HasGroups)}}
 {{if eq .Tab "open"}}
 <div class="empty">Everything applied, happy {{.HappyWord}}!</div>
 {{else}}
-<div class="empty">No notes.</div>
+<div class="empty">{{t "No notes."}}</div>
 {{end}}
 {{end}}
 {{range .Files}}
@@ -38,7 +38,7 @@
     {{with $row.Label}}<span class="section-label">{{.}}</span>{{end}}
     <a class="badge {{if not $view.Filter}}badge-ok{{else}}badge-dim{{end}}" href="{{$view.AllURL}}"
        hx-get="{{$view.AllURL}}" hx-target="#proposals-body" hx-select="#proposals-body"
-       hx-swap="outerHTML" hx-push-url="true">all</a>
+       hx-swap="outerHTML" hx-push-url="true">{{t "all"}}</a>
     {{range $row.Filters}}
     <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.URL}}"
        hx-get="{{.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"

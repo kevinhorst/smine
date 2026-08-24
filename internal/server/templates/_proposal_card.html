@@ -3,12 +3,14 @@
   <div class="card-row">
     {{if .Proposal.Id}}<span class="badge badge-dim">{{.Proposal.Id}}</span>{{end}}
     <span class="label"><strong>{{.Proposal.Title}}</strong></span>
+    {{if isDeveloperAudience}}
     {{if .Proposal.Target}}<span class="badge badge-dim">→ {{.Proposal.Target}}</span>{{end}}
     {{if .Proposal.Gate.Band}}
       {{if eq .Proposal.Gate.Band "J"}}<span class="badge badge-action">band J — prose</span>
       {{else}}<span class="badge badge-dim">band {{.Proposal.Gate.Band}}</span>{{end}}
     {{end}}
     {{range .Proposal.Tags}}<span class="badge badge-dim">{{.}}</span>{{end}}
+    {{end}}
     {{if .Proposal.Proposed}}<span class="meta">{{.Proposal.Proposed}}</span>{{end}}
     {{if .PendingVote}}
       {{if eq .PendingVote "p"}}<span class="badge badge-dim">Postponed (Pending{{if .IsRevert}}, revert{{end}})</span>
@@ -31,32 +33,32 @@
   {{if and .Proposal.Id .Proposal.Status}}
   {{if .Disabled}}
   <div class="card-row vote-disabled" title="example — voting works on the Proposals page">
-    <input type="text" disabled placeholder="comment (rejection reason or agent instruction)">
+    <input type="text" disabled placeholder="{{t "comment (rejection reason or agent instruction)"}}">
     <button type="button" disabled>+</button>
     <button type="button" disabled>−</button>
-    <button type="button" disabled>postpone</button>
+    <button type="button" disabled>{{t "postpone"}}</button>
   </div>
   {{else}}
   <form class="card-row" hx-post="/api/proposals/{{.Kind}}/{{pathEscape .Proposal.Id}}/vote"
         hx-target="closest .card" hx-swap="outerHTML">
     <input type="text" name="comment" maxlength="500"
-           placeholder="comment (rejection reason or agent instruction)" value="{{.PendingComment}}">
+           placeholder="{{t "comment (rejection reason or agent instruction)"}}" value="{{.PendingComment}}">
     <button type="submit" name="vote" value="+">+</button>
     <button type="submit" name="vote" value="-">−</button>
-    <button type="submit" name="vote" value="p">postpone</button>
+    <button type="submit" name="vote" value="p">{{t "postpone"}}</button>
   </form>
   {{end}}
   {{end}}
   {{if or .Proposal.Fields .Proposal.Gate.Band .Evidence}}
   <details class="card-more">
-    <summary>details{{with .Proposal.Fields}} · {{len .}} fields{{end}}{{with .Evidence}} · {{len .}} evidence{{end}}</summary>
+    <summary>{{t "details"}}{{with .Proposal.Fields}} · {{len .}} {{t "fields"}}{{end}}{{with .Evidence}} · {{len .}} {{t "evidence"}}{{end}}</summary>
     {{range .Proposal.Fields}}
     <div class="finding">
       <span class="badge badge-dim">{{.Label}}</span>
       <span class="label">{{.Text}}</span>
     </div>
     {{end}}
-    {{if .Proposal.Gate.Band}}
+    {{if and isDeveloperAudience .Proposal.Gate.Band}}
     <div class="finding">
       <span class="badge badge-dim">gate</span>
       <span class="label">{{if .Proposal.Gate.Verifier}}{{.Proposal.Gate.Verifier}}{{end}}{{if .Proposal.Gate.Anchor}} · <code>{{.Proposal.Gate.Anchor}}</code>{{end}}</span>
@@ -76,7 +78,7 @@
           </ul>
           {{range .Item.Snippets}}
           <details class="snippet">
-            <summary>{{.Kind}}{{if .Lang}} · {{.Lang}}{{end}}{{if .Source}} · from {{.Source}}{{end}}</summary>
+            <summary>{{if isDeveloperAudience}}{{.Kind}}{{if .Lang}} · {{.Lang}}{{end}}{{if .Source}} · from {{.Source}}{{end}}{{else}}{{t "technical detail"}}{{end}}</summary>
             <pre><code>{{.Code}}</code></pre>
           </details>
           {{end}}
