@@ -9,6 +9,7 @@
 		<string>__REPO_DIR__/bin/configserver</string>
 		<string>-addr</string>
 		<string>127.0.0.1:__PORT__</string>
+		<string>-init-welcome=__INIT_WELCOME__</string>
 	</array>
 	<key>WorkingDirectory</key>
 	<string>__REPO_DIR__</string>

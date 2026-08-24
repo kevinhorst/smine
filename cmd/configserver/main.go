@@ -46,6 +46,7 @@ func main() {
 	peekControlPort := flag.Int("peek-control-port", 42442, "peek-mcp control dashboard port (0 disables the dashboard)")
 	peekStart := flag.Bool("peek-start", true, "spawn peek-mcp when the port is not serving")
 	reposPath := flag.String("repos", "repos.json", "path to the repo registry file")
+	initWelcome := flag.Bool("init-welcome", false, "always show the Welcome nav entry and setup tile, even when all setup checks are green")
 	install := flag.Bool("install", false, "windows: register logon task + routines, then exit (macOS: use install.sh)")
 	logFile := flag.String("logfile", "", "append all output to this file (the Windows logon task passes it; the binary is windowsgui-subsystem there, so a console is never attached)")
 	routinesDir := flag.String("routines", "routines", "path to the routines directory")
@@ -102,7 +103,7 @@ func main() {
 	defer cancel()
 
 	if *install {
-		os.Exit(runInstall(ctx, *addr, *peekPort, *peekControlPort))
+		os.Exit(runInstall(ctx, *addr, *initWelcome, *peekPort, *peekControlPort))
 	}
 
 	endpoint := ""
@@ -128,6 +129,7 @@ func main() {
 		ContextDir:         *contextDir,
 		EvalsDir:           *evalsDir,
 		ExamplesDir:        *examplesDir,
+		InitWelcome:        *initWelcome,
 		PeekDashboardURL:   dashboardURL,
 		PeekEndpoint:       endpoint,
 		ProposalsDir:       *proposalsDir,

@@ -69,7 +69,7 @@ const serverTaskTemplate = `<?xml version="1.0"?>
 // and a second concurrent SyncAll from this process races it on
 // Register-ScheduledTask (observed: all three routines "sync failed" in the
 // server log while the installer's copies won).
-func runInstall(ctx context.Context, addr string, peekPort, peekControlPort int) int {
+func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, peekControlPort int) int {
 	repoDir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "install: getwd: %v\n", err)
@@ -81,6 +81,10 @@ func runInstall(ctx context.Context, addr string, peekPort, peekControlPort int)
 	bash := shell.BashPath()
 	if bash == "" {
 		fmt.Fprintln(os.Stderr, "install: Git Bash not found (set SMINE_BASH)")
+		return 1
+	}
+	if output, err := shell.Run(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", "ensure_git_repo.sh")); err != nil {
+		fmt.Fprintf(os.Stderr, "install: ensure_git_repo.sh: %v\n%s\n", err, output)
 		return 1
 	}
 	shimDir := filepath.Join(os.Getenv("LOCALAPPDATA"), "smine", "bin")
@@ -103,7 +107,7 @@ func runInstall(ctx context.Context, addr string, peekPort, peekControlPort int)
 		fmt.Fprintf(os.Stderr, "install: %v\n", err)
 		return 1
 	}
-	if err := registerServerTask(ctx, repoDir, addr, peekPort, peekControlPort); err != nil {
+	if err := registerServerTask(ctx, repoDir, addr, initWelcome, peekPort, peekControlPort); err != nil {
 		fmt.Fprintf(os.Stderr, "install: %v\n", err)
 		return 1
 	}
@@ -186,11 +190,11 @@ func takeOverPort(ctx context.Context, addr string) error {
 // registerServerTask registers \smine\configserver from serverTaskTemplate
 // with the port flags in the task arguments (plan D11), then fires the
 // immediate first run.
-func registerServerTask(ctx context.Context, repoDir, addr string, peekPort, peekControlPort int) error {
+func registerServerTask(ctx context.Context, repoDir, addr string, initWelcome bool, peekPort, peekControlPort int) error {
 	command := filepath.Join(repoDir, "bin", "configserver.exe")
 	logPath := filepath.Join(os.Getenv("LOCALAPPDATA"), "claude-routine", "logs", "configserver.log")
-	arguments := fmt.Sprintf(`-addr %s -peek-port %d -peek-control-port %d -logfile "%s"`,
-		addr, peekPort, peekControlPort, logPath)
+	arguments := fmt.Sprintf(`-addr %s -init-welcome=%t -peek-port %d -peek-control-port %d -logfile "%s"`,
+		addr, initWelcome, peekPort, peekControlPort, logPath)
 	taskXML := fmt.Sprintf(serverTaskTemplate, xmlEscapeInstall(command), xmlEscapeInstall(arguments), xmlEscapeInstall(repoDir))
 
 	xmlFile, err := os.CreateTemp("", "smine-configserver-*.xml")
