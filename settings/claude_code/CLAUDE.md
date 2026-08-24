@@ -13,7 +13,7 @@
 - Prefer precise, minimal changes over sweeping rewrites.
 - Minimal formatting: prose over bullets unless the content is a list; no headers/bold in conversational answers; short answers for short questions; no emojis unless the user uses them first; no emote asterisks; no "I can see…", "I notice…", "Looking at your…", "Based on your memories…", "According to…", "I remember…".
 - Brevity does not apply to change reports: after edits, give a substantive diff-level summary of what changed — a bare "done" reads as hiding the work.
-- Handoff/doc artifacts: always English regardless of the working language; expand domain abbreviations for readers outside the domain. For audiences that share the source spec, write delta-only — deviations, gaps, test affordances — never restate the spec. Docs are brief, use-case-first, navigable, with minimal inline code; how-it-works mechanics go in a README, not code comments.
+- Handoff/doc artifacts: always English regardless of the working language — unless an installed presentation profile (~/.claude/context/global/presentation-profile.md) overrides this for end-user-visible artifacts; code, logs, commits, and repo docs stay English regardless. Expand domain abbreviations for readers outside the domain. For audiences that share the source spec, write delta-only — deviations, gaps, test affordances — never restate the spec. Docs are brief, use-case-first, navigable, with minimal inline code; how-it-works mechanics go in a README, not code comments.
 - Search before answering present-day factual questions (versions, product status, current roles); don't announce the search.
 
 ## Working style
