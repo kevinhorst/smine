@@ -78,6 +78,10 @@ One entry per statement:
 - ID: per the identity grammar above; entry kinds here are `ACTION` and `FACT`.
 - Enforcement tag (backticked, after the ID): required on ACTION, absent on FACT.
   `[hook]` | `[lint]` | `[gate]` | `[review]` | `[manual]` — the cheapest sufficient mechanism.
+- Marker tag (backticked, optional, after the enforcement tag; never on FACT): flags the entry
+  as a member of a named cross-file set. Closed set: `[DoD]` — the entry is a Definition-of-Done
+  criterion (walked PASS/FAIL/N/A by railroad-review and dod-report). Query the set with
+  `rules entries --marker DoD` or jq over `context.json` (`.entries[].markers`).
 - Statement: one sentence after the em dash, polarity included ("Never …", "Always …"). An
   entry needing paragraphs is a spec, not an entry.
 - Bullets under the entry:
@@ -87,7 +91,7 @@ One entry per statement:
   - `Evidence:` — what proves adherence (optional).
   - `Location:` — evidence pointer (required on FACT; keeps staleness mechanically checkable).
   - `Reach:` — deployment reach (optional): `global` (default — ships to every target)
-    or comma-separated repo names, e.g. `Reach: aqms, peek-mcp` (ships exactly to those
+    or comma-separated repo names, e.g. `Reach: work, peek-mcp` (ships exactly to those
     targets; names = target dir basename). This repo is named `smine` — `Reach: smine`
     means "here only, never deploys"; there is no self-keyword. Sync-time filtering drops
     non-covered entries from deployed copies (`cmd/rules filter`).
