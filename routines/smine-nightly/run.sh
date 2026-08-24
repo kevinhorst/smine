@@ -134,6 +134,16 @@ printf '%s' "$output" | append_result "$exit_status" smine
 
 # ---- Stage 1.5: consolidate proposals (dedup, re-home, schema/audit gate) ----
 consolidate_status=0
+# Presentation profile: thread the install's language into the consolidate
+# rewording pass (the style-correction gate for the proposal store).
+consolidate_prompt="/smine-consolidate proposals"
+presentation_profile="$HOME/.claude/context/global/presentation-profile.md"
+if [[ -f "$presentation_profile" ]]; then
+  profile_language=$(sed -n 's/^language:[[:space:]]*//p' "$presentation_profile" | head -1)
+  if [[ -n "$profile_language" && "$profile_language" != "en" ]]; then
+    consolidate_prompt="/smine-consolidate proposals language $profile_language"
+  fi
+fi
 consolidate_tools="$(routine_allowed_tools smine-consolidate)"
 consolidate_flags=()
 if [[ -n "$consolidate_tools" ]]; then
@@ -141,7 +151,7 @@ if [[ -n "$consolidate_tools" ]]; then
 else
   echo "no allowed-tools manifest for smine-consolidate; running without --allowedTools"
 fi
-consolidate_output=$(routine_run_claude 3600 claude -p "/smine-consolidate proposals" \
+consolidate_output=$(routine_run_claude 3600 claude -p "$consolidate_prompt" \
   ${consolidate_flags[@]+"${consolidate_flags[@]}"} \
   --model "${ROUTINE_MODEL:-claude-opus-4-8[1m]}" \
   --effort low \
