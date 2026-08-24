@@ -22,7 +22,7 @@ func TestFilterRulesFileDropsSmineReachEntriesWithBullets(t *testing.T) {
 		"**ACTION-IMPL-001** `[review]` — Keep.\n\n* Applies: always.\n\n" +
 		"**ACTION-IMPL-002** `[review]` — Drop.\n\n* Applies: always.\n* Reach: smine\n\n" +
 		"**ACTION-IMPL-003** `[review]` — Keep too.\n\n* Applies: always.\n"
-	out := FilterRulesFile(content, "aqms", provideFilterAspects(), nil)
+	out := FilterRulesFile(content, "work", provideFilterAspects(), nil)
 	assert.Contains(t, out, "ACTION-IMPL-001")
 	assert.NotContains(t, out, "ACTION-IMPL-002")
 	assert.NotContains(t, out, "Reach: smine")
@@ -30,8 +30,8 @@ func TestFilterRulesFileDropsSmineReachEntriesWithBullets(t *testing.T) {
 }
 
 func TestFilterRulesFileListReachCoversOnlyNamedTargets(t *testing.T) {
-	content := "**ACTION-IMPL-001** `[review]` — Listed.\n\n* Applies: always.\n* Reach: aqms, peek-mcp\n"
-	kept := FilterRulesFile(content, "aqms", provideFilterAspects(), nil)
+	content := "**ACTION-IMPL-001** `[review]` — Listed.\n\n* Applies: always.\n* Reach: work, peek-mcp\n"
+	kept := FilterRulesFile(content, "work", provideFilterAspects(), nil)
 	assert.Contains(t, kept, "ACTION-IMPL-001")
 	dropped := FilterRulesFile(content, "otherrepo", provideFilterAspects(), nil)
 	assert.NotContains(t, dropped, "ACTION-IMPL-001")
@@ -41,16 +41,24 @@ func TestFilterRulesFileLangBoundScopes(t *testing.T) {
 	content := "**RULE-GOLANG-INTEG-001** `[review]` — Go rule.\n\n* Applies: go files.\n\n" +
 		"**RULE-PYTHON-INTEG-001** `[review]` — Python rule.\n\n* Applies: py files.\n\n" +
 		"**ACTION-IMPL-001** `[review]` — Lang-free.\n\n* Applies: always.\n"
-	out := FilterRulesFile(content, "aqms", provideFilterAspects(), []string{"go"})
+	out := FilterRulesFile(content, "work", provideFilterAspects(), []string{"go"})
 	assert.Contains(t, out, "RULE-GOLANG-INTEG-001")
 	assert.NotContains(t, out, "RULE-PYTHON-INTEG-001")
 	assert.Contains(t, out, "ACTION-IMPL-001")
 }
 
+func TestFilterRulesFileKeepsMarkedEntriesVerbatim(t *testing.T) {
+	content := "**ACTION-IMPL-001** `[review]` `[DoD]` — Marked keep.\n\n* Applies: always.\n\n" +
+		"**ACTION-IMPL-002** `[review]` `[DoD]` — Marked drop.\n\n* Applies: always.\n* Reach: smine\n"
+	out := FilterRulesFile(content, "work", provideFilterAspects(), nil)
+	assert.Contains(t, out, "**ACTION-IMPL-001** `[review]` `[DoD]` — Marked keep.")
+	assert.NotContains(t, out, "ACTION-IMPL-002")
+}
+
 func TestFilterRulesFilePassesNonEntryContentVerbatim(t *testing.T) {
 	content := "# Heading\n\nProse paragraph.\n\n```markdown\n**ACTION-IMPL-099** `[review]` — Example in fence.\n\n* Reach: smine\n```\n\n" +
 		"## Tombstones\n\n| Retired | Replacement | Date |\n| ACTION-IMPL-009 | — | 2026-01-01 |\n"
-	out := FilterRulesFile(content, "aqms", provideFilterAspects(), nil)
+	out := FilterRulesFile(content, "work", provideFilterAspects(), nil)
 	assert.Equal(t, content, out)
 }
 
@@ -58,7 +66,7 @@ func TestFilterRulesFileOutputReparsesGreen(t *testing.T) {
 	content := "**ACTION-IMPL-001** `[review]` — Keep.\n\n* Applies: always.\n\n" +
 		"**ACTION-IMPL-002** `[review]` — Drop.\n\n* Applies: always.\n* Reach: smine\n\n" +
 		"**RULE-PYTHON-INTEG-001** `[review]` — Drop lang.\n\n* Applies: py.\n"
-	out := FilterRulesFile(content, "aqms", provideFilterAspects(), []string{"go"})
+	out := FilterRulesFile(content, "work", provideFilterAspects(), []string{"go"})
 	dir := writeRulesFixture(t, map[string]string{"chapter.md": out})
 	set, err := ParseRulesDir(dir, false)
 	require.NoError(t, err)

@@ -76,6 +76,28 @@ func TestParseRulesDir(t *testing.T) {
 		assert.Equal(t, "ACTION-IMPL-INTEG-001", set.Tombstones[0].Replacement)
 	})
 
+	t.Run("marker-tag-parses", func(t *testing.T) {
+		dir := writeRulesFixture(t, map[string]string{
+			"integrity.md": "# Data Integrity\n\n**ACTION-IMPL-INTEG-001** `[review]` `[DoD]` — Never edit an applied migration.\n\n* Applies: diff touches migration files.\n\n**ACTION-IMPL-INTEG-004** `[review]` — Claim side effects transactionally.\n\n* Applies: diff adds a send or charge.\n",
+		})
+		set, err := ParseRulesDir(dir, false)
+		require.NoError(t, err)
+		require.Len(t, set.Entries, 2)
+		assert.Equal(t, []string{"DoD"}, set.Entries[0].Markers)
+		assert.Equal(t, "review", set.Entries[0].Enforcement)
+		assert.Equal(t, "Never edit an applied migration.", set.Entries[0].Content.Statement)
+		assert.Nil(t, set.Entries[1].Markers)
+	})
+
+	t.Run("malformed-entry-line-still-errors", func(t *testing.T) {
+		dir := writeRulesFixture(t, map[string]string{
+			"integrity.md": "**ACTION-IMPL-INTEG-001** `[review]` `[DoD]` no dash separator\n",
+		})
+		_, err := ParseRulesDir(dir, false)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "malformed entry line")
+	})
+
 	t.Run("content-is-typed-fields", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
 			"go.md": "# GO\n\n**RULE-NAV-001** `[review]` — Names are verbose.\n\n* Applies: everywhere.\n* Why: clarity.\n* Evidence: measured drift.\n* Version: 1.1\n* Names MUST be verbose.\n  Continuation of the bullet.\n* No `i` loops.\n\nA prose note.\n\n```go\n// GOOD\n---\nvar hookGroup int\n```\n\n```\nbare fence\n```\n\n**RULE-NAV-002** `[review]` — Second rule.\n\n## SECTION\n\nprose\n",
@@ -200,13 +222,13 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("reach-bullet-parses-smine-and-list", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"nav.md": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n* Reach: smine\n\n**ACTION-NAV-002** `[review]` — Always look.\n\n* Applies: everywhere.\n* Reach: aqms, peek-mcp\n",
+			"nav.md": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n* Reach: smine\n\n**ACTION-NAV-002** `[review]` — Always look.\n\n* Applies: everywhere.\n* Reach: work, peek-mcp\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
 		require.Len(t, set.Entries, 2)
 		assert.Equal(t, "smine", set.Entries[0].Reach)
-		assert.Equal(t, "aqms, peek-mcp", set.Entries[1].Reach)
+		assert.Equal(t, "work, peek-mcp", set.Entries[1].Reach)
 	})
 
 	t.Run("reach-defaults-to-global", func(t *testing.T) {
@@ -389,6 +411,41 @@ func TestValidateRules(t *testing.T) {
 		})}},
 	})
 
+	// clean-marker-tag
+	tests = append(tests, &testCase{
+		_id:               "clean-marker-tag",
+		_expectedFragment: "",
+		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
+			entry.Markers = []string{"DoD"}
+		})}},
+	})
+
+	// unknown-marker-tag
+	tests = append(tests, &testCase{
+		_id:               "unknown-marker-tag",
+		_expectedFragment: "unknown marker tag [Todo]",
+		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
+			entry.Markers = []string{"Todo"}
+		})}},
+	})
+
+	// fact-with-marker-tag
+	tests = append(tests, &testCase{
+		_id:               "fact-with-marker-tag",
+		_expectedFragment: "FACT entries carry no marker tag",
+		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
+			entry.Id = "FACT-REPO-STACK-001"
+			entry.Kind = RuleKindFact
+			entry.Scope = "REPO"
+			entry.Topic = "STACK"
+			entry.Enforcement = ""
+			entry.Content.Applies = ""
+			entry.Content.Location = "go.mod"
+			entry.Origin = RuleOriginOverlay
+			entry.Markers = []string{"DoD"}
+		})}},
+	})
+
 	// fact-with-enforcement-tag
 	tests = append(tests, &testCase{
 		_id:               "fact-with-enforcement-tag",
@@ -476,7 +533,7 @@ func TestValidateRules(t *testing.T) {
 		_id:               "list-reach-is-valid",
 		_expectedFragment: "",
 		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
-			entry.Reach = "aqms, peek-mcp"
+			entry.Reach = "work, peek-mcp"
 		})}},
 	})
 

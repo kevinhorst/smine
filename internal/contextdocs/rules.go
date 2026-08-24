@@ -93,6 +93,12 @@ var ruleEnforcements = map[string]bool{
 	"review": true,
 }
 
+// ruleMarkers are the valid marker tags — an optional second backticked tag
+// after the enforcement tag that flags an entry as a member of a named set.
+var ruleMarkers = map[string]bool{
+	"DoD": true,
+}
+
 // RuleExample is one fenced example block inside an entry — Lang is the fence
 // info string ("go", "sql", "" for a bare fence), Code the verbatim body.
 type RuleExample struct {
@@ -124,6 +130,7 @@ type RuleEntry struct {
 	Topic       string      `json:"topic,omitempty"`
 	Number      int         `json:"-"`
 	Enforcement string      `json:"enforcement,omitempty"`
+	Markers     []string    `json:"markers,omitempty"`
 	Content     RuleContent `json:"content"`
 	Reach       string      `json:"reach"`
 	Version     string      `json:"version"`
@@ -159,7 +166,7 @@ type RuleSet struct {
 
 var (
 	ruleEntryPattern = regexp.MustCompile(
-		`^\*\*(FACT|ACTION|RULE)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-([0-9]{3})\*\*(?: \x60\[([a-z]+)\]\x60)? — (.+)$`)
+		`^\*\*(FACT|ACTION|RULE)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-([0-9]{3})\*\*(?: \x60\[([a-z]+)\]\x60)?(?: \x60\[([A-Za-z]+)\]\x60)? — (.+)$`)
 	ruleEntryPrefixPattern = regexp.MustCompile(`^\*\*(FACT|ACTION|RULE)-`)
 	ruleBulletPattern      = regexp.MustCompile(`^\* (Why|Applies|Evidence|Location|Version|Reach): (.+)$`)
 	ruleFilesPattern       = regexp.MustCompile(`^\*\*Files:\*\* (.+)$`)
@@ -333,6 +340,10 @@ func parseRulesFile(content, source, origin string, set *RuleSet) error {
 			if match[3] != "" {
 				id = fmt.Sprintf("%s-%s-%s-%s", match[1], match[2], match[3], match[4])
 			}
+			var markers []string
+			if match[6] != "" {
+				markers = []string{match[6]}
+			}
 			set.Entries = append(set.Entries, RuleEntry{
 				Id:          id,
 				Kind:        strings.ToLower(match[1]),
@@ -340,7 +351,8 @@ func parseRulesFile(content, source, origin string, set *RuleSet) error {
 				Topic:       match[3],
 				Number:      number,
 				Enforcement: match[5],
-				Content:     parseEntryContent(strings.TrimSpace(match[6]), lines[lineNumber+1:entryContentEnd(lines, lineNumber)]),
+				Markers:     markers,
+				Content:     parseEntryContent(strings.TrimSpace(match[7]), lines[lineNumber+1:entryContentEnd(lines, lineNumber)]),
 				Reach:       reach.Global,
 				Version:     "1.0",
 				Source:      source,
@@ -522,12 +534,22 @@ func ValidateRules(set RuleSet, aspects []RuleAspect) []string {
 			violations = append(violations, fmt.Sprintf(
 				"%s: %s: topic %s is not a registered class-topic taxonomy entry", entry.Source, entry.Id, entry.Topic))
 		}
+		for _, marker := range entry.Markers {
+			if !ruleMarkers[marker] {
+				violations = append(violations, fmt.Sprintf(
+					"%s: %s: unknown marker tag [%s]", entry.Source, entry.Id, marker))
+			}
+		}
 
 		switch entry.Kind {
 		case RuleKindFact:
 			if entry.Enforcement != "" {
 				violations = append(violations, fmt.Sprintf(
 					"%s: %s: FACT entries carry no enforcement tag", entry.Source, entry.Id))
+			}
+			if len(entry.Markers) > 0 {
+				violations = append(violations, fmt.Sprintf(
+					"%s: %s: FACT entries carry no marker tag", entry.Source, entry.Id))
 			}
 			if entry.Content.Location == "" {
 				violations = append(violations, fmt.Sprintf(
