@@ -4,6 +4,7 @@
 //	rules validate [--deployed <dir>] [--dir <context-dir>]
 //	rules generate [-check] [--dir <context-dir>] [--out <file>]
 //	rules filter --target <name> [--langs go,sql] [--dir <context-dir>] <file>
+//	rules entries --marker DoD [--deployed <dir>] [--dir <context-dir>]
 //	rules render-skill [--disable id,glob*] [--list-entries] <SKILL.md>
 //
 // validate parses a context tree (actions/ + rules/ + facts/; with --deployed,
@@ -14,7 +15,11 @@
 // removed — the sync boundary: entries whose reach does not cover the target
 // and unselected-language entries never ship. render-skill prints a SKILL.md
 // with disabled entries stripped, or its parsed entries as JSON — the SKILL.md
-// is the only source, there is no stored skill index.
+// is the only source, there is no stored skill index. entries lists the
+// entries carrying a marker tag (id — statement, one per line) — it parses
+// the .md tree directly, so it works even where context.json was not synced;
+// jq over context.json (.entries[] | select(.markers // [] | index("DoD")))
+// is the equivalent query where the file exists.
 package main
 
 import (
@@ -49,7 +54,7 @@ func main() {
 
 func run() int {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: rules <validate|generate|filter|render-skill> [flags]")
+		fmt.Fprintln(os.Stderr, "usage: rules <validate|generate|filter|entries|render-skill> [flags]")
 		return exitError
 	}
 
@@ -62,6 +67,8 @@ func run() int {
 		return runRenderSkill(os.Args[2:])
 	case "filter":
 		return runFilter(os.Args[2:])
+	case "entries":
+		return runEntries(os.Args[2:])
 	default:
 		fmt.Fprintf(os.Stderr, "rules: unknown command: %s\n", os.Args[1])
 		return exitError
@@ -134,6 +141,48 @@ func runFilter(args []string) int {
 		}
 	}
 	fmt.Print(contextdocs.FilterRulesFile(string(content), *targetName, aspects, langs))
+	return exitClean
+}
+
+// runEntries prints every entry carrying the given marker tag, one
+// "id — statement" line per entry. It parses the .md tree directly, so the
+// query works in deployed context dirs even where context.json was skipped.
+func runEntries(args []string) int {
+	flags := flag.NewFlagSet("entries", flag.ExitOnError)
+	marker := flags.String("marker", "", "marker tag to select (e.g. DoD); required")
+	deployedDir := flags.String("deployed", "", "deployed context root; baseline files recognized by their synced header")
+	sourceDir := flags.String("dir", "context", "source context directory (ignored with --deployed)")
+	flags.Parse(args)
+	if *marker == "" {
+		fmt.Fprintln(os.Stderr, "usage: rules entries --marker <tag> [--deployed <dir>] [--dir <context-dir>]")
+		return exitError
+	}
+
+	contextDir, detectOrigin := *sourceDir, false
+	if *deployedDir != "" {
+		contextDir, detectOrigin = *deployedDir, true
+	}
+
+	set, err := contextdocs.ParseContext(contextDir, detectOrigin)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "rules:", err)
+		return exitError
+	}
+
+	count := 0
+	for _, entry := range set.Entries {
+		for _, tag := range entry.Markers {
+			if tag == *marker {
+				fmt.Printf("%s — %s\n", entry.Id, entry.Content.Statement)
+				count++
+				break
+			}
+		}
+	}
+	if count == 0 {
+		fmt.Fprintf(os.Stderr, "rules: no entries with marker [%s] in %s\n", *marker, contextDir)
+		return exitViolations
+	}
 	return exitClean
 }
 
