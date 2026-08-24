@@ -10,7 +10,6 @@
   },
   "permissions": {
     "allow": [
-      "Bash(/Users/kevinpersonal/.claude/agents/tools/remove_agent_worktrees.sh --delete-branch claude/*)",
       "Bash(bash cmd/context/context_record.sh *)",
       "Bash(cat *)",
       "Bash(cmd/context/context_record.sh *)",
