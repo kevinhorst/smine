@@ -20,7 +20,13 @@ one lineage of dated branches `claude-routines/<group>-<date>` (a `-2`, `-3`, �
 disambiguates two runs on the same day). Every run mints a **fresh** branch — it
 never reuses one: the new branch is based on the newest un-merged dated branch
 (the chain tip) so consecutive runs stack linearly, or on `main` when none
-survives. Chain members (routines sharing a `ROUTINE_GROUP`) serialize on the
+survives. A chain-based run then **syncs with `main` before it starts**: a clean
+`git merge main`, or — on conflicts — an unattended `/merge-resolve` claude run
+in the worktree, gated by a clean tree and a conflict-free
+`git merge-tree --write-tree main HEAD`; a sync that cannot reach a mergeable
+state fails the run and leaves the chain untouched. Every run's result is
+therefore mergeable into main as of run start — a conflict at accept time only
+means main moved after the run. Chain members (routines sharing a `ROUTINE_GROUP`) serialize on the
 group lock; different groups run concurrently and never touch each other's
 worktrees or branches. Output is committed locally on the run's dated branch — no
 push, no PR. **Locally merging the newest branch accepts the whole chain;

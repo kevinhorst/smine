@@ -44,6 +44,52 @@ routine_branch_only_failures() {
   ! grep -qv '\[failed\]' <<<"$subjects"
 }
 
+# Merges current local main into the run's worktree so the run's result
+# descends from main-as-of-run-start — the later local merge into main is then
+# conflict-free unless main moved after the run. Clean merges cost nothing; a
+# conflicted merge is aborted and handed to an unattended /merge-resolve
+# claude run in the worktree, then gated: the tree must be clean and
+# `git merge-tree --write-tree main HEAD` conflict-free. Returns 1 when the
+# sync cannot produce a mergeable state. routine_run_claude /
+# routine_allowed_tools are used when the caller sourced platform.sh/skill.sh
+# (every run.sh does); a bare `claude` keeps the lib sourceable standalone.
+routine_chain_sync_main() {
+  local wt="$1" tools prompt
+  if git -C "$wt" merge --no-edit --quiet main >/dev/null 2>&1; then
+    return 0
+  fi
+  git -C "$wt" merge --abort >/dev/null 2>&1 || true
+
+  echo "chain diverged from main with conflicts; running unattended /merge-resolve" >&2
+  prompt="/merge-resolve theirs main. Unattended routine run: never ask a question; decide every judgement call yourself."
+  tools=""
+  [ "$(type -t routine_allowed_tools)" = "function" ] && tools="$(routine_allowed_tools merge-resolve)"
+  local claude_cmd=(claude -p "$prompt")
+  [[ -n "$tools" ]] && claude_cmd+=(--allowedTools "$tools")
+  claude_cmd+=(
+    --model "${ROUTINE_MODEL:-claude-opus-4-8[1m]}"
+    --effort low
+    --permission-mode "${ROUTINE_PERMISSION_MODE:-acceptEdits}"
+    --max-budget-usd "${ROUTINE_MAX_BUDGET_USD:-15}"
+    --output-format json
+  )
+  if [ "$(type -t routine_run_claude)" = "function" ]; then
+    ( cd "$wt" && routine_run_claude 3600 "${claude_cmd[@]}" ) >/dev/null || true
+  else
+    ( cd "$wt" && "${claude_cmd[@]}" ) >/dev/null 2>&1 || true
+  fi
+
+  if [[ -n "$(git -C "$wt" status --porcelain)" ]]; then
+    echo "merge-resolve left the worktree dirty; sync failed" >&2
+    return 1
+  fi
+  if ! git -C "$wt" merge-tree --write-tree main HEAD >/dev/null 2>&1; then
+    echo "chain still conflicts with main after merge-resolve; sync failed" >&2
+    return 1
+  fi
+  return 0
+}
+
 # Dated group branches, newest commit first (the chain tip is line 1). The
 # dated suffix carries no slash, so the refs/heads glob matches cleanly.
 routine_group_branches() {
@@ -67,7 +113,9 @@ routine_prune_merged() {
 # Mints a fresh dated branch for this run and checks it out into the group
 # worktree. Never reuses a branch: the run stacks on the newest un-merged dated
 # branch (chain tip) so votes, proposal edits, and archives accumulate linearly
-# — or on main when none survives. Prunes merged branches first; an all-[failed]
+# — or on main when none survives. A chain-based run then syncs with main
+# (routine_chain_sync_main) so every run ends mergeable into main as of run
+# start. Prunes merged branches first; an all-[failed]
 # chain is discarded and the run starts from main. Honors
 # ROUTINE_MAX_OPEN_BRANCHES: at the cap it mints nothing and returns 3. Removes
 # only the group's own stale worktree — never a sibling group's. Echoes the
@@ -112,6 +160,17 @@ routine_worktree_create() {
 
   mkdir -p "$ROUTINE_WT_ROOT"
   git -C "$repo_root" worktree add --quiet -b "$new" "$wt" "$base" || return 1
+
+  # A chain-based run syncs with main before anything else touches the tree,
+  # so the run's result stays mergeable into main-as-of-run-start. On sync
+  # failure the fresh branch and worktree are discarded — the chain is left
+  # exactly as found and the run is recorded as failed by the caller.
+  if [[ "$base" != "main" ]] && ! routine_chain_sync_main "$wt"; then
+    git -C "$repo_root" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
+    git -C "$repo_root" branch -D "$new" >/dev/null 2>&1 || true
+    return 1
+  fi
+
   printf '%s\n' "$wt"
 }
 

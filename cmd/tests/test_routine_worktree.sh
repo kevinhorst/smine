@@ -65,6 +65,22 @@ run_lib_env() {
       && ROUTINE_WT_ROOT="$ROUTINE_WT_ROOT_OVERRIDE" && "$@" )
 }
 
+run_lib_stub() {
+  # like run_lib, but prepends a stub-binary dir to PATH (fake claude for the
+  # chain-sync conflict paths)
+  local stubdir=$1
+  shift
+  ( HOME="$TMP" && PATH="$stubdir:$PATH" && source "$LIB" \
+      && ROUTINE_WT_ROOT="$ROUTINE_WT_ROOT_OVERRIDE" && "$@" )
+}
+
+# main gains a commit editing $1 (relative path) with content $2
+advance_main() {
+  printf '%s\n' "$2" > "$repo_root/$1"
+  git -C "$repo_root" add "$1"
+  git -C "$repo_root" commit -qm "main edits $1"
+}
+
 # branch checked out in a worktree = the dated branch create just minted
 head_branch() {
   git -C "$1" rev-parse --abbrev-ref HEAD
@@ -243,6 +259,73 @@ test_commit_body_handoff() {
     || fail "changed file not committed"
 }
 
+test_chain_sync_clean() {
+  setup_case syncclean
+  wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  printf '%s\n' night > "$wt/night-one"
+  run_lib routine_worktree_publish 0 || fail "publish failed"
+  # main advances on a disjoint file -> the next chain run merges it cleanly
+  advance_main main-later later
+  wt=$(run_lib routine_worktree_create) || fail "second create failed"
+  [[ -f "$wt/night-one" ]] || fail "chain content lost by sync"
+  [[ -f "$wt/main-later" ]] || fail "main's commit not merged into the chain run"
+  git -C "$wt" merge-tree --write-tree main HEAD >/dev/null \
+    || fail "synced branch not mergeable into main"
+}
+
+test_chain_sync_conflict_resolved() {
+  setup_case syncfix
+  wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  printf '%s\n' chain-side > "$wt/base"
+  run_lib routine_worktree_publish 0 || fail "publish failed"
+  # main edits the same file differently -> the sync merge conflicts and the
+  # stub claude stands in for /merge-resolve: it re-merges and concludes the
+  # conflicted merge with a resolution
+  advance_main base main-side
+  local stubdir="$TMP/syncfix-stub"
+  mkdir -p "$stubdir"
+  cat > "$stubdir/claude" <<'STUB'
+#!/usr/bin/env bash
+git merge --no-edit --quiet main >/dev/null 2>&1 || {
+  printf '%s\n' resolved > base
+  git add base
+  git commit --no-edit -q
+}
+STUB
+  chmod +x "$stubdir/claude"
+  wt=$(run_lib_stub "$stubdir" routine_worktree_create) || fail "conflicted create failed"
+  [[ "$(cat "$wt/base")" == "resolved" ]] || fail "stub resolution not in the worktree"
+  git -C "$wt" merge-tree --write-tree main HEAD >/dev/null \
+    || fail "resolved branch not mergeable into main"
+  [[ -z "$(git -C "$wt" status --porcelain)" ]] || fail "worktree left dirty"
+}
+
+test_chain_sync_conflict_unresolved() {
+  setup_case syncbad
+  wt=$(run_lib routine_worktree_create) || fail "first create failed"
+  local b1
+  b1=$(head_branch "$wt")
+  printf '%s\n' chain-side > "$wt/base"
+  run_lib routine_worktree_publish 0 || fail "publish failed"
+  advance_main base main-side
+  # the stub claude does nothing -> the gate must fail the create, leaving the
+  # chain untouched and no half-made branch behind
+  local stubdir="$TMP/syncbad-stub"
+  mkdir -p "$stubdir"
+  printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$stubdir/claude"
+  chmod +x "$stubdir/claude"
+  local rc=0
+  wt2=$(run_lib_stub "$stubdir" routine_worktree_create) || rc=$?
+  [[ "$rc" -eq 1 ]] || fail "expected rc 1 on unresolved sync, got $rc"
+  [[ ! -d "$ROUTINE_WT_ROOT_OVERRIDE/probe-nightly" ]] || fail "worktree survived failed sync"
+  git -C "$repo_root" rev-parse --quiet --verify "refs/heads/$b1" >/dev/null \
+    || fail "chain branch lost on failed sync"
+  local count
+  count=$(git -C "$repo_root" for-each-ref --format='%(refname:short)' \
+    'refs/heads/claude-routines/probe-nightly-*' | grep -c . || true)
+  [[ "$count" -eq 1 ]] || fail "failed sync left an extra branch (expected 1, got $count)"
+}
+
 test_dated_branch_name
 test_same_day_collision
 test_base_off_latest
@@ -254,4 +337,7 @@ test_stale_worktree_sweep
 test_sibling_group_survival
 test_no_change_no_commit
 test_commit_body_handoff
+test_chain_sync_clean
+test_chain_sync_conflict_resolved
+test_chain_sync_conflict_unresolved
 echo "OK"
