@@ -1,0 +1,7 @@
+[
+  {
+    "version": "1.0",
+    "date": "2026-08-24",
+    "text": "initial: reviewer-handoff DoD report — four fixed questions (why this solution, how validated, how tested, DoD per point), DoD set queried via the [DoD] entry marker (rules entries --marker DoD), consumes a railroad-review station output when present (reconcile, never duplicate), self-gather mode stated otherwise, FAILs/gaps escalated to a top Blockers section, delivered as a dated session-plan section in English"
+  }
+]
