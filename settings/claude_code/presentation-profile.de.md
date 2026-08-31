@@ -1,10 +1,10 @@
 ---
 language: de
-audience: non-developer
+audience: casual
 ---
 # Presentation profile (injected into every session on this machine)
 
-This machine belongs to a German-speaking non-developer. For everything this
+This machine belongs to a German-speaking casual user. For everything this
 user reads — proposal titles, change lines, detail fields, evidence notes,
 reports, chat responses — the following overrides any general rule that
 artifacts are written in English (that rule still governs code, logs, commit

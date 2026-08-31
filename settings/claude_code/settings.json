@@ -3,7 +3,7 @@
     "BASH_MAX_OUTPUT_LENGTH": "150000",
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
     "MAX_MCP_OUTPUT_TOKENS": "100000",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:42442/otlp",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
     "OTEL_METRICS_EXPORTER": "otlp",
     "OTEL_METRIC_EXPORT_INTERVAL": "10000"
@@ -105,10 +105,6 @@
     "ask": [
       "Bash(python3 -c *)",
       "Bash(python3)",
-      "Edit(**/*.acdsl)",
-      "Edit(acdsl/**)",
-      "Write(**/*.acdsl)",
-      "Write(acdsl/**)",
       "mcp__goland__execute_sql_query"
     ],
     "defaultMode": "acceptEdits",
@@ -180,6 +176,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash ~/.claude/hooks/skill-invoke-gate.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash ~/.claude/hooks/read-gate.sh",
             "timeout": 10
           }
@@ -201,6 +206,11 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/worktree-write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/acdsl-policy-guard.sh",
             "timeout": 10
           }
         ]
