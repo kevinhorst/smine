@@ -2,7 +2,7 @@ GO           ?= go
 GOOPTS       ?=
 GOBUILD=$(GO) build $(GOOPTS)
 GOTEST=$(GO) test -v -race $(GOOPTS)
-VERSION      ?= 1.1.4
+VERSION      ?= 1.2.0
 LDFLAGS      = -s -w -X main.version=$(VERSION)
 ADDR         ?= :6001
 SETTINGS     ?= $(HOME)/.claude/settings.json
@@ -77,6 +77,12 @@ build:
 	$(GOBUILD) -o ./bin/acdsl$(BINEXT) ./cmd/acdsl
 	@echo "-> Building rules ..."
 	$(GOBUILD) -o ./bin/rules$(BINEXT) ./cmd/rules
+
+## build: build all binaries and install
+.PHONY: build-install
+build-install: build
+	./install.sh
+
 
 ## build-release: build release binaries for GOOS/GOARCH into bin/release (VERSION=x.y.z)
 # The two daemons add -H=windowsgui on windows: no console window at logon.

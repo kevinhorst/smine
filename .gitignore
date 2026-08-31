@@ -15,6 +15,9 @@
 # machine-specific repo registry (D27)
 /repos.json
 
+# per-install ports and home overrides, written by install.sh / -install
+/install.env
+
 # routine runtime state (machine-specific)
 routines/*/.lock
 routines/*/results.jsonl
@@ -42,3 +45,7 @@ bin/*
 cmd/configserver/main
 
 .DS_Store
+
+# per-machine local Claude settings (skill-visibility overlay incl. routine
+# worktrees — publish's add -A must never commit it)
+.claude/settings.local.json

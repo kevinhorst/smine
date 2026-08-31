@@ -27,15 +27,15 @@ something that actually went wrong (many carry their origin quote) or demonstrab
 ```mermaid
 flowchart TD
     S["sessions in project repos<br>(plans, diffs, transcripts)"] --> P["peek-mcp"]
-    P --> SA["smine-batch<br>sessions/{scope}/batch-NN.md + json/*.json + ledger"]
+    P --> SA["smine-batch<br>sessions/{repo}/batch-NN.md + json/*.json + ledger"]
     SA --> AN["/smine<br>fan-out via skills/smine/smine/workflows/session-mine.js"]
     subgraph DIM["smine dimension skills"]
         M["smine-memory"]
-        K["smine-skills · smine-routines<br>smine-context"]
+        K["smine-skills · smine-routines<br>smine-context · smine-permissions"]
     end
     AN --> M
     AN --> K
-    SA --> JS["sessions/{scope}/json/*.json"]
+    SA --> JS["sessions/{repo}/json/*.json"]
     M --> PR["proposals/*.json<br>(ranked proposals)"]
     K --> PR
     JS --> CFG["cmd/configserver<br>sessions overview · proposals · skills"]
@@ -47,11 +47,22 @@ flowchart TD
 ## Installation (macOS)
 
 - Download the source archive (`Source code (tar.gz)`) from the [latest release](https://github.com/kevinhorst/smine/releases/latest) and extract it to a folder of your choice — the folder's name and location are yours; the extracted tree is the install.
-- `install.sh` — first initializes the folder as a standalone git repository (branch `main`, one initial commit, no remote) unless `.git` already exists, then installs [peek-mcp](https://github.com/kevinhorst/peek-mcp) ≥ 1.2.0 (`--no-peek` to skip), optionally serena (`--serena`), builds `bin/configserver`, materializes the routine plists from `routines/*/*.plist.template` (gitignored; edited later via the config server's Routines page), and runs the server as LaunchAgent `com.smine.configserver` on `:6001` (logs in `~/Library/Logs/`). Stop with `launchctl bootout gui/$(id -u)/com.smine.configserver` — launchd restarts the process after a plain `kill`.
+- `install.sh` — first initializes the folder as a standalone git repository (branch `main`, one initial commit, no remote) unless `.git` already exists, then installs [peek-mcp](https://github.com/kevinhorst/peek-mcp) ≥ 1.2.2 (`--no-peek` to skip), optionally serena (`--serena`), builds `bin/configserver`, materializes the routine plists from `routines/*/*.plist.template` (gitignored; edited later via the config server's Routines page), and runs the server as LaunchAgent `com.smine.configserver` on `:6001` (logs in `~/Library/Logs/`). Stop with `launchctl bootout gui/$(id -u)/com.smine.configserver` — launchd restarts the process after a plain `kill`.
 - For the nightly routine (`routines/smine-nightly/`, the loop's primary driver): `brew install flock coreutils`, then write a token from `claude setup-token` to `~/.config/claude-routine/token` (0600) — or add labeled per-account tokens via the config server's Configure widget (`~/.config/claude-routine/tokens/<label>`, selected per routine via the Token setting). The config server auto-bootstraps the routine at startup; without the token a run exits 78 and does nothing. Operations manual: [routines/README.md](routines/README.md).
 - Then run the [sync scripts](#sync-scripts) to deploy settings, skills, and context.
+- One-shot seeding from the machine's session history: the Welcome page's Bootstrap button, or `bash cmd/bootstrap/run.sh` with `BOOTSTRAP_TOKEN_FILE` (and optionally `BOOTSTRAP_SINCE=YYYY-MM-DD` / `BOOTSTRAP_N`) — the wrapper stages style → mine → consolidate → apply → orchestrate as separate headless claude runs; `BOOTSTRAP_DRY_RUN=1` prints the stage commands without running anything.
 
 The install dir is your own repository — it is not connected to this GitHub repo. To push it anywhere, add your own remote: `git remote add origin <url>`. Updates never run git for you; commit your local changes before updating.
+
+### Multiple macOS profiles on one Mac
+
+All user profiles share the machine's loopback port space, so every install needs its own port trio — otherwise the second profile's configserver finds the first profile's peek on the shared port and refuses it (the log names the foreign homes and the session column stays disabled rather than showing another user's sessions). Install per profile with explicit ports:
+
+```bash
+CONFIGSERVER_PORT=6002 PEEK_PORT=4243 PEEK_CONTROL_PORT=42443 ./install.sh
+```
+
+The resolved values are persisted to the gitignored `install.env`, so later plain `./install.sh` re-runs keep the profile's ports; environment variables always override the stored values. `PEEK_CLAUDE_HOME`/`PEEK_CODEX_HOME` optionally point the spawned peek at non-default agent homes. `install.env` also feeds `{{PEEK_CONTROL_PORT}}` in the settings template, so each profile's Claude Code exports telemetry to its own peek. Reinstalling is the peek update vector: install.sh kills this profile's running peek (never another profile's — it only sees your own processes) so the fresh configserver respawns the just-installed binary.
 
 ## Installation (Windows)
 
@@ -146,7 +157,7 @@ No `settings.json` edit or session restart needed; the hook entry stays wired bu
 | `cmd/worktrees/` | Helpers for parallel agent work in git worktrees: sync target branch into `claude/*` worktrees, print status, force-remove agent worktrees. |
 | `cmd/configserver/`, `internal/` | Go web app to toggle hooks, permissions, env, model, and MCP servers in `~/.claude/settings.json`; apply permission rules from rendered docs. |
 | `routines/` | Scheduled `claude -p` routines (one contract subdir each) + packaging templates. Operations manual: [routines/README.md](routines/README.md). |
-| `sessions/` | Retrospective output: batch reports + per-dimension `analyzed-*.txt` ledgers (`personal/`, `work/`), cross-scope ranked proposals (`proposals/`), batch JSON summaries (`<scope>/json/`). |
+| `sessions/` | Retrospective output: one folder per connected repo (plus `default/` for repo-less sessions, `archived/` for archived folders): batch reports + per-dimension `analyzed-*.txt` ledgers, batch JSON summaries (`<repo>/json/`); cross-repo ranked proposals live in `proposals/`. |
 | `evals/` | Skill eval results (`<skill>-<date>/eval.json`, skillroutine-eval schema) and their run artifacts. |
 | `docs/` | ACDSL spec ([acdsl-spec.md](docs/acdsl-spec.md)) and Go tooling notes, [telemetry decision record](docs/telemetry.md), workflow-problem [checklist](docs/checklist.md). |
 
@@ -253,12 +264,13 @@ flowchart LR
 | Step | Skill | Artifact out |
 | :--- | :--- | :--- |
 | 1 | `smine` | Runs the whole retrospective — mine then fan-out — via the `session-mine` workflow |
-| 2 | `smine-batch` | `sessions/<scope>/*batch-NN.md` + `sessions/<scope>/json/<batch>.json` + ledger (stage 1: transcript mining + batch JSON) |
+| 2 | `smine-batch` | `sessions/<repo>/*batch-NN.md` + `sessions/<repo>/json/<batch>.json` + ledger (stage 1: transcript mining + batch JSON) |
 | 3a | `smine-memory` | `proposals/context.json` (fact-surface groups; runs after 3d — shared file) |
 | 3b | `smine-skills` | `proposals/skills.json` |
 | 3c | `smine-routines` | `proposals/routines.json` |
 | 3d | `smine-context` | `proposals/context.json` |
-| 3e | `smine-consolidate` | proposals-store cleanup (dedup, re-home, presentation, schema/audit gate); smine-nightly consolidate stage between fan-out and apply |
+| 3e | `smine-permissions` | `proposals/permissions.json` (allowlist-addition proposals from batch permission grants) |
+| 3f | `smine-consolidate` | proposals-store cleanup (dedup, re-home, presentation, schema/audit gate); smine-nightly consolidate stage between fan-out and apply |
 | 4 | `smine-apply` | consumes the votes sidecar; dispositions + implementations committed on `claude-routines/smine-nightly-<date>` by the smine-nightly wrapper's apply stage |
 
 `/smine` is the default route — it mines and fans out; `/smine --no-batch` routes already-mined batches, `/smine --no-<dimension>` skips a dimension, `--max-proposals-per-dimension` / `--max-proposals-mined` cap nightly production. A dimension skill runs standalone only when a single dimension on one batch is wanted; `/smine-batch` is the raw miner alone. Each dimension keeps its own `analyzed-*.txt` ledger (historical filenames, unchanged).
@@ -340,8 +352,10 @@ Beyond the config editors the server manages multi-repo worktrees, launchd routi
 | `-context` | `context` | context source root shown on the Context page (`/context`: browse the docs, sync them into a target repo via `sync_context.sh`, with a native folder picker) |
 | `-peek-port` | `4242` | peek-mcp HTTP port; `0` disables peek entirely |
 | `-peek-control-port` | `42442` | peek-mcp control dashboard + OTLP receiver port (peek's canonical base); `0` disables the dashboard |
-| `-peek-start` | `true` | spawn peek-mcp when nothing serves the port |
+| `-peek-start` | `true` | spawn peek-mcp when nothing serves the port; a listener is reused only when its `/healthz` identity matches this profile's homes, anything else disables the peek integration with a logged error |
 | `-peek-bin` | `peek-mcp` | peek-mcp binary, resolved via PATH |
+| `-claude-home` | `~/.claude` | claude home passed to the spawned peek-mcp |
+| `-codex-home` | `~/.codex` | codex home passed to the spawned peek-mcp |
 
 `repos.json` format:
 
@@ -353,9 +367,9 @@ Beyond the config editors the server manages multi-repo worktrees, launchd routi
 }
 ```
 
-Session liveness comes from peek-mcp (v1.0.7+) as MCP client over Streamable HTTP at `127.0.0.1:<peek-port>/mcp` — the server spawns the binary itself unless one is already serving, so a standalone `peek-mcp start` is no longer needed. If peek is down, the session column degrades; pages keep rendering.
+Session liveness comes from peek-mcp (v1.0.7+) as MCP client over Streamable HTTP at `127.0.0.1:<peek-port>/mcp` — the server spawns the binary itself unless one is already serving, so a standalone `peek-mcp start` is no longer needed. The spawn passes `--back-link` with the config server's own address (peek's dashboard nav then links back here as "Hub"; older peek binaries without the flag fail to start — keep peek current). If peek is down, the session column degrades; pages keep rendering.
 
-Claude Code telemetry (peek v1.2+): the settings template (`settings/claude_code/settings.json`) carries the OTLP export env (`CLAUDE_CODE_ENABLE_TELEMETRY`, endpoint `http://127.0.0.1:42442/otlp`) and `sync_settings.sh` deploying it **is** the setup step — never run `peek-mcp setup` on a managed machine; the template is the single source of truth and matches what setup would write byte-for-byte. The receiver is the configserver-spawned peek's control server (`-peek-control-port`, default 42442 = peek's canonical base); per-session peeks run `--control-port=0` in both fragments so they never contend for the port. Drift (e.g. after a peek version bump) surfaces through peek's own detector: startup log, `/stats`, and `session_events` `time.telemetry` report `misconfigured` with the expected values.
+Claude Code telemetry (peek v1.2+): the settings template (`settings/claude_code/settings.json`) carries the OTLP export env (`CLAUDE_CODE_ENABLE_TELEMETRY`, endpoint `http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp`, expanded from `install.env`, default 42442) and `sync_settings.sh` deploying it **is** the setup step — never run `peek-mcp setup` on a managed machine; the template is the single source of truth and matches what setup would write byte-for-byte. The receiver is the configserver-spawned peek's control server (`-peek-control-port`, default 42442 = peek's canonical base); per-session peeks run `--control-port=0` in both fragments so they never contend for the port. Drift (e.g. after a peek version bump) surfaces through peek's own detector: startup log, `/stats`, and `session_events` `time.telemetry` report `misconfigured` with the expected values.
 
 ### Telemetry & usage analytics
 

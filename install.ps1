@@ -17,6 +17,7 @@ $missing = @()
 if (-not (Test-Cmd git.exe)) { $missing += "Git.Git" }
 if (-not (Test-Cmd go.exe))  { $missing += "GoLang.Go" }
 if (-not (Test-Cmd jq.exe))  { $missing += "jqlang.jq" }
+if (-not (Test-Cmd shellcheck.exe)) { $missing += "koalaman.shellcheck" }
 if ($missing.Count -gt 0) {
     if (-not (Test-Cmd winget.exe)) {
         throw "winget missing (install 'App Installer' from the Microsoft Store), and prerequisites are missing: $($missing -join ', ')"

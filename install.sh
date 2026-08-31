@@ -2,7 +2,37 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
-ADDR_PORT="${CONFIGSERVER_PORT:-6001}"
+
+# Per-install values: install.env carries the previous install's ports and
+# home overrides, environment variables override the file, defaults fill the
+# rest — and the resolved values are written back, so a plain re-run keeps
+# this profile's ports instead of resetting to the colliding defaults (D9).
+ENV_CONFIGSERVER_PORT="${CONFIGSERVER_PORT:-}"
+ENV_PEEK_PORT="${PEEK_PORT:-}"
+ENV_PEEK_CONTROL_PORT="${PEEK_CONTROL_PORT:-}"
+ENV_PEEK_CLAUDE_HOME="${PEEK_CLAUDE_HOME:-}"
+ENV_PEEK_CODEX_HOME="${PEEK_CODEX_HOME:-}"
+if [ -f "$REPO_DIR/install.env" ]; then
+  # shellcheck source=/dev/null
+  . "$REPO_DIR/install.env"
+fi
+ADDR_PORT="${ENV_CONFIGSERVER_PORT:-${CONFIGSERVER_PORT:-6001}}"
+PEEK_PORT="${ENV_PEEK_PORT:-${PEEK_PORT:-4242}}"
+PEEK_CONTROL_PORT="${ENV_PEEK_CONTROL_PORT:-${PEEK_CONTROL_PORT:-42442}}"
+PEEK_CLAUDE_HOME="${ENV_PEEK_CLAUDE_HOME:-${PEEK_CLAUDE_HOME:-}}"
+PEEK_CODEX_HOME="${ENV_PEEK_CODEX_HOME:-${PEEK_CODEX_HOME:-}}"
+
+{
+  echo "CONFIGSERVER_PORT=$ADDR_PORT"
+  echo "PEEK_PORT=$PEEK_PORT"
+  echo "PEEK_CONTROL_PORT=$PEEK_CONTROL_PORT"
+  if [ -n "$PEEK_CLAUDE_HOME" ]; then
+    echo "PEEK_CLAUDE_HOME=$PEEK_CLAUDE_HOME"
+  fi
+  if [ -n "$PEEK_CODEX_HOME" ]; then
+    echo "PEEK_CODEX_HOME=$PEEK_CODEX_HOME"
+  fi
+} > "$REPO_DIR/install.env"
 
 INSTALL_PEEK=1
 INSTALL_SERENA=0
@@ -23,9 +53,15 @@ done
 
 bash "$REPO_DIR/cmd/sync/ensure_git_repo.sh" "$REPO_DIR"
 
+# Warn-only dependency check — the acdsl gates are the enforcement, this is
+# the early warning (a missing shellcheck reddens every acdsl check).
+for dep in jq shellcheck; do
+  command -v "$dep" >/dev/null 2>&1 || echo "WARN: $dep not found — install it (brew install $dep) before the first mining run"
+done
+
 if [ "$INSTALL_PEEK" = 1 ]; then
   echo "-> Installing peek-mcp ..."
-  go install github.com/kevinhorst/peek-mcp@v1.2.0
+  go install github.com/kevinhorst/peek-mcp@v1.2.2
 else
   echo "skip: peek-mcp (--no-peek)"
 fi
@@ -85,10 +121,21 @@ done
 LABEL="com.smine.configserver"
 AGENT_PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
+PEEK_HOME_ARGS=""
+if [ -n "$PEEK_CLAUDE_HOME" ]; then
+  PEEK_HOME_ARGS="<string>-claude-home</string><string>$PEEK_CLAUDE_HOME</string>"
+fi
+if [ -n "$PEEK_CODEX_HOME" ]; then
+  PEEK_HOME_ARGS="$PEEK_HOME_ARGS<string>-codex-home</string><string>$PEEK_CODEX_HOME</string>"
+fi
+
 echo "-> Installing LaunchAgent $LABEL ..."
 mkdir -p "$HOME/Library/LaunchAgents"
 sed -e "s|__REPO_DIR__|$REPO_DIR|g" \
     -e "s|__PORT__|$ADDR_PORT|g" \
+    -e "s|__PEEK_PORT__|$PEEK_PORT|g" \
+    -e "s|__PEEK_CONTROL_PORT__|$PEEK_CONTROL_PORT|g" \
+    -e "s|__PEEK_HOME_ARGS__|$PEEK_HOME_ARGS|g" \
     -e "s|__HOME__|$HOME|g" \
     -e "s|__PATH__|$PATH|g" \
     -e "s|__INIT_WELCOME__|$INIT_WELCOME|g" \
@@ -117,6 +164,20 @@ if [ -n "$pid" ]; then
   kill "$pid" 2>/dev/null || true
   while kill -0 "$pid" 2>/dev/null; do sleep 0.1; done
 fi
+
+# A running peek survives configserver restarts by design, so install is the
+# peek update vector: kill this profile's stale peek so the fresh configserver
+# respawns it from the just-installed binary with current flags. lsof without
+# sudo lists only this user's processes — another profile's peek on the same
+# port is never killed here; the configserver's identity check reports it.
+for peek_port in "$PEEK_PORT" "$PEEK_CONTROL_PORT"; do
+  pid="$(lsof -tiTCP:"$peek_port" -sTCP:LISTEN || true)"
+  if [ -n "$pid" ]; then
+    echo "-> Stopping process on :$peek_port (pid $pid) ..."
+    kill "$pid" 2>/dev/null || true
+    while kill -0 "$pid" 2>/dev/null; do sleep 0.1; done
+  fi
+done
 
 echo "-> Bootstrapping $LABEL ..."
 launchctl bootstrap "gui/$(id -u)" "$AGENT_PLIST"
