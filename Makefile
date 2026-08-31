@@ -2,7 +2,7 @@ GO           ?= go
 GOOPTS       ?=
 GOBUILD=$(GO) build $(GOOPTS)
 GOTEST=$(GO) test -v -race $(GOOPTS)
-VERSION      ?= 1.2.0
+VERSION      ?= 1.2.1
 LDFLAGS      = -s -w -X main.version=$(VERSION)
 ADDR         ?= :6001
 SETTINGS     ?= $(HOME)/.claude/settings.json
