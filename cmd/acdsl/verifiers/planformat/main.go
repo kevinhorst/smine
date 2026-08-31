@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var canon = []string{"TLDR", "Context", "Drivers", "Scope", "Assumptions", "Current state", "Target state", "Behavior contract", "Decisions", "Baseline (verified)", "Exemplar & reuse", "Changes", "Hot items", "Tests", "Test runbook", "Contracts & sweeps", "Verification", "Stop conditions", "Open questions", "Changelog"}
+var canon = []string{"TLDR", "Context", "Drivers", "Scope", "Assumptions", "Current state", "Target state", "Behavior contract", "Decisions", "Open questions", "Baseline (verified)", "Exemplar & reuse", "Changes", "Hot items", "Tests", "Test runbook", "Contracts & sweeps", "Verification", "Stop conditions", "Changelog"}
 
 type heading struct {
 	text string

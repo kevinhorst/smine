@@ -27,7 +27,8 @@ for installed in "$HOOKS_DST"/*.sh; do
   name="$(basename "$installed")"
   if [ ! -f "$HOOKS_SRC/$name" ]; then
     printf "prune %s (not in repo)? [y/N]: " "$installed"
-    read -r answer
+    # EOF (no stdin) answers "n": never prune without an explicit yes.
+    read -r answer || answer=n
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
       rm -f "$installed"
       echo "  pruned: $installed"

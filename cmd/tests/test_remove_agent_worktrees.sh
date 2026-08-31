@@ -192,6 +192,53 @@ test_competing_change_branch_skipped() {
   [ -d "$repo/.claude/worktrees/negative" ] || fail "unsafe worktree was removed"
 }
 
+# A branch whose commits reached main only as one squash commit is safe via
+# the shared squash-containment layer — removed without --force.
+test_squash_contained_branch_removed_without_force() {
+  local repo=$TMP/repo-squash out
+  mkdir -p "$repo"
+  git -C "$repo" init -q -b main
+  git -C "$repo" config user.email test@example.com
+  git -C "$repo" config user.name test
+  printf 'shared base line\n' > "$repo/f.txt"
+  git -C "$repo" add f.txt
+  git -C "$repo" commit -qm base
+
+  git -C "$repo" branch claude/squashed main
+  git -C "$repo" checkout -q claude/squashed
+  printf 'shared version A from the agent\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "agent step one"
+  printf 'shared version B from the agent\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "agent step two"
+  git -C "$repo" checkout -q main
+  git -C "$repo" merge --squash -q claude/squashed >/dev/null
+  git -C "$repo" commit -qm "squash-landed agent work"
+  git -C "$repo" worktree add -q "$repo/.claude/worktrees/squashed" claude/squashed
+
+  out=$(cd "$repo" && bash "$SCRIPT" claude/squashed)
+  echo "$out" | grep -qF "removed: $repo/.claude/worktrees/squashed" \
+    || fail "squash-contained branch not removed without --force: $out"
+  [ ! -d "$repo/.claude/worktrees/squashed" ] || fail "worktree survived"
+}
+
+# Tool droppings (.serena/, .DS_Store) never count as untracked work: a
+# contained branch whose worktree holds only those is removed without --force.
+test_tool_droppings_do_not_block_removal() {
+  local repo=$TMP/repo-droppings wt out
+  init_repo "$repo"
+  git -C "$repo" branch claude/serena
+  wt=$repo/.claude/worktrees/serena
+  git -C "$repo" worktree add -q "$wt" claude/serena
+  mkdir -p "$wt/.serena"
+  printf '%s\n' x > "$wt/.serena/project.yml"
+  printf '%s\n' x > "$wt/.DS_Store"
+
+  out=$(cd "$repo" && bash "$SCRIPT" claude/serena)
+  echo "$out" | grep -qF "removed: $wt" \
+    || fail ".serena/.DS_Store wrongly blocked removal: $out"
+  [ ! -d "$wt" ] || fail "worktree survived"
+}
+
 # claude-routines/* lineages are valid targets: a contained routine branch's
 # worktree is removed and the branch deleted; the retired routine/* prefix is
 # rejected with the usage error.
@@ -222,5 +269,7 @@ test_delete_branch_removes_contained_branch
 test_delete_branch_skips_uncontained_without_force
 test_probe_upgraded_branch_removed_without_force
 test_competing_change_branch_skipped
+test_squash_contained_branch_removed_without_force
+test_tool_droppings_do_not_block_removal
 
 echo "PASS: remove_agent_worktrees.sh targeting"

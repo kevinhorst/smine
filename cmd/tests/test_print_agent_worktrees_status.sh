@@ -104,7 +104,8 @@ test_unpicked_list_has_no_probe_noise() {
 }
 
 # UNTRACKED counts non-infrastructure untracked files in the worktree —
-# .idea/, .claude/ and .claude-worktree never count, everything else does.
+# .idea/, .claude/, .claude-worktree, .serena/ and .DS_Store never count,
+# everything else does.
 test_untracked_column_flags_non_infra_files() {
   local repo=$TMP/repo3 wt row
   mkdir -p "$repo"
@@ -121,6 +122,9 @@ test_untracked_column_flags_non_infra_files() {
   mkdir -p "$wt/.idea"
   printf '%s\n' x > "$wt/.idea/workspace.xml"
   printf '%s\n' x > "$wt/.claude-worktree"
+  mkdir -p "$wt/.serena"
+  printf '%s\n' x > "$wt/.serena/project.yml"
+  printf '%s\n' x > "$wt/.DS_Store"
   printf '%s\n' x > "$wt/stray-artifact"
 
   row=$(cd "$repo" && bash "$SCRIPT" | grep 'claude/wt')
@@ -456,6 +460,76 @@ test_reworded_twin_stays_unpicked() {
     || fail "drill-down missing the twin-search-exhausted annotation: $detail"
 }
 
+# The squash blind spot, closed by layer 4: two sequential edits to the same
+# line land on main as ONE squash commit. Neither per-commit layer places the
+# first commit (conflicting re-pick, no subject twin), but the branch's full
+# content is on main — merge-tree containment reads UNPICKED 0 with a
+# squashed:<n> verdict and the starred main entry, and the drill-down points
+# at the containment instead of "no twin".
+test_squash_transfer_reads_contained() {
+  local repo=$TMP/repo-squash row detail
+  mkdir -p "$repo"
+  git -C "$repo" init -q -b main
+  git -C "$repo" config user.email test@example.com
+  git -C "$repo" config user.name test
+  printf 'shared base line\n' > "$repo/f.txt"
+  git -C "$repo" add f.txt
+  git -C "$repo" commit -qm base
+
+  git -C "$repo" branch claude/squashed main
+  git -C "$repo" checkout -q claude/squashed
+  printf 'shared version A from the agent\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "agent step one"
+  printf 'shared version B from the agent\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "agent step two"
+  git -C "$repo" checkout -q main
+  git -C "$repo" merge --squash -q claude/squashed >/dev/null
+  git -C "$repo" commit -qm "squash-landed agent work"
+
+  row=$(cd "$repo" && bash "$SCRIPT" | grep 'claude/squashed')
+  echo "$row" | awk '{exit $8 == "0" ? 0 : 1}' \
+    || fail "squash transfer should read UNPICKED 0: $row"
+  echo "$row" | grep -q 'squashed:' \
+    || fail "VERDICTS should carry a squashed count: $row"
+  echo "$row" | grep -q 'main\*' \
+    || fail "IN should carry the starred main entry: $row"
+  detail=$(cd "$repo" && bash "$SCRIPT" claude/squashed unpicked)
+  echo "$detail" | grep -q 'content contained in main via squash' \
+    || fail "drill-down missing the squash-containment annotation: $detail"
+}
+
+# The conservative edge: main edited the squashed content further, so the
+# branch's version is NOT what main holds — merge-tree conflicts and the
+# commit stays UNPICKED with an empty IN.
+test_edited_squash_stays_unpicked() {
+  local repo=$TMP/repo-squash-edited row
+  mkdir -p "$repo"
+  git -C "$repo" init -q -b main
+  git -C "$repo" config user.email test@example.com
+  git -C "$repo" config user.name test
+  printf 'shared base line\n' > "$repo/f.txt"
+  git -C "$repo" add f.txt
+  git -C "$repo" commit -qm base
+
+  git -C "$repo" branch claude/edited main
+  git -C "$repo" checkout -q claude/edited
+  printf 'shared version A from the agent\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "agent step one"
+  printf 'shared version B from the agent\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "agent step two"
+  git -C "$repo" checkout -q main
+  git -C "$repo" merge --squash -q claude/edited >/dev/null
+  git -C "$repo" commit -qm "squash-landed agent work"
+  printf 'shared version C edited after the squash\n' > "$repo/f.txt"
+  git -C "$repo" commit -qam "main edits the squashed content"
+
+  row=$(cd "$repo" && bash "$SCRIPT" | grep 'claude/edited')
+  echo "$row" | awk '{exit $8 >= 1 ? 0 : 1}' \
+    || fail "edited squash must keep the branch UNPICKED: $row"
+  echo "$row" | awk '{exit $11 == "-" ? 0 : 1}' \
+    || fail "edited squash IN must be empty (unsafe): $row"
+}
+
 # A fully harvested branch (empty FROM '+' set) runs no probes: WORKTREE_STATUS_TRACE=1
 # emits no trace line for it, and the trace flag never changes stdout.
 test_steady_state_runs_no_probes() {
@@ -486,6 +560,70 @@ test_steady_state_runs_no_probes() {
   trace_err=$(cd "$repo" && WORKTREE_STATUS_TRACE=1 bash "$SCRIPT" 2>&1 >/dev/null | grep 'claude/harvested' || true)
   [ -z "$trace_err" ] \
     || fail "harvested branch should run no probes (no trace line): $trace_err"
+}
+
+# The verdict cache: a warm run is byte-identical and probe-free, the bypass
+# env recomputes, a truncated file is a miss, candidate movement invalidates,
+# and rows of deleted branches are pruned.
+test_verdict_cache_hit_and_invalidation() {
+  local repo=$TMP/repo-cache cache_dir cache_file first second traced
+  mkdir -p "$repo"
+  git -C "$repo" init -q -b main
+  git -C "$repo" config user.email test@example.com
+  git -C "$repo" config user.name test
+  printf '%s\n' base > "$repo/shared"
+  git -C "$repo" add shared
+  git -C "$repo" commit -qm base
+
+  # conflicting agent commit so a cold scan provably probes (trace line)
+  git -C "$repo" branch claude/work main
+  git -C "$repo" checkout -q claude/work
+  printf '%s\n' agent-version > "$repo/shared"
+  git -C "$repo" commit -qam conflict-commit
+  git -C "$repo" checkout -q main
+  printf '%s\n' main-version > "$repo/shared"
+  git -C "$repo" commit -qam main-diverges
+
+  cache_dir=$repo/.git/agent-status-cache
+  cache_file=$cache_dir/row-claude~work
+
+  first=$(cd "$repo" && bash "$SCRIPT")
+  [ -f "$cache_file" ] || fail "cache file not written: $cache_file"
+
+  # warm run: byte-identical and probe-free
+  traced=$(cd "$repo" && WORKTREE_STATUS_TRACE=1 bash "$SCRIPT" 2>&1 >/dev/null | grep 'trace:' || true)
+  [ -z "$traced" ] || fail "warm run still probed: $traced"
+  second=$(cd "$repo" && bash "$SCRIPT")
+  [ "$first" = "$second" ] || fail "warm run differs from cold run"
+
+  # bypass recomputes despite a valid cache file, with identical output
+  traced=$(cd "$repo" && WORKTREE_STATUS_NO_CACHE=1 WORKTREE_STATUS_TRACE=1 bash "$SCRIPT" 2>&1 >/dev/null | grep 'trace:' || true)
+  [ -n "$traced" ] || fail "WORKTREE_STATUS_NO_CACHE=1 did not recompute"
+  second=$(cd "$repo" && WORKTREE_STATUS_NO_CACHE=1 bash "$SCRIPT")
+  [ "$first" = "$second" ] || fail "bypass output differs from cached output"
+
+  # truncated cache file is a miss: recomputed and rewritten complete
+  printf 'garbage\n' > "$cache_file"
+  second=$(cd "$repo" && bash "$SCRIPT")
+  [ "$first" = "$second" ] || fail "truncated cache changed the output"
+  [ "$(wc -l < "$cache_file")" -eq 5 ] || fail "cache file not rewritten complete"
+
+  # candidate movement (main advances) invalidates: probes run again
+  printf '%s\n' more > "$repo/more"
+  git -C "$repo" add more
+  git -C "$repo" commit -qm main-moves
+  traced=$(cd "$repo" && WORKTREE_STATUS_TRACE=1 bash "$SCRIPT" 2>&1 >/dev/null | grep 'trace:' || true)
+  [ -n "$traced" ] || fail "candidate movement did not invalidate the cache"
+
+  # a deleted branch's cache row is pruned on the next run
+  git -C "$repo" branch claude/tmp main
+  (cd "$repo" && bash "$SCRIPT" >/dev/null)
+  [ -f "$cache_dir/row-claude~tmp" ] || fail "no cache row written for claude/tmp"
+  git -C "$repo" branch -q -D claude/tmp
+  (cd "$repo" && bash "$SCRIPT" >/dev/null)
+  if [ -e "$cache_dir/row-claude~tmp" ]; then
+    fail "stale cache row for the deleted branch was not pruned"
+  fi
 }
 
 # A clean checked-out worktree must count DIRTY=0 UNTRACKED=0 — pins the
@@ -553,12 +691,15 @@ test_resolved_and_negative_verdicts
 test_merge_plus_resolved_pick_combination
 test_merge_plus_clean_pick_combination
 test_reworded_twin_stays_unpicked
+test_squash_transfer_reads_contained
+test_edited_squash_stays_unpicked
 test_steady_state_runs_no_probes
 test_untracked_column_flags_non_infra_files
 test_merged_and_contained_in
 test_contained_in_lists_from_first
 test_parallel_output_matches_serial
 test_branch_name_selector
+test_verdict_cache_hit_and_invalidation
 test_clean_worktree_counts_zero
 
 echo "PASS: print_agent_worktrees_status.sh"

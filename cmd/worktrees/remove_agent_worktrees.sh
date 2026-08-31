@@ -18,8 +18,9 @@
 # Unsafe worktrees are skipped with the reason printed.
 #
 # Infrastructure entries written by worktree-sessionstart.sh (.idea/,
-# .claude/, .claude-worktree sentinel) never count as untracked work, and
-# locks placed by that hook are lifted before removal.
+# .claude/, .claude-worktree sentinel) and per-tool droppings (.serena/,
+# .DS_Store) never count as untracked work, and locks placed by that hook
+# are lifted before removal.
 #
 # With --force everything is removed regardless of state.
 #
@@ -65,8 +66,8 @@ remove() {
 }
 
 # count_untracked comes from _lib/verdict.sh — the same infrastructure filter
-# (.idea/, .claude/, .claude-worktree) the status script's UNTRACKED column
-# applies.
+# (.idea/, .claude/, .claude-worktree, .serena/, .DS_Store) the status
+# script's UNTRACKED column applies.
 
 skipped=0
 matched=0

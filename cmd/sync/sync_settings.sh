@@ -20,6 +20,14 @@ case "$(uname -s)" in
     ;;
 esac
 
+# Per-install values (peek ports) live in the gitignored install.env written
+# by install.sh / the Windows installer; absent file = peek defaults.
+if [ -f "$REPO_DIR/install.env" ]; then
+  # shellcheck source=/dev/null
+  . "$REPO_DIR/install.env"
+fi
+PEEK_CONTROL_PORT="${PEEK_CONTROL_PORT:-42442}"
+
 SYNC_SERENA=0
 for arg in "$@"; do
   case "$arg" in
@@ -50,7 +58,7 @@ sync_file() {
   fi
 
   tmp="$(mktemp)"
-  sed -e "s|{{HOME}}|$HOME_NATIVE|g" -e "s|{{PEEK_MCP}}|$PEEK_MCP|g" "$src" > "$tmp"
+  sed -e "s|{{HOME}}|$HOME_NATIVE|g" -e "s|{{PEEK_MCP}}|$PEEK_MCP|g" -e "s|{{PEEK_CONTROL_PORT}}|$PEEK_CONTROL_PORT|g" "$src" > "$tmp"
 
   if [ -f "$dst" ] && diff -q "$tmp" "$dst" >/dev/null 2>&1; then
     echo "unchanged: $dst"
@@ -103,7 +111,7 @@ merge_mcp_servers() {
   fi
 
   expanded="$(mktemp)"
-  sed -e "s|{{HOME}}|$HOME_NATIVE|g" -e "s|{{PEEK_MCP}}|$PEEK_MCP|g" "$frag" > "$expanded"
+  sed -e "s|{{HOME}}|$HOME_NATIVE|g" -e "s|{{PEEK_MCP}}|$PEEK_MCP|g" -e "s|{{PEEK_CONTROL_PORT}}|$PEEK_CONTROL_PORT|g" "$frag" > "$expanded"
 
   tmp="$(mktemp)"
   jq --slurpfile frag "$expanded" \

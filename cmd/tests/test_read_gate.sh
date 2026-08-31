@@ -248,6 +248,28 @@ test_sidecar_without_transcript_keeps_gate_active() {
   silent || fail "sidecar-only coverage denied: $out"
 }
 
+test_subagent_requires_invoked_skill_spill() {
+  # A subagent owes the spill of a skill IT invoked (railroad lanes), but a
+  # subagent that invoked no skill keeps the historic exemption.
+  clear_state
+  mkdir -p "$home/.claude/context-required/$sid"
+  seq 1 50 > "$home/.claude/context-required/$sid/fdesign.md"
+  skill_only="$TMP/skill_only.jsonl"
+  jq -nc '{type:"assistant", message:{content:[{type:"tool_use", id:"s", name:"Skill", input:{skill:"fdesign"}}]}}' > "$skill_only"
+  run_hook "$(bash_json "git status" "$repo" "$skill_only" agent-7)"
+  [ "$(decision)" = "deny" ] || fail "subagent that invoked fdesign not required to read spill: $out"
+  case "$(reason)" in *"/$sid/fdesign.md"*) : ;; *) fail "spill range missing for invoked-skill subagent: $(reason)" ;; esac
+  # A subagent that invoked no skill owes nothing.
+  run_hook "$(bash_json "git status" "$repo" "$fresh" agent-7)"
+  silent || fail "subagent with no Skill call wrongly required a spill: $out"
+  # The spill read in the subagent's own transcript satisfies it.
+  skill_read="$TMP/skill_read_sub.jsonl"
+  { cat "$skill_only"; read_row "$home/.claude/context-required/$sid/fdesign.md"; } > "$skill_read"
+  run_hook "$(bash_json "git status" "$repo" "$skill_read" agent-7)"
+  silent || fail "subagent spill read not honored: $out"
+  rm -rf "$home/.claude/context-required"
+}
+
 test_first_touch_denied_with_range
 test_read_of_guide_itself_allowed
 test_full_read_passes
@@ -264,5 +286,6 @@ test_bash_touching_governed_file_requires_guide
 test_sidecar_robustness
 test_sidecar_prune
 test_sidecar_without_transcript_keeps_gate_active
+test_subagent_requires_invoked_skill_spill
 
 echo "PASS: test_read_gate.sh"

@@ -15,21 +15,26 @@
 #           the reflog records no resolvable origin — FROM is never guessed.
 # DIRTY     modified files in the agent worktree ("-" = branch has no worktree)
 # UNTRACKED untracked files in the agent worktree, excluding worktree
-#           infrastructure (.idea/, .claude/, .claude-worktree) — the same
-#           filter remove_agent_worktrees.sh applies ("-" = no worktree)
+#           infrastructure and tool droppings (.idea/, .claude/,
+#           .claude-worktree, .serena/, .DS_Store) — the same filter
+#           remove_agent_worktrees.sh applies ("-" = no worktree)
 # AHEAD     commits on the agent branch missing from FROM ("-" = FROM unknown)
 # BEHIND    commits on FROM missing from the agent branch ("-" = FROM unknown)
 # UNPICKED  ahead-commits whose patch is in NO non-claude branch AND whose
-#           change neither the applied-probe (re-pick + range-diff on FROM)
-#           nor the twin sweep (exact-subject commit paired by range-diff on
+#           change neither the applied-probe (re-pick + range-diff on FROM),
+#           the twin sweep (exact-subject commit paired by range-diff on
+#           any candidate), nor the squash layer (merge-tree containment on
 #           any candidate) could place — genuinely untransferred work
 # VERDICTS  probe summary for commits missing from FROM by patch-id:
 #           applied:<n> (clean empty re-pick on FROM), resolved:<n>
-#           (conflicted re-pick on FROM paired by range-diff), and
+#           (conflicted re-pick on FROM paired by range-diff),
 #           picked-resolved:<n> (landed on a candidate as a subject twin with
 #           manual conflict resolution — counted as picked, but a later merge
 #           or re-pick of this branch will conflict against the resolved
-#           version); "-" when nothing needed probing
+#           version), and squashed:<n> (placed by no per-commit layer, but a
+#           candidate contains the branch's full content — merging the branch
+#           into it is a conflict-free no-op, the squash-merge signature);
+#           "-" when nothing needed probing
 # MERGED    the non-claude branch whose first-parent history contains a merge
 #           commit that merged this branch's tip — an actual merge, never
 #           containment; "-" when the tip was never merged (fast-forward or
@@ -37,13 +42,19 @@
 # IN        every non-claude branch that already contains ALL of this branch's
 #           work (tip is an ancestor, or every ahead-commit is patch-present),
 #           comma-separated, FROM first. A starred entry (X*) means
-#           containment came from probe/twin verdicts (applied,
-#           applied-resolved, picked-resolved) instead of exact patch-ids;
-#           "-" = the work exists nowhere else
+#           containment came from probe/twin/squash verdicts (applied,
+#           applied-resolved, picked-resolved, squashed) instead of exact
+#           patch-ids; "-" = the work exists nowhere else
 #
 # Safe to remove: IN != "-" plus, when a worktree is checked out, DIRTY=0 and
 # UNTRACKED=0. A branch without a worktree is judged on containment alone.
 # (cmd/worktrees/remove_agent_worktrees.sh, internal/repos/status.go)
+#
+# Verdict cache: UNPICKED/VERDICTS/MERGED/IN are pure functions of the branch
+# tip, its FROM, and the candidate tips — cached per branch under
+# <git-common-dir>/agent-status-cache/, keyed by exactly those SHAs. DIRTY,
+# UNTRACKED, AHEAD/BEHIND and LAST-COMMIT are always computed live.
+# WORKTREE_STATUS_NO_CACHE=1 bypasses the cache (tests, diagnosis).
 
 set -euo pipefail
 
@@ -163,6 +174,14 @@ if [ "$mode" = detail ]; then
       # (not in its '+' set) are exact picks and need no probe.
       trap verdict_cleanup EXIT
       from_plus=$(git cherry "$from" "$branch" | sed -n 's/^+ //p')
+      # Squash-containing candidates, once per branch: annotates commits the
+      # per-commit layers cannot place but whose content a candidate holds.
+      squash_in=''
+      for c in "${candidates[@]}"; do
+        if squash_contained "$c" "$branch"; then
+          squash_in+="${squash_in:+,}$c"
+        fi
+      done
       for hash in "${hashes[@]}"; do
         if ! printf '%s\n' "$from_plus" | grep -qx "$hash"; then
           git log -1 --format='%h  %cd  %s  (applied on '"$from"')' --date=format:'%Y-%m-%d %H:%M' "$hash"
@@ -178,12 +197,22 @@ if [ "$mode" = detail ]; then
             git log -1 --format='%h  %cd  %s  (picked on '"$verdict_candidate"' as '"$(git rev-parse --short "$verdict_twin")"', conflict resolved manually — not auto-reconcilable)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
           unpicked)
             # A subject twin exists but range-diff refused to pair it: the
-            # content genuinely differs from what landed there.
-            git log -1 --format='%h  %cd  %s  (twin '"$(git rev-parse --short "$verdict_twin")"' on '"$verdict_candidate"' differs — content not transferred)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
+            # content genuinely differs from what landed there — unless a
+            # candidate squash-contains the whole branch.
+            if [ -n "$squash_in" ]; then
+              git log -1 --format='%h  %cd  %s  (content contained in '"$squash_in"' via squash — see IN*)' --date=format:'%Y-%m-%d %H:%M' "$hash"
+            else
+              git log -1 --format='%h  %cd  %s  (twin '"$(git rev-parse --short "$verdict_twin")"' on '"$verdict_candidate"' differs — content not transferred)' --date=format:'%Y-%m-%d %H:%M' "$hash"
+            fi ;;
           unpicked-notwin)
             # Twin search exhausted: a transfer under a reworded subject, a
-            # squash, or heavy modification is invisible to detection.
-            git log -1 --format='%h  %cd  %s  (no twin on any local branch — reworded/squashed transfers are invisible; verify via git log --all --grep before treating as lost)' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
+            # squash, or heavy modification is invisible to per-commit
+            # detection — the branch-level squash check covers the full case.
+            if [ -n "$squash_in" ]; then
+              git log -1 --format='%h  %cd  %s  (content contained in '"$squash_in"' via squash — see IN*)' --date=format:'%Y-%m-%d %H:%M' "$hash"
+            else
+              git log -1 --format='%h  %cd  %s  (no twin on any local branch — reworded/squashed transfers are invisible; verify via git log --all --grep before treating as lost)' --date=format:'%Y-%m-%d %H:%M' "$hash"
+            fi ;;
           *)
             git log -1 --format='%h  %cd  %s' --date=format:'%Y-%m-%d %H:%M' "$hash" ;;
         esac
@@ -201,7 +230,7 @@ fi
 # parent can reassemble rows in branch order regardless of completion order.
 print_row() {
   local num=$1 branch worktree dirty untracked porcelain raw_from from
-  local ahead behind merged age
+  local ahead behind merged age tip from_tip cache_key cache_file cache_tmp
   branch=${branches[$((num - 1))]}
   worktree=$(awk -v b="refs/heads/$branch" \
     '/^worktree /{p=$2} $0=="branch "b{print p}' "$WTS_WORKTREES")
@@ -213,8 +242,7 @@ print_row() {
     # not one empty line; grep still counts a final unterminated line.
     porcelain=$(git -C "$worktree" status --porcelain)
     dirty=$(printf '%s' "$porcelain" | grep -cv '^??' || true)
-    untracked=$(printf '%s' "$porcelain" | grep '^??' |
-      grep -cv -e '^?? \.idea/' -e '^?? \.claude/' -e '^?? \.claude-worktree$' || true)
+    untracked=$(printf '%s' "$porcelain" | filter_untracked)
   fi
 
   raw_from=$(resolve_from "$branch")
@@ -227,9 +255,31 @@ print_row() {
     ahead=-
     behind=-
   fi
-  trap verdict_cleanup EXIT
-  evaluate_branch "$branch" "$raw_from"
-  merged=$(merged_into "$branch" "$raw_from")
+  # Cache hit: the key line matches and the file is complete (5 lines) —
+  # anything else recomputes and rewrites (a truncated file is a miss, and
+  # the guarded read chain must never abort the child under set -e).
+  tip=$(git rev-parse "$branch")
+  from_tip=''
+  [ -n "$raw_from" ] && from_tip=$(git rev-parse "$raw_from")
+  # v2 salt: the squash-containment layer changed the cached columns'
+  # semantics — v1 rows for unchanged SHAs must miss, not serve old verdicts.
+  cache_key="$tip|$raw_from|$from_tip|$WTS_CANDIDATES_DIGEST|v2"
+  cache_file="$WTS_CACHE_DIR/row-$(printf '%s' "$branch" | tr '/' '~')"
+  if [ "${WORKTREE_STATUS_NO_CACHE:-0}" != 1 ] && [ -f "$cache_file" ] &&
+      [ "$(head -1 "$cache_file")" = "$cache_key" ] &&
+      [ "$(wc -l < "$cache_file")" -eq 5 ]; then
+    { read -r _; read -r eval_unpicked; read -r eval_verdicts
+      read -r eval_in; read -r merged; } < "$cache_file"
+  else
+    trap verdict_cleanup EXIT
+    evaluate_branch "$branch" "$raw_from"
+    merged=$(merged_into "$branch" "$raw_from")
+    cache_tmp=$(mktemp "$WTS_CACHE_DIR/.tmp.XXXXXX")
+    printf '%s\n%s\n%s\n%s\n%s\n' \
+      "$cache_key" "$eval_unpicked" "$eval_verdicts" "$eval_in" "$merged" \
+      > "$cache_tmp"
+    mv -f -- "$cache_tmp" "$cache_file"
+  fi
   if [ "${WORKTREE_STATUS_TRACE:-0}" = 1 ] && [ "$probe_count" -gt 0 ]; then
     echo "trace: $branch probes=$probe_count probe_ms=$probe_ms" >&2
   fi
@@ -244,6 +294,8 @@ print_row() {
 if [ "$mode" = row ]; then
   : "${WTS_WORKTREES:?__row is internal — run the script without args}"
   : "${WTS_ROWDIR:?__row is internal — run the script without args}"
+  : "${WTS_CACHE_DIR:?__row is internal — run the script without args}"
+  : "${WTS_CANDIDATES_DIGEST:?__row is internal — run the script without args}"
   print_row "$row_num"
   exit 0
 fi
@@ -256,6 +308,24 @@ trap 'rm -rf -- "$rowdir"' EXIT
 git worktree list --porcelain > "$rowdir/worktrees"
 export WTS_WORKTREES="$rowdir/worktrees"
 export WTS_ROWDIR="$rowdir"
+
+# Verdict-cache inputs shared with the row workers (see header). The digest
+# covers every candidate (non-agent) tip so any candidate movement
+# invalidates all rows.
+cache_dir=$(git rev-parse --git-common-dir)/agent-status-cache
+mkdir -p "$cache_dir"
+export WTS_CACHE_DIR="$cache_dir"
+WTS_CANDIDATES_DIGEST=$(git for-each-ref --format='%(refname:short) %(objectname)' refs/heads/ |
+  awk '$1 !~ /^claude(-routines)?\//' | shasum | awk '{print $1}')
+export WTS_CANDIDATES_DIGEST
+
+# Prune rows of deleted branches ("~" is illegal in refnames, so the file
+# name maps back to exactly one branch).
+for cache_file in "$cache_dir"/row-*; do
+  [ -e "$cache_file" ] || continue
+  cached_branch=$(basename "$cache_file" | sed 's/^row-//' | tr '~' '/')
+  git show-ref -q --verify "refs/heads/$cached_branch" || rm -f -- "$cache_file"
+done
 
 jobs=${WORKTREE_STATUS_JOBS:-$(getconf _NPROCESSORS_ONLN)}
 seq 1 ${#branches[@]} | xargs -n1 -P "$jobs" "$0" __row

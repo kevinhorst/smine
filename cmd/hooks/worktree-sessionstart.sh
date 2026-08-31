@@ -88,7 +88,7 @@ sweep_pool() {
     for entry in "$d"/* "$d"/.[!.]* "$d"/..?*; do
       [ -e "$entry" ] || [ -L "$entry" ] || continue
       case "${entry##*/}" in
-        .idea | .claude | .DS_Store | "$SENTINEL") ;;
+        .idea | .claude | .DS_Store | .serena | "$SENTINEL") ;;
         *)
           husk=0
           break

@@ -9,7 +9,11 @@
 		<string>__REPO_DIR__/bin/configserver</string>
 		<string>-addr</string>
 		<string>127.0.0.1:__PORT__</string>
-		<string>-init-welcome=__INIT_WELCOME__</string>
+		<string>-peek-port</string>
+		<string>__PEEK_PORT__</string>
+		<string>-peek-control-port</string>
+		<string>__PEEK_CONTROL_PORT__</string>
+		<string>-init-welcome=__INIT_WELCOME__</string>__PEEK_HOME_ARGS__
 	</array>
 	<key>WorkingDirectory</key>
 	<string>__REPO_DIR__</string>

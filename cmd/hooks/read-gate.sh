@@ -76,10 +76,21 @@ required_files() {
 			guide_for_path "$token"
 		done ;;
 	esac
-	[ -z "$agent_id" ] && [ -n "$session_id" ] || return 0
-	for f in "$HOME/.claude/context-required/$session_id"/*.md; do
-		[ -f "$f" ] && echo "$f"
-	done
+	[ -n "$session_id" ] || return 0
+	if [ -z "$agent_id" ]; then
+		for f in "$HOME/.claude/context-required/$session_id"/*.md; do
+			[ -f "$f" ] && echo "$f"
+		done
+	else
+		# Subagents owe only the spills of skills they invoked themselves.
+		[ -n "$transcript" ] || return 0
+		jq -rs '[ .[] | select(.type == "assistant") | .message.content[]?
+			| select(.type == "tool_use" and .name == "Skill") | .input.skill // empty ] | unique | .[]' \
+			"$transcript" 2>/dev/null | while IFS= read -r s; do
+			[ -n "$s" ] && [ -f "$HOME/.claude/context-required/$session_id/$s.md" ] \
+				&& echo "$HOME/.claude/context-required/$session_id/$s.md"
+		done
+	fi
 }
 
 # exact_cat_target: prints the target path iff the Bash command is exactly

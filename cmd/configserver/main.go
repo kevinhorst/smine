@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -25,6 +26,11 @@ import (
 )
 
 func main() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	addr := flag.String("addr", "127.0.0.1:6001", "listen address")
 	allowRemote := flag.Bool("allow-remote", false, "permit binding a routable (non-loopback) interface; required opt-in since every endpoint is unauthenticated")
 	acdslVerdicts := flag.String("acdsl-verdicts", "", "acdsl verdict log (default: ~/.claude/acdsl/verdicts.jsonl)")
@@ -45,10 +51,13 @@ func main() {
 	peekPort := flag.Int("peek-port", 4242, "peek-mcp HTTP port (0 disables peek entirely)")
 	peekControlPort := flag.Int("peek-control-port", 42442, "peek-mcp control dashboard port (0 disables the dashboard)")
 	peekStart := flag.Bool("peek-start", true, "spawn peek-mcp when the port is not serving")
+	claudeHome := flag.String("claude-home", filepath.Join(homeDir, ".claude"), "claude home passed to the spawned peek-mcp")
+	codexHome := flag.String("codex-home", filepath.Join(homeDir, ".codex"), "codex home passed to the spawned peek-mcp")
 	reposPath := flag.String("repos", "repos.json", "path to the repo registry file")
 	initWelcome := flag.Bool("init-welcome", false, "always show the Welcome nav entry and setup tile, even when all setup checks are green")
 	presentationPath := flag.String("presentation", server.DefaultPresentationPath(), "path to the per-install presentation profile (missing file = English/developer defaults)")
 	presentationProfile := flag.String("presentation-profile", "", "windows install: presentation profile template id to install (e.g. de); empty installs none")
+	stylePath := flag.String("style", server.DefaultStylePath(), "path to the mined per-install style profile (missing file = no learned style yet)")
 	install := flag.Bool("install", false, "windows: register logon task + routines, then exit (macOS: use install.sh)")
 	logFile := flag.String("logfile", "", "append all output to this file (the Windows logon task passes it; the binary is windowsgui-subsystem there, so a console is never attached)")
 	routinesDir := flag.String("routines", "routines", "path to the routines directory")
@@ -116,7 +125,10 @@ func main() {
 			dashboardURL = fmt.Sprintf("http://127.0.0.1:%d/", *peekControlPort)
 		}
 		if *peekStart {
-			startPeek(ctx, *peekBin, *peekPort, *peekControlPort)
+			if !startPeek(ctx, *peekBin, *peekPort, *peekControlPort, "http://"+*addr+"/", *claudeHome, *codexHome) {
+				endpoint = ""
+				dashboardURL = ""
+			}
 		}
 	}
 
@@ -142,6 +154,7 @@ func main() {
 		SettingsPath:       *settingsPath,
 		SkillsHome:         *skillsHome,
 		SkillsRepo:         *skillsRepo,
+		StylePath:          *stylePath,
 		SyncScriptsDir:     syncScriptsDir,
 		TokenDir:           tokenDir,
 		Version:            version,
@@ -200,28 +213,62 @@ func isLoopbackAddr(addr string) (bool, error) {
 	return ip.IsLoopback(), nil
 }
 
-// startPeek spawns the peek-mcp binary unless something already listens on
-// the port (an externally started peek keeps working, D32). The child shares
-// ctx — it dies with the server. No restart loop.
-func startPeek(ctx context.Context, bin string, port, controlPort int) {
+type peekID struct {
+	Version     string `json:"version"`
+	ClaudeHome  string `json:"claudeHome"`
+	CodexHome   string `json:"codexHome"`
+	ControlPort int    `json:"controlPort"`
+}
+
+func peekIdentity(addr string) (*peekID, error) {
+	client := &http.Client{Timeout: time.Second}
+	resp, err := client.Get("http://" + addr + "/healthz")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("healthz status %d", resp.StatusCode)
+	}
+	var id peekID
+	if err := json.NewDecoder(resp.Body).Decode(&id); err != nil {
+		return nil, err
+	}
+	return &id, nil
+}
+
+// startPeek spawns peek-mcp with this profile's homes. A listener on the
+// port is reused only when its /healthz identity matches — on this shared
+// loopback another macOS profile's peek is reachable on the same port, and
+// reusing it would serve that user's sessions. Mismatch or an
+// unidentifiable holder disables the peek integration for this run.
+func startPeek(ctx context.Context, bin string, port, controlPort int, backLink, claudeHome, codexHome string) bool {
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
-	conn, err := net.DialTimeout("tcp", addr, time.Second)
-	if err == nil {
+	if id, err := peekIdentity(addr); err == nil {
+		if id.ClaudeHome == claudeHome && id.CodexHome == codexHome {
+			log.Printf("peek-mcp %s already serving on %s for this profile, not spawning", id.Version, addr)
+			return true
+		}
+		log.Printf("ERROR: peek-mcp on %s serves claude-home=%s codex-home=%s, want %s / %s — another profile's peek holds this port; set PEEK_PORT/PEEK_CONTROL_PORT and reinstall (session column disabled)", addr, id.ClaudeHome, id.CodexHome, claudeHome, codexHome)
+		return false
+	} else if conn, dialErr := net.DialTimeout("tcp", addr, time.Second); dialErr == nil {
 		conn.Close()
-		log.Printf("peek-mcp already serving on %s, not spawning", addr)
-		return
+		log.Printf("ERROR: %s is in use but not an identifiable peek-mcp (%v) — stale pre-1.2.2 peek or foreign process; reinstall to replace it (session column disabled)", addr, err)
+		return false
 	}
 
-	args := []string{"start", "--transport", "http", "--port", strconv.Itoa(port)}
+	args := []string{"start", "--transport", "http", "--port", strconv.Itoa(port),
+		"--claude-home", claudeHome, "--codex-home", codexHome}
 	if controlPort != 0 {
 		args = append(args, "--control-port", strconv.Itoa(controlPort))
+		args = append(args, "--back-link", backLink)
 	}
 	cmd := exec.CommandContext(ctx, bin, args...)
 	cmd.Stderr = os.Stderr
 	shell.HideWindow(cmd)
 	if err := cmd.Start(); err != nil {
 		log.Printf("peek-mcp spawn failed (session column degraded): %v", err)
-		return
+		return false
 	}
 
 	log.Printf("peek-mcp spawned (pid %d) on http://%s/mcp", cmd.Process.Pid, addr)
@@ -230,4 +277,5 @@ func startPeek(ctx context.Context, bin string, port, controlPort int) {
 			log.Printf("peek-mcp exited: %v", err)
 		}
 	}()
+	return true
 }

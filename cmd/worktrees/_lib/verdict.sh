@@ -95,13 +95,48 @@ contained_in() {
   echo "$out"
 }
 
-# Untracked files excluding worktree infrastructure (.idea/, .claude/,
-# .claude-worktree) — those are written by hooks, not by the session's work.
-# Prefix-matched: a partially tracked .idea/ lists individual files instead
-# of the collapsed directory line, and those must not count either.
+# Layer 4 — branch-level squash containment: a 3-way merge of the branch
+# into the candidate that is conflict-free AND leaves the candidate's tree
+# byte-identical proves every line of the branch's work is already there —
+# exactly what a squash-merge or reworded transfer leaves behind, which the
+# per-commit layers cannot see. Plumbing only (git >= 2.38): no worktree,
+# no index, no side effects.
+squash_contained() {
+  local candidate=$1 branch=$2 merged_tree
+  merged_tree=$(git merge-tree --write-tree "$candidate" "$branch" 2>/dev/null) || return 1
+  merged_tree=$(printf '%s\n' "$merged_tree" | head -1)
+  [ "$merged_tree" = "$(git rev-parse "$candidate^{tree}")" ]
+}
+
+# True when any explanation pair carries this hash (any candidate).
+hash_explained_anywhere() {
+  local hash=$1 p
+  for p in ${explained_pairs[@]+"${explained_pairs[@]}"}; do
+    case "$p" in *" $hash") return 0 ;; esac
+  done
+  return 1
+}
+
+# Untracked entries written by tooling, not by the session's work: worktree
+# infrastructure (worktree-sessionstart.sh) plus per-tool droppings (.serena/
+# — Serena MCP project cache; .DS_Store — Finder, any depth). Prefix-matched:
+# a partially tracked .idea/ lists individual files instead of the collapsed
+# directory line, and those must not count either. Reads porcelain on stdin,
+# prints the count of remaining untracked entries. The single source for the
+# UNTRACKED column and the remove gate.
+filter_untracked() {
+  grep '^??' |
+    grep -cv \
+      -e '^?? \.idea/' \
+      -e '^?? \.claude/' \
+      -e '^?? \.claude-worktree$' \
+      -e '^?? \.serena/' \
+      -e '^?? \.DS_Store$' \
+      -e '/\.DS_Store$' || true
+}
+
 count_untracked() {
-  git -C "$1" status --porcelain | grep '^??' |
-    grep -cv -e '^?? \.idea/' -e '^?? \.claude/' -e '^?? \.claude-worktree$' || true
+  git -C "$1" status --porcelain | filter_untracked
 }
 
 # Milliseconds since the epoch. macOS date has no %N; perl ships with macOS.
@@ -259,7 +294,9 @@ is_explained() {
 #   verdict_twin       the twin sha, else ''
 # unpicked-notwin is the exhausted flavor: no subject twin exists on ANY
 # candidate — a transfer under a reworded subject, a squash, or heavy
-# modification is invisible to this detector and must be verified manually.
+# modification is invisible to this detector; the branch-level
+# squash_contained layer in evaluate_branch catches the fully-transferred
+# case, anything partial must still be verified manually.
 verdict_candidate=''
 verdict_twin=''
 twin_sweep() {
@@ -378,7 +415,7 @@ eval_unpicked=0
 eval_verdicts=-
 eval_in=''
 evaluate_branch() {
-  local branch=$1 from=$2 hash from_plus candidate_branch index
+  local branch=$1 from=$2 hash from_plus candidate_branch index squashed_n=0
   local applied_n=0 resolved_n=0 picked_resolved_n=0 unpicked_n=0
   local is_candidate=0 all_transferred=1
   compute_cherry_sets "$branch"
@@ -410,15 +447,37 @@ evaluate_branch() {
     esac
   done <<< "$from_plus"
 
+  # Layer 4: squash containment — only for candidates the per-commit layers
+  # left partially unexplained; a hit explains every remaining '+' commit of
+  # that candidate at once.
+  while IFS= read -r index; do
+    candidate_branch=${candidates[$index]}
+    [ -z "${cherry_plus[$index]}" ] && continue
+    candidate_fully_explained "$index" && continue
+    if squash_contained "$candidate_branch" "$branch"; then
+      while IFS= read -r hash; do
+        [ -z "$hash" ] && continue
+        is_explained "$index" "$hash" || mark_explained "$index" "$hash"
+      done <<< "${cherry_plus[$index]}"
+    fi
+  done < <(ordered_indices "$from")
+
   # UNPICKED: intersection commits neither the probe nor the twin sweep
-  # explained. Intersection hashes absent from FROM's '+' set are
-  # patch-present on FROM => picked.
+  # explained; a commit layer 4 explained counts squashed, not unpicked.
+  # Intersection hashes absent from FROM's '+' set are patch-present on
+  # FROM => picked.
   while IFS= read -r hash; do
     [ -z "$hash" ] && continue
     if printf '%s\n' "$from_plus" | grep -qx "$hash"; then
       verdict_for "$hash" "$from"
       case "$verdict" in
-        unpicked | unpicked-notwin) unpicked_n=$((unpicked_n + 1)) ;;
+        unpicked | unpicked-notwin)
+          if hash_explained_anywhere "$hash"; then
+            squashed_n=$((squashed_n + 1))
+          else
+            unpicked_n=$((unpicked_n + 1))
+          fi
+          ;;
       esac
     fi
   done < <(unpicked_anywhere)
@@ -428,6 +487,7 @@ evaluate_branch() {
   [ "$applied_n" -gt 0 ] && summary="applied:$applied_n"
   [ "$resolved_n" -gt 0 ] && summary="${summary:+$summary,}resolved:$resolved_n"
   [ "$picked_resolved_n" -gt 0 ] && summary="${summary:+$summary,}picked-resolved:$picked_resolved_n"
+  [ "$squashed_n" -gt 0 ] && summary="${summary:+$summary,}squashed:$squashed_n"
   eval_verdicts=${summary:--}
 
   # Rebuild IN with per-candidate stars: a candidate whose every '+' commit
@@ -446,8 +506,9 @@ evaluate_branch() {
   eval_in=$in_out
 
   # A remote-tracking FROM is not a candidate: its probe upgrade is prepended
-  # here. A local FROM already earned its star via candidate_fully_explained.
-  if [ "$all_transferred" -eq 1 ]; then
+  # here (a squash landed directly on it is equally proof of transfer). A
+  # local FROM already earned its star via candidate_fully_explained.
+  if [ "$all_transferred" -eq 1 ] || squash_contained "$from" "$branch"; then
     for candidate_branch in "${candidates[@]}"; do
       if [ "$candidate_branch" = "$from" ]; then is_candidate=1; fi
     done

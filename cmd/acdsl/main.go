@@ -10,10 +10,12 @@
 // check resolves every rule's anchor and executes its registered verifier;
 // violations print one line each (or JSON with -json) citing the rule ID. It
 // also refuses staged projection blocks (the working tree carries them, the
-// index never may). -lifetime defaults to doctrine: the audit gates doctrine
-// on every run, while a task's contract (task-lifetime entries in a *.acdsl
-// file anywhere in the repo) is legitimately red mid-implementation and
-// gated explicitly via -lifetime task.
+// index never may), and enforces the acdsl/policy.json self-management mode
+// (strict/gated repos may not change rules or verifiers off the base branch).
+// -lifetime defaults to doctrine: the audit gates doctrine on every run,
+// while a task's contract (task-lifetime entries in a *.acdsl file anywhere
+// in the repo) is legitimately red mid-implementation and gated explicitly
+// via -lifetime task.
 // project -file syncs one file's on-disk projection: the governing rules as
 // a comment block directly above the content — what the agent reads IS the
 // projected file. project -strip removes every block before committing.
@@ -117,11 +119,22 @@ func runCheck(args []string) int {
 		fmt.Fprintln(os.Stderr, "acdsl:", err)
 		return exitError
 	}
+	policy, err := acdsl.LoadPolicy(*root)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "acdsl:", err)
+		return exitError
+	}
+	policyDiagnostics, err := acdsl.CheckPolicy(ctx, *root, policy)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "acdsl:", err)
+		return exitError
+	}
 	diagnostics, err := acdsl.Check(ctx, *root, gated, registry, discovery.Universe)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "acdsl:", err)
 		return exitError
 	}
+	diagnostics = append(policyDiagnostics, diagnostics...)
 	logVerdicts(ctx, *root, gated, diagnostics)
 	if len(diagnostics) > 0 {
 		for _, diagnostic := range diagnostics {

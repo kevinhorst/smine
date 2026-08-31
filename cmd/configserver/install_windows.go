@@ -83,7 +83,7 @@ func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, pe
 		fmt.Fprintln(os.Stderr, "install: Git Bash not found (set SMINE_BASH)")
 		return 1
 	}
-	if output, err := shell.Run(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", "ensure_git_repo.sh")); err != nil {
+	if output, err := shell.RunSync(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", "ensure_git_repo.sh")); err != nil {
 		fmt.Fprintf(os.Stderr, "install: ensure_git_repo.sh: %v\n%s\n", err, output)
 		return 1
 	}
@@ -94,6 +94,10 @@ func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, pe
 	}
 	claudeFound := deployClaude(ctx, repoDir, shimDir, bash)
 	deployPeek(repoDir, shimDir)
+	if err := writeInstallEnv(repoDir, addr, peekPort, peekControlPort); err != nil {
+		fmt.Fprintf(os.Stderr, "install: %v\n", err)
+		return 1
+	}
 	if err := runSyncs(ctx, repoDir, bash); err != nil {
 		fmt.Fprintf(os.Stderr, "install: %v\n", err)
 		return 1
@@ -127,6 +131,21 @@ func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, pe
 	}
 	fmt.Printf("configserver logon task registered; serving on %s\n", addr)
 	return 0
+}
+
+// writeInstallEnv mirrors install.sh: the per-install ports land in the
+// gitignored install.env so sync_settings.sh and the config server expand
+// {{PEEK_CONTROL_PORT}} with this install's value.
+func writeInstallEnv(repoDir, addr string, peekPort, peekControlPort int) error {
+	_, configPort, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("writeInstallEnv: Invalid addr %q: %w", addr, err)
+	}
+	content := fmt.Sprintf("CONFIGSERVER_PORT=%s\nPEEK_PORT=%d\nPEEK_CONTROL_PORT=%d\n", configPort, peekPort, peekControlPort)
+	if err := os.WriteFile(filepath.Join(repoDir, "install.env"), []byte(content), 0o644); err != nil {
+		return fmt.Errorf("writeInstallEnv: %w", err)
+	}
+	return nil
 }
 
 // materializePlists mirrors install.sh: routines/*/*.plist.template ->
@@ -365,7 +384,7 @@ func installPresentationProfile(repoDir, profileId string) error {
 func runSyncs(ctx context.Context, repoDir, bash string) error {
 	fmt.Printf("-> Syncing settings/hooks/skills (bash: %s) ...\n", bash)
 	for _, script := range []string{"sync_settings.sh", "sync_hooks.sh", "sync_skills.sh"} {
-		if output, err := shell.Run(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", script)); err != nil {
+		if output, err := shell.RunSync(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", script)); err != nil {
 			return fmt.Errorf("runSyncs: %s: %w\n%s", script, err, output)
 		}
 	}

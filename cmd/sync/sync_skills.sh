@@ -240,3 +240,62 @@ cp "$REPO_DIR/cmd/worktrees/remove_agent_worktrees.sh" "$TOOLS_DST/remove_agent_
 chmod +x "$TOOLS_DST/remove_agent_worktrees.sh"
 cp "$REPO_DIR/cmd/worktrees/_lib/verdict.sh" "$TOOLS_DST/_lib/verdict.sh"
 echo "  toolset remove_agent_worktrees.sh (+ _lib/verdict.sh) -> $TOOLS_DST"
+
+# --- Skill visibility (presentation profile) ---
+# Casual installs hide every deployed leaf from the user's own sessions
+# via settings skillOverrides ("off" hides AND denies, incl. headless), and a
+# routine overlay re-enables them for pipeline runs (change plan C3/C4).
+# Developer installs drop the leaf overrides and the overlay (idempotent flip).
+PRESENTATION_PROFILE="$HOME/.claude/context/global/presentation-profile.md"
+SETTINGS_FILE="$HOME/.claude/settings.json"
+OVERLAY_FILE="$HOME/.config/claude-routine/skill-overrides.json"
+profile_audience=""
+if [ -f "$PRESENTATION_PROFILE" ]; then
+  # One-time migration: the audience value was renamed non-developer -> casual.
+  if grep -q '^audience:[[:space:]]*non-developer' "$PRESENTATION_PROFILE"; then
+    sed 's/^audience:[[:space:]]*non-developer/audience: casual/' "$PRESENTATION_PROFILE" > "$PRESENTATION_PROFILE.tmp" \
+      && mv "$PRESENTATION_PROFILE.tmp" "$PRESENTATION_PROFILE"
+  fi
+  profile_audience="$(sed -n 's/^audience:[[:space:]]*//p' "$PRESENTATION_PROFILE" | head -1)"
+fi
+
+leaf_names_json="$(printf '%s\n' "${skill_dirs[@]}" | while IFS= read -r dir; do basename "$dir"; done | jq -R . | jq -sc .)"
+if [ "$profile_audience" = "casual" ]; then
+  if [ -f "$SETTINGS_FILE" ]; then
+    jq --argjson leaves "$leaf_names_json" \
+      '.skillOverrides = ((.skillOverrides // {}) + ($leaves | map({key: ., value: "off"}) | from_entries))' \
+      "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+    echo "  skillOverrides: $(printf '%s' "$leaf_names_json" | jq length) leaves off (casual profile)"
+  fi
+  mkdir -p "$(dirname "$OVERLAY_FILE")"
+  printf '%s' "$leaf_names_json" | jq '{skillOverrides: (map({key: ., value: "on"}) | from_entries)}' > "$OVERLAY_FILE"
+  echo "  routine overlay -> $OVERLAY_FILE"
+  # Project scope beats user scope per key (probe-verified): the repo's local
+  # settings fragment re-enables the pipeline's skills at the main checkout;
+  # run.sh copies the overlay into each routine worktree. Merge, never
+  # overwrite — the local file may carry the operator's own keys.
+  REPO_LOCAL_SETTINGS="$REPO_DIR/.claude/settings.local.json"
+  mkdir -p "$REPO_DIR/.claude"
+  if [ -f "$REPO_LOCAL_SETTINGS" ]; then
+    jq --argjson leaves "$leaf_names_json" \
+      '.skillOverrides = ((.skillOverrides // {}) + ($leaves | map({key: ., value: "on"}) | from_entries))' \
+      "$REPO_LOCAL_SETTINGS" > "$REPO_LOCAL_SETTINGS.tmp" && mv "$REPO_LOCAL_SETTINGS.tmp" "$REPO_LOCAL_SETTINGS"
+  else
+    cp "$OVERLAY_FILE" "$REPO_LOCAL_SETTINGS"
+  fi
+else
+  if [ -f "$SETTINGS_FILE" ]; then
+    jq --argjson leaves "$leaf_names_json" \
+      'if .skillOverrides then .skillOverrides = (.skillOverrides | with_entries(select(.key as $k | $leaves | index($k) | not))) else . end
+       | if .skillOverrides == {} then del(.skillOverrides) else . end' \
+      "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+  fi
+  REPO_LOCAL_SETTINGS="$REPO_DIR/.claude/settings.local.json"
+  if [ -f "$REPO_LOCAL_SETTINGS" ]; then
+    jq --argjson leaves "$leaf_names_json" \
+      'if .skillOverrides then .skillOverrides = (.skillOverrides | with_entries(select(.key as $k | $leaves | index($k) | not))) else . end
+       | if .skillOverrides == {} then del(.skillOverrides) else . end' \
+      "$REPO_LOCAL_SETTINGS" > "$REPO_LOCAL_SETTINGS.tmp" && mv "$REPO_LOCAL_SETTINGS.tmp" "$REPO_LOCAL_SETTINGS"
+  fi
+  rm -f "$OVERLAY_FILE"
+fi
