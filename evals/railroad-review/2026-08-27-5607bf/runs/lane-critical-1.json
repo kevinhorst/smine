@@ -1,0 +1,21 @@
+{
+  "direction": "critical",
+  "lane": 1,
+  "aborted": false,
+  "files_reviewed": [
+    "plans/railroad-review-observability/runbooks/trace.md",
+    "routines/skill-eval-railroad-review/com.smine.routine.skill-eval-railroad-review.plist.template",
+    "routines/skill-eval-railroad-review/run.sh"
+  ],
+  "findings": [
+    {
+      "finding_id": "critical-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 188,
+      "severity": "MINOR",
+      "claim": "Cell git worktrees leak into the main repo's worktree registry — resource leak. run_cell adds a worktree at $RR_CELLS/$id (line 154) and removes it only at the tail of the same call (line 188), plus a same-id force-remove guard at the next add (line 153). There is no EXIT trap, no startup bulk sweep of $RR_CELLS/*, and no `git worktree prune` anywhere in run.sh (grep for trap/prune/rm -rf \"$RR_CELLS\" returns nothing). Concrete sequence: a run has 6 refute candidates and creates cells refute-1..refute-6; run.sh is hard-killed (launchd forced unload, system sleep, OOM, operator SIGKILL) after `git worktree add .../refute-6` and before its line-188 removal. The next run has <=5 candidates, so refute-6 is never re-added, its line-153 guard never fires, and its registered worktree (path + .git/worktrees/refute-6 admin dir) persists indefinitely in $repo_root. Because nothing ever runs `git worktree prune`, these orphans accumulate across runs and must be cleaned by hand. The matrix.sh pattern this wrapper is explicitly modeled on (header comment line 9: \"matrix.sh cell pattern\") does exactly the missing step: routine_matrix_cleanup (routines/_lib/matrix.sh:311-319) sweeps the whole cell-root dir and then calls `git worktree prune`.",
+      "fix": "Add `trap 'for c in \"$RR_CELLS\"/*/; do [ -d \"$c\" ] && git -C \"$repo_root\" worktree remove --force \"${c%/}\" 2>/dev/null || rm -rf \"${c%/}\"; done; git -C \"$repo_root\" worktree prune 2>/dev/null || true' EXIT` (mirroring routine_matrix_cleanup), or at minimum run `git -C \"$repo_root\" worktree prune` at startup so stale admin entries from prior killed runs are reclaimed.",
+      "evidence": "Re-read run.sh lines 37 (RR_CELLS def), 123 (mkdir -p \"$RR_CELLS\"), 146-191 (run_cell: add at 154, per-id guard at 153, tail removal at 188), and the whole file end (352-358: append_result, publish, exit — no trap installed). Grep across run.sh for trap|worktree prune|rm -rf \"$RR_CELLS\" returned no matches, confirming no crash-safe or periodic sweep. Cross-checked the sibling pattern: routines/_lib/matrix.sh:310-320 defines routine_matrix_cleanup, which loops every $MATRIX_CELLS_ROOT/* worktree, force-removes it and then runs `git worktree prune` — the exact whole-directory reclaim run.sh omits. Trigger is a hard kill (not a normal claude timeout, which returns control to the line-188 cleanup); on such kills orphan cell ids not reproduced by a later run leak permanently. Claim survives. Rated MINOR not BLOCKER: no wrong output on the eval's production path; the harm is gradual accumulation of registered worktrees in the main repo requiring a manual `git worktree prune`, and only under abnormal termination."
+    }
+  ]
+}

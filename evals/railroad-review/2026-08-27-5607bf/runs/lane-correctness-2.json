@@ -1,0 +1,21 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "aborted": false,
+  "files_reviewed": [
+    "plans/railroad-review-observability/runbooks/trace.md",
+    "routines/skill-eval-railroad-review/com.smine.routine.skill-eval-railroad-review.plist.template",
+    "routines/skill-eval-railroad-review/run.sh"
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 220,
+      "severity": "MINOR",
+      "claim": "The refute-candidate cap does not keep the highest-severity candidates it was written to keep. The pipeline is `... | sort_by(-severity) | unique_by([.file,.line]) | .[0:$max]`. jq's `unique_by` re-sorts its output ascending by the key `[.file,.line]`, discarding the preceding severity ordering; the final `.[0:$max]` therefore truncates in file/line order, not severity order. Concrete trigger: with `refute_max=6` (default) and 7+ distinct-location candidates at/above the threshold where the single BLOCKER is at a high-sorting path (e.g. `zzz.md:100`) and six MAJORs sit at `aaa.md`..`fff.md`, the cap keeps the six MAJORs and drops the BLOCKER from Stage 2 refutation. The `sort_by(-severity)` on line 223 shows the intent was to prioritize the most severe candidates for the second-confirmation pass; the intent is defeated. Consequence is bounded to refutation coverage, not lost findings: the station (run.sh:249-260) ingests every lane finding via `eval-in/lanes/*.json`, so an un-refuted BLOCKER still reaches the station's own verification — hence MINOR, a measurement-fidelity defect rather than a wrong review verdict.",
+      "fix": "Move the cap after a severity re-sort so the highest-severity survivors are kept: `... | unique_by([.file,.line]) | sort_by(-({\"BLOCKER\":5,\"MAJOR\":4,\"MINOR\":3,\"NIT\":2,\"INFO\":1}[.severity] // 0)) | .[0:$max]`.",
+      "evidence": "Re-read run.sh:213-247 (Stage 2 refutation) in full: line 223 `sort_by(-(...severity...))`, line 224 `unique_by([.file, .line]) | .[0:$max]`. Confirmed jq's reordering empirically: `echo '[{z.go,BLOCKER},{a.go,MAJOR},{b.go,MAJOR},{c.go,MAJOR}]' | jq 'sort_by(-sev) | unique_by([.file,.line]) | .[0:2]'` returned `[a.go MAJOR, b.go MAJOR]` — the BLOCKER at z.go was dropped by the cap. Re-read run.sh:249-260 (Stage 3 station) confirming the station reads all lane JSONs from eval-in/lanes, so a dropped refute candidate is not a lost finding; this bounds the impact to MINOR."
+    }
+  ]
+}

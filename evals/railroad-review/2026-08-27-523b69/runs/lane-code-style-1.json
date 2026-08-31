@@ -1,0 +1,35 @@
+{
+  "direction": "code-style",
+  "lane": 1,
+  "aborted": false,
+  "files_reviewed": [
+    "cmd/worktrees/_lib/verdict.sh",
+    "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "skills/smine/smine/workflows/session-mine.js",
+    "skills/feature/fdesign/SKILL.md",
+    "skills/feature/fdesign/changelog.json",
+    "skills/feature/fimplement/SKILL.md",
+    "skills/feature/fimplement/changelog.json",
+    "skills/git/merge-resolve/SKILL.md",
+    "skills/git/package-commit/SKILL.md",
+    "skills/git/package-commit/changelog.json",
+    "skills/smine/smine-apply/SKILL.md",
+    "skills/smine/smine-apply/changelog.json",
+    "skills/smine/smine/SKILL.md",
+    "skills/smine/smine/changelog.json",
+    "docs/workflows.md"
+  ],
+  "findings": [
+    {
+      "finding_id": "code-style-NIT-1",
+      "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+      "line": 73,
+      "severity": "NIT",
+      "claim": "phase('Gate') is called inside the pipeline() second-stage callback, so with more than one template the 'Gate' phase marker is re-emitted once per template. Every other workflow in this change set hoists each phase() call once at top level: phase('Render') is hoisted at line 50 of this same file, foreign-toolchain-pretag.js (same batch, same author) puts both phase('Build') (line 43) and phase('Gate') (line 58) at top level, session-mine.js calls phase('Drift'/'Mine'/'Route') at top level, and subsystem-grounding.js calls phase('Ground')/phase('Fold') at lines 57/79 top level. config-ui-fidelity-gate.js is the sole file placing a phase() call inside a loop body, diverging from the one-call-per-phase house pattern (ACTION-REVIEW-QUALITY-001: code follows project conventions / structure).",
+      "fix": "Hoist phase('Gate') out of the reducer to top level before the pipeline() call (or between the two stage arrow functions), matching foreign-toolchain-pretag.js:58.",
+      "evidence": "Re-read config-ui-fidelity-gate.js lines 50-86: phase('Render') is hoisted at line 50, phase('Gate') sits at line 73 inside the second-stage arrow function passed to pipeline(). Re-read foreign-toolchain-pretag.js lines 42-58: phase('Build') (43) and phase('Gate') (58) are both top-level statements. Re-read session-mine.js: phase('Drift') (~line 92), 'Mine', 'Route' all top-level. Re-read subsystem-grounding.js: phase('Ground') line 57, phase('Fold') line 79, both top-level. Claim survives: config-ui-fidelity-gate.js is the only file nesting a phase() marker in an iterated callback."
+    }
+  ]
+}

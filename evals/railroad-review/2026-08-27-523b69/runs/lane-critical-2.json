@@ -1,0 +1,13 @@
+{
+  "direction": "critical",
+  "lane": 2,
+  "aborted": false,
+  "files_reviewed": [
+    "cmd/worktrees/_lib/verdict.sh",
+    "skills/smine/smine/workflows/session-mine.js",
+    "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js"
+  ],
+  "findings": []
+}

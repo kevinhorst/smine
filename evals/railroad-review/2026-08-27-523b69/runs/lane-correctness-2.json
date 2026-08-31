@@ -1,0 +1,61 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "aborted": false,
+  "files_reviewed": [
+    "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "skills/smine/smine/workflows/session-mine.js",
+    "skills/feature/fdesign/SKILL.md",
+    "skills/feature/fimplement/SKILL.md",
+    "skills/git/package-commit/SKILL.md",
+    "skills/smine/smine/SKILL.md",
+    "skills/smine/smine-apply/SKILL.md",
+    "skills/git/merge-resolve/SKILL.md",
+    "skills/feature/fdesign/changelog.json",
+    "skills/feature/fimplement/changelog.json",
+    "skills/git/package-commit/changelog.json",
+    "skills/smine/smine/changelog.json",
+    "skills/smine/smine-apply/changelog.json",
+    "docs/workflows.md"
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MINOR-1",
+      "file": "skills/feature/fdesign/SKILL.md",
+      "line": 60,
+      "severity": "MINOR",
+      "claim": "The new bundled workflow subsystem-grounding.js (changelog v3.6: \"grounds a multi-subsystem plan deterministically\") is never invoked by its fronting skill. fdesign SKILL.md contains no Workflow-tool invocation, no scriptPath reference, and no manual-run note for the workflow anywhere in its body, including Phase 1 (Ground) where grounding happens. Concrete trigger: run /fdesign change with drivers spanning two or more subsystems — the skill has no instruction to call Workflow({scriptPath: '.../workflows/subsystem-grounding.js'}), so the deterministic per-subsystem grounding the changelog promises never runs. Contrast session-mine, which IS wired at skills/smine/smine/SKILL.md:45 (\"Manual-run alternative ... call the Workflow tool with {scriptPath: '.../workflows/session-mine.js'}\"). The workflow file is correct and matches docs/workflows.md, but is inert without a caller.",
+      "fix": "Add a manual-run bullet to fdesign SKILL.md Phase 1 mirroring smine SKILL.md:45, naming Workflow({scriptPath: '<base>/workflows/subsystem-grounding.js', args:{subsystems, drivers, planRef}}) as the multi-subsystem grounding path.",
+      "evidence": "Re-read skills/feature/fdesign/workflows/subsystem-grounding.js in full (meta.whenToUse: 'Invoked by /fdesign (or /fdesign change) when the drivers span two or more subsystems'); re-grepped skills/feature/fdesign/SKILL.md for 'subsystem-grounding', 'workflows/', 'Workflow tool', 'scriptPath', 'manual-run' — zero hits; the only near-match (line 57) is INTAKE-008, unrelated. docs/workflows.md:7 confirms workflows are invoked by-path from the fronting skill and line 94 frames it 'Fronted by /fdesign'. session-mine wiring re-read at smine SKILL.md:45 as the established pattern."
+    },
+    {
+      "finding_id": "correctness-MINOR-2",
+      "file": "skills/feature/fimplement/SKILL.md",
+      "line": 62,
+      "severity": "MINOR",
+      "claim": "The new bundled workflow config-ui-fidelity-gate.js (changelog v1.23: \"gating the first commit of any config-server template/CSS change\") is never invoked by fimplement. The fimplement Phase 3 diff added two verify bullets (data-dir sync-exclude; host:port listener) but no bullet invoking the config-server UI render/fidelity gate, and no Workflow-tool/scriptPath reference exists anywhere in the body. Concrete trigger: run /fimplement on a change touching a config-server template or internal/server/assets/style.css — nothing calls the workflow, so the promised pre-first-commit gate (throwaway render + single-Save-button assertion + design-system diff) never fires and an off-spec config UI can be committed unchecked. The workflow file itself is correct.",
+      "fix": "Add a Phase 3 (or Phase 4 pre-commit) bullet to fimplement SKILL.md invoking Workflow({scriptPath: '<base>/workflows/config-ui-fidelity-gate.js', args:{templates, cssPath, renderHint}}) whenever the diff touches config-server templates or style.css, gating the first commit on gate.pass.",
+      "evidence": "Re-read skills/feature/fimplement/workflows/config-ui-fidelity-gate.js in full (meta.whenToUse: 'Invoked by /fimplement (or /fdesign change) before the first commit ... that touches config-server templates or internal/server/assets/style.css'); re-read the fimplement SKILL.md Phase 3 diff (added bullets are the sync-exclude and host:port checks, not a UI gate); grep for 'config-ui-fidelity', 'workflow', 'scriptPath' in fimplement SKILL.md returned only the unrelated 'Workflow position' navigation line (22) and a commented ACDSL entry (15). docs/workflows.md:86 confirms it is 'Fronted by /fimplement ... as a pre-first-commit gate'."
+    },
+    {
+      "finding_id": "correctness-MINOR-3",
+      "file": "skills/git/package-commit/SKILL.md",
+      "line": 20,
+      "severity": "MINOR",
+      "claim": "The new bundled workflow foreign-toolchain-pretag.js (changelog v3.3: \"blocks the tag on any failure so a CI run on a pushed tag is never the first compile\") is never invoked by package-commit. The package-commit SKILL.md diff only bumps the version to 3.3; the body has no Workflow-tool invocation, scriptPath, or release-tag pre-compile step referencing the workflow. Concrete trigger: run /package-commit (or a release-tag step) on a release including an Inno Setup .iss or GOOS cross-build artifact — nothing calls the workflow, so the local pre-tag compile that the changelog promises never runs and a pushed tag's CI remains the first compile. The workflow file itself is correct.",
+      "fix": "Add a release-tag step to package-commit SKILL.md invoking Workflow({scriptPath: '<base>/workflows/foreign-toolchain-pretag.js', args:{artifacts, tagRef}}) before any release tag whose build includes a foreign-toolchain artifact, refusing to tag on gate.pass=false.",
+      "evidence": "Re-read skills/git/package-commit/workflows/foreign-toolchain-pretag.js in full (meta.whenToUse: 'Invoked by /package-commit (or any release-tag step) before a release tag whose build includes a foreign-toolchain artifact'); re-read the package-commit SKILL.md diff (only the frontmatter version bump 3.2->3.3, no body change); grep for 'foreign-toolchain', 'workflow', 'scriptPath' returned only the unrelated 'Workflow position' line (20). docs/workflows.md:102 confirms it is 'Fronted by /package-commit ... whenever the release includes a foreign-toolchain artifact'."
+    },
+    {
+      "finding_id": "correctness-INFO-1",
+      "file": "skills/smine/smine/SKILL.md",
+      "line": 45,
+      "severity": "INFO",
+      "claim": "session-mine.js v1.13 added optional model/effort args to the workflow (args contract and meta.whenToUse updated to {..., model?, effort?}), but the manual-run invocation documented in smine SKILL.md:45 still lists args as {nightly, noBatch, skip, batches, maxMinedPerDimension, maxMinedTotal, agents} — model/effort are omitted. Concrete consequence: an interactive user following SKILL.md:45 to invoke the workflow by hand has no way to discover the new tier-override args. Not a runtime defect (both are optional; omitting preserves session inheritance), only a doc-completeness gap versus the shipped workflow contract.",
+      "fix": "Append model, effort to the args object listed in smine SKILL.md:45 (or note they are optional tier overrides), matching the workflow's updated args contract.",
+      "evidence": "Re-read the session-mine.js diff: meta.whenToUse now '{nightly, noBatch, skip[], batches[], model?, effort?}' and the args-contract comment plus the throw message both add model/effort; re-read smine SKILL.md:45 manual-invocation arg list which still omits model/effort. docs/workflows.md:45 (the authoritative section) does document model/effort, so only the SKILL.md manual-run line lags."
+    }
+  ]
+}

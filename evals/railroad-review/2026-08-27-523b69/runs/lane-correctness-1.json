@@ -1,0 +1,26 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "aborted": false,
+  "files_reviewed": [
+    "cmd/worktrees/_lib/verdict.sh",
+    "docs/workflows.md",
+    "skills/feature/fdesign/SKILL.md",
+    "skills/feature/fdesign/changelog.json",
+    "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "skills/feature/fimplement/SKILL.md",
+    "skills/feature/fimplement/changelog.json",
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "skills/git/merge-resolve/SKILL.md",
+    "skills/git/package-commit/SKILL.md",
+    "skills/git/package-commit/changelog.json",
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "skills/smine/smine-apply/SKILL.md",
+    "skills/smine/smine-apply/changelog.json",
+    "skills/smine/smine/SKILL.md",
+    "skills/smine/smine/changelog.json",
+    "skills/smine/smine/workflows/session-mine.js"
+  ],
+  "findings": [],
+  "notes": "Correctness direction. Spec/request basis: docs/workflows.md (updated in-range, the request contract for the four bundled workflows) plus each skill's changelog.json and SKILL.md prose. The ~70 non-code files (sessions/**, evals/fexplore-2026-08-27/**, proposals/**) are generated retrospective/eval/proposal artifacts with no spec-checkable code path — reviewed at diff level for scope creep, none found. Confirmed clean against the correctness bar: every candidate examined named a concrete trigger and none survived re-reading the cited code. Checks performed: (1) session-mine.js tier override `{ ...(model && { model }), ...(effort && { effort }) }` — with model/effort '' the guard short-circuits to '' and `{...''}` is `{}`, so omission correctly yields session inheritance per spec (skills/smine/smine/changelog.json 1.13). (2) config-ui-fidelity-gate.js multi-stage `pipeline(templates, renderFn, (rendered, template) => ...)` — the second-stage `(prevResult, item)` signature matches the repo reference railroad-review.js:389 `async (fanout, d) => ...`; failed-render short-circuits to a pure-JS pass:false object satisfying GATE_SCHEMA required fields; matches docs/workflows.md description. (3) foreign-toolchain-pretag.js single-stage pipeline + pure-JS gate mapping non-zero/missing exits to blocking_errors — matches spec. (4) subsystem-grounding.js `parallel(subsystems.map(s => () => agent(...)))` thunk-array barrier + Fold agent, planRef branch returns plan_ref vs grounded_sections — matches spec. (5) All four new workflow file paths registered in docs/workflows.md match on-disk paths; all four files exist. (6) fimplement changelog renumber (old 1.21-1.23 -> 1.24-1.26, three new 1.21-1.23 with earlier 08-20/08-21 dates) is chronologically monotonic: lower versions carry earlier dates, SKILL.md version 1.26 matches changelog head."
+}

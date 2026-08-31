@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "2.0",
+  "eval": {
+    "skill": "fexplore",
+    "skillMdPath": "skills/feature/fexplore/SKILL.md",
+    "date": "2026-08-27",
+    "manifest": "evals/fexplore-2026-08-27/manifest.json",
+    "notes": "Four ctx-on runs of one prose brief (applied-probe safety); no variants, so no sharedTotals. Self rows are synthesized SKILL-FEXPLORE-NNN because fexplore is a prose skill with no formal entry ids (render-skill --list-entries returned []); each row anchors to a directive line in the loaded skills/default.md. CONTEXT axis is N/A: context_record.sh on the transcripts shows injected.skill=[] and only the Go language pack (87 RULE-GOLANG-* ids) plus ACDSL file rules were injected; fexplore's deliverable is a prose exploration containing no Go, so code-doctrine is not demonstrable against it — no context rubric rows, no context totals. OUTPUT quality is judged against the qualityContext exemplar plans/archived/applied_probe_safety/design/exploration.md, which is the downstream layer-3 exploration used as a structure/rigor exemplar, NOT a content answer key (the brief covers the broader concept). Three run outputs bundle pre-existing implementation code under '## file:' headers; that code is byte-identical across two different models and matches the on-branch shipped files, so it is the harness surfacing the working-copy ACDSL-projection view of files the run read, not run-authored code (fable-5.max, which grounded at the pre-implementation parent b1151f3 and did not read the shipped verdict.sh, bundles only exploration.md). audit_pass and diff_lines are null: cross-directory Bash in the cell worktrees is approval-gated and this was an unattended run."
+  },
+  "rubric": [
+    { "id": "SKILL-FEXPLORE-001", "axis": "self", "phase": "P5", "rule": "Produce exactly one artifact — plans/{slug}/design/exploration.md; produce neither a plan nor code.", "source": "evals/fexplore-2026-08-27/skills/default.md:11" },
+    { "id": "SKILL-FEXPLORE-002", "axis": "self", "phase": "P2", "rule": "Enumerate the hard constraints first; each gets an ID C<n> and an anchor or measurement; options are derived from them, not brainstormed.", "source": "evals/fexplore-2026-08-27/skills/default.md:42" },
+    { "id": "SKILL-FEXPLORE-003", "axis": "self", "phase": "P1", "rule": "Facts carry file:line anchors; a claim without an anchor is an opinion.", "source": "evals/fexplore-2026-08-27/skills/default.md:34" },
+    { "id": "SKILL-FEXPLORE-004", "axis": "self", "phase": "P1", "rule": "Separate current gaps from architectural limits — evaluate each option both as-is and fully-implemented; the owner's implementation intent is an input, not inferred from TODOs.", "source": "evals/fexplore-2026-08-27/skills/default.md:36" },
+    { "id": "SKILL-FEXPLORE-005", "axis": "self", "phase": "P1", "rule": "Live probe over document archaeology — when a capability question blocks, propose the cheapest live experiment instead of continuing to search.", "source": "evals/fexplore-2026-08-27/skills/default.md:37" },
+    { "id": "SKILL-FEXPLORE-006", "axis": "self", "phase": "P1", "rule": "Design by measurement — when an option hinges on a data distribution/capability, write the runnable query and hand it to the user; the result becomes a binding fact.", "source": "evals/fexplore-2026-08-27/skills/default.md:38" },
+    { "id": "SKILL-FEXPLORE-007", "axis": "self", "phase": "P3", "rule": "Derive the exhaustive set of families the constraints admit; per family: name, mechanism, binding/killing constraints, ownership assumptions.", "source": "evals/fexplore-2026-08-27/skills/default.md:46" },
+    { "id": "SKILL-FEXPLORE-008", "axis": "self", "phase": "P3", "rule": "A family that violates a hard constraint is listed with its killing constraint — visible, not silently dropped.", "source": "evals/fexplore-2026-08-27/skills/default.md:46" },
+    { "id": "SKILL-FEXPLORE-009", "axis": "self", "phase": "P4", "rule": "Evaluation table with columns Option | Groundedness | Blast radius | Effort | Reversibility | Verdict.", "source": "evals/fexplore-2026-08-27/skills/default.md:50" },
+    { "id": "SKILL-FEXPLORE-010", "axis": "self", "phase": "P4", "rule": "Groundedness = how much existing code/pattern the option rides (the criterion that decided the bake-off).", "source": "evals/fexplore-2026-08-27/skills/default.md:52" },
+    { "id": "SKILL-FEXPLORE-011", "axis": "self", "phase": "P4", "rule": "Per-scenario verdicts are allowed; when a subset of requirements fits a 'losing' option, say so — no winner-take-all.", "source": "evals/fexplore-2026-08-27/skills/default.md:53" },
+    { "id": "SKILL-FEXPLORE-012", "axis": "self", "phase": "P4", "rule": "Two options within noise → both go to the recommendation as an OPEN decision; never fake a winner.", "source": "evals/fexplore-2026-08-27/skills/default.md:54" },
+    { "id": "SKILL-FEXPLORE-013", "axis": "self", "phase": "P5", "rule": "exploration.md follows the template: Context, Constraints, Options, Evaluation, Recommendation (chosen or OPEN + what fdesign imports: the option, its binding constraints, its measurements), Rejected (one line per rejected option with the killing reason).", "source": "evals/fexplore-2026-08-27/skills/default.md:58" },
+    { "id": "SKILL-FEXPLORE-014", "axis": "self", "phase": "P0", "rule": "The user's candidate is a first-class option, evaluated under the user's premise including changes to components the team owns.", "source": "evals/fexplore-2026-08-27/skills/default.md:30" },
+    { "id": "SKILL-FEXPLORE-015", "axis": "self", "phase": "P0", "rule": "Familiarity mode changes explanation depth, never rigor; state the mode.", "source": "evals/fexplore-2026-08-27/skills/default.md:24" },
+
+    { "id": "C1", "axis": "output", "rule": "Every constraint carries a concrete file:line anchor or a measurement, not a bare assertion.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Constraints table)" },
+    { "id": "C2", "axis": "output", "rule": "Options are exhaustive families, each with a mechanism and its binding/killing constraint; killed families are shown with the killing constraint.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Options)" },
+    { "id": "C3", "axis": "output", "rule": "Evaluation table present with the prescribed columns and a per-option verdict.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Evaluation)" },
+    { "id": "C4", "axis": "output", "rule": "Groundedness handled honestly — the grounding situation is disclosed and the space is surveyed rather than fabricated; anchors are real.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Context/Evaluation groundedness); default.md:52" },
+    { "id": "C5", "axis": "output", "rule": "Design-by-measurement: the recommendation's load-bearing claim (the fail-closed separation) is backed by a measured or runnable-and-handed-over separation across the ground-truth cases, not merely asserted.", "source": "plans/archived/applied_probe_safety/design/exploration.md:150-157" },
+    { "id": "C6", "axis": "output", "rule": "Recommendation states what fdesign imports: the option, its binding constraints, and its measurements.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Recommendation)" },
+    { "id": "C7", "axis": "output", "rule": "Rejected register — one line per rejected option with the killing reason.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Rejected)" },
+    { "id": "C8", "axis": "output", "rule": "Surveys the full solution space the brief asked for — both the layered applied-probe AND the unified verdict source.", "source": "routines/skill-eval-fexplore/briefs/fexplore/applied-probe-safety.md; default.md:46" },
+    { "id": "C9", "axis": "output", "rule": "Surfaces the non-obvious substrate/mechanism alternatives the constraints admit (e.g. the worktreeless git merge-tree substrate) as a live option rather than re-deriving only the shipped ladder.", "source": "plans/archived/applied_probe_safety/design/exploration.md (Options breadth)" }
+  ],
+  "runs": [
+    { "id": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.fable-5.medium.r1.md", "skillMd": "evals/fexplore-2026-08-27/skills/default.md", "transcript": "c591a403-8e64-4f27-91b4-dd0e966b8e78", "model": { "id": "claude-fable-5", "effort": "medium", "mode": "context-on", "telemetry": "wall_s=195 output_tokens=13359 cost_usd=0.8135 turns=13" } },
+    { "id": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.fable-5.max.r1.md", "skillMd": "evals/fexplore-2026-08-27/skills/default.md", "transcript": "cac79176-c7ac-4b27-afa9-c0da39f24d38", "model": { "id": "claude-fable-5", "effort": "max", "mode": "context-on", "telemetry": "wall_s=822 output_tokens=58798 cost_usd=2.7033 turns=51" } },
+    { "id": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.opus-4-8.medium.r1.md", "skillMd": "evals/fexplore-2026-08-27/skills/default.md", "transcript": "27e2e592-0bc1-45da-b8cf-cbfa37ee586f", "model": { "id": "claude-opus-4-8[1m]", "effort": "medium", "mode": "context-on", "telemetry": "wall_s=203 output_tokens=13787 cost_usd=0.6236 turns=15" } },
+    { "id": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.opus-4-8.max.r1.md", "skillMd": "evals/fexplore-2026-08-27/skills/default.md", "transcript": "f2a4676e-ef6b-4808-b23f-7fd9c6050390", "model": { "id": "claude-opus-4-8[1m]", "effort": "max", "mode": "context-on", "telemetry": "wall_s=701 output_tokens=47984 cost_usd=1.9149 turns=28" } }
+  ],
+  "probes": [
+    { "name": "context-injection-shape", "ruleIds": [], "result": "context_record.sh on the fable-5.medium and opus-4-8.max transcripts both show injected.skill=[], injected.global=[], and one lang pack (context/rules/go.md, 87 RULE-GOLANG-*/ACTION ids). No skill-scoped context was injected for any run; ctx-on here means the Go language pack was present. Because the deliverable is a prose exploration with no Go code, the injected code-doctrine is not demonstrable against it — the CONTEXT axis is N/A." },
+    { "name": "code-bundle-provenance", "ruleIds": ["SKILL-FEXPLORE-001"], "result": "fable-5.max output = only 'plans/applied-probe-safety/design/exploration.md'. The other three outputs also bundle implementation files (verdict.sh, print/remove scripts, status.go; opus-max adds test files) under '## file:' headers. Section boundaries are identical between fable-5.medium and opus-4-8.medium (verdict 1-478, print 479-796, remove 797-956, status 957-1260) and the code matches the on-branch shipped files verbatim (incl. the '[ACDSL-PROJECTION] ... stripped before commit' working-copy header). Two different models cannot independently emit byte-identical 475-line files, so this is the harness surfacing the working-copy projection view of files the run READ, not run-authored code. No run produced code; SKILL-FEXPLORE-001 is not violated by any run." },
+    { "name": "archived-design-prohibition", "ruleIds": ["C4"], "result": "The brief forbids reading plans/archived/applied_probe_safety/design/. All four disclose non-consultation (fable-5.max grounds at pre-impl parent b1151f3 and states it read neither verdict.sh nor the archived design; the others disclose treating the shipped code as an incumbent). Each run's option taxonomy differs from the golden's (golden A range-diff / B reverse-apply / C interdiff-gate / D post-image / E merge-result / F annotation / G layers-1-2 vs the runs' distinct A0-A7 / P/U/B lettering), consistent with independent derivation rather than copying." },
+    { "name": "concept-vs-shipped-contradiction", "ruleIds": ["C4"], "result": "Binding-input contradiction: concept.md MVP scopes layer 3 to 'FROM only' and backlogs candidate-wide probing, while the shipped verdict.sh does a candidate-wide twin sweep. All four surface this tension — fable-5.max flags the twin sweep as beyond the concept MVP, fable-5.medium notes G is orthogonal to the FROM-only probe decision, opus-4-8.medium raises it in Open Questions (A-WIDE scope), opus-4-8.max raises it (scope reconciliation)." },
+    { "name": "merge-tree-substrate-coverage", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "ruleIds": ["C9"], "result": "opus-4-8.medium surfaces git merge-tree only as option A3 and kills it ('carries the same ambiguity as A1's conflict case and adds no disambiguation ... loses the lazy-worktree reuse'), missing its role as a worktreeless layer-2 substrate. fable-5.max, fable-5.medium, and opus-4-8.max each raise the worktreeless merge-tree substrate as a live OPEN optimization for the clean-apply layer with a git>=2.38 caveat." }
+  ],
+  "scores": [
+    { "ruleId": "SKILL-FEXPLORE-001", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent", "justification": "Authored deliverable is plans/applied-probe-safety/design/exploration.md; bundled code is pre-existing (see code-bundle-provenance probe).", "evidence": ["## file: plans/applied-probe-safety/design/exploration.md"] },
+    { "ruleId": "SKILL-FEXPLORE-001", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Output is exactly the single exploration.md artifact, no code bundled at all.", "evidence": ["fable-5.max output = only '## file: plans/applied-probe-safety/design/exploration.md'"] },
+    { "ruleId": "SKILL-FEXPLORE-001", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "probe", "justification": "Authored deliverable is exploration.md; bundled code is byte-identical to the shipped files (code-bundle-provenance probe), not run-authored.", "evidence": ["## file: plans/applied-probe-safety/design/exploration.md"] },
+    { "ruleId": "SKILL-FEXPLORE-001", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "probe", "justification": "Authored deliverable is exploration.md; bundled code+tests are pre-existing shipped files surfaced by the harness.", "evidence": ["## file: plans/applied-probe-safety/design/exploration.md"] },
+
+    { "ruleId": "SKILL-FEXPLORE-002", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-002", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-002", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-002", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-003", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-003", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-003", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-003", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-004", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-004", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-004", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-004", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-005", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent", "justification": "Recommends a 5-minute live merge-tree probe per the live-probe rule.", "evidence": ["a 5-minute live probe, per the live-probe-over-archaeology rule"] },
+    { "ruleId": "SKILL-FEXPLORE-005", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Wrote a three-scenario scratch lab and hands over exact git version / merge-tree probe commands to bind the blocked capability.", "evidence": ["git merge-tree --write-tree --merge-base=HEAD~1 HEAD HEAD~0 >/dev/null 2>&1; echo $?", "a three-scenario scratch-repo lab ... was written to /tmp/applied_probe_lab/lab.sh"] },
+    { "ruleId": "SKILL-FEXPLORE-005", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 0, "source": "agent", "justification": "Surfaces no blocked capability question and proposes no live experiment; Open Questions cover only A-WIDE scope and cache deferral. It dismisses merge-tree by analysis rather than proposing a probe.", "evidence": ["Open Questions: A-WIDE scope exceeds the concept's stated MVP ... Cache deferral stands"] },
+    { "ruleId": "SKILL-FEXPLORE-005", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent", "justification": "Wrote a probe script and hands over the exact command to run before fdesign commits the merge-tree substrate.", "evidence": ["the probe script (/tmp/probe_applied.sh) was written but Bash execution is approval-gated", "run it: assert applied/unpicked/CONFLICT->range-diff match the worktree probe"] },
+
+    { "ruleId": "SKILL-FEXPLORE-006", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent", "justification": "Hands over the merge-tree availability probe and names the measurements implementation must take (WORKTREE_STATUS_TRACE).", "evidence": ["verify git merge-tree --write-tree on every execution context ... first", "probe count/duration via WORKTREE_STATUS_TRACE=1 on the real repo"] },
+    { "ruleId": "SKILL-FEXPLORE-006", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Blind-spot matrix records expected outcomes and the runnable lab/commands make the separation binding.", "evidence": ["Runnable probes to bind open facts", "git version   # >=2.38 unlocks the merge-tree substrate"] },
+    { "ruleId": "SKILL-FEXPLORE-006", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 0, "source": "agent", "justification": "No runnable query is written or handed over; the ground-truth separation is cited from the concept's prior decision-127 work rather than measured here or made runnable.", "evidence": ["Ground-truth separation ... was measured during the concept's decision 127 revision"] },
+    { "ruleId": "SKILL-FEXPLORE-006", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent", "justification": "Ties the separation to the shipped test line numbers and hands over the merge-tree probe as the binding measurement before fdesign locks the substrate.", "evidence": ["Context-shifted clean pick (test:241-272)", "run it: assert applied/unpicked/CONFLICT->range-diff match the worktree probe on the three ground-truth cases"] },
+
+    { "ruleId": "SKILL-FEXPLORE-007", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-007", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-007", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-007", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-008", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-008", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-008", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-008", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-009", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-009", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-009", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-009", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-010", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-010", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-010", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-010", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-011", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-011", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-011", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-011", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-012", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-012", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Positive confirmation of the no-fake-winner rule: leaves the layer-2 substrate OPEN, 'within noise on effort, so no winner is faked.'", "evidence": ["Within noise on effort, so no winner is faked"] },
+    { "ruleId": "SKILL-FEXPLORE-012", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-012", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-013", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-013", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-013", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-013", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "SKILL-FEXPLORE-014", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 0, "source": "agent", "justification": "Not demonstrable — the brief supplies no distinct user candidate idea; the concept defines the space, so there is no user candidate to evaluate first-class. Scored 0 uniformly across all runs (no ranking effect).", "evidence": ["brief: 'Explore the solution space for the layered applied-probe and the unified verdict source, per the concept's Goals.'"] },
+    { "ruleId": "SKILL-FEXPLORE-014", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 0, "source": "agent", "justification": "Not demonstrable — no distinct user candidate in this brief.", "evidence": ["brief has no user-proposed candidate option"] },
+    { "ruleId": "SKILL-FEXPLORE-014", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 0, "source": "agent", "justification": "Not demonstrable — no distinct user candidate in this brief.", "evidence": ["brief has no user-proposed candidate option"] },
+    { "ruleId": "SKILL-FEXPLORE-014", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 0, "source": "agent", "justification": "Not demonstrable — no distinct user candidate in this brief.", "evidence": ["brief has no user-proposed candidate option"] },
+
+    { "ruleId": "SKILL-FEXPLORE-015", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-015", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-015", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "SKILL-FEXPLORE-015", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C1", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C1", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C1", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C1", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C2", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C2", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C2", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C2", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C3", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C3", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C3", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C3", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C4", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent", "justification": "N/A for +1 — discloses treating the shipped code as an incumbent candidate and surveys the space around it; anchors are real.", "evidence": ["the shipped code is treated as the incumbent candidate and evaluated like any other family, with the space surveyed around it"] },
+    { "ruleId": "C4", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Strongest grounding discipline — grounds at the pre-implementation parent and did not read the shipped verdict.sh, surveying the space as-of the decision point.", "evidence": ["every anchor below cites the pre-implementation state (path:line @ b1151f3), and neither cmd/worktrees/_lib/verdict.sh nor anything under plans/archived/.../design/ was read"] },
+    { "ruleId": "C4", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent", "justification": "Discloses grounding on the shipped tree and still surveys and rejects alternatives.", "evidence": ["the tree at HEAD already contains one point in this space ... the space surveyed around it"] },
+    { "ruleId": "C4", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent", "justification": "Honestly frames the survey as post-hoc but grounds anchors on real shipped code/tests and adds a genuinely-new option.", "evidence": ["Current state (groundedness signal, not a reason to skip the survey)"] },
+
+    { "ruleId": "C5", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent", "justification": "Backs the added-line separation across three named ground-truth cases and hands over the merge-tree probe.", "evidence": ["verified against three ground-truth cases: the real incident (accept), a resolved pick over a competing edit (accept), a genuinely competing change (reject)"] },
+    { "ruleId": "C5", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Blind-spot matrix + runnable lab make the separation measurable and binding.", "evidence": ["blind-spot matrix over the shapes that occur in harvest histories", "Runnable probes to bind open facts"] },
+    { "ruleId": "C5", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 0, "source": "agent", "justification": "The load-bearing separation is asserted via a citation to the concept's prior decision-127 measurement; no runnable measurement is written or handed over for this exploration.", "evidence": ["Ground-truth separation ... was measured during the concept's decision 127 revision"] },
+    { "ruleId": "C5", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent", "justification": "Per-scenario notes anchor each case to shipped test line numbers and a merge-tree probe is handed over as the pre-fdesign measurement.", "evidence": ["Competing change never landed (test:334-338)", "run it: assert applied/unpicked/CONFLICT->range-diff match the worktree probe"] },
+
+    { "ruleId": "C6", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C6", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C6", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C6", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C7", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C7", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C7", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C7", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C8", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C8", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C8", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 1, "source": "agent" },
+    { "ruleId": "C8", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent" },
+
+    { "ruleId": "C9", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "score": 1, "source": "agent", "justification": "Surfaces merge-tree substrate (E) and provenance trailers (F) as live alternatives beyond the shipped ladder.", "evidence": ["E. git merge-tree --write-tree simulation (worktree-less probe)"] },
+    { "ruleId": "C9", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "score": 1, "source": "agent", "justification": "Raises the worktreeless merge-tree substrate as an OPEN and provenance trailers (P1) as additive hardening.", "evidence": ["A1-substrate-b ... git merge-tree --write-tree ... Not weighed by the shipped code", "P1 provenance trailers"] },
+    { "ruleId": "C9", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "score": 0, "source": "agent", "justification": "Surfaces merge-tree only as A3 and kills it as adding no disambiguation and losing lazy worktree reuse, missing its role as a worktreeless layer-2 substrate the other three raised as an OPEN.", "evidence": ["A3 - git merge-tree / three-way, no worktree ... adds no disambiguation; still needs a layer 3, and loses the lazy-worktree reuse"] },
+    { "ruleId": "C9", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "score": 1, "source": "agent", "justification": "Raises the worktreeless merge-tree substrate as the single largest simplification, plus reverse-apply/cherry-mark/normalized-patch-id families.", "evidence": ["A1-substrate-b - worktreeless git merge-tree --write-tree ... Not weighed by the shipped code"] }
+  ],
+  "metrics": [
+    { "id": "wall_s", "label": "Wall time", "unit": "s", "direction": "lower", "source": "telemetry" },
+    { "id": "output_tokens", "label": "Output tokens (cost proxy, not quality)", "unit": "tokens", "direction": "lower", "source": "telemetry" },
+    { "id": "cost_usd", "label": "Cost", "unit": "USD", "direction": "lower", "source": "telemetry" },
+    { "id": "files_touched", "label": "Files in output bundle (fexplore should touch one)", "unit": "files", "direction": "lower", "source": "probe" },
+    { "id": "constraints_enumerated", "label": "Constraints enumerated (C<n> rows)", "unit": "count", "direction": "higher", "source": "probe" },
+    { "id": "options_surveyed", "label": "Option families surveyed", "unit": "count", "direction": "higher", "source": "probe" },
+    { "id": "entry_citations", "label": "Skill entry-id citations", "unit": "count", "direction": "higher", "source": "probe" },
+    { "id": "audit_pass", "label": "make audit", "unit": "bool", "direction": "higher", "source": "probe" },
+    { "id": "diff_lines", "label": "Diff lines vs base", "unit": "lines", "direction": "lower", "source": "probe" }
+  ],
+  "metricValues": [
+    { "metricId": "wall_s", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 195 },
+    { "metricId": "wall_s", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 822 },
+    { "metricId": "wall_s", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 203 },
+    { "metricId": "wall_s", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 701 },
+
+    { "metricId": "output_tokens", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 13359 },
+    { "metricId": "output_tokens", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 58798 },
+    { "metricId": "output_tokens", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 13787 },
+    { "metricId": "output_tokens", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 47984 },
+
+    { "metricId": "cost_usd", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 0.8135 },
+    { "metricId": "cost_usd", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 2.7033 },
+    { "metricId": "cost_usd", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 0.6236 },
+    { "metricId": "cost_usd", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 1.9149 },
+
+    { "metricId": "files_touched", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 5, "note": "4 pre-existing implementation files surfaced via the working-copy projection view + 1 authored exploration.md (see code-bundle-provenance probe)" },
+    { "metricId": "files_touched", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 1, "note": "only the authored exploration.md — cleanest single-artifact discipline" },
+    { "metricId": "files_touched", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 5, "note": "4 pre-existing implementation files + exploration.md" },
+    { "metricId": "files_touched", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 7, "note": "6 pre-existing implementation/test files + exploration.md" },
+
+    { "metricId": "constraints_enumerated", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 11 },
+    { "metricId": "constraints_enumerated", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 14 },
+    { "metricId": "constraints_enumerated", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 9 },
+    { "metricId": "constraints_enumerated", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 9 },
+
+    { "metricId": "options_surveyed", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 11, "note": "count of evaluated option families (Q1 A-G + Q2 P1-P4)" },
+    { "metricId": "options_surveyed", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 10, "note": "detection P0-P5 + verdict-source U-A..U-D; decided Safe-wiring W-A..C excluded" },
+    { "metricId": "options_surveyed", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 11, "note": "Axis A A0-A6 + Axis B B1-B4" },
+    { "metricId": "options_surveyed", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 13, "note": "Axis A A0-A7 + Axis B B1-B5" },
+
+    { "metricId": "entry_citations", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": 0, "note": "fexplore defines no SKILL entry ids; the exploration cites file:line anchors instead. Uniformly 0, no ranking value." },
+    { "metricId": "entry_citations", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": 0, "note": "no SKILL entry ids to cite" },
+    { "metricId": "entry_citations", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": 0, "note": "no SKILL entry ids to cite" },
+    { "metricId": "entry_citations", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": 0, "note": "no SKILL entry ids to cite" },
+
+    { "metricId": "audit_pass", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": null, "note": "cross-directory make audit in the cell worktree is approval-gated; unattended run could not execute it" },
+    { "metricId": "audit_pass", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": null, "note": "approval-gated in unattended run" },
+    { "metricId": "audit_pass", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": null, "note": "approval-gated in unattended run" },
+    { "metricId": "audit_pass", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": null, "note": "approval-gated in unattended run" },
+
+    { "metricId": "diff_lines", "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "value": null, "note": "git diff --numstat in the cell worktree is approval-gated cross-directory Bash; unattended run could not collect it" },
+    { "metricId": "diff_lines", "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "value": null, "note": "approval-gated in unattended run" },
+    { "metricId": "diff_lines", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "value": null, "note": "approval-gated in unattended run" },
+    { "metricId": "diff_lines", "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "value": null, "note": "approval-gated in unattended run" }
+  ],
+  "totals": [
+    { "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "axis": "self", "raw": 14, "max": 15, "pct": 93.3 },
+    { "runId": "default.ctx-on.applied-probe-safety.fable-5.medium.r1", "axis": "output", "raw": 9, "max": 9, "pct": 100.0 },
+    { "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "axis": "self", "raw": 14, "max": 15, "pct": 93.3 },
+    { "runId": "default.ctx-on.applied-probe-safety.fable-5.max.r1", "axis": "output", "raw": 9, "max": 9, "pct": 100.0 },
+    { "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "axis": "self", "raw": 12, "max": 15, "pct": 80.0 },
+    { "runId": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1", "axis": "output", "raw": 7, "max": 9, "pct": 77.8 },
+    { "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "axis": "self", "raw": 14, "max": 15, "pct": 93.3 },
+    { "runId": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1", "axis": "output", "raw": 9, "max": 9, "pct": 100.0 }
+  ]
+}

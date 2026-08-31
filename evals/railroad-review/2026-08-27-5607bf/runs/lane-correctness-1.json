@@ -1,0 +1,39 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "aborted": false,
+  "files_reviewed": [
+    "plans/railroad-review-observability/runbooks/trace.md",
+    "routines/skill-eval-railroad-review/com.smine.routine.skill-eval-railroad-review.plist.template",
+    "routines/skill-eval-railroad-review/run.sh"
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 167,
+      "severity": "MAJOR",
+      "claim": "The change drops the routine's only aggregate budget cap and silently disables its config-server budget control. Old run.sh capped the single review session with --max-budget-usd \"${ROUTINE_MAX_BUDGET_USD:-15}\"; the rewrite reads that variable nowhere and instead caps each cell at --max-budget-usd \"$cell_budget\" (ROUTINE_CELL_BUDGET_USD, default 4) with no total ceiling. The plist template renamed the key ROUTINE_MAX_BUDGET_USD -> ROUTINE_CELL_BUDGET_USD, but the config server still renders 'Max budget (USD)' -> ROUTINE_MAX_BUDGET_USD as a standard widget for every routine (internal/server/routines.go:41). Concrete sequence: an operator opens skill-eval-railroad-review's configure widget and sets 'Max budget (USD)' to 10 to cap the nightly run; handleSetEnv upserts ROUTINE_MAX_BUDGET_USD=10 into the plist (internal/server/env.go:72-97, preserved by internal/routines/plist.go), but run.sh never reads it, so the cap is ignored. With defaults (3 directions x 2 lanes = 6 lane cells + up to refute_max=6 refuter cells + 1 station = up to 13 cells) each capped only at $4, worst-case spend is ~$52 per run and is unbounded in aggregate, while the one budget lever the UI exposes for this routine now does nothing.",
+      "fix": "Either keep run.sh reading ROUTINE_MAX_BUDGET_USD as a total ceiling (accumulate per-cell cost and stop when exceeded), or add ROUTINE_CELL_BUDGET_USD (and REFUTE_LEVEL/REFUTE_MAX) to internal/server/routines.go standardSettings/routineSettings so the config widget exposes the new knob and the dead 'Max budget (USD)' field is not the sole visible budget control.",
+      "evidence": "Re-read run.sh:30-37 (cell_budget=${ROUTINE_CELL_BUDGET_USD:-4}, no ROUTINE_MAX_BUDGET_USD), run.sh:163-168 (--max-budget-usd \"$cell_budget\" per cell), lane loop run.sh:194-211, refute loop run.sh:234-247 (cap refute_max), station run.sh:260; plist diff dropping ROUTINE_MAX_BUDGET_USD and adding ROUTINE_CELL_BUDGET_USD=4; grep across repo confirms run.sh has no ROUTINE_MAX_BUDGET_USD reference; internal/server/routines.go:41 standard widget; internal/server/env.go:72-97 upsert; internal/routines/plist.go:175-179 replaces EnvironmentVariables with supplied env (unrelated keys preserved by the caller starting from parseEnv). Confirms the widget writes the key and run.sh ignores it."
+    },
+    {
+      "finding_id": "correctness-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 224,
+      "severity": "MINOR",
+      "claim": "The refute-candidate selection truncates by filename, not severity, so high-severity candidates can be dropped from refutation when the cap binds. The pipeline is: flatten all lane findings, map(select >= threshold), sort_by(-rank), unique_by([.file,.line]), .[0:$max]. jq's unique_by re-groups (re-sorts) its output by the key [.file,.line], discarding the preceding sort_by(-rank); the .[0:$max] cap then keeps the lexicographically-first files. Concrete input: seven MAJOR candidates in files a..f plus one BLOCKER in file z.go, refute_max=6 -> after unique_by the order is a,b,c,d,e,f,z and .[0:6] drops z.go, so the BLOCKER never gets a refuter cell. Separately, the flatten spans all directions before unique_by, so a code-style finding and a correctness finding at the same file:line collapse to one candidate.",
+      "fix": "Re-apply the severity sort after unique_by, e.g. `... | unique_by([.file,.line]) | sort_by(-({...}[.severity]//0)) | .[0:$max]`, and include the direction in the dedup key (`unique_by([.file,.line,.direction])` or fold direction into the flattened records) so cross-direction findings at the same line are not merged away.",
+      "evidence": "Re-read run.sh:218-224 (candidates pipeline); confirmed jq behavior with `jq -n '[...]|sort_by(-rank)|unique_by([.file,.line])'` — output re-ordered a.go,b.go,z.go(BLOCKER last), proving sort_by is discarded and the cap truncates by file. Flatten `[.[] | .findings[]?]` at run.sh:221 spans all lane_jsons (all directions). Note the station (run.sh:255-260) unions all lane findings independently, so a capped-out candidate still reaches the review — impact is confined to which candidates get a dedicated refuter, hence MINOR."
+    },
+    {
+      "finding_id": "correctness-MINOR-2",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 245,
+      "severity": "MINOR",
+      "claim": "Refuter verdicts are keyed only by finding_id, but finding_ids are not unique across lanes, so the station can attach a verdict to the wrong claim. Each lane numbers finding_id as \"$d-<SEV>-<n>\" from 1 per direction+severity independently (lane prompt run.sh:206), and the refuter output schema is {finding_id, verdict, reasoning, evidence} with no file/line (run.sh:245). Concrete sequence: lane-correctness-1 finds a MAJOR at fileA:10 -> id 'correctness-MAJOR-1'; lane-correctness-2 finds a different MAJOR at fileB:20 -> also 'correctness-MAJOR-1'. unique_by([.file,.line]) keeps both (distinct lines), two refuter cells produce two verdicts both labelled 'correctness-MAJOR-1' (possibly opposite). The station is told to apply refuter verdicts keyed on finding_id (run.sh:256-257); with a colliding id it cannot deterministically map verdict->claim and may kill the wrong finding.",
+      "fix": "Make the refuter echo the claim's file+line into its output and have the station join on {finding_id,file,line}; or assign each deduped candidate a fresh unique id before spawning refuters and pass that id into both the refuter prompt and the station stage.",
+      "evidence": "Re-read lane prompt (run.sh:206, finding_id \"$d-<SEV>-<n>\" numbered per lane), refute prompt schema (run.sh:240-245, no file/line field), refute filename `refute-$k-$fid` (run.sh:238,246 — $k keeps files distinct so no file collision, but the JSON key still collides), station prompt (run.sh:256-258, verdicts applied by finding_id). Station re-verifies surviving claims against the tree ('unless plainly inconsistent'), which backstops but does not guarantee correct attribution — hence MINOR."
+    }
+  ]
+}

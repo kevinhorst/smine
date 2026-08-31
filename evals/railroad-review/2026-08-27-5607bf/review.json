@@ -1,0 +1,87 @@
+{
+  "findings": [
+    {
+      "finding_id": "correctness-MAJOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 167,
+      "severity": "MAJOR",
+      "claim": "The rewrite dropped the routine's aggregate budget ceiling and left the config server's budget widget dead. Old run.sh capped the whole session with --max-budget-usd \"${ROUTINE_MAX_BUDGET_USD:-15}\"; the new run.sh caps each cell independently at --max-budget-usd \"$cell_budget\" (ROUTINE_CELL_BUDGET_USD, default 4) with no total ceiling — up to 13 cells (3 directions x 2 lanes + up to 6 refuters + 1 station) at $4 each = ~$52 worst-case, unbounded in aggregate. The plist template renamed the key ROUTINE_MAX_BUDGET_USD -> ROUTINE_CELL_BUDGET_USD, but internal/server/routines.go:41 still renders 'Max budget (USD)' -> ROUTINE_MAX_BUDGET_USD as a standard widget for every routine. An operator who sets 'Max budget (USD)' in this routine's configure panel writes ROUTINE_MAX_BUDGET_USD into the plist, which run.sh never reads — the only UI budget lever for this routine silently does nothing.",
+      "fix": "Either read ROUTINE_MAX_BUDGET_USD in run.sh as a total ceiling (accumulate per-cell cost, stop when exceeded), or add ROUTINE_CELL_BUDGET_USD to internal/server/routines.go so the config widget exposes the real per-cell knob and 'Max budget (USD)' is not a dead control for this routine.",
+      "evidence": "Re-verified against the tree (this worktree, HEAD 5607bf4): run.sh:36 cell_budget=${ROUTINE_CELL_BUDGET_USD:-4}; run.sh:167 --max-budget-usd \"$cell_budget\" per cell; full read of run.sh confirms zero ROUTINE_MAX_BUDGET_USD references and no aggregate accumulation. plist template lines 16-17 define ROUTINE_CELL_BUDGET_USD=4 and drop ROUTINE_MAX_BUDGET_USD. grep confirms internal/server/routines.go:41 `{Key: \"ROUTINE_MAX_BUDGET_USD\", Label: \"Max budget (USD)\", Default: \"15\"}` is a standardSettings entry rendered for every routine, and routines_test.go:569 asserts the widget is emitted. No refuter verdict was produced for this claim; station second-confirmed it directly.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "code-style-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 2,
+      "severity": "MINOR",
+      "claim": "The two-line [ACDSL-PROJECTION] header (run.sh:2-3) is committed into HEAD even though its own text reads 'working-copy view, stripped before commit'. No sibling routine run.sh carries it — the projection leaked into the commit, so the committed file contradicts its own strip-before-commit contract and does not read like the repo wrote it.",
+      "fix": "Strip run.sh lines 2-3 (the '# [ACDSL-PROJECTION]' header and its rule line) from the committed file, matching every other routines/*/run.sh; the projection is a working-copy overlay, not committed content.",
+      "evidence": "Re-verified with git show HEAD:routines/skill-eval-railroad-review/run.sh — lines 2-3 are present in the committed blob ('# [ACDSL-PROJECTION] 1 rule(s) govern this file — working-copy view, stripped before commit' + the ACDSL-SHELL-002 rule line). git show HEAD:routines/skill-eval/run.sh shows a plain description comment with no projection header. Below the refute threshold (major); no refuter verdict, station-confirmed.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "correctness-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 224,
+      "severity": "MINOR",
+      "claim": "The refute-candidate selection is severity-blind and merges cross-direction findings. The pipeline (run.sh:221-224) is map(select rank >= thr) | sort_by(-rank) | unique_by([.file,.line]) | .[0:$max]. jq's unique_by re-sorts its output by the key [.file,.line], discarding the preceding sort_by(-rank); the .[0:$max] cap then truncates in lexical file/line order, so a BLOCKER in a lexically-late path (e.g. zzz.go) is dropped when the cap binds and six earlier MAJORs are kept. Separately the flatten `[.[] | .findings[]?]` spans all directions before unique_by, so a code-style and a correctness finding at the same file:line collapse to one candidate. Impact is bounded to which candidates get a dedicated refuter — the station (run.sh:252-260) unions all lane JSONs independently — hence MINOR.",
+      "fix": "Re-apply the severity sort after dedup and key the dedup by direction too: ... | unique_by([.file,.line,.direction]) | sort_by(-({\"BLOCKER\":5,\"MAJOR\":4,\"MINOR\":3,\"NIT\":2,\"INFO\":1}[.severity] // 0)) | .[0:$max].",
+      "evidence": "Re-read run.sh:218-224: sort_by(-rank) precedes unique_by([.file,.line]) which precedes .[0:$max] — jq's unique_by is documented to sort by the key and keep one per group, discarding the prior order, so the cap is file-order not severity-order. Flatten at run.sh:221 spans every lane_json (all directions). Station at run.sh:252-260 reads all lane JSONs, bounding the consequence. Three lanes reported this defect (correctness lane 1, correctness lane 2, critical lane 2); station-confirmed, no refuter verdict.",
+      "merged_from": ["correctness-MINOR-1 (correctness lane 2)", "critical-MINOR-1 (critical lane 2)"],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "correctness-MINOR-2",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 245,
+      "severity": "MINOR",
+      "claim": "Refuter verdicts are keyed only by finding_id, but finding_ids are not unique across lanes, so the station can attach a verdict to the wrong claim. Lanes number finding_id as \"$d-<SEV>-<n>\" from 1 per direction+severity independently (lane prompt run.sh:206), and the refuter output schema (run.sh:245) is {finding_id, verdict, reasoning, evidence} with no file/line. Two lanes on the same direction can each emit 'correctness-MAJOR-1' for different defects at different lines; both survive unique_by (distinct lines), both get refuters, and the two verdicts share the id. The station is told to apply verdicts keyed on finding_id (run.sh:257), so with a colliding id it cannot deterministically map verdict->claim and may kill the wrong finding. Station re-verification against the tree backstops but does not guarantee correct attribution — hence MINOR.",
+      "fix": "Have each refuter echo the claim's file+line into its output and join on {finding_id,file,line}; or assign each deduped candidate a fresh unique id before spawning refuters and thread it through both the refuter prompt and the station stage.",
+      "evidence": "Re-read run.sh:206 (lane finding_id \"$d-<SEV>-<n>\" numbered per lane), run.sh:240-245 (refuter schema, no file/line field; filename refute-$k-$fid disambiguates the file but not the JSON key), run.sh:256-258 (station applies verdicts by finding_id). This eval's own inputs demonstrate the collision: 'correctness-MINOR-1' appears in both correctness lane 1 and lane 2, and 'critical-MINOR-1' in both critical lanes. Station-confirmed, no refuter verdict.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "code-style-NIT-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 294,
+      "severity": "NIT",
+      "claim": "'done < <(cat \"$cells_file\")' (run.sh:294) is a useless use of cat inside a process substitution; the while-read loop reads only, so it can read the file directly. The repo's own cell-pattern source, routines/_lib/matrix.sh, uses the direct 'done < \"$plan\"' form.",
+      "fix": "Replace with 'done < \"$cells_file\"'.",
+      "evidence": "Re-read run.sh:263-294 — the mechanical-trace loop only reads $cells_file. run.sh:294 is `done < <(cat \"$cells_file\")`. Below the refute threshold; station-confirmed, no refuter verdict.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "code-style-NIT-2",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 227,
+      "severity": "NIT",
+      "claim": "Variable 'total_major' (run.sh:227-232, printed at run.sh:233) counts pre-dedup candidates at/above the configured $refute_rank threshold, which derives from ROUTINE_REFUTE_LEVEL (blocker|major|minor|nit|info) — not specifically 'major'. With ROUTINE_REFUTE_LEVEL=blocker the variable holds the blocker count while the name and the message '(of $total_major pre-dedup...)' label it 'major', misleading a reader who set a non-major threshold.",
+      "fix": "Rename to a threshold-generic name such as 'total_at_threshold' at both assignment sites and the run.sh:233 echo.",
+      "evidence": "Re-read run.sh:34 (refute_level default), 39-47 (refute_rank maps all five levels + none), 227-233 — the jq select uses '>= $thr' with $thr=$refute_rank, so the count tracks the configured level while the name hardcodes 'major'. Below the refute threshold; station-confirmed, no refuter verdict.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "critical-MAJOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 154,
+      "severity": "MAJOR",
+      "claim": "DEBUNKED. Claimed that run_cell leaks git worktree registrations that permanently brick a cell id 'on every subsequent run until a human runs git worktree prune by hand' because no git worktree prune runs anywhere. Also raised (critical lane 1) as a MINOR indefinite worktree-registry leak on the same missing-prune premise.",
+      "fix": "No change required — the routine already self-heals. (If desired, a per-run cleanup sweep mirroring routine_matrix_cleanup would also force-remove leftover cell directories whose registration is still valid, but this is not a defect.)",
+      "evidence": "Refuter debunk re-verified against the tree: run.sh:87 sources routines/_lib/worktree.sh; run.sh:94 calls routine_worktree_create BEFORE the Stage-1 lane loop at run.sh:194; worktree.sh:133 runs a bare `git worktree prune` unconditionally. A bare prune with no --expire defaults to expire=TIME_MAX, so every registration whose working-tree directory is missing is reclaimed immediately (the 3-month gc grace applies only to git gc). Cell worktrees register under the same $repo_root/.git/worktrees/ that prune scans (run.sh:154). So a stale registration is cleared before the next run's line-154 add, and lane/station ids are additionally cleared by the run.sh:153 dir guard on every reuse. Both lanes' load-bearing premise ('nothing ever runs git worktree prune', 'must be cleaned by hand') is false — the identical grep-scoped-to-run.sh error missed the sourced worktree.sh. Debunk stands.",
+      "merged_from": ["critical-MINOR-1 (critical lane 1)"],
+      "refuter_verdict": "debunked"
+    }
+  ],
+  "funnel": {
+    "claims_produced": 10,
+    "after_dedup": 7,
+    "debunked": 1,
+    "survivors": 6
+  }
+}

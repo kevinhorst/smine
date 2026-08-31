@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "2.0",
+  "skill": "fexplore",
+  "skillMd": "skills/feature/fexplore/SKILL.md",
+  "contextFiles": [],
+  "qualityContext": [
+    "plans/archived/applied_probe_safety/design/exploration.md"
+  ],
+  "inputs": [
+    "routines/skill-eval-fexplore/briefs/fexplore/applied-probe-safety.md"
+  ],
+  "runs": [
+    {
+      "id": "default.ctx-on.applied-probe-safety.fable-5.medium.r1",
+      "output": "evals/fexplore-2026-08-27-2/runs/default.ctx-on.applied-probe-safety.fable-5.medium.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27-2/skills/default.md",
+      "model": {
+        "id": "claude-fable-5",
+        "effort": "medium",
+        "mode": "context-on",
+        "telemetry": "wall_s=178 output_tokens=12500 cost_usd=0.5823963000000001 turns=10"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.fable-5.high.r1",
+      "output": "evals/fexplore-2026-08-27-2/runs/default.ctx-on.applied-probe-safety.fable-5.high.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27-2/skills/default.md",
+      "model": {
+        "id": "claude-fable-5",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=281 output_tokens=20490 cost_usd=1.0314408 turns=17"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.fable-5.max.r1",
+      "output": "evals/fexplore-2026-08-27-2/runs/default.ctx-on.applied-probe-safety.fable-5.max.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27-2/skills/default.md",
+      "model": {
+        "id": "claude-fable-5",
+        "effort": "max",
+        "mode": "context-on",
+        "telemetry": "wall_s=543 output_tokens=38215 cost_usd=1.6294615499999998 turns=33"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1",
+      "output": "evals/fexplore-2026-08-27-2/runs/default.ctx-on.applied-probe-safety.opus-4-8.medium.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27-2/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "medium",
+        "mode": "context-on",
+        "telemetry": "wall_s=224 output_tokens=14315 cost_usd=0.89059245 turns=13"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.opus-4-8.high.r1",
+      "output": "evals/fexplore-2026-08-27-2/runs/default.ctx-on.applied-probe-safety.opus-4-8.high.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27-2/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "high",
+        "mode": "context-on",
+        "telemetry": "wall_s=346 output_tokens=17651 cost_usd=0.78093735 turns=7"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1",
+      "output": "evals/fexplore-2026-08-27-2/runs/default.ctx-on.applied-probe-safety.opus-4-8.max.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27-2/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "max",
+        "mode": "context-on",
+        "telemetry": "wall_s=565 output_tokens=39293 cost_usd=1.52554605 turns=23"
+      }
+    }
+  ],
+  "output": "evals/fexplore-2026-08-27-2/eval.json",
+  "md": true
+}

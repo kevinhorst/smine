@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "2.0",
+  "skill": "fexplore",
+  "skillMd": "skills/feature/fexplore/SKILL.md",
+  "contextFiles": [],
+  "qualityContext": [
+    "plans/archived/applied_probe_safety/design/exploration.md"
+  ],
+  "inputs": [
+    "routines/skill-eval-fexplore/briefs/fexplore/applied-probe-safety.md"
+  ],
+  "runs": [
+    {
+      "id": "default.ctx-on.applied-probe-safety.fable-5.medium.r1",
+      "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.fable-5.medium.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27/skills/default.md",
+      "model": {
+        "id": "claude-fable-5",
+        "effort": "medium",
+        "mode": "context-on",
+        "telemetry": "wall_s=195 output_tokens=13359 cost_usd=0.8135106000000001 turns=13"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.fable-5.max.r1",
+      "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.fable-5.max.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27/skills/default.md",
+      "model": {
+        "id": "claude-fable-5",
+        "effort": "max",
+        "mode": "context-on",
+        "telemetry": "wall_s=822 output_tokens=58798 cost_usd=2.703294149999999 turns=51"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.opus-4-8.medium.r1",
+      "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.opus-4-8.medium.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "medium",
+        "mode": "context-on",
+        "telemetry": "wall_s=203 output_tokens=13787 cost_usd=0.6236448 turns=15"
+      }
+    },
+    {
+      "id": "default.ctx-on.applied-probe-safety.opus-4-8.max.r1",
+      "output": "evals/fexplore-2026-08-27/runs/default.ctx-on.applied-probe-safety.opus-4-8.max.r1.md",
+      "skillMd": "evals/fexplore-2026-08-27/skills/default.md",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "max",
+        "mode": "context-on",
+        "telemetry": "wall_s=701 output_tokens=47984 cost_usd=1.9148719499999998 turns=28"
+      }
+    }
+  ],
+  "output": "evals/fexplore-2026-08-27/eval.json",
+  "md": true
+}

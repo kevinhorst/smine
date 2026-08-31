@@ -1,0 +1,32 @@
+{
+  "direction": "code-style",
+  "lane": 2,
+  "aborted": false,
+  "files_reviewed": [
+    "cmd/worktrees/_lib/verdict.sh",
+    "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "skills/smine/smine/workflows/session-mine.js"
+  ],
+  "findings": [
+    {
+      "finding_id": "code-style-NIT-1",
+      "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+      "line": 73,
+      "severity": "NIT",
+      "claim": "phase('Gate') is called inside the pipeline transform callback (line 73), after an early return (lines 63-72) for render-failed templates. Every other workflow in the repo declares each phase() marker once at top level as a sequential stage boundary — including this file's own direct sibling foreign-toolchain-pretag.js, which runs the identical Build/Gate shape but calls phase('Gate') once at top level (line 58) after the pipeline. The consequence of this placement: for a template whose render harness fails (rendered.harness_ok false), execution returns at line 64 and phase('Gate') never fires for it; and because the transform runs per item as each render completes, the phase marker flip-flops between 'Render' and 'Gate' across concurrent items rather than advancing cleanly. It deviates from the house structure (one top-level phase() per stage) and mislabels workflow progress.",
+      "fix": "Move phase('Gate') to top level after the pipeline (as in foreign-toolchain-pretag.js:58), or restructure Render and Gate as two sequential pipeline passes so each phase() is a single stage boundary.",
+      "evidence": "Re-read config-ui-fidelity-gate.js lines 50-86 in full: phase('Render') at col 0 (line 50), pipeline(templates, renderFn, transformFn); transformFn early-returns at 63-72 on render failure, then phase('Gate') at line 73 (indented, inside the callback). Compared against grep of all workflow phase() call sites: every sibling declares phase() at column 0 as a stage marker; foreign-toolchain-pretag.js:58 does the same Build/Gate two-stage shape with phase('Gate') at top level after the pipeline."
+    },
+    {
+      "finding_id": "code-style-NIT-2",
+      "file": "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+      "line": 66,
+      "severity": "NIT",
+      "claim": "The JS-side local const and gate return-key blocking_errors (lines 66, 72) is snake_case, breaking the repo's camelCase convention for JavaScript identifiers and return-object keys — every sibling collection var and return key is camelCase or a single word: failed, dead, violations, builds, reports, results, gate, skippedDimensions. snake_case in this repo's workflows is reserved for agent-output SCHEMA fields (exit_code, harness_ok, run_id), not JS-side variables. Concretely, this file's direct sibling config-ui-fidelity-gate.js exposes the identical concept (the list of problems blocking the commit) as gate.violations (camelCase/single word, line 96/99), so the two gate workflows return divergent key names — gate.blocking_errors vs gate.violations — for the same shape; a consumer reading the gate result must special-case per workflow.",
+      "fix": "Rename the const and return key to camelCase and align with the sibling — e.g. gate: { pass, violations } (matching config-ui-fidelity-gate.js), or blockingErrors if a distinct name is wanted.",
+      "evidence": "Re-read foreign-toolchain-pretag.js lines 66-73: const blocking_errors = builds.filter(...).map(...); return { tagRef, gate: { pass: blocking_errors.length === 0, blocking_errors }, builds }. Re-read config-ui-fidelity-gate.js lines 96-101: const violations = gated.filter(...).flatMap(...); return { gate: { pass: violations.length === 0, violations }, results }. grep across all workflows confirms JS-side identifiers/return keys are camelCase (failed, dead, violations, builds, skippedDimensions); snake_case appears only in agent-output schema property names."
+    }
+  ]
+}

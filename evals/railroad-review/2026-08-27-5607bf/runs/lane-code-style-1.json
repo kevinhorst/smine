@@ -1,0 +1,39 @@
+{
+  "direction": "code-style",
+  "lane": 1,
+  "aborted": false,
+  "files_reviewed": [
+    "routines/skill-eval-railroad-review/run.sh",
+    "routines/skill-eval-railroad-review/com.smine.routine.skill-eval-railroad-review.plist.template",
+    "plans/railroad-review-observability/runbooks/trace.md"
+  ],
+  "findings": [
+    {
+      "finding_id": "code-style-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 2,
+      "severity": "MINOR",
+      "claim": "The two-line [ACDSL-PROJECTION] header (lines 2-3) is committed into HEAD even though its own text reads 'working-copy view, stripped before commit'. No other routine script carries it: git show HEAD:routines/{skill-eval,smine-nightly,coverage-increaser}/run.sh all begin '#!/usr/bin/env bash' followed directly by a normal description comment, and this header was added in this very range (git diff a7abd0..HEAD shows the two lines as + additions in the committed tree). Concrete trigger: reading the committed file shows a projection header every sibling routine/*/run.sh lacks and that contradicts its own strip-before-commit contract — it does not read like the repo wrote it.",
+      "fix": "Strip lines 2-3 (the '# [ACDSL-PROJECTION]' header and its rule line) from the committed file, matching every other routines/*/run.sh; the projection is a working-copy overlay, not committed content.",
+      "evidence": "Re-read run.sh:1-3 in full; text is '# [ACDSL-PROJECTION] 1 rule(s) govern this file — working-copy view, stripped before commit'. Confirmed via git show HEAD:routines/skill-eval/run.sh, routines/smine-nightly/run.sh, routines/coverage-increaser/run.sh — none carry a projection header (all start shebang + plain comment). Grep 'ACDSL-PROJECTION' over routines/**/*.sh matches only this file. git diff a7abd0..HEAD shows the two header lines added as committed additions."
+    },
+    {
+      "finding_id": "code-style-NIT-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 294,
+      "severity": "NIT",
+      "claim": "'done < <(cat \"$cells_file\")' is a useless use of cat inside a process substitution; the while-read loop can read the file directly. The repo's own cell-pattern source it mirrors, routines/_lib/matrix.sh:226, uses the direct form 'done < \"$plan\"'. Concrete: the redirect spawns a needless cat subprocess and diverges from the sibling idiom.",
+      "fix": "Replace with 'done < \"$cells_file\"'.",
+      "evidence": "Re-read run.sh:263-294 (the mechanical-trace while loop) — the loop only reads, never needs cat. Confirmed matrix.sh:211-226 uses 'done < \"$plan\"' / 'done <<< \"$files\"' directly; grep 'done < <(cat ' over *.sh matches only run.sh:294."
+    },
+    {
+      "finding_id": "code-style-NIT-2",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 227,
+      "severity": "NIT",
+      "claim": "Variable 'total_major' (assigned lines 227-232, printed line 233) counts pre-dedup candidates at/above the configured '$refute_rank' threshold, which derives from ROUTINE_REFUTE_LEVEL (blocker|major|minor|nit|info) — not specifically 'major'. With ROUTINE_REFUTE_LEVEL=blocker the variable holds the blocker count yet the name and the message 'refute: N candidate(s) at threshold $refute_level (of $total_major pre-dedup...)' label it 'major', misleading a reader who set a non-major threshold.",
+      "fix": "Rename to a threshold-generic name such as 'total_at_threshold' or 'candidates_predical' (both assignment sites and the echo on line 233).",
+      "evidence": "Re-read run.sh:34 (refute_level default), 39-47 (refute_rank mapping over all five levels + none), 227-233. The jq select uses '>= $thr' where $thr=$refute_rank, so the count tracks the configured level; the name hardcodes 'major', accurate only for the default. Message string on line 233 confirmed."
+    }
+  ]
+}

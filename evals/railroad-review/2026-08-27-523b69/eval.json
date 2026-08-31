@@ -1,0 +1,397 @@
+{
+  "schemaVersion": "2.0",
+  "eval": {
+    "skill": "railroad-review",
+    "date": "2026-08-27",
+    "notes": "headless observability routine — arm 8.3, range 72f50e5f7193ff60248a06f0664a67e446ce3014..523b69946405f5e7f0a68e6ac3e3489225f4489e; mechanical metrics only (no rubric scoring); source: cells.jsonl + trace.json"
+  },
+  "rubric": [],
+  "probes": [],
+  "scores": [],
+  "totals": [],
+  "sharedTotals": [],
+  "runs": [
+    {
+      "id": "lane-code-style-1",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    },
+    {
+      "id": "lane-code-style-2",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    },
+    {
+      "id": "lane-correctness-1",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    },
+    {
+      "id": "lane-correctness-2",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    },
+    {
+      "id": "lane-critical-1",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    },
+    {
+      "id": "lane-critical-2",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    },
+    {
+      "id": "station",
+      "model": {
+        "id": "claude-opus-4-8[1m]",
+        "effort": "",
+        "mode": "headless"
+      },
+      "variant": {
+        "name": "arm-8.3",
+        "disable": []
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "id": "cost_usd",
+      "label": "Cost USD",
+      "unit": "USD",
+      "direction": "lower",
+      "source": "probe"
+    },
+    {
+      "id": "output_tokens",
+      "label": "Output tokens",
+      "unit": "tokens",
+      "direction": "lower",
+      "source": "probe"
+    },
+    {
+      "id": "duration_ms",
+      "label": "Wall time",
+      "unit": "ms",
+      "direction": "lower",
+      "source": "probe"
+    },
+    {
+      "id": "ctx_at_end",
+      "label": "Context at end",
+      "unit": "tokens",
+      "direction": "lower",
+      "source": "probe"
+    },
+    {
+      "id": "injected",
+      "label": "Doctrine injections",
+      "unit": "count",
+      "direction": "lower",
+      "source": "probe"
+    },
+    {
+      "id": "missing_ctx",
+      "label": "Missing required context",
+      "unit": "count",
+      "direction": "lower",
+      "source": "probe"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "cost_usd",
+      "runId": "lane-code-style-1",
+      "value": 0.8596706999999999,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "lane-code-style-1",
+      "value": 14518,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "lane-code-style-1",
+      "value": 216940,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "lane-code-style-1",
+      "value": 107718,
+      "note": ""
+    },
+    {
+      "metricId": "injected",
+      "runId": "lane-code-style-1",
+      "value": 0,
+      "note": ""
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "lane-code-style-1",
+      "value": 3,
+      "note": ""
+    },
+    {
+      "metricId": "cost_usd",
+      "runId": "lane-code-style-2",
+      "value": 0.719097,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "lane-code-style-2",
+      "value": 12269,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "lane-code-style-2",
+      "value": 181745,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "lane-code-style-2",
+      "value": 96810,
+      "note": ""
+    },
+    {
+      "metricId": "injected",
+      "runId": "lane-code-style-2",
+      "value": 0,
+      "note": ""
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "lane-code-style-2",
+      "value": 2,
+      "note": ""
+    },
+    {
+      "metricId": "cost_usd",
+      "runId": "lane-correctness-1",
+      "value": 0.7179722999999999,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "lane-correctness-1",
+      "value": 14761,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "lane-correctness-1",
+      "value": 202678,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "lane-correctness-1",
+      "value": 98778,
+      "note": ""
+    },
+    {
+      "metricId": "injected",
+      "runId": "lane-correctness-1",
+      "value": 0,
+      "note": ""
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "lane-correctness-1",
+      "value": 1,
+      "note": ""
+    },
+    {
+      "metricId": "cost_usd",
+      "runId": "lane-correctness-2",
+      "value": 1.1422473,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "lane-correctness-2",
+      "value": 22120,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "lane-correctness-2",
+      "value": 321153,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "lane-correctness-2",
+      "value": 113492,
+      "note": ""
+    },
+    {
+      "metricId": "injected",
+      "runId": "lane-correctness-2",
+      "value": 0,
+      "note": ""
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "lane-correctness-2",
+      "value": 1,
+      "note": ""
+    },
+    {
+      "metricId": "cost_usd",
+      "runId": "lane-critical-1",
+      "value": 0.72460335,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "lane-critical-1",
+      "value": 11349,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "lane-critical-1",
+      "value": 167725,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "lane-critical-1",
+      "value": 94203,
+      "note": ""
+    },
+    {
+      "metricId": "injected",
+      "runId": "lane-critical-1",
+      "value": 0,
+      "note": ""
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "lane-critical-1",
+      "value": 2,
+      "note": ""
+    },
+    {
+      "metricId": "cost_usd",
+      "runId": "lane-critical-2",
+      "value": 0.59530275,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "lane-critical-2",
+      "value": 6303,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "lane-critical-2",
+      "value": 107435,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "lane-critical-2",
+      "value": 87708,
+      "note": ""
+    },
+    {
+      "metricId": "injected",
+      "runId": "lane-critical-2",
+      "value": 0,
+      "note": ""
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "lane-critical-2",
+      "value": 2,
+      "note": ""
+    },
+    {
+      "metricId": "cost_usd",
+      "runId": "station",
+      "value": 0.7711682999999999,
+      "note": ""
+    },
+    {
+      "metricId": "output_tokens",
+      "runId": "station",
+      "value": 14965,
+      "note": ""
+    },
+    {
+      "metricId": "duration_ms",
+      "runId": "station",
+      "value": 196159,
+      "note": ""
+    },
+    {
+      "metricId": "ctx_at_end",
+      "runId": "station",
+      "value": null,
+      "note": "not applicable / cell failed"
+    },
+    {
+      "metricId": "injected",
+      "runId": "station",
+      "value": null,
+      "note": "not applicable / cell failed"
+    },
+    {
+      "metricId": "missing_ctx",
+      "runId": "station",
+      "value": 0,
+      "note": ""
+    }
+  ]
+}

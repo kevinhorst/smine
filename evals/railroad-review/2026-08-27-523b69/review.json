@@ -1,0 +1,76 @@
+{
+  "findings": [
+    {
+      "finding_id": "correctness-MIN-1",
+      "file": "skills/feature/fdesign/SKILL.md",
+      "line": 60,
+      "severity": "MINOR",
+      "claim": "The bundled workflow subsystem-grounding.js is documented in docs/workflows.md:94 as \"Fronted by /fdesign ... when the drivers span two or more subsystems\", but fdesign SKILL.md never references or invokes it — no scriptPath, no Workflow-tool call, no manual-run note (the only 'Workflow' hit at line 28 is the unrelated 'Workflow position' navigation line). Trigger: /fdesign change with drivers spanning two+ subsystems — the skill has no instruction to call the workflow, so the deterministic per-subsystem grounding the changelog (v3.6) promises never runs. Contrast smine SKILL.md, which names its workflow at line 13 as the manual-run alternative.",
+      "fix": "Add a Phase-1 (Ground) bullet to fdesign SKILL.md invoking Workflow({scriptPath: '<base>/workflows/subsystem-grounding.js', args:{subsystems, drivers, planRef}}) for multi-subsystem drivers, mirroring the smine wiring.",
+      "evidence": "Re-read subsystem-grounding.js (meta.whenToUse: 'Invoked by /fdesign ... when the drivers span two or more subsystems'). Grep of fdesign SKILL.md for 'workflow'/'subsystem-grounding'/'scriptPath': only match is line 28 'Workflow position' nav. docs/workflows.md:92-98 documents the workflow as fronted by /fdesign. smine SKILL.md:13 is the established wiring pattern the three new workflows lack.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "correctness-MIN-2",
+      "file": "skills/feature/fimplement/SKILL.md",
+      "line": 62,
+      "severity": "MINOR",
+      "claim": "The bundled workflow config-ui-fidelity-gate.js is documented in docs/workflows.md:86 as a pre-first-commit gate 'Fronted by /fimplement (or /fdesign change)', but fimplement SKILL.md never references or invokes it. The Phase-3 diff added two verify bullets (data-dir sync-exclude, host:port listener) but no bullet invoking the config-server UI fidelity gate, and no scriptPath/Workflow-tool reference exists in the body (only the 'Workflow position' nav line 29). Trigger: /fimplement on a change touching a config-server template or internal/server/assets/style.css — nothing calls the workflow, so the promised render+fidelity gate never fires and an off-spec config UI can be committed unchecked.",
+      "fix": "Add a Phase-3 (or pre-commit) bullet to fimplement SKILL.md invoking Workflow({scriptPath: '<base>/workflows/config-ui-fidelity-gate.js', args:{templates, cssPath, renderHint}}) whenever the diff touches config-server templates or style.css, gating the first commit on gate.pass.",
+      "evidence": "Re-read config-ui-fidelity-gate.js (meta.whenToUse: 'Invoked by /fimplement (or /fdesign change) before the first commit ... that touches config-server templates or internal/server/assets/style.css'). Grep of fimplement SKILL.md for 'workflow'/'config-ui-fidelity'/'scriptPath': only match is line 29 'Workflow position' nav. docs/workflows.md:84-90 documents it as fronted by /fimplement.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "correctness-MIN-3",
+      "file": "skills/git/package-commit/SKILL.md",
+      "line": 20,
+      "severity": "MINOR",
+      "claim": "The bundled workflow foreign-toolchain-pretag.js is documented in docs/workflows.md:102 as 'Fronted by /package-commit (or any release-tag step) whenever the release includes a foreign-toolchain artifact', but package-commit SKILL.md never references or invokes it — the diff only bumps the frontmatter version (3.2->3.3); the body has no scriptPath, Workflow-tool call, or release-tag pre-compile step (only the 'Workflow position' nav line 20). Trigger: a release including an Inno Setup .iss or GOOS cross-build artifact — nothing calls the workflow, so the local pre-tag compile the changelog (v3.3) promises never runs and a pushed tag's CI stays the first compile.",
+      "fix": "Add a release-tag step to package-commit SKILL.md invoking Workflow({scriptPath: '<base>/workflows/foreign-toolchain-pretag.js', args:{artifacts, tagRef}}) before any release tag whose build includes a foreign-toolchain artifact, refusing to tag on gate.pass=false.",
+      "evidence": "Re-read foreign-toolchain-pretag.js (meta.whenToUse: 'Invoked by /package-commit (or any release-tag step) before a release tag whose build includes a foreign-toolchain artifact'). Grep of package-commit SKILL.md for 'workflow'/'foreign-toolchain'/'scriptPath': only match is line 20 'Workflow position' nav. docs/workflows.md:100-106 documents it as fronted by /package-commit.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "code-style-NIT-1",
+      "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+      "line": 73,
+      "severity": "NIT",
+      "claim": "phase('Gate') is called at line 73 inside the pipeline() second-stage arrow callback, after an early return (lines 63-72) for render-failed templates — so for a template whose harness fails, execution returns at line 64 and phase('Gate') never fires for it, and because the transform runs per item the marker re-emits per iteration rather than as one clean stage boundary. Every other bundled workflow declares each phase() marker once at top level as a sequential stage boundary — including this file's own phase('Render') at line 50 and its direct sibling foreign-toolchain-pretag.js, which runs the identical Build/Gate shape with phase('Gate') at top level (line 58) after the pipeline. Diverges from the one-top-level-phase()-per-stage house pattern (ACTION-REVIEW-QUALITY-001).",
+      "fix": "Move phase('Gate') to top level after the pipeline() call (as in foreign-toolchain-pretag.js:58), or restructure Render and Gate as two sequential pipeline passes so each phase() is a single stage boundary.",
+      "evidence": "Re-read config-ui-fidelity-gate.js lines 50-86: phase('Render') at col 0 (line 50); pipeline transform (rendered, template) => { early-returns 63-72 on render failure, then phase('Gate') at line 73 indented inside the callback }. Re-read foreign-toolchain-pretag.js lines 43-58: phase('Build') (43) and phase('Gate') (58) both top-level. Claim survives: config-ui-fidelity-gate.js is the sole file nesting a phase() marker in an iterated callback.",
+      "merged_from": ["code-style-1/code-style-NIT-1", "code-style-2/code-style-NIT-1"],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "code-style-NIT-2",
+      "file": "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+      "line": 66,
+      "severity": "NIT",
+      "claim": "The JS-side local const and gate return-key blocking_errors (lines 66, 72) is snake_case, breaking the repo's camelCase convention for JS identifiers and return-object keys — sibling collections/keys are camelCase or single words (violations, builds, results, gate, skippedDimensions); snake_case in these workflows is reserved for agent-output SCHEMA fields (exit_code, harness_ok). The direct sibling config-ui-fidelity-gate.js exposes the identical concept (list of problems blocking the commit) as gate.violations (lines 96/99), so the two gate workflows return divergent key names — gate.blocking_errors vs gate.violations — for the same shape; a consumer must special-case per workflow.",
+      "fix": "Rename the const and return key to camelCase and align with the sibling — gate: { pass, violations } (matching config-ui-fidelity-gate.js), or blockingErrors if a distinct name is wanted.",
+      "evidence": "Re-read foreign-toolchain-pretag.js lines 66-73: const blocking_errors = builds.filter(...).map(...); return { tagRef, gate: { pass: blocking_errors.length === 0, blocking_errors }, builds }. Re-read config-ui-fidelity-gate.js lines 96-101: const violations = ...; return { gate: { pass: violations.length === 0, violations }, results }. Confirmed divergent keys for the same gate shape.",
+      "merged_from": [],
+      "refuter_verdict": null
+    },
+    {
+      "finding_id": "correctness-INF-1",
+      "file": "skills/smine/smine/SKILL.md",
+      "line": 46,
+      "severity": "INFO",
+      "claim": "session-mine.js v1.13 added optional model/effort tier-override args to the workflow (docs/workflows.md:45 documents {..., model?, effort?}), but the flag-resolution arg list in smine SKILL.md:46 still reads {nightly, noBatch, skip[], batches[], maxMinedPerDimension, maxMinedTotal, scopes[], agents} — model/effort are omitted. Not a runtime defect (both optional; omission preserves session inheritance), only a doc-completeness gap between the SKILL.md resolve step and the shipped workflow contract.",
+      "fix": "Note model/effort as optional tier overrides in the smine SKILL.md resolve step (or the manual-run reference at line 13), matching docs/workflows.md:45.",
+      "evidence": "Re-read smine SKILL.md:46 flag-parse arg list (omits model/effort). docs/workflows.md:45 documents model?/effort? as the workflow tier override spread into every agent() call. session-mine.js meta/args-contract updated to include model/effort. Gap is doc-completeness only.",
+      "merged_from": [],
+      "refuter_verdict": null
+    }
+  ],
+  "funnel": {
+    "claims_produced": 7,
+    "after_dedup": 6,
+    "debunked": 0,
+    "survivors": 6
+  }
+}

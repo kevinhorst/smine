@@ -1,0 +1,30 @@
+{
+  "direction": "critical",
+  "lane": 2,
+  "aborted": false,
+  "files_reviewed": [
+    "plans/railroad-review-observability/runbooks/trace.md",
+    "routines/skill-eval-railroad-review/com.smine.routine.skill-eval-railroad-review.plist.template",
+    "routines/skill-eval-railroad-review/run.sh"
+  ],
+  "findings": [
+    {
+      "finding_id": "critical-MAJOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 154,
+      "severity": "MAJOR",
+      "claim": "run_cell leaks git worktree registrations that brick a cell id permanently. Sequence: (1) the routine is killed (launchd/timeout SIGTERM, crash) after `git worktree add --detach \"$cellwt\" \"$headCommit\"` (line 154) registers `$RR_CELLS/<id>` in `$repo_root/.git/worktrees/<id>` but before the per-cell removal at line 188; (2) the `$RR_CELLS` tree — which lives under `~/.cache/claude-routine/rr-eval-cells`, a purge-prone cache location — has that cell dir deleted (disk-pressure eviction, a cache clean, or manual rm) while the repo `.git/worktrees/<id>` registration survives. On the next run, line 153's guard `[[ -e \"$cellwt\" ]]` is false (dir gone) so no removal runs, and line 154 `git worktree add` fails with `fatal: '<id>' already exists`, recorded as a cell failure with `overall=70`. There is no `git worktree prune` anywhere in run.sh, so that cell id fails on every subsequent run until a human runs `git worktree prune` by hand. The header comment (line 9) states this wrapper follows the `matrix.sh cell pattern`; matrix.sh's `routine_matrix_cleanup` deliberately calls `git -C \"$repo_root\" worktree prune` (matrix.sh:319) precisely to clear such stale registrations, and run.sh dropped that step when copying the pattern.",
+      "fix": "Add `git -C \"$repo_root\" worktree prune >/dev/null 2>&1 || true` at the top of run_cell (before line 153), or make line 153 remove by registration rather than dir existence; optionally add a final cleanup sweep mirroring routine_matrix_cleanup.",
+      "evidence": "Re-read run.sh:150-191 (run_cell in full): the only worktree teardown is the dir-conditional removal at line 153 and the happy-path removal at line 188; grep across run.sh confirms no `worktree prune` and no cleanup sweep (only lines 153,154,188 touch worktrees). Re-read matrix.sh:310-320 (routine_matrix_cleanup): per-cell `worktree remove --force || rm -rf` followed by `git worktree prune` at line 319; matrix.sh:170-171 is the identical add/remove pattern run.sh copied. Re-read run.sh header line 9 citing the matrix.sh cell pattern, and lines 36-37 confirming $RR_CELLS resolves under ~/.cache. The line-153 guard being dir-existence-based (not registration-based) is what leaves the dir-purged-but-registered state unhandled."
+    },
+    {
+      "finding_id": "critical-MINOR-1",
+      "file": "routines/skill-eval-railroad-review/run.sh",
+      "line": 224,
+      "severity": "MINOR",
+      "claim": "The refute-candidate selection caps by file:line order, not by severity, so with more than $refute_max at-threshold findings the higher-severity ones can be dropped from refutation. The jq pipeline (lines 221-224) does `... | sort_by(-sev) | unique_by([.file,.line]) | .[0:$max]`. jq's `unique_by` re-sorts its input by the given key ([.file,.line]) and returns one element per group in that key order, discarding the preceding `sort_by(-sev)` ordering. The subsequent `.[0:$max]` slice therefore takes the first `refute_max` (default 6) candidates in lexical file:line order, not the top-N by severity. Concrete trigger: 8 unique-location findings all at or above the `major` threshold, a BLOCKER among them living in a lexically-late path (e.g. `zzz.go`) — the cap keeps 6 lexically-earlier MAJOR findings and drops the BLOCKER from the refute stage. Downstream impact is bounded: the station (line 256) reads all lane JSONs directly and second-confirms every surviving claim, so no finding is lost from the review output; only the measurement's refute prioritisation is severity-blind.",
+      "fix": "Re-apply the severity sort after dedup: `... | unique_by([.file,.line]) | sort_by(-({\"BLOCKER\":5,\"MAJOR\":4,\"MINOR\":3,\"NIT\":2,\"INFO\":1}[.severity] // 0)) | .[0:$max]`.",
+      "evidence": "Re-read run.sh:218-233 in full: the candidates pipeline sorts by severity desc, then `unique_by([.file,.line])`, then slices `.[0:$max]`; jq's unique_by is documented to sort by the key expression and keep one per group, so the severity order is not preserved into the slice. Confirmed the station stage (run.sh:249-260) independently unions eval-in/lanes/*.json and re-verifies each claim, which is why the consequence is confined to refute-stage prioritisation rather than lost findings."
+    }
+  ]
+}
