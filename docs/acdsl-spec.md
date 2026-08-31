@@ -219,7 +219,7 @@ Every rule should carry committed pass/fail example sets under `acdsl/testdata/<
 | Continuous integration | `.github/workflows/ci.yml` | runs `make test` (includes the smoke) but **not** `make audit` — `check`/`fixtures` are not directly a CI gate today; CI builds the binaries for the distribution payload |
 | Commit time | none | no pre-commit hook runs `check`; the staged-projection guard and the `make audit` discipline are the commit-hygiene mechanisms |
 
-Agent write access to the rule surface is permission-gated: `Edit/Write` on `**/*.acdsl` and `acdsl/**` require explicit user approval (the agent-lock, `settings/claude_code/settings.json`), so an agent cannot silently weaken the rules that gate it.
+**Self-management modes.** Agent write access to the rule surface is governed by `acdsl/policy.json`: `strict` (no rule or verifier change at all), `gated` (rules editable only in designated taxonomy scopes, binding only sanctioned verifiers; the registry, generation bounds, and the policy itself stay frozen), or `free` (absent file). Enforcement is compiled into `bin/acdsl check` — it diffs the working tree against `merge-base(HEAD, base ref)`, so the base branch is the privilege boundary and an agent branch cannot self-escalate — with a PreToolUse write-guard hook (`acdsl-policy-guard.sh`) for immediate feedback. Details in `acdsl/README.md`, Modes.
 
 ## 7. Where context is defined, and why
 
