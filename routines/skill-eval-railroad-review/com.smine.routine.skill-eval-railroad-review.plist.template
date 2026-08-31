@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.smine.routine.skill-eval-railroad-review</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>__REPO_DIR__/routines/skill-eval-railroad-review/run.sh</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>ROUTINE_CADENCE_DAYS</key>
+		<string></string>
+		<key>ROUTINE_CELL_BUDGET_USD</key>
+		<string>4</string>
+		<key>ROUTINE_MAX_OPEN_BRANCHES</key>
+		<string>5</string>
+		<key>ROUTINE_REFUTE_LEVEL</key>
+		<string>major</string>
+		<key>ROUTINE_REFUTE_MAX</key>
+		<string>6</string>
+		<key>ROUTINE_REVIEW_BASE</key>
+		<string>HEAD~2</string>
+		<key>ROUTINE_REVIEW_LANES</key>
+		<string>2</string>
+		<key>ROUTINE_REVIEW_DIRECTIONS</key>
+		<string></string>
+	</dict>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-skill-eval-railroad-review.err.log</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-skill-eval-railroad-review.out.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>4</integer>
+		<key>Minute</key>
+		<integer>30</integer>
+	</dict>
+</dict>
+</plist>

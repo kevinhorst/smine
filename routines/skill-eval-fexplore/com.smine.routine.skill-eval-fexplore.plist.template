@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.smine.routine.skill-eval</string>
+	<string>com.smine.routine.skill-eval-fexplore</string>
 	<key>ProgramArguments</key>
 	<array>
 		<string>/bin/bash</string>
-		<string>__REPO_DIR__/routines/skill-eval/run.sh</string>
+		<string>__REPO_DIR__/routines/skill-eval-fexplore/run.sh</string>
 	</array>
 	<key>EnvironmentVariables</key>
 	<dict>
@@ -20,34 +20,29 @@
 		<key>ROUTINE_EVAL_SKILL</key>
 		<string>fexplore</string>
 		<key>ROUTINE_EVAL_CONTEXT_ARMS</key>
-		<string>on,off</string>
+		<string>on</string>
 		<key>ROUTINE_EVAL_VARIANTS</key>
 		<string></string>
-		<key>ROUTINE_EVAL_QUALITY_CONTEXT</key>
-		<string>plans/archived/applied_probe_safety/design/exploration.md</string>
 		<key>ROUTINE_EVAL_MODELS</key>
-		<string></string>
+		<string>claude-fable-5,claude-opus-4-8[1m]</string>
 		<key>ROUTINE_EVAL_EFFORTS</key>
-		<string>high</string>
+		<string>medium,max</string>
 		<key>ROUTINE_EVAL_REPLICAS</key>
-		<string>2</string>
+		<string>1</string>
 		<key>ROUTINE_EVAL_BRIEFS</key>
 		<string></string>
+		<key>ROUTINE_EVAL_CELL_TOOLS</key>
+		<string>Read,Write,Edit,Glob,Grep,Bash(ls *),Bash(mkdir *),Bash(git log *),Bash(git diff *),Bash(git show *),Bash(git cherry *)</string>
+		<key>ROUTINE_EVAL_QUALITY_CONTEXT</key>
+		<string>plans/archived/applied_probe_safety/design/exploration.md</string>
 		<key>ROUTINE_EVAL_CELL_BUDGET_USD</key>
 		<string>5</string>
 		<key>ROUTINE_EVAL_CELL_TIMEOUT_S</key>
-		<string>1200</string>
+		<string>1800</string>
 	</dict>
 	<key>StandardErrorPath</key>
-	<string>__HOME__/Library/Logs/claude-routine-skill-eval.err.log</string>
+	<string>__HOME__/Library/Logs/claude-routine-skill-eval-fexplore.err.log</string>
 	<key>StandardOutPath</key>
-	<string>__HOME__/Library/Logs/claude-routine-skill-eval.out.log</string>
-	<key>StartCalendarInterval</key>
-	<dict>
-		<key>Hour</key>
-		<integer>5</integer>
-		<key>Minute</key>
-		<integer>0</integer>
-	</dict>
+	<string>__HOME__/Library/Logs/claude-routine-skill-eval-fexplore.out.log</string>
 </dict>
 </plist>

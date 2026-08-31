@@ -27,6 +27,8 @@
 		<string></string>
 		<key>SMINE_AGENTS</key>
 		<string>claude,codex</string>
+		<key>SMINE_SUBAGENTS</key>
+		<string>0</string>
 	</dict>
 	<key>StandardErrorPath</key>
 	<string>__HOME__/Library/Logs/claude-routine-smine-nightly.err.log</string>

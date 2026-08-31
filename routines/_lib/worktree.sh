@@ -61,7 +61,7 @@ routine_chain_sync_main() {
   git -C "$wt" merge --abort >/dev/null 2>&1 || true
 
   echo "chain diverged from main with conflicts; running unattended /merge-resolve" >&2
-  prompt="/merge-resolve theirs main. Unattended routine run: never ask a question; decide every judgement call yourself."
+  prompt="/merge-resolve theirs main. Unattended routine run: never ask a question; decide every judgement call yourself. Merge directly on the current branch — do not create a work branch and skip the cleanup step."
   tools=""
   [ "$(type -t routine_allowed_tools)" = "function" ] && tools="$(routine_allowed_tools merge-resolve)"
   local claude_cmd=(claude -p "$prompt")
@@ -165,7 +165,11 @@ routine_worktree_create() {
   # so the run's result stays mergeable into main-as-of-run-start. On sync
   # failure the fresh branch and worktree are discarded — the chain is left
   # exactly as found and the run is recorded as failed by the caller.
-  if [[ "$base" != "main" ]] && ! routine_chain_sync_main "$wt"; then
+  # The merge must land on the dated branch itself: run.sh captures the run
+  # branch from HEAD, and publish/prune glob on the group prefix — a HEAD left
+  # on a stray merge/* work branch would mis-target the whole run.
+  if [[ "$base" != "main" ]] && { ! routine_chain_sync_main "$wt" \
+      || [[ "$(git -C "$wt" symbolic-ref --short HEAD 2>/dev/null)" != "$new" ]]; }; then
     git -C "$repo_root" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
     git -C "$repo_root" branch -D "$new" >/dev/null 2>&1 || true
     return 1

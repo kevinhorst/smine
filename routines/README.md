@@ -13,7 +13,19 @@ authoring a new routine is `/skillroutine-create` (routine route).
 |---|---|---|---|---|
 | `smine-nightly` | 03:00 | `smine-nightly` → `claude-routines/smine-nightly-<date>` | `/smine --nightly`, then `/smine-consolidate proposals`, then `/smine-apply <votes file>` when votes are pending (three stages, one publish) | $15 per stage |
 | `coverage-increaser` | 04:00 | `coverage-increaser` → `claude-routines/coverage-increaser-<date>` **in the target repo** | `/coverage-increase --nightly` | $15 |
-| `skill-eval` | 05:00 | `skill-eval` → `claude-routines/skill-eval-<date>` | A/B matrix of the evaluated skill (default `concept`): one real `claude -p "/<skill>[--<variant>] [--no-context] <brief>"` session per cell in a detached worktree (context on/off × skill variants × replicas, cap 16), then `/skillroutine-eval <manifest>` on the generated manifest; results under `evals/<skill>-<date>/` | $5 per cell, $15 eval |
+| `skill-eval` | 05:00 | `skill-eval` → `claude-routines/skill-eval-<date>` | A/B matrix of the evaluated skill (default `fexplore`): one real `claude -p "/<skill>[--<variant>] [--no-context] <brief>"` session per cell in a detached worktree (context on/off × skill variants × replicas, cap 16), then `/skillroutine-eval <manifest>` on the generated manifest; results under `evals/<skill>-<date>/` | $5 per cell, $15 eval |
+
+| `skill-eval-fexplore` | — (Run Now only) | `skill-eval-fexplore` → `claude-routines/skill-eval-fexplore-<date>` | fexplore model bake-off pinned in the plist env: 4 cells ({fable-5, opus-4-8} × {medium, max}, context on, 1 replica, applied-probe-safety brief), then `/skillroutine-eval <manifest>`; results under `evals/fexplore-<date>/` | $5 per cell, $15 eval |
+
+`skill-eval` is **opt-in**: its routine directory carries a `default-disabled`
+marker, so the config server never auto-bootstraps it — start it once via the
+Routines page's Start button (the resulting explicit enable persists across
+logins).
+
+`skill-eval-fexplore` has **no schedule**: its plist carries no
+`StartCalendarInterval`, so it is bootstrapped but never fires on its own —
+run it via the Routines page's Run Now button (or
+`launchctl kickstart gui/$(id -u)/com.smine.routine.skill-eval-fexplore`).
 
 Each group owns one worktree at `~/.cache/claude-routine/worktrees/<group>` and
 one lineage of dated branches `claude-routines/<group>-<date>` (a `-2`, `-3`, … suffix
@@ -69,6 +81,23 @@ launchctl bootout gui/$(id -u)/com.smine.routine.<name>
 ```bash
 launchctl bootstrap gui/$(id -u) <repo-root>/routines/<name>/com.smine.routine.<name>.plist
 ```
+
+## One-off model bake-off
+
+Compare models/efforts on the same skill and context with full telemetry
+(wall-clock, output tokens, cost) — run the skill-eval matrix once, manually,
+from the **main checkout** (never a worktree):
+
+```bash
+ROUTINE_EVAL_SKILL=fexplore ROUTINE_EVAL_MODELS="claude-fable-5,claude-opus-4-8[1m]" ROUTINE_EVAL_EFFORTS="medium,max" ROUTINE_EVAL_CONTEXT_ARMS=on ROUTINE_EVAL_VARIANTS= ROUTINE_EVAL_REPLICAS=2 bash routines/skill-eval/run.sh
+```
+
+8 cells (2 models × 2 efforts × 2 replicas, context on, default variant only —
+cap 16). Results land on the run's dated branch under `evals/<skill>-<date>/`:
+`manifest.json` (per-cell `model.telemetry`), `eval.json` / `eval.md` (scores),
+`deltas.json`. Needs the routine token file (`~/.config/claude-routine/token`)
+like every routine run. The off-diagonal cells (fable-max, opus-medium) come
+free with the cross-product — extra comparison data, not waste.
 
 ## Prerequisites (nothing runs without these)
 
@@ -147,6 +176,7 @@ launchctl bootstrap gui/$(id -u) <repo-root>/routines/<name>/com.smine.routine.<
   claude JSON envelope reports `is_error`/non-`success`, not just on a non-zero exit.
   `SMINE_APPLY_CAP` (default 3) overrides the per-run implementation cap.
   `SMINE_AGENTS` (default `claude,codex`) selects which agents' sessions smine-batch mines; passed as `--agents`.
+  `SMINE_SUBAGENTS` (default `0`) — set to `1` to also mine each session's per-subagent transcripts (peek-mcp `subagent` parameter); passed as `--subagents`. Expensive (one extra paginated pull per subagent), so off by default.
 - **skill-eval**: exit 2 = matrix refused (over the 16-cell cap, unknown arm, no
   briefs) — no cells ran; 70 with `stage: cells` = variant render failed or no
   cell produced output. Cell worktrees live under

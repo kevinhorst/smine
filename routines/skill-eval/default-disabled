@@ -1,0 +1,2 @@
+Opt-in routine: SyncAll never auto-bootstraps this routine. Enable it once via
+the config server's Start button (persists across logins).

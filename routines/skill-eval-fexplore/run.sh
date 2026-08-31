@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# Nightly skill A/B eval routine (operations + claude -p mechanics:
-# routines/README.md). Two stages on one worktree/branch:
+# fexplore model bake-off routine (operations + claude -p mechanics:
+# routines/README.md). The plist ships without StartCalendarInterval — the
+# routine starts unscheduled; set a schedule from the config server's
+# Reschedule form, or trigger it via Run Now (launchctl kickstart). The
+# model/effort matrix is pinned in the plist's EnvironmentVariables. Two
+# stages on one worktree/branch:
 # cells — every matrix cell is a real `claude -p` session of the evaluated
 # skill (default: fexplore) in its own detached worktree, arms = context on/off
 # × skill variants × replicas (routines/_lib/matrix.sh) — then eval —
