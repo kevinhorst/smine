@@ -98,7 +98,7 @@ func (s *Server) claudeRows() ([]configRow, error) {
 		return nil, err
 	}
 
-	fragment, err := config.Load(s.claudeFragmentPath)
+	fragment, err := config.LoadFragment(s.claudeFragmentPath)
 	if err != nil {
 		return nil, err
 	}

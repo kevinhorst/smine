@@ -46,7 +46,7 @@ func TestNavPeekLink_Disabled(t *testing.T) {
 	assert.NotContains(t, recorder.Body.String(), ">Peek</a>")
 }
 
-func TestNavNonDeveloper(t *testing.T) {
+func TestNavCasual(t *testing.T) {
 	server := newTestServer(t, &Options{
 		PeekDashboardURL: "http://127.0.0.1:4243/",
 		PresentationPath: writeGermanProfile(t),
@@ -61,8 +61,8 @@ func TestNavNonDeveloper(t *testing.T) {
 	assert.Contains(t, body, ">Übersicht</a>")
 	assert.Contains(t, body, ">Sitzungen</a>")
 	assert.Contains(t, body, ">Vorschläge</a>")
+	assert.Contains(t, body, ">Projekte</a>")
 	assert.NotContains(t, body, `href="/context"`)
-	assert.NotContains(t, body, `href="/repos"`)
 	assert.NotContains(t, body, `href="/scripts/skills"`)
 	assert.NotContains(t, body, `href="/config/claude"`)
 	assert.NotContains(t, body, ">Peek</a>")

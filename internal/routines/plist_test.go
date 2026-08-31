@@ -29,12 +29,12 @@ func TestParseScheduleSingleDict(t *testing.T) {
 		<dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>15</integer></dict>
 	</dict></plist>`)
 
-	intervals, supported, err := parseSchedule(path)
+	schedule, err := parseSchedule(path)
 	require.NoError(t, err)
-	assert.True(t, supported)
-	require.Len(t, intervals, 1)
-	assert.Equal(t, 6, *intervals[0].Hour)
-	assert.Equal(t, 15, *intervals[0].Minute)
+	assert.True(t, schedule.Supported)
+	require.Len(t, schedule.Intervals, 1)
+	assert.Equal(t, 6, *schedule.Intervals[0].Hour)
+	assert.Equal(t, 15, *schedule.Intervals[0].Minute)
 }
 
 func TestParseScheduleArrayOfDicts(t *testing.T) {
@@ -46,12 +46,12 @@ func TestParseScheduleArrayOfDicts(t *testing.T) {
 		</array>
 	</dict></plist>`)
 
-	intervals, supported, err := parseSchedule(path)
+	schedule, err := parseSchedule(path)
 	require.NoError(t, err)
-	assert.True(t, supported)
-	require.Len(t, intervals, 2)
-	assert.Equal(t, 18, *intervals[1].Hour)
-	assert.Equal(t, 1, *intervals[1].Weekday)
+	assert.True(t, schedule.Supported)
+	require.Len(t, schedule.Intervals, 2)
+	assert.Equal(t, 18, *schedule.Intervals[1].Hour)
+	assert.Equal(t, 1, *schedule.Intervals[1].Weekday)
 }
 
 func TestParseScheduleUnknownKeyFails(t *testing.T) {
@@ -60,20 +60,34 @@ func TestParseScheduleUnknownKeyFails(t *testing.T) {
 		<dict><key>Second</key><integer>30</integer></dict>
 	</dict></plist>`)
 
-	_, _, err := parseSchedule(path)
+	_, err := parseSchedule(path)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "Unknown key Second")
 }
 
-func TestParseScheduleMissingKeyIsUnsupported(t *testing.T) {
+func TestParseScheduleMissingKeyIsUnscheduled(t *testing.T) {
 	path := writePlist(t, plistHeader+`<plist version="1.0"><dict>
 		<key>Label</key><string>demo</string>
 	</dict></plist>`)
 
-	intervals, supported, err := parseSchedule(path)
+	schedule, err := parseSchedule(path)
 	require.NoError(t, err)
-	assert.False(t, supported)
-	assert.Nil(t, intervals)
+	assert.False(t, schedule.Supported)
+	assert.True(t, schedule.Unscheduled)
+	assert.Nil(t, schedule.Intervals)
+}
+
+func TestParseScheduleOtherTriggerIsUnsupported(t *testing.T) {
+	path := writePlist(t, plistHeader+`<plist version="1.0"><dict>
+		<key>Label</key><string>demo</string>
+		<key>StartInterval</key><integer>3600</integer>
+	</dict></plist>`)
+
+	schedule, err := parseSchedule(path)
+	require.NoError(t, err)
+	assert.False(t, schedule.Supported)
+	assert.False(t, schedule.Unscheduled)
+	assert.Nil(t, schedule.Intervals)
 }
 
 func TestParseEnv(t *testing.T) {
@@ -165,6 +179,24 @@ func TestReschedulePreservesUnrelatedKeys(t *testing.T) {
 
 	_, err = os.Stat(path + ".tmp")
 	assert.True(t, os.IsNotExist(err), "tmp file left behind")
+}
+
+func TestRescheduleAddsMissingKey(t *testing.T) {
+	path := writePlist(t, plistHeader+`<plist version="1.0"><dict>
+		<key>Label</key><string>com.test.demo</string>
+		<key>ProgramArguments</key><array><string>/bin/bash</string><string>/tmp/run.sh</string></array>
+	</dict></plist>`)
+
+	interval := CalendarInterval{Hour: intPtr(7), Minute: intPtr(30)}
+	require.NoError(t, Reschedule(interval, path))
+
+	schedule, err := parseSchedule(path)
+	require.NoError(t, err)
+	assert.True(t, schedule.Supported)
+	assert.False(t, schedule.Unscheduled)
+	require.Len(t, schedule.Intervals, 1)
+	assert.Equal(t, 7, *schedule.Intervals[0].Hour)
+	assert.Equal(t, 30, *schedule.Intervals[0].Minute)
 }
 
 func TestPlistMetaLabelAndEnv(t *testing.T) {

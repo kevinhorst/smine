@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -228,4 +229,13 @@ func TestServer_CheckRoster(t *testing.T) {
 	check := server.checkRoster()
 	assert.True(t, check.Ok)
 	assert.Contains(t, check.Detail, "1 git repos")
+}
+
+func TestWelcomeBootstrapConcurrent(t *testing.T) {
+	server := newTestServer(t, &Options{})
+	server.bootstrap.running = true
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, formPost("/welcome/bootstrap", url.Values{}))
+	assert.Equal(t, http.StatusConflict, recorder.Code)
 }

@@ -15,6 +15,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/peek"
+	"github.com/kevinhorst/smine/internal/repos"
 )
 
 // reposTestEnv builds a registry with one git-backed repo and echo-stub
@@ -88,7 +91,7 @@ func TestReposIndexRendersRegistryRows(t *testing.T) {
 	assert.Contains(t, body, ">on</span>")
 	assert.NotContains(t, body, "<th>Languages</th>")
 	assert.NotContains(t, body, "<th>Claude</th>")
-	assert.Contains(t, body, "<td>1</td>")
+	assert.Contains(t, body, "<div>claude:1</div>")
 	assert.Contains(t, body, `<option value="demo">demo</option>`)
 }
 
@@ -124,7 +127,7 @@ func TestReposIndexCountsAgentWorktrees(t *testing.T) {
 	require.Equal(t, http.StatusOK, response.Code)
 	body := response.Body.String()
 	assert.Contains(t, body, "copy_<wbr>trader_<wbr>flask_<wbr>server_<wbr>llm")
-	assert.Contains(t, body, "<td>2</td>")
+	assert.Contains(t, body, "<div>claude:1</div><div>claude-routines:1</div>")
 }
 
 func TestWorktreeStatusFragmentKindFilter(t *testing.T) {
@@ -137,31 +140,22 @@ func TestWorktreeStatusFragmentKindFilter(t *testing.T) {
 	stubPath := filepath.Join(server.worktreeScripts, "print_agent_worktrees_status.sh")
 	require.NoError(t, os.WriteFile(stubPath, []byte(statusStub), 0o755))
 
-	// claude: only the session worktree row.
+	// Filtering is client-side: every row is rendered regardless of ?kind=,
+	// tagged with its data attributes for the detail page's JS.
 	response := httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status?kind=claude", nil))
 	require.Equal(t, http.StatusOK, response.Code)
 	body := response.Body.String()
 	assert.Contains(t, body, "claude/alpha")
-	assert.NotContains(t, body, "claude-routines/nightly")
-	// the auto-refresh URL keeps the filter
-	assert.Contains(t, body, `hx-get="/repos/demo/status?kind=claude"`)
-
-	// claude-routines: only the routine lineage row.
-	response = httptest.NewRecorder()
-	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status?kind=claude-routines", nil))
-	require.Equal(t, http.StatusOK, response.Code)
-	body = response.Body.String()
 	assert.Contains(t, body, "claude-routines/nightly")
-	assert.NotContains(t, body, "claude/alpha")
-
-	// kind chips carry an active base filter and vice versa.
-	response = httptest.NewRecorder()
-	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status?base=main&kind=claude", nil))
-	require.Equal(t, http.StatusOK, response.Code)
-	body = response.Body.String()
-	assert.Contains(t, body, `?base=main&amp;kind=claude-routines`)
-	assert.Contains(t, body, `?kind=claude"`) // base "all" chip keeps the kind
+	assert.Contains(t, body, `<tr data-kind="claude" data-base="main">`)
+	assert.Contains(t, body, `<tr data-kind="claude-routines" data-base="main">`)
+	// chips carry their group/value for the JS and no htmx round-trip
+	assert.Contains(t, body, `data-group="kind" data-value="claude"`)
+	assert.Contains(t, body, `data-group="kind" data-value="claude-routines"`)
+	assert.NotContains(t, body, `hx-get="/repos/demo/status?kind=`)
+	// the repo-op auto-refresh always forces a fresh scan
+	assert.Contains(t, body, `hx-get="/repos/demo/status?refresh=1"`)
 }
 
 func TestReposIndexPartialCoverage(t *testing.T) {
@@ -231,6 +225,75 @@ func TestWorktreeStatusFragmentDegradedPeekStillRenders(t *testing.T) {
 	// Timing line present (DR3).
 	assert.Contains(t, body, "status ")
 	assert.Contains(t, body, "ms</div>")
+}
+
+func TestWorktreeSessionsPrefersBranchOverRecycledDir(t *testing.T) {
+	type testCase struct {
+		_id         string
+		_expectedId string
+
+		index  *peek.SessionIndex
+		status repos.WorktreeStatus
+	}
+
+	// The recycled pool dir: the previous occupant is still the newest
+	// session by cwd, the current session matches by branch.
+	poolIndex := &peek.SessionIndex{
+		ByBranch: map[string]peek.Session{"claude/current": {Id: "current"}},
+		ByCwd:    map[string]peek.Session{"/repo/.claude/worktrees/recycled-dir": {Id: "previous-occupant"}},
+	}
+
+	tests := make([]*testCase, 0)
+
+	// branch-match-beats-recycled-dir
+	tests = append(tests, &testCase{
+		_id:         "branch-match-beats-recycled-dir",
+		_expectedId: "current",
+
+		index:  poolIndex,
+		status: repos.WorktreeStatus{Branch: "claude/current", Worktree: "/repo/.claude/worktrees/recycled-dir"},
+	})
+
+	// cwd-fallback-without-branch-match
+	tests = append(tests, &testCase{
+		_id:         "cwd-fallback-without-branch-match",
+		_expectedId: "previous-occupant",
+
+		index:  poolIndex,
+		status: repos.WorktreeStatus{Branch: "claude/unindexed", Worktree: "/repo/.claude/worktrees/recycled-dir"},
+	})
+
+	// no-match-yields-no-entry
+	tests = append(tests, &testCase{
+		_id:         "no-match-yields-no-entry",
+		_expectedId: "",
+
+		index:  poolIndex,
+		status: repos.WorktreeStatus{Branch: "claude/unindexed", Worktree: "/repo/.claude/worktrees/other-dir"},
+	})
+
+	// branch-without-worktree-yields-no-entry
+	tests = append(tests, &testCase{
+		_id:         "branch-without-worktree-yields-no-entry",
+		_expectedId: "",
+
+		index:  poolIndex,
+		status: repos.WorktreeStatus{Branch: "claude/current", Worktree: ""},
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			statuses := []repos.WorktreeStatus{test.status}
+			sessions := worktreeSessions(statuses, test.index)
+			assert.Equal(t, test._expectedId, sessions[test.status.Worktree].Id)
+		})
+	}
+}
+
+func TestWorktreeSessionsNilIndexYieldsNil(t *testing.T) {
+	statuses := []repos.WorktreeStatus{{Branch: "claude/current", Worktree: "/repo/.claude/worktrees/dir"}}
+	assert.Nil(t, worktreeSessions(statuses, nil))
 }
 
 func TestRootCause(t *testing.T) {
@@ -328,35 +391,75 @@ func TestWorktreeStatusFragmentBaseFilter(t *testing.T) {
 	require.Equal(t, http.StatusOK, response.Code)
 	body := response.Body.String()
 
-	// filter badges offer every base from the unfiltered list; dev is active
+	// base chips come from the full list; the "unknown" sentinel never
+	// becomes a chip; the JS owns the active state
 	assert.Contains(t, body, ">all</a>")
-	assert.Contains(t, body, `?base=main`)
-	assert.Contains(t, body, `class="badge badge-ok"
-     href="/repos/demo?base=dev"`)
-	// the "unknown" sentinel never becomes a chip
-	assert.NotContains(t, body, `?base=unknown`)
-	// only the dev-based row survives the filter
+	assert.Contains(t, body, `data-group="base" data-value="main"`)
+	assert.Contains(t, body, `data-group="base" data-value="dev"`)
+	assert.NotContains(t, body, `data-value="unknown"`)
+	// every row is rendered, tagged with its base for the client-side filter
+	assert.Contains(t, body, `data-base="main">`)
+	assert.Contains(t, body, `data-base="dev">`)
+	assert.Contains(t, body, `data-base="unknown">`)
+	assert.Contains(t, body, "claude/alpha")
 	assert.Contains(t, body, "claude/beta")
-	assert.NotContains(t, body, "claude/alpha")
-	assert.NotContains(t, body, "claude/gamma")
-	// the auto-refresh URL keeps the filter
-	assert.Contains(t, body, `hx-get="/repos/demo/status?base=dev"`)
+	assert.Contains(t, body, "claude/gamma")
 }
 
-func TestRepoRemoveDeleteBranchCheckbox(t *testing.T) {
-	server, _, _ := reposTestEnv(t)
-	response := httptest.NewRecorder()
-	server.Handler().ServeHTTP(response, formPost("/repos/demo/branches/claude%2Ffeature/remove", url.Values{"delete-branch": {"on"}}))
-	require.Equal(t, http.StatusOK, response.Code)
-	assert.Contains(t, response.Body.String(), "remove --delete-branch claude/feature")
-}
+func TestWorktreeStatusFragmentServesCache(t *testing.T) {
+	server, repo, _ := reposTestEnv(t)
+	// The stub counts its invocations so the cache behavior is observable.
+	countFile := filepath.Join(t.TempDir(), "runs")
+	statusStub := "#!/bin/sh\necho run >> " + countFile + "\ncat <<'EOF'\n" +
+		"#    BRANCH        FROM  DIRTY  UNTRACKED  AHEAD  BEHIND  UNPICKED  VERDICTS  MERGED  IN    LAST-COMMIT      WORKTREE\n" +
+		"1    claude/alpha  main  0      0          0      0       0         -         -       main  2026-07-15 10:00 /repo/.claude/worktrees/alpha\n" +
+		"EOF\n"
+	stubPath := filepath.Join(server.worktreeScripts, "print_agent_worktrees_status.sh")
+	require.NoError(t, os.WriteFile(stubPath, []byte(statusStub), 0o755))
 
-func TestRepoRemoveForceCheckbox(t *testing.T) {
-	server, _, _ := reposTestEnv(t)
+	scriptRuns := func() int {
+		content, err := os.ReadFile(countFile)
+		if err != nil {
+			return 0
+		}
+		return strings.Count(string(content), "run")
+	}
+
+	// first load scans and renders the reload button + timestamp
 	response := httptest.NewRecorder()
-	server.Handler().ServeHTTP(response, formPost("/repos/demo/branches/claude%2Ffeature/remove", url.Values{"force": {"on"}}))
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status", nil))
 	require.Equal(t, http.StatusOK, response.Code)
-	assert.Contains(t, response.Body.String(), "remove --force claude/feature")
+	assert.Equal(t, 1, scriptRuns())
+	body := response.Body.String()
+	assert.Contains(t, body, ">Reload</button>")
+	assert.Contains(t, body, "as of ")
+
+	// second plain load serves the cache — no script run, cached marker shown
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, 1, scriptRuns())
+	assert.Contains(t, response.Body.String(), "claude/alpha")
+	assert.Contains(t, response.Body.String(), " · cached")
+
+	// ?refresh=1 always re-scans
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status?refresh=1", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, 2, scriptRuns())
+	assert.NotContains(t, response.Body.String(), " · cached")
+
+	// a structural change (new agent branch) flips the fingerprint — the next
+	// plain load re-scans instead of serving the stale entry
+	branchCmd := exec.Command("git", "branch", "claude/fresh")
+	branchCmd.Dir = repo
+	output, err := branchCmd.CombinedOutput()
+	require.NoError(t, err, string(output))
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/repos/demo/status", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, 3, scriptRuns())
+	assert.NotContains(t, response.Body.String(), " · cached")
 }
 
 func TestRepoRemoveSelected(t *testing.T) {
@@ -413,6 +516,40 @@ func TestRepoRemoveSelected(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, formPost("/repos/demo/remove-selected", url.Values{}))
 		assert.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("clean-removal-drops-cached-rows", func(t *testing.T) {
+		server, _, _ := reposTestEnv(t)
+		server.statusCache.Store("demo", "", []repos.WorktreeStatus{
+			{Branch: "claude/feature"},
+			{Branch: "claude/keep"},
+		})
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/repos/demo/remove-selected",
+			url.Values{"branch": {"claude/feature"}}))
+		require.Equal(t, http.StatusOK, response.Code)
+
+		entry, ok := server.statusCache.Get("demo")
+		require.True(t, ok)
+		kept := []repos.WorktreeStatus{{Branch: "claude/keep"}}
+		assert.Equal(t, kept, entry.Statuses)
+	})
+
+	t.Run("skip-output-leaves-cache-untouched", func(t *testing.T) {
+		server, _, _ := reposTestEnv(t)
+		statuses := []repos.WorktreeStatus{{Branch: "claude/feature"}}
+		server.statusCache.Store("demo", "", statuses)
+		stub := "#!/bin/sh\necho \"skipped: /some/worktree (claude/feature): dirty(1)\"\n"
+		require.NoError(t, os.WriteFile(
+			filepath.Join(server.worktreeScripts, "remove_agent_worktrees.sh"), []byte(stub), 0o755))
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/repos/demo/remove-selected",
+			url.Values{"branch": {"claude/feature"}}))
+		require.Equal(t, http.StatusOK, response.Code)
+
+		entry, ok := server.statusCache.Get("demo")
+		require.True(t, ok)
+		assert.Equal(t, statuses, entry.Statuses)
 	})
 }
 
@@ -510,6 +647,34 @@ func TestReposAdd(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
 
+	t.Run("custom-name-overrides-basename", func(t *testing.T) {
+		server, _, reposPath := reposTestEnv(t)
+		dir := filepath.Join(t.TempDir(), "clash")
+		require.NoError(t, os.Mkdir(dir, 0o755))
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/repos/add", url.Values{"path": {dir}, "name": {"clash-2"}}))
+		require.Equal(t, http.StatusOK, response.Code)
+
+		file := readRegistryFile(t, reposPath)
+		require.Len(t, file["repos"], 2)
+		assert.Equal(t, "clash-2", file["repos"][1]["name"])
+	})
+
+	t.Run("reserved-name-is-bad-request-before-git-init", func(t *testing.T) {
+		server, _, reposPath := reposTestEnv(t)
+		dir := filepath.Join(t.TempDir(), "somerepo")
+		require.NoError(t, os.Mkdir(dir, 0o755))
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/repos/add", url.Values{"path": {dir}, "name": {"default"}}))
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		assert.Contains(t, response.Body.String(), "is reserved")
+		assert.Len(t, readRegistryFile(t, reposPath)["repos"], 1)
+		// validation ran before the op — the folder was not git-inited
+		assert.NoDirExists(t, filepath.Join(dir, ".git"))
+	})
+
 	t.Run("duplicate-name-renders-failure", func(t *testing.T) {
 		server, repo, reposPath := reposTestEnv(t)
 		response := httptest.NewRecorder()
@@ -580,4 +745,98 @@ func TestReposChooseFolder(t *testing.T) {
 		assert.Contains(t, response.Body.String(), `value="/typed/path"`)
 		assert.NotContains(t, response.Body.String(), "picker failed")
 	})
+}
+
+func reposProfileEnv(t *testing.T, presentationPath string) (*Server, string, string) {
+	t.Helper()
+	repoDir := t.TempDir()
+	reposPath := filepath.Join(t.TempDir(), "repos.json")
+	registry := `{"repos": [{"label": "Haushalt", "name": "demo", "path": "` + repoDir + `"}]}`
+	require.NoError(t, os.WriteFile(reposPath, []byte(registry), 0o644))
+
+	settingsPath := filepath.Join(t.TempDir(), "settings.json")
+	opts := &Options{
+		PresentationPath: presentationPath,
+		ReposPath:        reposPath,
+		SettingsPath:     settingsPath,
+	}
+	return newTestServer(t, opts), reposPath, settingsPath
+}
+
+func TestReposCasualProjects(t *testing.T) {
+	server, _, _ := reposProfileEnv(t, writeGermanProfile(t))
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/repos", nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	body := recorder.Body.String()
+	assert.Contains(t, body, "Projekte")
+	assert.Contains(t, body, "Haushalt")
+	assert.Contains(t, body, `hx-post="/repos/add"`)
+	assert.Contains(t, body, `hx-post="/repos/delete"`)
+	assert.NotContains(t, body, `name="additional-dir"`)
+	assert.NotContains(t, body, "<th>Path</th>")
+	assert.NotContains(t, body, "<th>ACDSL</th>")
+	assert.NotContains(t, body, `href="/repos/demo"`)
+}
+
+func TestReposAddCasualForcesAdditionalDir(t *testing.T) {
+	server, _, settingsPath := reposProfileEnv(t, writeGermanProfile(t))
+	dir := filepath.Join(t.TempDir(), "projekt")
+	require.NoError(t, os.Mkdir(dir, 0o755))
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, formPost("/repos/add", url.Values{"path": {dir}}))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	content, err := os.ReadFile(settingsPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), dir)
+}
+
+func TestReposAddDeveloperUnchanged(t *testing.T) {
+	server, _, settingsPath := reposProfileEnv(t, "")
+	dir := filepath.Join(t.TempDir(), "devrepo")
+	require.NoError(t, os.Mkdir(dir, 0o755))
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, formPost("/repos/add", url.Values{"path": {dir}}))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	content, _ := os.ReadFile(settingsPath)
+	assert.NotContains(t, string(content), dir)
+}
+
+func TestReposAddWithLabel(t *testing.T) {
+	server, reposPath, _ := reposProfileEnv(t, "")
+	dir := filepath.Join(t.TempDir(), "labeled")
+	require.NoError(t, os.Mkdir(dir, 0o755))
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, formPost("/repos/add", url.Values{"label": {"Vereinsunterlagen"}, "path": {dir}}))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	content, err := os.ReadFile(reposPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), "Vereinsunterlagen")
+
+	index := httptest.NewRecorder()
+	server.Handler().ServeHTTP(index, httptest.NewRequest(http.MethodGet, "/repos", nil))
+	assert.Contains(t, index.Body.String(), "Vereinsunterlagen")
+}
+
+func TestReposAddInitsGit(t *testing.T) {
+	server, _, _ := reposProfileEnv(t, "")
+	dir := filepath.Join(t.TempDir(), "plainfolder")
+	require.NoError(t, os.Mkdir(dir, 0o755))
+
+	recorder := httptest.NewRecorder()
+	server.Handler().ServeHTTP(recorder, formPost("/repos/add", url.Values{"path": {dir}}))
+	require.Equal(t, http.StatusOK, recorder.Code)
+	assert.Contains(t, recorder.Body.String(), "added plainfolder")
+
+	info, err := os.Stat(filepath.Join(dir, ".git"))
+	require.NoError(t, err)
+	assert.True(t, info.IsDir())
 }

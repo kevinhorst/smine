@@ -9,6 +9,25 @@
 <div hx-get="/welcome/checks" hx-trigger="every 10s" hx-swap="innerHTML">
 {{template "_welcome_checks.html" .Checks}}
 </div>
+<h2>bootstrap</h2>
+<div class="card">
+  <div class="check-row">
+    <span class="check-name"><a href="/profile">{{t "Profile"}}</a></span>
+    <span class="check-detail">set who this machine talks to first — the bootstrap's profile and style stages build on it</span>
+  </div>
+  <form class="check-row" hx-post="/welcome/bootstrap" hx-target="#bootstrap-result" hx-swap="innerHTML"
+        hx-disabled-elt="find button"
+        hx-confirm="Runs the full smine pipeline over the machine's recent sessions — a long, paid claude run. Continue?">
+    <span class="check-name">Bootstrap</span>
+    <span class="check-detail">seed this install from the machine's sessions — mine, consolidate, auto-apply, orchestrate in one run</span>
+    <label class="meta">mine sessions since
+      <input type="date" name="since" value="{{.BootstrapSinceDefault}}" max="{{.BootstrapToday}}">
+    </label>
+    <input type="text" name="extra-prompt" maxlength="500" placeholder="extra prompt (optional)">
+    <button type="submit" class="verify-button">Bootstrap</button>
+  </form>
+  <div id="bootstrap-result" hx-preserve="true"></div>
+</div>
 {{else}}
 <h2>the feedback loop</h2>
 <div class="welcome-section">

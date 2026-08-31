@@ -25,10 +25,12 @@
 {{define "nav"}}
 <nav>
   <a href="/" {{if eq .Page "overview"}}class="active"{{end}}>{{t "Overview"}}</a>
-  {{if and initWelcome isDeveloperAudience}}<a href="/welcome" {{if eq .Page "welcome"}}class="active"{{end}}>Welcome</a>{{end}}
+  {{if initWelcome}}<a href="/welcome" {{if eq .Page "welcome"}}class="active"{{end}}>Welcome</a>{{end}}
   {{if isDeveloperAudience}}<a href="/config/claude" {{if or (eq .Page "config-claude") (eq .Page "config-codex")}}class="active"{{end}}>Config</a>{{end}}
+  <a href="/profile" {{if eq .Page "profile"}}class="active"{{end}}>{{t "Profile"}}</a>
   <a href="/sessions" {{if eq .Page "sessions"}}class="active"{{end}}>{{t "Sessions"}}</a>
   <a href="/proposals" {{if eq .Page "proposals"}}class="active"{{end}}>{{t "Proposals"}}</a>
+  {{if not isDeveloperAudience}}<a href="/repos" {{if eq .Page "repos"}}class="active"{{end}}>{{t "Projects"}}</a>{{end}}
   {{if isDeveloperAudience}}
   <a href="/scripts/skills" {{if eq .Page "skills"}}class="active"{{end}}>Skills</a>
   <a href="/context" {{if eq .Page "context"}}class="active"{{end}}>Context</a>

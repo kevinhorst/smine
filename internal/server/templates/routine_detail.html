@@ -10,7 +10,6 @@
 <div id="op-result"></div>
 <h2>status</h2>
 <div class="routines-layout">
-<div id="routine-configure"></div>
 <table class="md-body checklist-table">
   <thead>
     <tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Session</th><th>Next run</th></tr>
@@ -19,23 +18,30 @@
     {{template "_routine_row.html" .Row}}
   </tbody>
 </table>
+<div id="routine-configure"></div>
 </div>
 {{if .HistoryErr}}
 <div class="card card-error"><span class="label">{{.HistoryErr}}</span></div>
 {{end}}
 <h2>Run history</h2>
 {{if .History}}
-<table class="md-body checklist-table">
+<table class="md-body checklist-table" id="run-history">
   <thead>
-    <tr><th>Timestamp</th><th>Exit</th><th>Turns</th><th>Cost</th><th>Session</th></tr>
+    <tr><th>Timestamp</th><th>Exit</th><th>Turns</th><th>Cost</th><th>Session</th><th>Result</th></tr>
   </thead>
   <tbody>
     {{range .History}}
-    <tr>
+    <tr data-stamp="{{.Timestamp}}">
       <td class="run-cell">{{stampDate .Timestamp}}<br>{{stampTime .Timestamp}}</td>
+      {{if .IsRunning}}
+      <td><span class="badge">RUNNING</span></td>
+      <td>–</td>
+      <td>–</td>
+      {{else}}
       <td>{{if eq .ExitStatus 0}}<span class="badge badge-ok">0</span>{{else}}<span class="badge badge-error">{{.ExitStatus}}</span>{{end}}</td>
       <td>{{.NumTurns}}</td>
       <td>${{printf "%.4f" .TotalCostUsd}}</td>
+      {{end}}
       <td>
         {{if .SessionId}}
           {{$peekURL := peekSessionURL .SessionId}}
@@ -43,10 +49,61 @@
           {{else}}<code>{{.SessionId}}</code>{{end}}
         {{else}}–{{end}}
       </td>
+      <td>{{if .Result}}<code>{{truncate .Result 110}}</code>{{else}}–{{end}}</td>
     </tr>
     {{end}}
   </tbody>
 </table>
+<script>
+{{/* Week bands (client-side): consecutive rows grouped per ISO week (Monday
+     start, UTC — matches the UTC stamps); a clickable band header row per
+     week, newest expanded, older collapsed. */}}
+(function () {
+  var body = document.querySelector('#run-history tbody');
+  if (!body) return;
+  function weekStart(stamp) {
+    var date = new Date(stamp);
+    if (isNaN(date)) return null;
+    var day = (date.getUTCDay() + 6) % 7;
+    date.setUTCHours(0, 0, 0, 0);
+    date.setUTCDate(date.getUTCDate() - day);
+    return date;
+  }
+  function iso(date) { return date.toISOString().slice(0, 10); }
+  var bands = [], current = null;
+  Array.prototype.slice.call(body.querySelectorAll('tr[data-stamp]')).forEach(function (row) {
+    var start = weekStart(row.dataset.stamp);
+    var key = start ? iso(start) : 'unknown';
+    if (!current || current.key !== key) {
+      current = { key: key, start: start, rows: [] };
+      bands.push(current);
+    }
+    current.rows.push(row);
+  });
+  bands.forEach(function (band, index) {
+    var header = document.createElement('tr');
+    header.className = 'run-band';
+    var cell = document.createElement('td');
+    cell.colSpan = 6;
+    var label = 'unknown date';
+    if (band.start) {
+      var end = new Date(band.start);
+      end.setUTCDate(end.getUTCDate() + 6);
+      label = 'Week ' + iso(band.start) + ' – ' + iso(end);
+    }
+    cell.textContent = label + ' (' + band.rows.length + ')';
+    header.appendChild(cell);
+    body.insertBefore(header, band.rows[0]);
+    var collapsed = index > 0;
+    function apply() {
+      band.rows.forEach(function (row) { row.hidden = collapsed; });
+      header.classList.toggle('collapsed', collapsed);
+    }
+    header.addEventListener('click', function () { collapsed = !collapsed; apply(); });
+    apply();
+  });
+})();
+</script>
 {{else}}
 <div class="empty">No runs recorded.</div>
 {{end}}

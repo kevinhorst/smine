@@ -197,7 +197,7 @@ func (s *Server) renderPermissions(w http.ResponseWriter, main, disabled *config
 
 	// One fragment load feeds both the per-rule marking and the section
 	// badge; a load error degrades to no marking (never 500 over the badge).
-	fragment, fragErr := config.Load(s.claudeFragmentPath)
+	fragment, fragErr := config.LoadFragment(s.claudeFragmentPath)
 	var fragPerms config.Permissions
 	if fragErr == nil {
 		fragPerms, _ = fragment.Permissions()

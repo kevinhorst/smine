@@ -44,6 +44,17 @@ func skillsTestEnv(t *testing.T, withChangelog bool) *Server {
 	require.NoError(t, os.WriteFile(filepath.Join(evalSkillDir, "deltas.json"), []byte(deltasContent), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(evalSkillDir, "runs", "run-1.md"), []byte("run output\n"), 0o644))
 
+	nestedRunDir := filepath.Join(evalsDir, "demo", "2026-07-12-abc123")
+	require.NoError(t, os.MkdirAll(filepath.Join(nestedRunDir, "runs"), 0o755))
+	nestedEval := `{
+		"schemaVersion": "2.0",
+		"eval": {"skill": "demo", "date": "2026-07-12", "notes": "nested run"},
+		"runs": [{"id": "cell-1", "model": {"id": "claude-fable-5", "effort": ""}}],
+		"rubric": [], "scores": [], "probes": [], "totals": []
+	}`
+	require.NoError(t, os.WriteFile(filepath.Join(nestedRunDir, "eval.json"), []byte(nestedEval), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(nestedRunDir, "runs", "cell-1.md"), []byte("nested cell output\n"), 0o644))
+
 	examplesDir := t.TempDir()
 	exampleSkillDir := filepath.Join(examplesDir, "demo")
 	require.NoError(t, os.MkdirAll(exampleSkillDir, 0o755))
@@ -134,6 +145,21 @@ func TestSkillTestsFileServesArtifact(t *testing.T) {
 
 	denied := httptest.NewRecorder()
 	target = "/scripts/skills/repo/demo/tests/file?d=demo-2026-07-11&f=" + url.QueryEscape("../../go.mod")
+	server.Handler().ServeHTTP(denied, httptest.NewRequest(http.MethodGet, target, nil))
+	assert.Equal(t, http.StatusNotFound, denied.Code)
+}
+
+func TestSkillTestsFileServesNestedArtifact(t *testing.T) {
+	server := skillsTestEnv(t, false)
+
+	response := httptest.NewRecorder()
+	target := "/scripts/skills/repo/demo/tests/file?d=" + url.QueryEscape("demo/2026-07-12-abc123") + "&f=" + url.QueryEscape("runs/cell-1.md")
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, target, nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, response.Body.String(), "nested cell output")
+
+	denied := httptest.NewRecorder()
+	target = "/scripts/skills/repo/demo/tests/file?d=" + url.QueryEscape("demo/../..") + "&f=" + url.QueryEscape("go.mod")
 	server.Handler().ServeHTTP(denied, httptest.NewRequest(http.MethodGet, target, nil))
 	assert.Equal(t, http.StatusNotFound, denied.Code)
 }

@@ -72,30 +72,58 @@ func mapIntervalArray(items []any) ([]CalendarInterval, error) {
 	return intervals, nil
 }
 
+// otherTriggerKeys are the launchd trigger mechanisms the routine contract
+// does not support; their presence distinguishes an unsupported schedule from
+// a plist that simply has no schedule set yet.
+var otherTriggerKeys = []string{
+	"KeepAlive",
+	"QueueDirectories",
+	"RunAtLoad",
+	"StartInterval",
+	"StartOnMount",
+	"WatchPaths",
+}
+
+type scheduleInfo struct {
+	Intervals   []CalendarInterval
+	Supported   bool
+	Unscheduled bool
+}
+
 // parseSchedule decodes the plist and maps StartCalendarInterval; a plist
-// without the key is valid but unsupported for next-run and reschedule
-// (D24, D26) — supported reports that distinction.
-func parseSchedule(plistPath string) ([]CalendarInterval, bool, error) {
+// without the key and without any other launchd trigger is a routine with no
+// schedule set yet (Unscheduled), while any other trigger mechanism is
+// unsupported for next-run (D24, D26).
+func parseSchedule(plistPath string) (*scheduleInfo, error) {
 	data, err := os.ReadFile(plistPath)
 	if err != nil {
-		return nil, false, fmt.Errorf("parseSchedule: Failed to read %s: %w", plistPath, err)
+		return nil, fmt.Errorf("parseSchedule: Failed to read %s: %w", plistPath, err)
 	}
 
 	var content map[string]any
 	if _, err := plist.Unmarshal(data, &content); err != nil {
-		return nil, false, fmt.Errorf("parseSchedule: Failed to parse %s: %w", plistPath, err)
+		return nil, fmt.Errorf("parseSchedule: Failed to parse %s: %w", plistPath, err)
 	}
 
 	raw, ok := content["StartCalendarInterval"]
 	if !ok {
-		return nil, false, nil
+		info := &scheduleInfo{Unscheduled: true}
+		for _, key := range otherTriggerKeys {
+			if _, present := content[key]; present {
+				info.Unscheduled = false
+				break
+			}
+		}
+		return info, nil
 	}
 
 	intervals, err := mapIntervals(raw)
 	if err != nil {
-		return nil, false, fmt.Errorf("parseSchedule: %s: %w", plistPath, err)
+		return nil, fmt.Errorf("parseSchedule: %s: %w", plistPath, err)
 	}
-	return intervals, true, nil
+
+	info := &scheduleInfo{Intervals: intervals, Supported: true}
+	return info, nil
 }
 
 // PlistMeta reads the routine directory's single plist and returns its label

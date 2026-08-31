@@ -595,6 +595,32 @@ func TestProposalVote(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, response.Code)
 	})
 
+	t.Run("permissions-kind-accepted", func(t *testing.T) {
+		sessionsDir := t.TempDir()
+		jsonDir := filepath.Join(sessionsDir, "proposals")
+		require.NoError(t, os.MkdirAll(jsonDir, 0755))
+		permissionsFixture := `{
+		  "kind": "permissions",
+		  "groups": [
+		    {"title": "Allowlist additions", "proposals": [
+		      {"id": "gh-pr-view", "title": "gh pr view — allowlist", "change": "Add Bash(gh pr view *) to permissions.allow", "status": "proposed"}
+		    ]}
+		  ]
+		}`
+		require.NoError(t, os.WriteFile(filepath.Join(jsonDir, "permissions.json"), []byte(permissionsFixture), 0644))
+		server := newTestServer(t, &Options{ProposalsDir: jsonDir, SessionsDir: sessionsDir})
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/api/proposals/permissions/gh-pr-view/vote",
+			url.Values{"vote": {"+"}}))
+		require.Equal(t, http.StatusOK, response.Code)
+
+		lines := votesLines(t, sessionsDir)
+		require.Len(t, lines, 1)
+		assert.Contains(t, lines[0], `"kind":"permissions"`)
+		assert.Contains(t, lines[0], "gh-pr-view")
+	})
+
 	t.Run("unknown-id-404", func(t *testing.T) {
 		server, _ := newVoteServer(t)
 

@@ -73,11 +73,13 @@ type welcomeVerifyData struct {
 }
 
 type welcomePage struct {
-	Checks   welcomeChecksData
-	Page     string
-	Proposal proposalView
-	Tab      string
-	Title    string
+	BootstrapSinceDefault string
+	BootstrapToday        string
+	Checks                welcomeChecksData
+	Page                  string
+	Proposal              proposalView
+	Tab                   string
+	Title                 string
 }
 
 func (s *Server) checkClaudeCli() setupCheck {
@@ -286,6 +288,9 @@ func (s *Server) handleWelcome(w http.ResponseWriter, r *http.Request) {
 	data := welcomePage{Page: pageWelcome, Tab: tab, Title: "Welcome"}
 	if tab == "setup" {
 		data.Checks = s.welcomeChecks(r.Context())
+		now := time.Now()
+		data.BootstrapSinceDefault = now.AddDate(0, 0, -30).Format("2006-01-02")
+		data.BootstrapToday = now.Format("2006-01-02")
 	} else {
 		data.Proposal = demoProposalView()
 	}

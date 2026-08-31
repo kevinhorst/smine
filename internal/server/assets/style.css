@@ -327,7 +327,12 @@ input[type="checkbox"] { accent-color: var(--neon); }
 .routines-layout > table td:nth-child(2) { white-space: normal; }
 #routine-configure { width: 100%; }
 .run-cell { white-space: nowrap; }
+/* Run-history week bands: clickable header rows folding the week's rows. */
+.run-band td { cursor: pointer; user-select: none; color: var(--text-3); font-size: 0.8125rem; }
+.run-band td::before { content: "▾ "; }
+.run-band.collapsed td::before { content: "▸ "; }
 .configure-form { width: 100%; }
+.configure-form .card-row { margin-top: 10px; }
 .configure-row { width: 100%; justify-content: flex-start; gap: 16px; }
 .configure-row .configure-key { flex: 0 0 260px; }
 .configure-row input[type="text"], .configure-row input[type="password"], .configure-row select, .configure-row textarea { flex: 1 1 auto; min-width: 0; }

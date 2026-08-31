@@ -4,7 +4,7 @@
      it re-fires on swapped-in content and would loop (D3). hx-disinherit
      keeps the refresh attributes off the op forms inside, whose responses
      target #op-result with the default swap. */}}
-<div id="worktree-status" hx-get="/repos/{{pathEscape .Repo.Name}}/status{{.Query}}"
+<div id="worktree-status" hx-get="/repos/{{pathEscape .Repo.Name}}/status?refresh=1"
      hx-trigger="repo-op from:body" hx-swap="outerHTML"
      hx-disinherit="*">
 {{if .SessionsErr}}
@@ -24,24 +24,30 @@
 {{if .StatusErr}}
 <div class="card card-error"><span class="label">{{.StatusErr}}</span></div>
 {{else}}
+<div class="reload-form">
+  <button type="button" class="small"
+          hx-get="/repos/{{pathEscape .Repo.Name}}/status?refresh=1"
+          hx-target="#worktree-status" hx-swap="outerHTML"
+          hx-indicator="#status-reload-indicator" hx-disabled-elt="this"
+          title="re-run the worktree scan — plain loads serve the last scan">Reload</button>
+  <span id="status-reload-indicator" class="htmx-indicator">scanning…</span>
+  {{if not .ScannedAt.IsZero}}<span class="meta">as of {{.ScannedAt.Format "15:04:05"}}</span>{{end}}
+</div>
+{{/* Filtering is client-side (repo_detail.html script): chips carry their
+     group/value as data attributes; JS toggles row visibility and the
+     active-chip classes, and mirrors the state into ?base=&kind=. */}}
 <div class="card card-filter" title="kind chips separate claude/* session worktrees from claude-routines/* routine lineages; base chips show only branches created from the chosen base — the two combine">
   <span class="section-label">kind</span>
   {{range .KindFilters}}
-  <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
-     href="/repos/{{pathEscape $.Repo.Name}}{{.Query}}"
-     hx-get="/repos/{{pathEscape $.Repo.Name}}/status{{.Query}}"
-     hx-target="#worktree-status" hx-swap="outerHTML"
-     hx-push-url="/repos/{{pathEscape $.Repo.Name}}{{.Query}}">{{.Label}}</a>
+  <a class="badge badge-dim wt-filter" href="#"
+     data-group="kind" data-value="{{.Value}}">{{.Label}}</a>
   {{end}}
   {{if gt (len .BaseFilters) 1}}
   <hr class="filter-divider">
   <span class="section-label">base</span>
   {{range .BaseFilters}}
-  <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
-     href="/repos/{{pathEscape $.Repo.Name}}{{.Query}}"
-     hx-get="/repos/{{pathEscape $.Repo.Name}}/status{{.Query}}"
-     hx-target="#worktree-status" hx-swap="outerHTML"
-     hx-push-url="/repos/{{pathEscape $.Repo.Name}}{{.Query}}">{{.Label}}</a>
+  <a class="badge badge-dim wt-filter" href="#"
+     data-group="base" data-value="{{.Value}}">{{.Label}}</a>
   {{end}}
   {{end}}
 </div>
@@ -77,8 +83,8 @@
       <th title="agent branch (claude/* session branches, claude-routines/* routine lineages)">Branch</th>
       <th title="checkout directory name — hover the cell for the full path">Worktree</th>
       <th title="branch this one was created from (reflog)">Base</th>
-      <th title="dirty/untracked · ahead/behind/unpicked — dirty: modified files in the worktree; untracked: untracked files excluding worktree infrastructure (.idea/, .claude/, .claude-worktree); ahead/behind: commits missing between this branch and Base; unpicked: commits transferred to no non-agent branch. Click a count for its commit list; – = no worktree / Base unknown">Counts</th>
-      <th title="probe results for commits missing from the base by patch-id: applied:n (patch applies empty on the base — change already present, byte-identical), resolved:n (conflicted re-pick on the base paired by range-diff — transferred verbatim after conflict), picked-resolved:n (landed on another branch as a same-subject twin with manual conflict resolution — counted as picked, but NOT auto-reconcilable: a merge or re-pick of this branch will conflict against the resolved version)">Verdicts</th>
+      <th title="dirty/untracked · ahead/behind/unpicked — dirty: modified files in the worktree; untracked: untracked files excluding worktree infrastructure and tool droppings (.idea/, .claude/, .claude-worktree, .serena/, .DS_Store); ahead/behind: commits missing between this branch and Base; unpicked: commits transferred to no non-agent branch. Click a count for its commit list; – = no worktree / Base unknown">Counts</th>
+      <th title="probe results for commits missing from the base by patch-id: applied:n (patch applies empty on the base — change already present, byte-identical), resolved:n (conflicted re-pick on the base paired by range-diff — transferred verbatim after conflict), picked-resolved:n (landed on another branch as a same-subject twin with manual conflict resolution — counted as picked, but NOT auto-reconcilable: a merge or re-pick of this branch will conflict against the resolved version), squashed:n (branch content fully contained in a candidate via merge-tree — squash or reworded transfer; merging the branch there is a no-op)">Verdicts</th>
       <th title="branch whose history has an actual merge commit for this branch's tip — empty when the state was only cherry-picked or fast-forwarded">Merged into</th>
       <th title="every non-agent branch already containing all of this branch's work, base branch first">Contained in</th>
       <th title="date of the branch's newest commit">Last commit</th>
@@ -87,7 +93,7 @@
   </thead>
   <tbody>
     {{range .Statuses}}
-    <tr>
+    <tr data-kind="{{if hasPrefix .Branch "claude-routines/"}}claude-routines{{else}}claude{{end}}" data-base="{{.From}}">
       <td><input type="checkbox" name="branch" value="{{.Branch}}"
            data-branch="{{.Branch}}" data-worktree="{{.Worktree}}"
            {{if .SafeToRemove}}data-safe="1"{{end}}>
@@ -141,12 +147,13 @@
   </tbody>
 </table>
 </div>
+<div class="empty" id="wt-filter-empty" hidden>No agent branches matching the active filter.</div>
 {{else}}
-<div class="empty">{{if or .Base .Kind}}No agent branches matching the active filter.{{else}}No agent branches (claude/*, claude-routines/*).{{end}}</div>
+<div class="empty">No agent branches (claude/*, claude-routines/*).</div>
 {{end}}
 {{end}}
 {{if .Timings}}
-<div class="meta">{{range $i, $t := .Timings}}{{if $i}} · {{end}}{{$t.Step}} {{$t.Ms}}ms{{end}}</div>
+<div class="meta">{{range $i, $t := .Timings}}{{if $i}} · {{end}}{{$t.Step}} {{$t.Ms}}ms{{end}}{{if .Cached}} · cached{{end}}</div>
 {{end}}
 </div>
 {{end}}

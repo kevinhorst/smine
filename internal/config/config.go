@@ -207,6 +207,23 @@ func Load(path string) (*Settings, error) {
 	return s, nil
 }
 
+// LoadFragment loads a repo settings fragment, expanding the per-install
+// markers a fragment may carry (live settings files never do — use Load).
+func LoadFragment(path string) (*Settings, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return NewSettings(), nil
+		}
+		return nil, fmt.Errorf("reading %s: %w", path, err)
+	}
+	s := NewSettings()
+	if err := json.Unmarshal(ExpandInstallMarkers(data), s.doc); err != nil {
+		return nil, fmt.Errorf("parsing %s: %w", path, err)
+	}
+	return s, nil
+}
+
 func Save(path string, s *Settings) error {
 	data, err := json.MarshalIndent(s.doc, "", "  ")
 	if err != nil {

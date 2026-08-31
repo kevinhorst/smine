@@ -375,7 +375,7 @@ func TestParseWindow(t *testing.T) {
 	}
 }
 
-func TestOverviewNonDeveloper(t *testing.T) {
+func TestOverviewCasual(t *testing.T) {
 	server := newTestServer(t, &Options{PresentationPath: writeGermanProfile(t)})
 
 	recorder := httptest.NewRecorder()

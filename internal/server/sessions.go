@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"maps"
 	"net/http"
 	"net/url"
@@ -15,10 +16,11 @@ import (
 )
 
 const (
-	pageSessions      = "sessions"
-	tmplBatchBody     = "_batch_body.html"
-	tmplSessionsBatch = "sessions_batch.html"
-	tmplSessionsIndex = "sessions_index.html"
+	pageSessions        = "sessions"
+	tmplBatchBody       = "_batch_body.html"
+	tmplSessionsArchive = "sessions_archive.html"
+	tmplSessionsBatch   = "sessions_batch.html"
+	tmplSessionsIndex   = "sessions_index.html"
 
 	// dimFrustration/dimPositive are pseudo-dimensions (D10): backed by the
 	// per-session quote arrays, not by findings.
@@ -39,6 +41,13 @@ type batchPage struct {
 	ThemeLabel    string
 	Title         string
 	ToggleAllURL  string
+}
+
+type sessionsArchivePage struct {
+	Archived   []sessions.ArchivedFolder
+	Page       string
+	ScopeNames []string
+	Title      string
 }
 
 type sessionsIndexPage struct {
@@ -64,6 +73,7 @@ type sessionView struct {
 }
 
 func (s *Server) handleSessionsBatch(w http.ResponseWriter, r *http.Request) {
+	s.reloadSessions()
 	scope := r.PathValue("scope")
 	number, err := strconv.Atoi(r.PathValue("batch"))
 	if err != nil {
@@ -102,7 +112,7 @@ func (s *Server) handleSessionsBatch(w http.ResponseWriter, r *http.Request) {
 		SessionsParam: strings.Join(sessionIds, ","),
 		ThemeBullets:  themeBulletList,
 		ThemeLabel:    themeLabel,
-		Title:         fmt.Sprintf("%s · Batch %d", scope, number),
+		Title:         fmt.Sprintf("%s · %s %d", scope, translate(s.presentation.language(), "Batch"), number),
 	}
 	data.Sessions = visibleSessions(batch, data.Dimension, sessionIds)
 	data.ToggleAllURL = toggleAllURL(batch, data.Dimension, sessionIds)
@@ -114,7 +124,23 @@ func (s *Server) handleSessionsBatch(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, tmplSessionsBatch, data)
 }
 
+func (s *Server) handleSessionsArchiveTab(w http.ResponseWriter, r *http.Request) {
+	s.reloadSessions()
+	names := make([]string, 0)
+	for _, scopeInfo := range s.sessions.Scopes() {
+		names = append(names, scopeInfo.Name)
+	}
+	data := sessionsArchivePage{
+		Archived:   s.sessions.ArchivedFolders(),
+		Page:       pageSessions,
+		ScopeNames: names,
+		Title:      "Sessions — archive",
+	}
+	s.renderFragment(w, tmplSessionsArchive, data)
+}
+
 func (s *Server) handleSessionsIndex(w http.ResponseWriter, r *http.Request) {
+	s.reloadSessions()
 	scopes := s.sessions.Scopes()
 	if len(scopes) == 0 {
 		data := sessionsIndexPage{Page: pageSessions, Title: "Sessions"}
@@ -125,19 +151,8 @@ func (s *Server) handleSessionsIndex(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/sessions/"+scopes[0].Name, http.StatusFound)
 }
 
-func (s *Server) handleSessionsReload(w http.ResponseWriter, r *http.Request) {
-	result := opResult{Page: pageSessions, Subject: "reload sessions"}
-	if err := s.sessions.Reload(); err != nil {
-		result.Error = err.Error()
-	}
-
-	// The batch list re-pulls itself on this event so the current scope
-	// refreshes in place.
-	w.Header().Set("HX-Trigger", "sessions-reload")
-	s.renderFragment(w, tmplOpResult, result)
-}
-
 func (s *Server) handleSessionsScope(w http.ResponseWriter, r *http.Request) {
+	s.reloadSessions()
 	scope := r.PathValue("scope")
 	info, ok := s.sessions.Scope(scope)
 	if !ok {
@@ -150,22 +165,58 @@ func (s *Server) handleSessionsScope(w http.ResponseWriter, r *http.Request) {
 		names = append(names, scopeInfo.Name)
 	}
 	data := sessionsIndexPage{
-		BatchBands: batchBands(info.Batches),
+		BatchBands: batchBands(info.Batches, s.presentation.language()),
 		Page:       pageSessions,
 		Scope:      info,
 		ScopeNames: names,
-		Title:      "Sessions — " + scope,
+		Title:      translate(s.presentation.language(), "Sessions") + " — " + scope,
 	}
 	s.renderFragment(w, tmplSessionsIndex, data)
 }
 
+func (s *Server) handleSessionsScopeArchive(w http.ResponseWriter, r *http.Request) {
+	result := opResult{Page: pageSessions, Subject: "archive " + r.PathValue("scope")}
+	if err := s.sessions.ArchiveScope(r.PathValue("scope")); err != nil {
+		result.Error = err.Error()
+	}
+	w.Header().Set("HX-Redirect", "/sessions")
+	s.renderFragment(w, tmplOpResult, result)
+}
+
+func (s *Server) handleSessionsScopeDelete(w http.ResponseWriter, r *http.Request) {
+	result := opResult{Page: pageSessions, Subject: "delete " + r.PathValue("name")}
+	if err := s.sessions.DeleteScope(r.PathValue("name")); err != nil {
+		result.Error = err.Error()
+	}
+	w.Header().Set("HX-Redirect", "/sessions/archive")
+	s.renderFragment(w, tmplOpResult, result)
+}
+
+func (s *Server) handleSessionsScopeUnarchive(w http.ResponseWriter, r *http.Request) {
+	result := opResult{Page: pageSessions, Subject: "unarchive " + r.PathValue("name")}
+	if err := s.sessions.UnarchiveScope(r.PathValue("name")); err != nil {
+		result.Error = err.Error()
+	}
+	w.Header().Set("HX-Redirect", "/sessions/archive")
+	s.renderFragment(w, tmplOpResult, result)
+}
+
+// reloadSessions rescans the sessions dir before a page render — the store
+// has no watcher, and request-time rescan is what lets a fresh install see
+// its first batch without a restart. A failed scan serves the last state.
+func (s *Server) reloadSessions() {
+	if err := s.sessions.Reload(); err != nil {
+		log.Printf("sessions: reload failed, serving previous state: %v", err)
+	}
+}
+
 // batchBands groups batches into decades (Batch 1-10, 11-20, …) by number.
 // Batches arrive sorted by number, so each decade is contiguous — one pass.
-func batchBands(batches []*sessions.BatchSummary) []batchBand {
+func batchBands(batches []*sessions.BatchSummary, language string) []batchBand {
 	var bands []batchBand
 	for _, batch := range batches {
 		decade := (batch.Batch.Number - 1) / 10
-		label := fmt.Sprintf("Batch %d-%d", decade*10+1, decade*10+10)
+		label := fmt.Sprintf(translate(language, "Batch %d-%d"), decade*10+1, decade*10+10)
 		if n := len(bands); n > 0 && bands[n-1].Label == label {
 			bands[n-1].Batches = append(bands[n-1].Batches, batch)
 			continue

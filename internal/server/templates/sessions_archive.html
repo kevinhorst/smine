@@ -1,0 +1,36 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{t "Sessions"}}</h1>
+<div class="tabs">
+  {{range .ScopeNames}}
+  <a href="/sessions/{{.}}">{{.}}</a>
+  {{end}}
+  <a href="/sessions/archive" class="active">{{t "archive"}}</a>
+</div>
+<div id="op-result"></div>
+{{if .Archived}}
+<table class="md-body checklist-table">
+  <tbody>
+    {{range .Archived}}
+    <tr>
+      <td>{{.Name}}</td>
+      <td>{{.MdReports}} {{t "batches"}}</td>
+      <td>
+        <form hx-post="/sessions/archive/{{pathEscape .Name}}/unarchive" hx-target="#op-result">
+          <button type="submit" class="small">{{t "Unarchive"}}</button>
+        </form>
+      </td>
+      <td>
+        <form hx-post="/sessions/archive/{{pathEscape .Name}}/delete" hx-target="#op-result"
+              hx-confirm="{{t "Delete this folder permanently? Analyses and ledgers are removed; its sessions may be mined again."}}">
+          <button type="submit" class="small">{{t "Delete"}}</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<div class="empty">{{t "No archived folders."}}</div>
+{{end}}
+{{template "foot" .}}

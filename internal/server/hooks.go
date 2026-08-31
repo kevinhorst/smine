@@ -190,7 +190,7 @@ func (s *Server) renderHooks(w http.ResponseWriter, main *config.Settings) {
 // array order are not noise. A fragment load error renders no diff, matching
 // sectionOverridden's degrade-to-quiet.
 func (s *Server) hooksFragmentDiff(main *config.Settings) []diffLine {
-	fragment, err := config.Load(s.claudeFragmentPath)
+	fragment, err := config.LoadFragment(s.claudeFragmentPath)
 	if err != nil {
 		return nil
 	}

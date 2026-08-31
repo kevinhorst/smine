@@ -50,6 +50,7 @@ type Options struct {
 	SettingsPath       string
 	SkillsHome         string
 	SkillsRepo         string
+	StylePath          string
 	SyncScriptsDir     string
 	TokenDir           string
 	Version            string
@@ -59,6 +60,7 @@ type Options struct {
 type Server struct {
 	acdslVerdictsPath  string
 	autoApplyRulesPath string
+	bootstrap          *bootstrapRun
 	catalog            []catalog.Entry
 	checklistPath      string
 	claudeFragmentPath string
@@ -71,7 +73,7 @@ type Server struct {
 	examplesDir        string
 	initWelcome        bool
 	peekClient         *peek.Client
-	profile            *presentationProfile
+	presentation       *presentationStore
 	proposalsDir       string
 	repoLocks          *repos.Locks
 	repoRegistry       *repos.Registry
@@ -81,6 +83,7 @@ type Server struct {
 	settingsPath       string
 	skillsHome         string
 	skillsRepo         string
+	statusCache        *statusCache
 	syncScripts        string
 	tmpl               *template.Template
 	tokenDir           string
@@ -88,7 +91,7 @@ type Server struct {
 }
 
 func New(opts *Options) (*Server, error) {
-	profile := loadPresentationProfile(opts.PresentationPath)
+	presentation := newPresentationStore(opts.PresentationPath, opts.StylePath)
 	funcs := template.FuncMap{
 		// baseName shortens worktree paths to their directory name; the
 		// detail table compares it against the branch slug to expose
@@ -126,6 +129,15 @@ func New(opts *Options) (*Server, error) {
 			return template.HTML(builder.String())
 		},
 		"pathEscape": url.PathEscape,
+		// truncate caps a display string at limit runes with an ellipsis —
+		// run-history result summaries stay one line.
+		"truncate": func(text string, limit int) string {
+			runes := []rune(text)
+			if len(runes) <= limit {
+				return text
+			}
+			return string(runes[:limit]) + "…"
+		},
 		// pathWrap inserts word-break opportunities after each slash so long
 		// absolute paths wrap at segment boundaries, never mid-word.
 		"pathWrap": func(path string) template.HTML {
@@ -146,16 +158,15 @@ func New(opts *Options) (*Server, error) {
 		},
 		// t overlays the profile language onto English source strings;
 		// identity when no catalog entry exists or the language is English
-		// (plan D5).
+		// (plan D5). Reads go through the store so a Profile-page save takes
+		// effect without a restart.
 		"t": func(text string) string {
-			return translate(profile.Language, text)
+			return translate(presentation.language(), text)
 		},
-		"langAttr": func() string {
-			return profile.Language
-		},
+		"langAttr": presentation.language,
 		// isDeveloperAudience gates internals-exposing nav entries and
 		// proposal-card parts (plan D6).
-		"isDeveloperAudience": profile.isDeveloperAudience,
+		"isDeveloperAudience": presentation.isDeveloperAudience,
 		// appVersion feeds the nav brand; ldflags -X main.version stamps it.
 		"appVersion": func() string {
 			return opts.Version
@@ -224,6 +235,7 @@ func New(opts *Options) (*Server, error) {
 	configServer := &Server{
 		acdslVerdictsPath:  opts.AcdslVerdictsPath,
 		autoApplyRulesPath: opts.AutoApplyRulesPath,
+		bootstrap:          &bootstrapRun{},
 		catalog:            entries,
 		checklistPath:      opts.ChecklistPath,
 		claudeFragmentPath: claudeFragment,
@@ -236,7 +248,7 @@ func New(opts *Options) (*Server, error) {
 		examplesDir:        opts.ExamplesDir,
 		initWelcome:        opts.InitWelcome,
 		peekClient:         peek.NewClient(opts.PeekEndpoint),
-		profile:            profile,
+		presentation:       presentation,
 		proposalsDir:       opts.ProposalsDir,
 		repoLocks:          repos.NewLocks(),
 		repoRegistry:       registry,
@@ -246,6 +258,7 @@ func New(opts *Options) (*Server, error) {
 		settingsPath:       opts.SettingsPath,
 		skillsHome:         opts.SkillsHome,
 		skillsRepo:         opts.SkillsRepo,
+		statusCache:        newStatusCache(),
 		syncScripts:        opts.SyncScriptsDir,
 		tmpl:               tmpl,
 		tokenDir:           opts.TokenDir,
@@ -303,7 +316,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /sessions", s.handleSessionsIndex)
 	mux.HandleFunc("GET /sessions/{scope}", s.handleSessionsScope)
 	mux.HandleFunc("GET /sessions/{scope}/{batch}", s.handleSessionsBatch)
-	mux.HandleFunc("POST /sessions/reload", s.handleSessionsReload)
+	mux.HandleFunc("GET /sessions/archive", s.handleSessionsArchiveTab)
+	mux.HandleFunc("POST /sessions/{scope}/archive", s.handleSessionsScopeArchive)
+	mux.HandleFunc("POST /sessions/archive/{name}/unarchive", s.handleSessionsScopeUnarchive)
+	mux.HandleFunc("POST /sessions/archive/{name}/delete", s.handleSessionsScopeDelete)
 	mux.HandleFunc("GET /proposals", s.handleProposals)
 	mux.HandleFunc("POST /api/proposals/{kind}/{id}/vote", s.handleProposalVote)
 	mux.HandleFunc("GET /config", s.handleConfigRedirect)
@@ -317,9 +333,15 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("DELETE /api/config/{target}/{key}/items/{index}", s.handleConfigItemRemove)
 	mux.HandleFunc("POST /api/config/codex/{key}/toggle", s.handleConfigCodexToggle)
 	mux.HandleFunc("GET /docs/checklist", s.handleChecklistPage)
+	mux.HandleFunc("GET /profile", s.handleProfilePage)
+	mux.HandleFunc("POST /profile", s.handleProfileSave)
+	mux.HandleFunc("POST /profile/style", s.handleProfileStyleSave)
+	mux.HandleFunc("POST /profile/test", s.handleProfileTest)
 	mux.HandleFunc("GET /welcome", s.handleWelcome)
 	mux.HandleFunc("GET /welcome/checks", s.handleWelcomeChecks)
 	mux.HandleFunc("POST /welcome/verify-token", s.handleWelcomeVerifyToken)
+	mux.HandleFunc("POST /welcome/bootstrap", s.handleWelcomeBootstrap)
+	mux.HandleFunc("GET /welcome/bootstrap/status", s.handleWelcomeBootstrapStatus)
 	mux.HandleFunc("POST /api/checklist/{number}/status", s.handleChecklistStatus)
 	mux.HandleFunc("GET /scripts/skills", s.handleSkillsIndex)
 	mux.HandleFunc("POST /scripts/skills/sync", s.handleSkillsSync)
@@ -349,7 +371,6 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /repos/{name}/branches/{branch}/commits/{class}", s.handleRepoCommits)
 	mux.HandleFunc("POST /repos/{name}/branches/{branch}/sync", s.handleRepoSync)
 	mux.HandleFunc("POST /repos/{name}/branches/{branch}/merge", s.handleRepoMerge)
-	mux.HandleFunc("POST /repos/{name}/branches/{branch}/remove", s.handleRepoRemove)
 	mux.HandleFunc("POST /repos/{name}/remove-selected", s.handleRepoRemoveSelected)
 	mux.HandleFunc("POST /repos/{name}/cherry-pick", s.handleRepoCherryPick)
 	mux.HandleFunc("GET /routines", s.handleRoutinesIndex)

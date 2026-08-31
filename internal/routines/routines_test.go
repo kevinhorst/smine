@@ -61,6 +61,50 @@ func TestScanConformantRoutine(t *testing.T) {
 	assert.False(t, routine.NextRun.IsZero())
 }
 
+func TestScanUnscheduledRoutine(t *testing.T) {
+	dir := t.TempDir()
+	routineDir := writeRoutine(t, dir, "demo")
+	unscheduledPlist := `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.test.demo</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>/tmp/run.sh</string>
+	</array>
+</dict>
+</plist>
+`
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "com.test.demo.plist"), []byte(unscheduledPlist), 0o644))
+
+	routines, err := Scan(dir)
+	require.NoError(t, err)
+	require.Len(t, routines, 1)
+
+	routine := routines[0]
+	assert.Empty(t, routine.LoadError)
+	assert.False(t, routine.ScheduleSupported)
+	assert.True(t, routine.Unscheduled)
+	assert.Empty(t, routine.Schedule)
+	assert.True(t, routine.NextRun.IsZero())
+}
+
+func TestScanDefaultDisabledMarker(t *testing.T) {
+	dir := t.TempDir()
+	routineDir := writeRoutine(t, dir, "demo")
+	writeRoutine(t, dir, "other")
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "default-disabled"), []byte("opt-in\n"), 0o644))
+
+	routines, err := Scan(dir)
+	require.NoError(t, err)
+	require.Len(t, routines, 2)
+	assert.True(t, routines[0].DefaultDisabled)
+	assert.False(t, routines[1].DefaultDisabled)
+}
+
 func TestScanMissingRunShDegrades(t *testing.T) {
 	dir := t.TempDir()
 	routineDir := writeRoutine(t, dir, "demo")
@@ -182,6 +226,25 @@ not json
 	require.NoError(t, err)
 	require.Len(t, limited, 1)
 	assert.Equal(t, "b", limited[0].SessionId)
+}
+
+func TestHistoryStartedRows(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "results.jsonl")
+	lines := `{"timestamp": "2026-08-27T06:00:00Z", "exit_status": 0, "subtype": "started", "result": "run started"}
+{"timestamp": "2026-08-27T06:30:00Z", "exit_status": 0, "session_id": "a", "num_turns": 100, "total_cost_usd": 7.4, "subtype": "summary", "result": "cells 8/8 ok"}
+{"timestamp": "2026-08-27T08:00:00Z", "exit_status": 0, "subtype": "started", "result": "run started again"}
+`
+	require.NoError(t, os.WriteFile(path, []byte(lines), 0o644))
+
+	results, err := History(path, 10)
+	require.NoError(t, err)
+	require.Len(t, results, 2)
+	assert.True(t, results[0].IsRunning())
+	assert.Equal(t, "run started again", results[0].Result)
+	assert.False(t, results[1].IsRunning())
+	assert.Equal(t, "summary", results[1].Subtype)
+	assert.Equal(t, "cells 8/8 ok", results[1].Result)
+	assert.Equal(t, "a", results[1].SessionId)
 }
 
 func TestHistoryMissingFileIsNil(t *testing.T) {

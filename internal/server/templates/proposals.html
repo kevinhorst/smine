@@ -9,7 +9,7 @@
 {{if .LoadErrors}}
 <div class="card card-error">
   <span class="label">
-    {{len .LoadErrors}} file(s) failed to load:
+    {{len .LoadErrors}} {{t "file(s) failed to load:"}}
     {{range .LoadErrors}}<br>{{.}}{{end}}
   </span>
 </div>
@@ -19,7 +19,7 @@
 {{end}}
 {{if and .Files (not .HasGroups)}}
 {{if eq .Tab "open"}}
-<div class="empty">Everything applied, happy {{.HappyWord}}!</div>
+<div class="empty">{{t "Everything applied, happy"}} {{t .HappyWord}}!</div>
 {{else}}
 <div class="empty">{{t "No notes."}}</div>
 {{end}}
@@ -27,7 +27,7 @@
 {{range .Files}}
 {{$file := .}}
 {{if .Groups}}
-<h2>{{.File.Kind}}{{if or .File.Updated .File.Source}} <span class="meta">{{if .File.Updated}}updated {{.File.Updated}}{{end}}{{if and .File.Updated .File.Source}} · {{end}}{{.File.Source}}</span>{{end}}</h2>
+<h2>{{t .File.Kind}}{{if or .File.Updated .File.Source}} <span class="meta">{{if .File.Updated}}{{t "updated"}} {{.File.Updated}}{{end}}{{if and .File.Updated .File.Source}} · {{end}}{{.File.Source}}</span>{{end}}</h2>
 {{/* Filter values only exist for votable proposals — no filter row on Notes. */}}
 {{if and .FilterRows (eq $.Tab "open")}}
 <div class="card card-filter">
@@ -35,7 +35,7 @@
   {{range $index, $row := .FilterRows}}
   {{if $index}}<hr class="filter-divider">{{end}}
   <div class="card-row">
-    {{with $row.Label}}<span class="section-label">{{.}}</span>{{end}}
+    {{with $row.Label}}<span class="section-label">{{t .}}</span>{{end}}
     <a class="badge {{if not $view.Filter}}badge-ok{{else}}badge-dim{{end}}" href="{{$view.AllURL}}"
        hx-get="{{$view.AllURL}}" hx-target="#proposals-body" hx-select="#proposals-body"
        hx-swap="outerHTML" hx-push-url="true">{{t "all"}}</a>
@@ -51,13 +51,13 @@
 {{range .Categories}}
 {{if not .Solo}}
 <details class="section" data-section="{{.DataSection}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
-  <summary>{{.Title}} <span class="count-note">{{.CountLabel}}</span></summary>
+  <summary>{{t .Title}} <span class="count-note">{{.CountLabel}}</span></summary>
 {{end}}
 {{range .Groups}}
 {{/* Server-side open is only the default for sections the script below has
      never snapshotted (first load, deep link). */}}
 <details class="section{{if not .Solo}} section-sub{{end}}" data-section="{{.DataSection}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
-  <summary>{{.Title}} <span class="count-note">{{.CountLabel}}</span>
+  <summary>{{t .Title}} <span class="count-note">{{.CountLabel}}</span>
     {{- if .Accepted.URL}}
     <a class="{{if .Accepted.Active}}badge badge-ok{{else}}state-note{{end}}" href="{{.Accepted.URL}}" title="{{.Accepted.Tooltip}}"
        hx-get="{{.Accepted.URL}}" hx-target="#proposals-body" hx-select="#proposals-body"
@@ -76,7 +76,7 @@
   {{if .Subgroups}}
   {{range .Subgroups}}
   <details class="section section-sub" data-section="{{.DataSection}}"{{if .IsFilterTarget}} open data-filter-target="1"{{end}}>
-    <summary>{{.Title}} <span class="count-note">{{.CountLabel}}</span></summary>
+    <summary>{{t .Title}} <span class="count-note">{{.CountLabel}}</span></summary>
     {{range .Proposals}}
     {{template "_proposal_card.html" .}}
     {{end}}

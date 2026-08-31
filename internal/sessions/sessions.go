@@ -10,9 +10,16 @@ import (
 	"sync"
 )
 
+const archivedDirName = "archived"
+
 type Arc struct {
 	SessionIds []string `json:"sessionIds"`
 	Summary    string   `json:"summary"`
+}
+
+type ArchivedFolder struct {
+	MdReports int
+	Name      string
 }
 
 type Batch struct {
@@ -137,6 +144,11 @@ func (s *Store) Reload() error {
 		if !scopeDir.IsDir() {
 			continue
 		}
+		// sessions/archived/ holds folders archived via the UI — out of the
+		// store, still consulted by the miner's ledger union.
+		if scopeDir.Name() == archivedDirName {
+			continue
+		}
 		info := &ScopeInfo{Name: scopeDir.Name()}
 		scopePath := filepath.Join(s.dir, scopeDir.Name())
 
@@ -206,6 +218,17 @@ func (s *Store) InvocationsBySkill() map[string][]Invocation {
 	return result
 }
 
+// validateScopeName rejects path traversal and the archive container itself;
+// "default" stays archivable — it is an ordinary mining folder.
+func validateScopeName(name string) error {
+	// name (also a path segment: never traversal, never the archive container)
+	isUnsafe := name == "" || name == archivedDirName || name == "." || name == ".." || name != filepath.Base(name)
+	if isUnsafe || strings.ContainsAny(name, `/\`) {
+		return fmt.Errorf("Invalid scope name %q", name)
+	}
+	return nil
+}
+
 func collectInvocations(batch *BatchSummary, result map[string][]Invocation) {
 	for _, session := range batch.Sessions {
 		for _, skillName := range session.InvokedSkills {
@@ -270,6 +293,92 @@ func (s *Store) SessionRefs() map[string]SessionRef {
 		}
 	}
 	return refs
+}
+
+// ArchiveScope moves sessions/<name> to sessions/archived/<name>; the folder
+// leaves the store but its ledgers stay consulted by the miner's union
+// skip-list.
+func (s *Store) ArchiveScope(name string) error {
+	if err := validateScopeName(name); err != nil {
+		return fmt.Errorf("Store.ArchiveScope: %w", err)
+	}
+
+	archivedDir := filepath.Join(s.dir, archivedDirName)
+	if err := os.MkdirAll(archivedDir, 0o755); err != nil {
+		return fmt.Errorf("Store.ArchiveScope: Failed to create %s: %w", archivedDir, err)
+	}
+
+	target := filepath.Join(archivedDir, name)
+	if _, err := os.Stat(target); err == nil {
+		return fmt.Errorf("Store.ArchiveScope: %s already archived", name)
+	}
+	if err := os.Rename(filepath.Join(s.dir, name), target); err != nil {
+		return fmt.Errorf("Store.ArchiveScope: Failed to move %s: %w", name, err)
+	}
+	return nil
+}
+
+// ArchivedFolders lists sessions/archived/* with their report counts — the
+// archive tab's data; a missing archived/ dir is an empty list.
+func (s *Store) ArchivedFolders() []ArchivedFolder {
+	entries, err := os.ReadDir(filepath.Join(s.dir, archivedDirName))
+	if err != nil {
+		return nil
+	}
+
+	folders := make([]ArchivedFolder, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		folder := ArchivedFolder{Name: entry.Name()}
+		if files, err := os.ReadDir(filepath.Join(s.dir, archivedDirName, entry.Name())); err == nil {
+			for _, f := range files {
+				if !f.IsDir() && strings.Contains(f.Name(), "batch") && strings.HasSuffix(f.Name(), ".md") {
+					folder.MdReports++
+				}
+			}
+		}
+		folders = append(folders, folder)
+	}
+	sort.Slice(folders, func(i, j int) bool { return folders[i].Name < folders[j].Name })
+	return folders
+}
+
+// DeleteScope removes sessions/archived/<name> permanently — batches and
+// ledgers; only archived folders are deletable, and the UI confirm names the
+// consequence (still-indexed sessions may re-mine).
+func (s *Store) DeleteScope(name string) error {
+	if err := validateScopeName(name); err != nil {
+		return fmt.Errorf("Store.DeleteScope: %w", err)
+	}
+
+	target := filepath.Join(s.dir, archivedDirName, name)
+	if _, err := os.Stat(target); err != nil {
+		return fmt.Errorf("Store.DeleteScope: %s is not archived: %w", name, err)
+	}
+	if err := os.RemoveAll(target); err != nil {
+		return fmt.Errorf("Store.DeleteScope: Failed to remove %s: %w", name, err)
+	}
+	return nil
+}
+
+// UnarchiveScope moves sessions/archived/<name> back to sessions/<name>; a
+// live folder of that name (repo re-registered and mined meanwhile) is an
+// error, never a merge.
+func (s *Store) UnarchiveScope(name string) error {
+	if err := validateScopeName(name); err != nil {
+		return fmt.Errorf("Store.UnarchiveScope: %w", err)
+	}
+
+	target := filepath.Join(s.dir, name)
+	if _, err := os.Stat(target); err == nil {
+		return fmt.Errorf("Store.UnarchiveScope: %s already exists as a live folder", name)
+	}
+	if err := os.Rename(filepath.Join(s.dir, archivedDirName, name), target); err != nil {
+		return fmt.Errorf("Store.UnarchiveScope: Failed to move %s: %w", name, err)
+	}
+	return nil
 }
 
 func (s *Store) Batch(scope string, number int) (*BatchSummary, bool) {

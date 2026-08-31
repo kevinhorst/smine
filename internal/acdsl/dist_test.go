@@ -190,3 +190,31 @@ func TestDistRefusesRepoOwnedRulesFile(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "repo-owned")
 }
+
+func TestDistShipsPolicyModeRewritten(t *testing.T) {
+	dest := newDistDest(t)
+	lines, err := Dist(context.Background(), repoRoot, "aqms", dest, false)
+	require.NoError(t, err)
+	assert.Contains(t, strings.Join(lines, "\n"), "acdsl/policy.json -> mode: gated")
+
+	shipped, err := LoadPolicy(dest)
+	require.NoError(t, err)
+	assert.Equal(t, PolicyModeGated, shipped.Mode)
+	assert.Empty(t, shipped.DistMode)
+
+	_, err = os.Stat(filepath.Join(dest, "acdsl", "policy.schema.json"))
+	assert.NoError(t, err)
+}
+
+func TestWritePolicyNoSourceShipsNothing(t *testing.T) {
+	root := t.TempDir()
+	dest := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dest, "acdsl"), 0o755))
+
+	mode, err := writePolicy(root, dest)
+
+	require.NoError(t, err)
+	assert.Empty(t, mode)
+	_, statErr := os.Stat(filepath.Join(dest, "acdsl", "policy.json"))
+	assert.True(t, os.IsNotExist(statErr))
+}

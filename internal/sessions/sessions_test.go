@@ -137,6 +137,21 @@ func TestStoreReload(t *testing.T) {
 		assert.False(t, ok)
 	})
 
+	t.Run("archived-dir-excluded", func(t *testing.T) {
+		root := t.TempDir()
+		writeScope(t, root, "personal", map[string]string{"batch-01.json": validBatch}, 1)
+		archivedScope := filepath.Join(root, "archived", "oldscope", "json")
+		require.NoError(t, os.MkdirAll(archivedScope, 0o755))
+		require.NoError(t, os.WriteFile(filepath.Join(archivedScope, "batch-01.json"), []byte(validBatch), 0o644))
+
+		store := NewStore(root)
+		require.NoError(t, store.Reload())
+
+		scopes := store.Scopes()
+		require.Len(t, scopes, 1)
+		assert.Equal(t, "personal", scopes[0].Name)
+	})
+
 	t.Run("normalizes-divergent-scope", func(t *testing.T) {
 		root := t.TempDir()
 		divergent := `{"batch": {"scope": "aqms", "number": 1, "file": "b1.md"}, "sessions": [{"id": "65a26e92-4c98-4879-82ce-35e644cd0ab5"}]}`
@@ -188,4 +203,62 @@ func TestStoreReload(t *testing.T) {
 		assert.Empty(t, info.Batches)
 		assert.Equal(t, 1, info.MdReports)
 	})
+}
+
+func TestStoreArchiveScope(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "oldscope"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(root, "oldscope", "session-analysis-batch-01.md"), []byte("# b"), 0o644))
+	store := NewStore(root)
+
+	require.NoError(t, store.ArchiveScope("oldscope"))
+	assert.DirExists(t, filepath.Join(root, "archived", "oldscope"))
+	assert.NoDirExists(t, filepath.Join(root, "oldscope"))
+
+	// already archived
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "oldscope"), 0o755))
+	assert.Error(t, store.ArchiveScope("oldscope"))
+
+	// invalid names
+	assert.Error(t, store.ArchiveScope("archived"))
+	assert.Error(t, store.ArchiveScope("../evil"))
+	assert.Error(t, store.ArchiveScope(""))
+
+	folders := store.ArchivedFolders()
+	require.Len(t, folders, 1)
+	assert.Equal(t, "oldscope", folders[0].Name)
+	assert.Equal(t, 1, folders[0].MdReports)
+}
+
+func TestStoreDeleteScope(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "livescope"), 0o755))
+	store := NewStore(root)
+
+	// only archived folders are deletable
+	assert.Error(t, store.DeleteScope("livescope"))
+	assert.DirExists(t, filepath.Join(root, "livescope"))
+	assert.Error(t, store.DeleteScope("archived"))
+	assert.Error(t, store.DeleteScope("../evil"))
+
+	require.NoError(t, store.ArchiveScope("livescope"))
+	require.NoError(t, store.DeleteScope("livescope"))
+	assert.NoDirExists(t, filepath.Join(root, "archived", "livescope"))
+}
+
+func TestStoreUnarchiveScope(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "oldscope"), 0o755))
+	store := NewStore(root)
+	require.NoError(t, store.ArchiveScope("oldscope"))
+
+	require.NoError(t, store.UnarchiveScope("oldscope"))
+	assert.DirExists(t, filepath.Join(root, "oldscope"))
+	assert.NoDirExists(t, filepath.Join(root, "archived", "oldscope"))
+
+	// live folder of the same name blocks unarchive
+	require.NoError(t, store.ArchiveScope("oldscope"))
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "oldscope"), 0o755))
+	assert.Error(t, store.UnarchiveScope("oldscope"))
+	assert.DirExists(t, filepath.Join(root, "archived", "oldscope"))
 }

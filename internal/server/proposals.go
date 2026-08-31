@@ -35,9 +35,10 @@ const (
 // kindDimension is the default deep-link dimension per proposals kind;
 // evidence-level dimension overrides it.
 var kindDimension = map[string]string{
-	"context":  "rule",
-	"routines": "routine-candidate",
-	"skills":   "skill-candidate",
+	"context":     "rule",
+	"permissions": "harness-friction",
+	"routines":    "routine-candidate",
+	"skills":      "skill-candidate",
 }
 
 type proposalsPage struct {
@@ -177,12 +178,12 @@ func (s *Server) handleProposals(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := proposalsPage{
-		Files:      proposalViews(files, active, s.sessions.SessionRefs(), votes, tab),
+		Files:      proposalViews(active, files, s.presentation.language(), s.sessions.SessionRefs(), tab, votes),
 		HappyWord:  happyWords[rand.IntN(len(happyWords))],
 		LoadErrors: loadErrors,
 		Page:       pageProposals,
 		Tab:        tab,
-		Title:      "Proposals",
+		Title:      translate(s.presentation.language(), "Proposals"),
 	}
 	for _, file := range data.Files {
 		if len(file.Groups) > 0 {
@@ -192,14 +193,14 @@ func (s *Server) handleProposals(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, tmplProposals, data)
 }
 
-func proposalViews(files []proposals.File, active map[string]string, refs map[string]sessions.SessionRef, votes map[string]proposals.Vote, tab string) []fileView {
+func proposalViews(active map[string]string, files []proposals.File, language string, refs map[string]sessions.SessionRef, tab string, votes map[string]proposals.Vote) []fileView {
 	views := make([]fileView, 0, len(files))
 	for _, file := range files {
 		view := fileView{
 			AllURL: filterURL(active, file.Kind, ""),
 			File:   file,
 			Filter: active[file.Kind],
-			Groups: groupViews(file, active, refs, votes, tab),
+			Groups: groupViews(active, file, language, refs, tab, votes),
 		}
 		view.Categories = categoryViews(file.Kind, view.Groups)
 		view.FilterRows = filterRows(&file, active, view.Filter)
@@ -395,7 +396,7 @@ func gateFilterKey(gate *proposals.Gate) string {
 	return "prose"
 }
 
-func groupViews(file proposals.File, active map[string]string, refs map[string]sessions.SessionRef, votes map[string]proposals.Vote, tab string) []groupView {
+func groupViews(active map[string]string, file proposals.File, language string, refs map[string]sessions.SessionRef, tab string, votes map[string]proposals.Vote) []groupView {
 	filter := active[file.Kind]
 	stateGroup, filterState, isStateFilter := stateFilterTarget(filter)
 
@@ -447,10 +448,10 @@ func groupViews(file proposals.File, active map[string]string, refs map[string]s
 		}
 
 		acceptedCount := counts["accepted"] + counts["applied"] + counts["building"]
-		acceptedTooltip := fmt.Sprintf("%d of %d accepted", acceptedCount, view.Total)
+		acceptedTooltip := fmt.Sprintf(translate(language, "%d of %d accepted"), acceptedCount, view.Total)
 		view.Accepted = stateNoteFor("accepted", acceptedCount, acceptedTooltip, active, file.Kind, groupIndex)
-		view.Rejected = stateNoteFor("rejected", counts["rejected"], fmt.Sprintf("%d rejected", counts["rejected"]), active, file.Kind, groupIndex)
-		view.Postponed = stateNoteFor("postponed", counts["postponed"], fmt.Sprintf("%d postponed", counts["postponed"]), active, file.Kind, groupIndex)
+		view.Rejected = stateNoteFor("rejected", counts["rejected"], fmt.Sprintf(translate(language, "%d rejected"), counts["rejected"]), active, file.Kind, groupIndex)
+		view.Postponed = stateNoteFor("postponed", counts["postponed"], fmt.Sprintf(translate(language, "%d postponed"), counts["postponed"]), active, file.Kind, groupIndex)
 
 		// The count pill mirrors what the bar contains: votable proposals
 		// on Open, notes on Notes.

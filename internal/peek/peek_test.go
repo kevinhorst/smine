@@ -61,7 +61,7 @@ func rfc3339(t time.Time) string {
 	return t.UTC().Format(time.RFC3339)
 }
 
-func TestSessionsByCwdNewestPerCwdWins(t *testing.T) {
+func TestSessionIndexNewestPerCwdWins(t *testing.T) {
 	now := time.Now()
 	stub := newStubPeek(t, []map[string]any{
 		{"id": "old", "meta": map[string]any{"cwd": "/repo"}, "title": "old", "last_active": rfc3339(now.Add(-time.Hour))},
@@ -71,13 +71,30 @@ func TestSessionsByCwdNewestPerCwdWins(t *testing.T) {
 	}, false)
 	defer stub.Close()
 
-	sessions, err := NewClient(stub.URL).SessionsByCwd(t.Context())
+	index, err := NewClient(stub.URL).SessionIndex(t.Context())
 	require.NoError(t, err)
-	require.Len(t, sessions, 1)
-	assert.Equal(t, "new", sessions["/repo"].Id)
+	require.Len(t, index.ByCwd, 1)
+	assert.Equal(t, "new", index.ByCwd["/repo"].Id)
 }
 
-func TestSessionsByCwdLiveWindowBoundary(t *testing.T) {
+func TestSessionIndexNewestPerBranchWins(t *testing.T) {
+	now := time.Now()
+	stub := newStubPeek(t, []map[string]any{
+		{"id": "old", "meta": map[string]any{"cwd": "/pool-dir", "git_branch": "claude/feature"}, "title": "old", "last_active": rfc3339(now.Add(-time.Hour))},
+		{"id": "new", "meta": map[string]any{"cwd": "/elsewhere", "git_branch": "claude/feature"}, "title": "new", "last_active": rfc3339(now.Add(-time.Minute))},
+		{"id": "detached", "meta": map[string]any{"cwd": "/detached", "git_branch": "HEAD"}, "last_active": rfc3339(now)},
+		{"id": "branchless", "meta": map[string]any{"cwd": "/branchless"}, "last_active": rfc3339(now)},
+	}, false)
+	defer stub.Close()
+
+	index, err := NewClient(stub.URL).SessionIndex(t.Context())
+	require.NoError(t, err)
+	require.Len(t, index.ByBranch, 1, "HEAD and branch-less sessions never index by branch")
+	assert.Equal(t, "new", index.ByBranch["claude/feature"].Id)
+	assert.Equal(t, "claude/feature", index.ByBranch["claude/feature"].GitBranch)
+}
+
+func TestSessionIndexLiveWindowBoundary(t *testing.T) {
 	now := time.Now()
 	stub := newStubPeek(t, []map[string]any{
 		{"id": "in", "meta": map[string]any{"cwd": "/in"}, "last_active": rfc3339(now.Add(-14 * time.Minute))},
@@ -85,10 +102,10 @@ func TestSessionsByCwdLiveWindowBoundary(t *testing.T) {
 	}, false)
 	defer stub.Close()
 
-	sessions, err := NewClient(stub.URL).SessionsByCwd(t.Context())
+	index, err := NewClient(stub.URL).SessionIndex(t.Context())
 	require.NoError(t, err)
-	assert.True(t, sessions["/in"].Live)
-	assert.False(t, sessions["/out"].Live)
+	assert.True(t, index.ByCwd["/in"].Live)
+	assert.False(t, index.ByCwd["/out"].Live)
 }
 
 func TestSessionsById(t *testing.T) {
@@ -108,29 +125,29 @@ func TestSessionsById(t *testing.T) {
 	assert.True(t, sessions["nometa"].Live)
 }
 
-func TestSessionsByCwdUnreachableEndpoint(t *testing.T) {
-	_, err := NewClient("http://127.0.0.1:1/mcp").SessionsByCwd(t.Context())
+func TestSessionIndexUnreachableEndpoint(t *testing.T) {
+	_, err := NewClient("http://127.0.0.1:1/mcp").SessionIndex(t.Context())
 	require.Error(t, err)
 }
 
-func TestSessionsByCwdToolError(t *testing.T) {
+func TestSessionIndexToolError(t *testing.T) {
 	stub := newStubPeek(t, nil, true)
 	defer stub.Close()
 
-	_, err := NewClient(stub.URL).SessionsByCwd(t.Context())
+	_, err := NewClient(stub.URL).SessionIndex(t.Context())
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "Tool returned an error")
 }
 
-func TestSessionsByCwdCleansPaths(t *testing.T) {
+func TestSessionIndexCleansPaths(t *testing.T) {
 	now := time.Now()
 	stub := newStubPeek(t, []map[string]any{
 		{"id": "s", "meta": map[string]any{"cwd": "/repo/sub/.."}, "last_active": rfc3339(now)},
 	}, false)
 	defer stub.Close()
 
-	sessions, err := NewClient(stub.URL).SessionsByCwd(t.Context())
+	index, err := NewClient(stub.URL).SessionIndex(t.Context())
 	require.NoError(t, err)
-	_, ok := sessions["/repo"]
-	assert.True(t, ok, fmt.Sprintf("keys: %v", sessions))
+	_, ok := index.ByCwd["/repo"]
+	assert.True(t, ok, fmt.Sprintf("keys: %v", index.ByCwd))
 }

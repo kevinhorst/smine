@@ -143,5 +143,21 @@ func TestManifestStub(t *testing.T) {
 		assert.Contains(t, manifest, key)
 	}
 	assert.Equal(t, "demo", manifest["skill"])
-	assert.Equal(t, filepath.Join("evals", "demo-<date>", "eval.json"), manifest["output"])
+	assert.Equal(t, filepath.Join("evals", "demo", "<date>-<hash>", "eval.json"), manifest["output"])
+}
+
+func TestLoadForSkillNestedRuns(t *testing.T) {
+	dir := t.TempDir()
+	writeEvalDir(t, dir, "demo-2026-07-01", "2026-07-01")
+	writeEvalDir(t, dir, filepath.Join("demo", "2026-07-10-abc123"), "2026-07-10")
+	writeEvalDir(t, dir, filepath.Join("demo", "2026-07-10-abc123-2"), "2026-07-10")
+	writeEvalDir(t, dir, filepath.Join("demo", "nonsense"), "2026-07-11")
+	writeEvalDir(t, dir, filepath.Join("demo", "2026-07-12"), "2026-07-12")
+
+	dirs, loadErrors := LoadForSkill(dir, "demo")
+	require.Empty(t, loadErrors)
+	require.Len(t, dirs, 3)
+	assert.Equal(t, filepath.Join("demo", "2026-07-10-abc123-2"), dirs[0].Dir)
+	assert.Equal(t, filepath.Join("demo", "2026-07-10-abc123"), dirs[1].Dir)
+	assert.Equal(t, "demo-2026-07-01", dirs[2].Dir)
 }

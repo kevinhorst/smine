@@ -11,7 +11,7 @@
   <td><input type="radio" name="rt-select" value="{{pathEscape .Routine.Name}}"
        {{if .Loaded}}data-loaded="1"{{end}}
        {{if and .Routine.ScheduleSupported (eq (len .Routine.Schedule) 1)}}{{with index .Routine.Schedule 0}}data-reschedule="1"
-       data-hour="{{intOrEmpty .Hour}}" data-minute="{{intOrEmpty .Minute}}" data-weekday="{{intOrEmpty .Weekday}}" data-day="{{intOrEmpty .Day}}"{{end}}{{end}}></td>
+       data-hour="{{intOrEmpty .Hour}}" data-minute="{{intOrEmpty .Minute}}" data-weekday="{{intOrEmpty .Weekday}}" data-day="{{intOrEmpty .Day}}"{{end}}{{else if .Routine.Unscheduled}}data-reschedule="1"{{end}}></td>
   <td>
     {{if .LoadedErr}}
     <span class="badge badge-error">state unknown</span> <span class="meta">{{.LoadedErr}}</span>
@@ -25,7 +25,7 @@
   <td>
     {{if .Routine.ScheduleSupported}}
       {{range $i, $interval := .Routine.Schedule}}{{if $i}}; {{end}}{{$interval}}{{end}}
-    {{else}}unsupported schedule{{end}}
+    {{else if .Routine.Unscheduled}}not scheduled{{else}}unsupported schedule{{end}}
   </td>
   <td class="run-cell">
     {{with .Routine.LastRun}}

@@ -47,12 +47,14 @@ func (s *Server) handleConfigSyncOp(w http.ResponseWriter, r *http.Request, reve
 		src, dst = fragment, live
 	}
 
+	expandMarkers := revert && target != catalog.TargetCodex
+
 	op := func(context.Context) (string, error) {
 		before, err := os.ReadFile(dst)
 		if err != nil && !os.IsNotExist(err) {
 			return "", fmt.Errorf("handleConfigSyncOp: Failed to read %s: %w", dst, err)
 		}
-		output, err := copyFileAtomic(src, dst)
+		output, err := copyFileAtomic(src, dst, expandMarkers)
 		if err != nil {
 			return output, err
 		}
@@ -95,7 +97,7 @@ func (s *Server) clearParkedClaudeState() error {
 // differs between the live settings and the repo fragment. A fragment load
 // error degrades to false — the sections must never 500 over the badge.
 func (s *Server) sectionOverridden(main *config.Settings, keys ...string) bool {
-	fragment, err := config.Load(s.claudeFragmentPath)
+	fragment, err := config.LoadFragment(s.claudeFragmentPath)
 	if err != nil {
 		return false
 	}
@@ -111,10 +113,13 @@ func (s *Server) sectionOverridden(main *config.Settings, keys ...string) bool {
 // copyFileAtomic replaces dst with src's content via tmp+rename; a missing
 // src is an error — the buttons are disabled when the fragment is absent,
 // so this only fires on a race.
-func copyFileAtomic(src, dst string) (string, error) {
+func copyFileAtomic(src, dst string, expandMarkers bool) (string, error) {
 	data, err := os.ReadFile(src)
 	if err != nil {
 		return "", fmt.Errorf("copyFileAtomic: Failed to read %s: %w", src, err)
+	}
+	if expandMarkers {
+		data = config.ExpandInstallMarkers(data)
 	}
 
 	tmp, err := os.CreateTemp(filepath.Dir(dst), ".config-sync-*")

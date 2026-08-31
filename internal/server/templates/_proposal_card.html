@@ -13,15 +13,15 @@
     {{end}}
     {{if .Proposal.Proposed}}<span class="meta">{{.Proposal.Proposed}}</span>{{end}}
     {{if .PendingVote}}
-      {{if eq .PendingVote "p"}}<span class="badge badge-dim">Postponed (Pending{{if .IsRevert}}, revert{{end}})</span>
-      {{else if eq .PendingVote "-"}}<span class="badge badge-action">Rejected (Pending{{if .IsRevert}}, revert{{end}})</span>
-      {{else}}<span class="badge badge-ok">Accepted (Pending)</span>{{end}}
+      {{if eq .PendingVote "p"}}<span class="badge badge-dim">{{t "Postponed"}} ({{t "Pending"}}{{if .IsRevert}}, {{t "revert"}}{{end}})</span>
+      {{else if eq .PendingVote "-"}}<span class="badge badge-action">{{t "Rejected"}} ({{t "Pending"}}{{if .IsRevert}}, {{t "revert"}}{{end}})</span>
+      {{else}}<span class="badge badge-ok">{{t "Accepted"}} ({{t "Pending"}})</span>{{end}}
       {{if .PendingDate}}<span class="meta">{{.PendingDate}}</span>{{end}}
-    {{else if .Proposal.Status}}<span class="badge badge-ok">{{.Proposal.Status}}</span>
+    {{else if .Proposal.Status}}<span class="badge badge-ok">{{t .Proposal.Status}}</span>
       {{if .Proposal.Decided}}<span class="meta">{{.Proposal.Decided}}</span>{{end}}
     {{end}}
     {{if .Proposal.AutoApplyHeld.Reason}}
-      <span class="badge badge-action">held by auto-apply</span>
+      <span class="badge badge-action">{{t "held by auto-apply"}}</span>
       <span class="meta">{{.Proposal.AutoApplyHeld.Date}} — {{.Proposal.AutoApplyHeld.Reason}}</span>
     {{end}}
   </div>
@@ -32,7 +32,7 @@
   {{end}}
   {{if and .Proposal.Id .Proposal.Status}}
   {{if .Disabled}}
-  <div class="card-row vote-disabled" title="example — voting works on the Proposals page">
+  <div class="card-row vote-disabled" title="{{t "example — voting works on the Proposals page"}}">
     <input type="text" disabled placeholder="{{t "comment (rejection reason or agent instruction)"}}">
     <button type="button" disabled>+</button>
     <button type="button" disabled>−</button>
@@ -73,7 +73,7 @@
         <td>
           <ul class="evidence-sessions">
             {{range .Links}}
-            <li>{{if .URL}}<a href="{{.URL}}" title="{{.Id}}"><code>{{slice .Id 0 8}}</code></a>{{else}}<code class="meta" title="{{.Id}}">{{slice .Id 0 8}}</code>{{end}}{{with peekSessionURL .Id}} <a class="meta" href="{{.}}" title="open in peek">peek</a>{{end}}: {{.Note}}</li>
+            <li>{{if .URL}}<a href="{{.URL}}" title="{{.Id}}"><code>{{slice .Id 0 8}}</code></a>{{else}}<code class="meta" title="{{.Id}}">{{slice .Id 0 8}}</code>{{end}}{{with peekSessionURL .Id}} <a class="meta" href="{{.}}" title="{{t "open in peek"}}">peek</a>{{end}}: {{.Note}}</li>
             {{end}}
           </ul>
           {{range .Item.Snippets}}

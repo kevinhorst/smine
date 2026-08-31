@@ -7,9 +7,10 @@
 <h2>worktrees</h2>
 {{/* Placeholder only — the fragment endpoint owns all subprocess cost so the
      shell paints instantly (D3). `load` fires once here; the swapped-in
-     fragment carries `repo-op from:body` instead, never `load` (loop). */}}
+     fragment carries `repo-op from:body` instead, never `load` (loop). A
+     plain load serves the server's last scan; Reload forces ?refresh=1. */}}
 <div id="worktree-status"
-     hx-get="/repos/{{pathEscape .Repo.Name}}/status{{.Query}}"
+     hx-get="/repos/{{pathEscape .Repo.Name}}/status"
      hx-trigger="load" hx-swap="outerHTML" hx-disinherit="*">
   <div class="empty">Loading worktree status…</div>
 </div>
@@ -73,13 +74,17 @@
   });
   // Optimistic removal (D4): hide the selected rows the moment the request
   // fires; a clean run confirms silently, error/skip fires repo-op and the
-  // fragment refresh restores the actual rows.
+  // fragment refresh restores the actual rows. The data-removed marker keeps
+  // applyFilter (afterSettle on every swap, incl. the op result) from
+  // un-hiding them; a fragment swap replaces the rows and drops the marker.
   document.addEventListener('htmx:beforeRequest', function (e) {
     var form = e.detail.elt.closest && e.detail.elt.closest('form[data-op="remove"]');
     if (!form) return;
     document.querySelectorAll('input[name="branch"]:checked').forEach(function (sel) {
       sel.checked = false;
-      sel.closest('tr').hidden = true;
+      var row = sel.closest('tr');
+      row.dataset.removed = '1';
+      row.hidden = true;
     });
     refresh();
   });
@@ -90,6 +95,40 @@
     e.target.nextElementSibling.hidden = false;
     e.target.hidden = true;
   });
+  // Client-side filter (D6): chips toggle row visibility; state lives in the
+  // URL (?base=&kind=) so deep links and fragment swaps re-apply it.
+  function applyFilter() {
+    var params = new URLSearchParams(location.search);
+    var kind = params.get('kind') || '', base = params.get('base') || '';
+    var visible = 0;
+    document.querySelectorAll('tr[data-kind]').forEach(function (row) {
+      var hide = !!row.dataset.removed ||
+                 (kind && row.dataset.kind !== kind) ||
+                 (base && row.dataset.base !== base);
+      row.hidden = hide;
+      if (!hide) visible++;
+    });
+    document.querySelectorAll('.wt-filter').forEach(function (chip) {
+      var active = (chip.dataset.group === 'kind' ? kind : base) === chip.dataset.value;
+      chip.classList.toggle('badge-ok', active);
+      chip.classList.toggle('badge-dim', !active);
+    });
+    var empty = document.getElementById('wt-filter-empty');
+    if (empty) empty.hidden = visible > 0 || !document.querySelector('tr[data-kind]');
+  }
+  document.addEventListener('click', function (e) {
+    var chip = e.target.closest && e.target.closest('.wt-filter');
+    if (!chip) return;
+    e.preventDefault();
+    var params = new URLSearchParams(location.search);
+    if (chip.dataset.value) params.set(chip.dataset.group, chip.dataset.value);
+    else params.delete(chip.dataset.group);
+    var query = params.toString();
+    history.replaceState(null, '', location.pathname + (query ? '?' + query : ''));
+    applyFilter();
+  });
+  document.addEventListener('htmx:afterSettle', applyFilter);
+  applyFilter();
 })();
 </script>
 {{template "foot" .}}

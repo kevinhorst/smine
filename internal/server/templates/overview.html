@@ -18,7 +18,7 @@
     {{end}}
     {{if .Filters}}
     <span class="tile-filter">
-      {{range .Filters}}<a class="tile-filter-link{{if .Active}} tile-filter-active{{end}}" href="{{.URL}}">{{.Label}}</a>{{end}}
+      {{range .Filters}}<a class="tile-filter-link{{if .Active}} tile-filter-active{{end}}" href="{{.URL}}">{{t .Label}}</a>{{end}}
     </span>
     {{end}}
     {{if .Detail}}<span class="tile-detail">{{t .Detail}}</span>{{end}}

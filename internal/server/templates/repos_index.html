@@ -1,12 +1,17 @@
 {{template "head" .}}
 {{template "nav" .}}
-<h1>Repos</h1>
+<h1>{{if isDeveloperAudience}}Repos{{else}}{{t "Projects"}}{{end}}</h1>
 <div class="card card-filter card-column">
   <form class="card-row" id="repo-add-form" hx-post="/repos/add" hx-target="#op-result" hx-swap="innerHTML show:none">
-    <span class="section-label">add</span>
+    <span class="section-label">{{t "add"}}</span>
     {{template "_repo_path.html" .AddPath}}
-    <button type="submit">Add</button>
+    <input type="text" name="name" maxlength="80" placeholder="{{t "name (default: folder name)"}}"
+           title="registry name — also the mining folder under sessions/; edit to resolve a name collision">
+    <input type="text" name="label" maxlength="80" placeholder="{{t "label (optional)"}}">
+    <button type="submit">{{t "Add"}}</button>
+    {{if isDeveloperAudience}}
     <label class="inline-check" title="also append the repo path to permissions.additionalDirectories in the live settings — grants every session read access and puts the repo on the smine working-repo roster"><input type="checkbox" name="additional-dir"> add to additionalDirectories</label>
+    {{end}}
   </form>
   <hr class="filter-divider">
   {{/* Own repo-op listener: the select lives outside #repo-list, so it
@@ -15,37 +20,47 @@
        hx-select="#repo-remove" hx-swap="outerHTML" hx-disinherit="*">
     {{if .RepoNames}}
     <form class="card-row" hx-post="/repos/delete" hx-target="#op-result"
-          hx-confirm="Remove the selected repo from the registry? The repository on disk is untouched.">
-      <span class="section-label">remove</span>
+          hx-confirm="{{t "Remove the selected repo from the registry? The repository on disk is untouched."}}">
+      <span class="section-label">{{t "remove"}}</span>
       {{template "_repo_select.html" .RepoNames}}
-      <button type="submit">Remove</button>
+      <button type="submit">{{t "Remove"}}</button>
     </form>
     {{end}}
   </div>
 </div>
 <div id="op-result"></div>
-<h2>repos</h2>
+<h2>{{if isDeveloperAudience}}repos{{else}}{{t "Projects"}}{{end}}</h2>
 {{/* Add/remove change the row set, so the table re-pulls itself whenever an op
      fires HX-Trigger: repo-op (mirrors repo_detail's #worktree-status). */}}
 <div id="repo-list" hx-get="/repos" hx-trigger="repo-op from:body"
      hx-select="#repo-list" hx-swap="outerHTML show:none" hx-disinherit="*">
 {{if .Rows}}
 <table class="md-body checklist-table repos-table">
+  {{if isDeveloperAudience}}
   <thead><tr><th>Name</th><th>Path</th><th>Context</th><th>ACDSL</th><th>Worktrees</th></tr></thead>
   <tbody>
     {{range .Rows}}
     <tr>
-      <td><a href="/repos/{{pathEscape .Repo.Name}}">{{nameWrap .Repo.Name}}</a></td>
+      <td><a href="/repos/{{pathEscape .Repo.Name}}">{{if .Repo.Label}}{{.Repo.Label}}{{else}}{{nameWrap .Repo.Name}}{{end}}</a></td>
       <td>{{pathWrap .Repo.Path}}</td>
       <td><span class="badge {{.Context.Class}}" title="{{.Context.Title}}">{{.Context.Label}}</span></td>
       <td><span class="badge {{.Acdsl.Class}}" title="{{.Acdsl.Title}}">{{.Acdsl.Label}}</span></td>
-      <td>{{.Worktrees}}</td>
+      <td class="wt-kinds">{{if .Worktrees}}{{range .Worktrees}}<div>{{.Label}}:{{.Count}}</div>{{end}}{{else}}0{{end}}</td>
     </tr>
     {{end}}
   </tbody>
+  {{else}}
+  <tbody>
+    {{range .Rows}}
+    <tr>
+      <td>{{if .Repo.Label}}{{.Repo.Label}}{{else}}{{nameWrap .Repo.Name}}{{end}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+  {{end}}
 </table>
 {{else}}
-<div class="empty">No repos registered.</div>
+<div class="empty">{{t "No repos registered."}}</div>
 {{end}}
 </div>
 {{template "foot" .}}

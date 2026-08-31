@@ -1,0 +1,6 @@
+{{define "_welcome_bootstrap.html"}}
+<div{{if .Running}} hx-get="/welcome/bootstrap/status" hx-trigger="every 5s" hx-swap="outerHTML"{{end}}>
+  <span class="label">{{.Detail}}</span>
+  {{if .SessionId}}<code>{{.SessionId}}</code>{{with peekSessionURL .SessionId}} <a class="meta" href="{{.}}" title="open in peek">peek</a>{{end}}{{end}}
+</div>
+{{end}}

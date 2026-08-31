@@ -8,12 +8,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/kevinhorst/smine/internal/fsx"
 	"github.com/kevinhorst/smine/internal/reach"
@@ -22,16 +24,29 @@ import (
 
 var namePattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 
+const labelMaxLength = 80
+
 type Repo struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
+	Label string `json:"label,omitempty"`
+	Name  string `json:"name"`
+	Path  string `json:"path"`
 }
 
 func (r *Repo) Validate() error {
+	// Label (display-only, never the URL segment — Name stays the key)
+	if len(r.Label) > labelMaxLength {
+		return fmt.Errorf("Repo.Validate: Invalid field Label: Longer than %d chars", labelMaxLength)
+	}
+
 	// Name (also the URL segment; add/delete/choose-folder/prune-jetbrains are
 	// shadowed for POST by the literal /repos/* routes)
 	if !namePattern.MatchString(r.Name) {
 		return fmt.Errorf("Repo.Validate: Invalid field Name: %q", r.Name)
+	}
+	// The name is also the repo's mining folder under sessions/ — the two
+	// structural folder names cannot be repo identities.
+	if r.Name == "default" || r.Name == "archived" {
+		return fmt.Errorf("Repo.Validate: Invalid field Name: %q is reserved", r.Name)
 	}
 
 	// Path
@@ -45,108 +60,49 @@ func (r *Repo) Validate() error {
 type Registry struct {
 	path string
 
-	// mu guards repos for concurrent request reads vs. Reload.
-	mu    sync.RWMutex
-	repos []Repo
+	// mu guards the loaded state below for concurrent request reads vs. reload.
+	mu            sync.RWMutex
+	loadedModTime time.Time
+	loadedSize    int64
+	repos         []Repo
 }
 
 func NewRegistry(path string) *Registry {
 	return &Registry{path: path}
 }
 
-func (r *Registry) swap(repos []Repo) {
-	r.mu.Lock()
-	r.repos = repos
-	r.mu.Unlock()
+// apply swaps in a snapshot's content and file identity. Callers hold r.mu.
+func (r *Registry) apply(snapshot *registrySnapshot) {
+	r.loadedModTime = snapshot.modTime
+	r.loadedSize = snapshot.size
+	r.repos = snapshot.repos
 }
 
-func (r *Registry) Find(name string) (*Repo, bool) {
+// refreshIfChanged reloads when the file identity (mtime+size) differs from
+// the loaded state — reads track external edits and other writers without a
+// restart. A failed re-read keeps the last good state and logs; only startup
+// fails loudly.
+func (r *Registry) refreshIfChanged() {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	for i := range r.repos {
-		if r.repos[i].Name == name {
-			repo := r.repos[i]
-			return &repo, true
-		}
-	}
-	return nil, false
-}
+	modTime, size := r.loadedModTime, r.loadedSize
+	r.mu.RUnlock()
 
-// Reload re-reads the registry file. A missing file is an empty registry
-// (bootstrapping, sessions-store pattern); an invalid entry fails the reload
-// loudly — the registry is a small user-authored file.
-func (r *Registry) Reload() error {
-	data, err := os.ReadFile(r.path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			r.swap(nil)
-			return nil
-		}
-		return fmt.Errorf("Registry.Reload: Failed to read %s: %w", r.path, err)
+	info, err := os.Stat(r.path)
+	isMissingAndUnloaded := os.IsNotExist(err) && size == 0 && modTime.IsZero()
+	if isMissingAndUnloaded {
+		return
+	}
+	if err == nil && info.ModTime().Equal(modTime) && info.Size() == size {
+		return
 	}
 
-	var file registryFile
-	if err := json.Unmarshal(data, &file); err != nil {
-		return fmt.Errorf("Registry.Reload: Failed to parse %s: %w", r.path, err)
+	if err := r.Reload(); err != nil {
+		log.Printf("Registry.refreshIfChanged: Keeping last good state: %v", err)
 	}
-
-	seen := make(map[string]bool)
-	for _, repo := range file.Repos {
-		if err := repo.Validate(); err != nil {
-			return fmt.Errorf("Registry.Reload: %w", err)
-		}
-		if seen[repo.Name] {
-			return fmt.Errorf("Registry.Reload: Duplicate repo name %s", repo.Name)
-		}
-		seen[repo.Name] = true
-	}
-
-	r.swap(file.Repos)
-	return nil
-}
-
-// Add validates the repo, rejects duplicate names, persists the extended
-// registry, and only then swaps it in — a failed save changes nothing.
-func (r *Registry) Add(repo Repo) error {
-	if err := repo.Validate(); err != nil {
-		return fmt.Errorf("Registry.Add: %w", err)
-	}
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	for i := range r.repos {
-		if r.repos[i].Name == repo.Name {
-			return fmt.Errorf("Registry.Add: Duplicate repo name %s", repo.Name)
-		}
-	}
-
-	repos := append(slices.Clone(r.repos), repo)
-	if err := r.save(repos); err != nil {
-		return fmt.Errorf("Registry.Add: %w", err)
-	}
-	r.repos = repos
-	return nil
-}
-
-// Remove deletes the named repo, persists, and swaps in on success.
-func (r *Registry) Remove(name string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	index := slices.IndexFunc(r.repos, func(repo Repo) bool { return repo.Name == name })
-	if index < 0 {
-		return fmt.Errorf("Registry.Remove: Unknown repo name %s", name)
-	}
-
-	repos := slices.Delete(slices.Clone(r.repos), index, index+1)
-	if err := r.save(repos); err != nil {
-		return fmt.Errorf("Registry.Remove: %w", err)
-	}
-	r.repos = repos
-	return nil
 }
 
 // save writes the registry file atomically (tmp + rename, config.Save
-// pattern). Callers hold r.mu.
+// pattern) and records the written state + file identity. Callers hold r.mu.
 func (r *Registry) save(repos []Repo) error {
 	data, err := json.MarshalIndent(registryFile{Repos: repos}, "", "  ")
 	if err != nil {
@@ -162,15 +118,142 @@ func (r *Registry) save(repos []Repo) error {
 		os.Remove(tmp)
 		return fmt.Errorf("save: %w", err)
 	}
+
+	info, err := os.Stat(r.path)
+	if err != nil {
+		return fmt.Errorf("save: Failed to stat after write: %w", err)
+	}
+	r.apply(&registrySnapshot{modTime: info.ModTime(), repos: repos, size: info.Size()})
+	return nil
+}
+
+// Add validates the repo, rejects duplicate names, and persists — against a
+// fresh read of the file, so a stale in-memory slice is never written back.
+func (r *Registry) Add(repo Repo) error {
+	if err := repo.Validate(); err != nil {
+		return fmt.Errorf("Registry.Add: %w", err)
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	snapshot, err := readRegistrySnapshot(r.path)
+	if err != nil {
+		return fmt.Errorf("Registry.Add: %w", err)
+	}
+	for i := range snapshot.repos {
+		if snapshot.repos[i].Name == repo.Name {
+			return fmt.Errorf("Registry.Add: Duplicate repo name %s", repo.Name)
+		}
+	}
+
+	repos := append(snapshot.repos, repo)
+	if err := r.save(repos); err != nil {
+		return fmt.Errorf("Registry.Add: %w", err)
+	}
+	return nil
+}
+
+func (r *Registry) Find(name string) (*Repo, bool) {
+	r.refreshIfChanged()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for i := range r.repos {
+		if r.repos[i].Name == name {
+			repo := r.repos[i]
+			return &repo, true
+		}
+	}
+	return nil, false
+}
+
+// Reload re-reads the registry file and swaps it in.
+func (r *Registry) Reload() error {
+	snapshot, err := readRegistrySnapshot(r.path)
+	if err != nil {
+		return fmt.Errorf("Registry.Reload: %w", err)
+	}
+
+	r.mu.Lock()
+	r.apply(snapshot)
+	r.mu.Unlock()
+	return nil
+}
+
+// Remove deletes the named repo and persists — like Add, against a fresh
+// read of the file.
+func (r *Registry) Remove(name string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	snapshot, err := readRegistrySnapshot(r.path)
+	if err != nil {
+		return fmt.Errorf("Registry.Remove: %w", err)
+	}
+	index := slices.IndexFunc(snapshot.repos, func(repo Repo) bool { return repo.Name == name })
+	if index < 0 {
+		return fmt.Errorf("Registry.Remove: Unknown repo name %s", name)
+	}
+
+	repos := slices.Delete(snapshot.repos, index, index+1)
+	if err := r.save(repos); err != nil {
+		return fmt.Errorf("Registry.Remove: %w", err)
+	}
 	return nil
 }
 
 func (r *Registry) Repos() []Repo {
+	r.refreshIfChanged()
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	repos := make([]Repo, len(r.repos))
 	copy(repos, r.repos)
 	return repos
+}
+
+// registrySnapshot is one parsed read of the registry file plus the file
+// identity (mtime+size) it was read at; the zero value is a missing file.
+type registrySnapshot struct {
+	modTime time.Time
+	repos   []Repo
+	size    int64
+}
+
+// readRegistrySnapshot reads and validates the registry file. A missing file
+// is an empty registry (bootstrapping, sessions-store pattern); an invalid
+// entry fails the read loudly — the registry is a small user-authored file.
+// Stat runs BEFORE the read, so a write racing the read is re-detected on
+// the next stat rather than missed.
+func readRegistrySnapshot(path string) (*registrySnapshot, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &registrySnapshot{}, nil
+		}
+		return nil, fmt.Errorf("readRegistrySnapshot: Failed to stat %s: %w", path, err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("readRegistrySnapshot: Failed to read %s: %w", path, err)
+	}
+
+	var file registryFile
+	if err := json.Unmarshal(data, &file); err != nil {
+		return nil, fmt.Errorf("readRegistrySnapshot: Failed to parse %s: %w", path, err)
+	}
+
+	seen := make(map[string]bool)
+	for _, repo := range file.Repos {
+		if err := repo.Validate(); err != nil {
+			return nil, fmt.Errorf("readRegistrySnapshot: %w", err)
+		}
+		if seen[repo.Name] {
+			return nil, fmt.Errorf("readRegistrySnapshot: Duplicate repo name %s", repo.Name)
+		}
+		seen[repo.Name] = true
+	}
+
+	snapshot := &registrySnapshot{modTime: info.ModTime(), repos: file.Repos, size: info.Size()}
+	return snapshot, nil
 }
 
 type registryFile struct {
@@ -348,7 +431,7 @@ func readContextIndex(path string) (*contextIndex, error) {
 // subdirs owning a .git entry. Hollow pool dirs (no .git) and the pool-guard
 // decoy (.git file at the pool root) never count. Stat-cheap — the overview
 // tile relies on that (no git execution there, D3/D8); the repos page uses
-// CountWorktrees for branch-kind counts instead.
+// WorktreeCounts for branch-kind counts instead.
 func CountPoolWorktrees(repoPath string) int {
 	pool := filepath.Join(repoPath, ".claude", "worktrees")
 	entries, err := os.ReadDir(pool)
@@ -367,27 +450,59 @@ func CountPoolWorktrees(repoPath string) int {
 	return count
 }
 
-// CountWorktrees counts the repo's checked-out agent worktrees whose branch
-// sits under one of the given prefixes (claude/, claude-routines/), read from
-// git worktree list — routine worktrees live outside the repo, so a
-// pool-directory scan cannot see them. Errors degrade to 0.
-func CountWorktrees(ctx context.Context, repoPath string, branchPrefixes []string) int {
+// Fingerprint captures the state the worktree status table derives from:
+// agent branch tips plus the checked-out worktree set. Two fast git reads —
+// the status cache serves its entry only while this matches; dirty counts
+// are invisible to it (accepted staleness, Reload covers them).
+func Fingerprint(ctx context.Context, repoPath string) (string, error) {
+	refs, err := shell.Run(ctx, repoPath, "git", "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/claude/", "refs/heads/claude-routines/")
+	if err != nil {
+		return "", fmt.Errorf("Fingerprint: %s: %w", strings.TrimSpace(refs), err)
+	}
+
+	worktrees, err := shell.Run(ctx, repoPath, "git", "worktree", "list", "--porcelain")
+	if err != nil {
+		return "", fmt.Errorf("Fingerprint: %s: %w", strings.TrimSpace(worktrees), err)
+	}
+	return refs + "\n" + worktrees, nil
+}
+
+// WorktreeKindCount is one branch-prefix bucket of a repo's agent worktrees
+// (label = prefix minus the trailing slash: "claude", "claude-routines").
+type WorktreeKindCount struct {
+	Count int
+	Label string
+}
+
+// WorktreeCounts counts the repo's checked-out agent worktrees per branch
+// prefix (claude/, claude-routines/), read from git worktree list — routine
+// worktrees live outside the repo, so a pool-directory scan cannot see them.
+// Zero-count prefixes are omitted; errors degrade to nil.
+func WorktreeCounts(ctx context.Context, repoPath string, branchPrefixes []string) []WorktreeKindCount {
 	output, err := shell.Run(ctx, repoPath, "git", "worktree", "list", "--porcelain")
 	if err != nil {
-		return 0
+		return nil
 	}
-	count := 0
+	counts := make([]int, len(branchPrefixes))
 	for _, line := range strings.Split(output, "\n") {
 		branch, isBranchLine := strings.CutPrefix(line, "branch refs/heads/")
 		if !isBranchLine {
 			continue
 		}
-		for _, prefix := range branchPrefixes {
+		for index, prefix := range branchPrefixes {
 			if strings.HasPrefix(branch, prefix) {
-				count++
+				counts[index]++
 				break
 			}
 		}
 	}
-	return count
+	var result []WorktreeKindCount
+	for index, prefix := range branchPrefixes {
+		if counts[index] == 0 {
+			continue
+		}
+		bucket := WorktreeKindCount{Count: counts[index], Label: strings.TrimSuffix(prefix, "/")}
+		result = append(result, bucket)
+	}
+	return result
 }

@@ -1,0 +1,55 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{t "Profile"}}</h1>
+
+<div class="card">
+  <h2>{{t "Who this machine talks to"}}</h2>
+  <form method="post" action="/profile">
+    <label>{{t "Audience"}}
+      <select name="audience">
+        <option value="" {{if not .Audience}}selected{{end}}>{{t "Developer"}}</option>
+        <option value="casual" {{if eq .Audience "casual"}}selected{{end}}>{{t "Casual"}}</option>
+        <option disabled>{{t "Business (later)"}}</option>
+      </select>
+    </label>
+    <label>{{t "Language"}}
+      <select name="language">
+        <option value="en" {{if ne .Language "de"}}selected{{end}}>English</option>
+        <option value="de" {{if eq .Language "de"}}selected{{end}}>Deutsch</option>
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" name="dev_mode" {{if .DevMode}}checked{{end}} {{if eq .Audience "casual"}}disabled{{end}}>
+      {{t "Dev mode — include smine and routine sessions in mining"}}
+    </label>
+    <button type="submit">{{t "Save"}}</button>
+  </form>
+  <p class="meta">{{.ProfilePath}}</p>
+</div>
+
+<div class="card">
+  <h2>{{t "Style"}}</h2>
+  <p class="meta">{{t "How the assistant writes to you — learned from your sessions during bootstrap. A style mining re-run overwrites manual edits."}}</p>
+  {{if .StyleError}}
+  <div class="card card-error"><span class="label">{{.StyleError}}</span></div>
+  {{end}}
+  <form class="configure-form" method="post" action="/profile/style">
+    <textarea name="style_content" rows="24">{{.StyleContent}}</textarea>
+    <div class="card-row">
+      <button type="submit">{{t "Save"}}</button>
+    </div>
+  </form>
+  <p class="meta">{{.StylePath}}</p>
+</div>
+
+<div class="card">
+  <h2>{{t "Test"}}</h2>
+  <div class="check-row">
+    <span class="check-detail">{{t "Sends one sample question to the assistant with the current profile and shows the answer."}}</span>
+    <button class="verify-button" hx-post="/profile/test" hx-target="#profile-test-result" hx-swap="innerHTML"
+            hx-disabled-elt="this"
+            hx-confirm="{{t "Runs one paid claude call with the current profile. Continue?"}}">{{t "Test"}}</button>
+  </div>
+  <div id="profile-test-result"></div>
+</div>
+{{template "foot" .}}

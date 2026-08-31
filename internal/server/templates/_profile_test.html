@@ -1,0 +1,7 @@
+{{define "_profile_test.html"}}
+<div class="check-row verify-result">
+  {{if .Ok}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">failed</span>{{end}}
+  <span class="check-detail">{{if .Ok}}{{.Answer}}{{else}}{{.Detail}}{{end}}</span>
+</div>
+<p class="meta">{{.Model}} · {{.Token}}</p>
+{{end}}

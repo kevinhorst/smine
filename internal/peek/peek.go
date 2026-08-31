@@ -83,10 +83,13 @@ func (c *Client) listSessions(ctx context.Context, mcpClient *mcpclient.Client) 
 	return listResult.Sessions, nil
 }
 
-// SessionsByCwd returns the most recently active claude session per working
-// directory — one session_list call, cwd nested in each item's meta since
-// peek-mcp v1.0.5. Sessions without a cwd (no turn meta yet) are skipped.
-func (c *Client) SessionsByCwd(ctx context.Context) (map[string]Session, error) {
+// SessionIndex returns the most recently active claude session per working
+// directory and per git branch — one session_list call, cwd and git_branch
+// nested in each item's meta since peek-mcp v1.0.5. Sessions without a cwd
+// (no turn meta yet) are skipped from ByCwd; detached-HEAD sessions are
+// skipped from ByBranch. Both maps exist so pool-recycled worktree dirs can
+// be attributed by branch identity instead of the dir's previous occupant.
+func (c *Client) SessionIndex(ctx context.Context) (*SessionIndex, error) {
 	mcpClient, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
@@ -98,26 +101,30 @@ func (c *Client) SessionsByCwd(ctx context.Context) (map[string]Session, error) 
 		return nil, err
 	}
 
-	byCwd := make(map[string]Session)
+	index := &SessionIndex{
+		ByBranch: make(map[string]Session),
+		ByCwd:    make(map[string]Session),
+	}
 	for _, item := range items {
-		if item.Meta.Cwd == "" {
-			continue
-		}
-
-		cwd := filepath.Clean(item.Meta.Cwd)
 		candidate := Session{
 			Id:         item.Id,
-			Cwd:        cwd,
+			Cwd:        item.Meta.Cwd,
+			GitBranch:  item.Meta.GitBranch,
 			LastActive: item.LastActive,
 			Live:       time.Since(item.LastActive) <= LiveWindow,
 			Title:      item.Title,
 		}
-		known, ok := byCwd[cwd]
-		if !ok || candidate.LastActive.After(known.LastActive) {
-			byCwd[cwd] = candidate
+		if candidate.Cwd != "" {
+			candidate.Cwd = filepath.Clean(candidate.Cwd)
+			keepNewest(index.ByCwd, candidate.Cwd, candidate)
+		}
+
+		isRealBranch := candidate.GitBranch != "" && candidate.GitBranch != "HEAD"
+		if isRealBranch {
+			keepNewest(index.ByBranch, candidate.GitBranch, candidate)
 		}
 	}
-	return byCwd, nil
+	return index, nil
 }
 
 func (c *Client) SessionsById(ctx context.Context) (map[string]Session, error) {
@@ -152,21 +159,39 @@ type listItem struct {
 	Title      string    `json:"title"`
 }
 
-// listMeta models the one session-meta field the client consumes; the server
-// sends more (session_id, git_branch, model, origin), all ignored.
+// listMeta models the session-meta fields the client consumes; the server
+// sends more (session_id, model, origin), all ignored.
 type listMeta struct {
-	Cwd string `json:"cwd"`
+	Cwd       string `json:"cwd"`
+	GitBranch string `json:"git_branch"`
 }
 
 type Session struct {
 	Id string
 
 	Cwd        string
+	GitBranch  string
 	LastActive time.Time
 	Live       bool
 	Title      string
 }
 
+// SessionIndex holds the newest-session projections one session_list call
+// yields: per working directory and per checked-out git branch.
+type SessionIndex struct {
+	ByBranch map[string]Session
+	ByCwd    map[string]Session
+}
+
 type sessionListResult struct {
 	Sessions []listItem `json:"sessions"`
+}
+
+// keepNewest stores candidate under key unless a more recently active
+// session already occupies it.
+func keepNewest(sessions map[string]Session, key string, candidate Session) {
+	known, ok := sessions[key]
+	if !ok || candidate.LastActive.After(known.LastActive) {
+		sessions[key] = candidate
+	}
 }

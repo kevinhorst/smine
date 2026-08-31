@@ -7,7 +7,7 @@ import (
 	"log"
 	"maps"
 	"net/http"
-	"net/url"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -18,6 +18,7 @@ import (
 	"github.com/kevinhorst/smine/internal/peek"
 	"github.com/kevinhorst/smine/internal/repos"
 	"github.com/kevinhorst/smine/internal/server/respond"
+	"github.com/kevinhorst/smine/internal/shell"
 )
 
 const (
@@ -74,46 +75,28 @@ func formatTimings(timings []stepTiming) string {
 
 type repoDetailPage struct {
 	Page  string
-	Query string
 	Repo  repos.Repo
 	Title string
 }
 
 // worktreeFilter is one chip of the worktree-table filters (kind or base);
-// Query carries both active params so the groups compose.
+// filtering is client-side — the chip carries its group value as a data
+// attribute and the detail page's JS owns the active state.
 type worktreeFilter struct {
-	Active bool
-	Label  string
-	Query  string
-}
-
-// worktreeFilterQuery renders the combined ?base=&kind= query, empty params
-// omitted, "" when nothing is filtered.
-func worktreeFilterQuery(base, kind string) string {
-	values := url.Values{}
-	if base != "" {
-		values.Set("base", base)
-	}
-	if kind != "" {
-		values.Set("kind", kind)
-	}
-	if len(values) == 0 {
-		return ""
-	}
-	return "?" + values.Encode()
+	Label string
+	Value string
 }
 
 // worktreeStatusPage feeds the #worktree-status fragment — everything the
 // status table needs, decoupled from the instant page shell (D3).
 type worktreeStatusPage struct {
-	Base              string
 	BaseFilters       []worktreeFilter
+	Cached            bool
 	Checkout          *repos.CheckoutStatus
 	CheckoutErr       string
-	Kind              string
 	KindFilters       []worktreeFilter
-	Query             string
 	Repo              repos.Repo
+	ScannedAt         time.Time
 	Sessions          map[string]peek.Session
 	SessionsErr       string
 	SessionsErrDetail string
@@ -177,7 +160,7 @@ type repoRow struct {
 	Acdsl     contextBadge
 	Context   contextBadge
 	Repo      repos.Repo
-	Worktrees int
+	Worktrees []repos.WorktreeKindCount
 }
 
 type reposIndexPage struct {
@@ -190,6 +173,31 @@ type reposIndexPage struct {
 
 // rootCause unwraps to the innermost error — the actionable fact of a wrapped
 // chain (e.g. "connection refused"); the full chain stays in the tooltip.
+// worktreeSessions attributes a session to each worktree row: the newest
+// session on the worktree's checked-out branch wins over the newest session
+// whose cwd is the directory — a pool-recycled dir otherwise shows its
+// previous occupant. The cwd fallback keeps detached-HEAD worktrees covered.
+func worktreeSessions(statuses []repos.WorktreeStatus, index *peek.SessionIndex) map[string]peek.Session {
+	if index == nil {
+		return nil
+	}
+
+	sessions := make(map[string]peek.Session)
+	for _, status := range statuses {
+		if status.Worktree == "" {
+			continue
+		}
+		if session, ok := index.ByBranch[status.Branch]; ok {
+			sessions[status.Worktree] = session
+			continue
+		}
+		if session, ok := index.ByCwd[status.Worktree]; ok {
+			sessions[status.Worktree] = session
+		}
+	}
+	return sessions
+}
+
 func rootCause(err error) error {
 	for {
 		next := errors.Unwrap(err)
@@ -293,7 +301,6 @@ func (s *Server) handleRepoDetail(w http.ResponseWriter, r *http.Request) {
 
 	data := repoDetailPage{
 		Page:  pageRepos,
-		Query: worktreeFilterQuery(r.URL.Query().Get("base"), r.URL.Query().Get("kind")),
 		Repo:  *repo,
 		Title: "Repo — " + repo.Name,
 	}
@@ -309,12 +316,8 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	data := worktreeStatusPage{
-		Base: r.URL.Query().Get("base"),
-		Kind: r.URL.Query().Get("kind"),
-		Repo: *repo,
-	}
-	data.Query = worktreeFilterQuery(data.Base, data.Kind)
+	data := worktreeStatusPage{Repo: *repo}
+	refresh := r.URL.Query().Get("refresh") == "1"
 
 	// Checkout and peek run concurrently with the dominant status script —
 	// sum becomes max, and a peek timeout no longer stacks on top (D7). Each
@@ -324,7 +327,7 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 	var checkout *repos.CheckoutStatus
 	var checkoutErr error
 	var checkoutMs int64
-	var sessions map[string]peek.Session
+	var sessionIndex *peek.SessionIndex
 	var sessionsErr error
 	var sessionsMs int64
 	wg.Add(2)
@@ -337,14 +340,32 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 	go func() {
 		defer wg.Done()
 		start := time.Now()
-		sessions, sessionsErr = s.peekClient.SessionsByCwd(r.Context())
+		sessionIndex, sessionsErr = s.peekClient.SessionIndex(r.Context())
 		sessionsMs = time.Since(start).Milliseconds()
 	}()
 
+	// A plain load serves the last scan only while the fingerprint (branch
+	// tips + worktree set) still matches it; any structural change — and
+	// ?refresh=1 (Reload button, repo-op re-pull) — re-scans, so mutations
+	// and new worktrees never linger or hide. A fingerprint error counts as
+	// changed: degrade to a fresh scan, never to stale rows.
+	var statuses []repos.WorktreeStatus
+	var err error
 	start := time.Now()
-	statuses, err := repos.Status(r.Context(), repo.Path, s.worktreeScripts)
+	fingerprint, fingerprintErr := repos.Fingerprint(r.Context(), repo.Path)
+	entry, cached := s.statusCache.Get(repo.Name)
+	data.Cached = cached && !refresh && fingerprintErr == nil && fingerprint == entry.Fingerprint
+	if data.Cached {
+		statuses = entry.Statuses
+	} else {
+		statuses, err = repos.Status(r.Context(), repo.Path, s.worktreeScripts)
+		if err == nil {
+			entry = s.statusCache.Store(repo.Name, fingerprint, statuses)
+		}
+	}
 	statusMs := time.Since(start).Milliseconds()
 	wg.Wait()
+	data.ScannedAt = entry.ScannedAt
 
 	data.Timings = []stepTiming{
 		{Ms: statusMs, Step: "status"},
@@ -364,34 +385,26 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 		data.SessionsErr = fmt.Sprintf("%s at %s", rootCause(sessionsErr), s.peekClient.Endpoint())
 		data.SessionsErrDetail = sessionsErr.Error()
 	}
-	data.Sessions = sessions
+	data.Sessions = worktreeSessions(statuses, sessionIndex)
 
-	// Filter values come from the unfiltered list so an active filter still
-	// offers every other target (mirrors the sessions dimension filter).
-	// Chips are the distinct base branches; "unknown" is a sentinel, not a base.
+	// Chips are the distinct base branches from the full list ("unknown" is a
+	// sentinel, not a base). Filtering itself is client-side — every row is
+	// rendered with data attributes and the detail page's JS owns visibility.
 	values := make(map[string]bool)
 	for _, status := range statuses {
 		if status.From != "unknown" {
 			values[status.From] = true
 		}
-		matchesBase := data.Base == "" || status.From == data.Base
-		matchesKind := data.Kind == "" || strings.HasPrefix(status.Branch, data.Kind+"/")
-		if matchesBase && matchesKind {
-			data.Statuses = append(data.Statuses, status)
-		}
 	}
+	data.Statuses = statuses
 	// Kind chips separate claude/* session worktrees from claude-routines/*
-	// routine lineages; each chip keeps the other group's active filter.
+	// routine lineages.
 	for _, kind := range []string{"", "claude", "claude-routines"} {
 		label := kind
 		if label == "" {
 			label = "all"
 		}
-		chip := worktreeFilter{
-			Active: kind == data.Kind,
-			Label:  label,
-			Query:  worktreeFilterQuery(data.Base, kind),
-		}
+		chip := worktreeFilter{Label: label, Value: kind}
 		data.KindFilters = append(data.KindFilters, chip)
 	}
 	for _, base := range append([]string{""}, slices.Sorted(maps.Keys(values))...) {
@@ -399,15 +412,11 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 		if label == "" {
 			label = "all"
 		}
-		chip := worktreeFilter{
-			Active: base == data.Base,
-			Label:  label,
-			Query:  worktreeFilterQuery(base, data.Kind),
-		}
+		chip := worktreeFilter{Label: label, Value: base}
 		data.BaseFilters = append(data.BaseFilters, chip)
 	}
 
-	log.Printf("timing: repo=%s %s rows=%d", repo.Name, formatTimings(data.Timings), len(statuses))
+	log.Printf("timing: repo=%s %s rows=%d cached=%t", repo.Name, formatTimings(data.Timings), len(statuses), data.Cached)
 	s.renderFragment(w, tmplWorktreeStatus, data)
 }
 
@@ -420,21 +429,6 @@ func (s *Server) handleRepoMerge(w http.ResponseWriter, r *http.Request) {
 	branch := r.PathValue("branch")
 	op := func(ctx context.Context) (string, error) {
 		return repos.Merge(ctx, branch, repo.Path, s.worktreeScripts)
-	}
-	s.runRepoOp(repo.Name, "repo-op", op, w, r)
-}
-
-func (s *Server) handleRepoRemove(w http.ResponseWriter, r *http.Request) {
-	repo := s.findRepo(w, r)
-	if repo == nil {
-		return
-	}
-
-	branch := r.PathValue("branch")
-	force := r.FormValue("force") == "on"
-	deleteBranch := r.FormValue("delete-branch") == "on"
-	op := func(ctx context.Context) (string, error) {
-		return repos.Remove(ctx, branch, force, deleteBranch, repo.Path, s.worktreeScripts)
 	}
 	s.runRepoOp(repo.Name, "repo-op", op, w, r)
 }
@@ -513,6 +507,10 @@ func (s *Server) handleRepoRemoveSelected(w http.ResponseWriter, r *http.Request
 	}
 	if opErr != nil || removalNeedsRefresh(output) {
 		w.Header().Set("HX-Trigger", "repo-op")
+	} else {
+		// Clean run: the optimistic UI keeps the rows hidden and no re-scan
+		// fires — drop them from the cache so plain loads agree.
+		s.statusCache.DropBranches(repo.Name, branches)
 	}
 	s.renderFragment(w, tmplOpResult, result)
 }
@@ -531,12 +529,16 @@ func (s *Server) handleRepoSync(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleReposIndex(w http.ResponseWriter, r *http.Request) {
-	data := reposIndexPage{Page: pageRepos, Title: "Repos"}
+	title := "Repos"
+	if !s.presentation.isDeveloperAudience() {
+		title = translate(s.presentation.language(), "Projects")
+	}
+	data := reposIndexPage{Page: pageRepos, Title: title}
 	branchPrefixes := []string{"claude/", "claude-routines/"}
 	sourceIndexPath := filepath.Join(s.contextDir, repos.ContextFileName)
 	for _, repo := range s.repoRegistry.Repos() {
 		data.RepoNames = append(data.RepoNames, repo.Name)
-		worktrees := repos.CountWorktrees(r.Context(), repo.Path, branchPrefixes)
+		worktrees := repos.WorktreeCounts(r.Context(), repo.Path, branchPrefixes)
 		presence := repos.DetectContext(repo.Path)
 		coverage, coverageErr := repos.DetectContextCoverage(sourceIndexPath, repo.Name, repo.Path, presence)
 		row := repoRow{
@@ -559,9 +561,32 @@ func (s *Server) handleReposAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Clean strips the picker's trailing slash so Base is the folder name.
 	path = filepath.Clean(path)
-	grantAccess := r.FormValue("additional-dir") == "on"
-	repo := repos.Repo{Name: filepath.Base(path), Path: path}
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		name = filepath.Base(path)
+	}
+	// Casual installs always grant: the mining roster derives from
+	// additionalDirectories, so an unmined project must not be registrable (C6).
+	grantAccess := r.FormValue("additional-dir") == "on" || !s.presentation.isDeveloperAudience()
+	label := strings.TrimSpace(r.FormValue("label"))
+	repo := repos.Repo{Label: label, Name: name, Path: path}
+	// Validate before the op: its git init must never fire for a repo the
+	// registry would reject anyway (reserved or malformed name).
+	if err := repo.Validate(); err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
 	op := func(ctx context.Context) (string, error) {
+		// A project the roster can't mine is a dead registration — an existing
+		// folder without a repo gets a local one (no remote, C19); a missing
+		// path keeps the registry's own error behavior.
+		if info, statErr := os.Stat(path); statErr == nil && info.IsDir() {
+			if _, gitErr := os.Stat(filepath.Join(path, ".git")); gitErr != nil {
+				if output, err := shell.Run(ctx, path, "git", "init", "-b", "main"); err != nil {
+					return "", fmt.Errorf("handleReposAdd: git init failed: %w\n%s", err, output)
+				}
+			}
+		}
 		if err := s.repoRegistry.Add(repo); err != nil {
 			return "", err
 		}
@@ -593,6 +618,7 @@ func (s *Server) handleReposDelete(w http.ResponseWriter, r *http.Request) {
 		if err := s.repoRegistry.Remove(name); err != nil {
 			return "", err
 		}
+		s.statusCache.Delete(name)
 		return "removed " + name, nil
 	}
 	s.runRepoOp(registryLockKey, "repo-op", op, w, r)

@@ -16,6 +16,10 @@ import (
 // is the ceiling (concept limit).
 const Timeout = 60 * time.Second
 
+// SyncTimeout bounds the sync scripts — sync_skills spawns hundreds of
+// processes under Windows Git Bash; the 60s Run ceiling killed cold installs.
+const SyncTimeout = 10 * time.Minute
+
 // Run executes name with args in dir (empty dir = inherit cwd). The combined
 // stdout+stderr is returned even when the command fails, so callers can
 // render script output alongside the error.
@@ -36,6 +40,27 @@ func Run(ctx context.Context, dir, name string, args ...string) (string, error) 
 	log.Printf("shell: %s dur=%dms err=%v", filepath.Base(name), time.Since(start).Milliseconds(), err != nil)
 	if err != nil {
 		return string(output), fmt.Errorf("Run: %s in %s: %w", name, dir, err)
+	}
+
+	return string(output), nil
+}
+
+// RunSync is Run with the sync-script deadline; sync_* scripts and
+// ensure_git_repo.sh are the only sanctioned callers.
+func RunSync(ctx context.Context, dir, name string, args ...string) (string, error) {
+	runCtx, cancel := context.WithTimeout(ctx, SyncTimeout)
+	defer cancel()
+
+	name, args = platformArgv(name, args)
+	cmd := exec.CommandContext(runCtx, name, args...)
+	cmd.Dir = dir
+	HideWindow(cmd)
+	cmd.WaitDelay = time.Second
+	start := time.Now()
+	output, err := cmd.CombinedOutput()
+	log.Printf("shell: %s dur=%dms err=%v", filepath.Base(name), time.Since(start).Milliseconds(), err != nil)
+	if err != nil {
+		return string(output), fmt.Errorf("RunSync: %s in %s: %w", name, dir, err)
 	}
 
 	return string(output), nil

@@ -2,9 +2,12 @@
 {{template "nav" .}}
 <h1>{{t "Sessions"}}</h1>
 {{if not .Scope}}
+<div class="tabs">
+  <a href="/sessions/archive">{{t "archive"}}</a>
+</div>
 <div class="empty">
   {{t "No session data found."}}{{if isDeveloperAudience}} Generate batch JSONs with the /smine or /smine-batch skill
-  (sessions/&lt;scope&gt;/json/*.json).{{end}}
+  (sessions/&lt;folder&gt;/json/*.json).{{end}}
 </div>
 {{else}}
 <div class="tabs">
@@ -12,16 +15,15 @@
   {{range .ScopeNames}}
   <a href="/sessions/{{.}}" {{if eq . $active}}class="active"{{end}}>{{.}}</a>
   {{end}}
+  <a href="/sessions/archive">{{t "archive"}}</a>
 </div>
-<form hx-post="/sessions/reload" hx-target="#op-result" class="reload-form">
-  <button type="submit" class="small">{{t "Reload from disk"}}</button>
+<form class="reload-form" hx-post="/sessions/{{pathEscape .Scope.Name}}/archive" hx-target="#op-result"
+      hx-confirm="{{t "Archive this folder? Its analyses disappear from this page; nothing is re-mined."}}">
+  <button type="submit" class="small">{{t "Archive folder"}}</button>
 </form>
 <div id="op-result"></div>
-{{/* Reload changes the batch set, so the list re-pulls itself when the
-     reload op fires HX-Trigger: sessions-reload. */}}
 <h2>{{t "batches"}}</h2>
-<div id="batch-list-wrap" hx-get="/sessions/{{.Scope.Name}}" hx-trigger="sessions-reload from:body"
-     hx-select="#batch-list-wrap" hx-swap="outerHTML" hx-disinherit="*">
+<div id="batch-list-wrap">
 {{template "_batch_list.html" .}}
 </div>
 {{end}}

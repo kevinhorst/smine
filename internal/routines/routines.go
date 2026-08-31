@@ -94,6 +94,7 @@ func (i *CalendarInterval) toDict() map[string]int {
 }
 
 type Routine struct {
+	DefaultDisabled   bool
 	Dir               string
 	Env               map[string]string
 	Label             string
@@ -105,19 +106,31 @@ type Routine struct {
 	ResultsPath       string
 	Schedule          []CalendarInterval
 	ScheduleSupported bool
+	Unscheduled       bool // no StartCalendarInterval and no other trigger — schedulable, not yet scheduled
 	WrapperPath       string
 }
 
 type RunResult struct {
 	ExitStatus   int     `json:"exit_status"`
 	NumTurns     int     `json:"num_turns"`
+	Result       string  `json:"result"`
 	SessionId    string  `json:"session_id"`
+	Subtype      string  `json:"subtype"`
 	Timestamp    string  `json:"timestamp"`
 	TotalCostUsd float64 `json:"total_cost_usd"`
 }
 
+// IsRunning reports a start marker row — a run in progress when it is the
+// newest line; History drops superseded ones.
+func (r *RunResult) IsRunning() bool {
+	return r.Subtype == "started"
+}
+
 // History returns up to limit results from results.jsonl, newest first.
 // Malformed lines are skipped — a broken line never hides the readable rest.
+// A "started" marker row is kept only as the newest line (a live run); any
+// newer line supersedes it — finished and crashed runs alike leave no
+// permanent RUNNING row.
 func History(resultsPath string, limit int) ([]RunResult, error) {
 	data, err := os.ReadFile(resultsPath)
 	if err != nil {
@@ -138,6 +151,15 @@ func History(resultsPath string, limit int) ([]RunResult, error) {
 		}
 		results = append(results, result)
 	}
+
+	var kept []RunResult
+	for index, result := range results {
+		if result.IsRunning() && index != len(results)-1 {
+			continue
+		}
+		kept = append(kept, result)
+	}
+	results = kept
 
 	// Newest first; the file appends chronologically.
 	for left, right := 0, len(results)-1; left < right; left, right = left+1, right-1 {
@@ -194,6 +216,10 @@ func lastResult(resultsPath string) (*RunResult, error) {
 func load(routineDir, name string) Routine {
 	routine := Routine{Dir: routineDir, Name: name, ResultsPath: filepath.Join(routineDir, "results.jsonl")}
 
+	if _, err := os.Stat(filepath.Join(routineDir, "default-disabled")); err == nil {
+		routine.DefaultDisabled = true
+	}
+
 	wrapper := filepath.Join(routineDir, "run.sh")
 	if _, err := os.Stat(wrapper); err != nil {
 		routine.LoadError = "missing run.sh"
@@ -209,13 +235,14 @@ func load(routineDir, name string) Routine {
 	routine.PlistPath = plists[0]
 	routine.Label = strings.TrimSuffix(filepath.Base(plists[0]), ".plist")
 
-	schedule, supported, err := parseSchedule(plists[0])
+	schedule, err := parseSchedule(plists[0])
 	if err != nil {
 		routine.LoadError = err.Error()
 		return routine
 	}
-	routine.Schedule = schedule
-	routine.ScheduleSupported = supported
+	routine.Schedule = schedule.Intervals
+	routine.ScheduleSupported = schedule.Supported
+	routine.Unscheduled = schedule.Unscheduled
 
 	env, err := parseEnv(plists[0])
 	if err != nil {
@@ -223,8 +250,8 @@ func load(routineDir, name string) Routine {
 		return routine
 	}
 	routine.Env = env
-	if supported {
-		if nextRun, ok := NextRun(schedule, time.Now()); ok {
+	if schedule.Supported {
+		if nextRun, ok := NextRun(schedule.Intervals, time.Now()); ok {
 			routine.NextRun = nextRun
 		}
 	}

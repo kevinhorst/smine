@@ -20,7 +20,7 @@ func Sync(ctx context.Context, prune bool, scriptsDir string) (string, error) {
 	}
 
 	script := filepath.Join(scriptsDir, syncScript)
-	output, err := shell.Run(ctx, "", script, args...)
+	output, err := shell.RunSync(ctx, "", script, args...)
 	if err != nil {
 		return output, fmt.Errorf("Sync: %w", err)
 	}

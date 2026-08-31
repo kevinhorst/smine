@@ -103,6 +103,10 @@ func Dist(ctx context.Context, root, target, dest string, includeTask bool) ([]s
 	if err := buildBinaries(ctx, root, dest, built); err != nil {
 		return nil, err
 	}
+	distMode, err := writePolicy(root, dest)
+	if err != nil {
+		return nil, err
+	}
 
 	lines := skipped
 	lines = append(lines,
@@ -110,6 +114,9 @@ func Dist(ctx context.Context, root, target, dest string, includeTask bool) ([]s
 		fmt.Sprintf("  acdsl/registry.json -> %d verifier contract(s)", len(built)+countVerbatim(shipped, registry, built)),
 		"  bin/acdsl -> check/project/fixtures runner",
 	)
+	if distMode != "" {
+		lines = append(lines, fmt.Sprintf("  acdsl/policy.json -> mode: %s", distMode))
+	}
 	names := make([]string, 0, len(built))
 	for name := range built {
 		names = append(names, name)
@@ -218,6 +225,39 @@ func writeDistRegistry(dest string, shipped []Rule, registry map[string]Registry
 		return nil, fmt.Errorf("writeDistRegistry: %w", err)
 	}
 	return built, nil
+}
+
+// writePolicy ships the self-management policy into dest: mode rewritten
+// from dist_mode (falling back to the source mode), dist_mode stripped — a
+// target never re-distributes. The schema ships verbatim beside it, and both
+// copies are baseline-owned like the registry subset. No source policy ships
+// nothing and returns "".
+func writePolicy(root, dest string) (PolicyMode, error) {
+	policy, err := LoadPolicy(root)
+	if err != nil {
+		return "", fmt.Errorf("writePolicy: %w", err)
+	}
+	if _, statErr := os.Stat(filepath.Join(root, "acdsl", "policy.json")); statErr != nil {
+		return "", nil
+	}
+	if policy.DistMode != "" {
+		policy.Mode = policy.DistMode
+	}
+	policy.DistMode = ""
+	data, err := json.MarshalIndent(policy, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("writePolicy: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(dest, "acdsl", "policy.json"), append(data, '\n'), 0o644); err != nil {
+		return "", fmt.Errorf("writePolicy: %w", err)
+	}
+	schemaSrc := filepath.Join(root, "acdsl", "policy.schema.json")
+	if _, statErr := os.Stat(schemaSrc); statErr == nil {
+		if err := fsx.CopyFile(schemaSrc, filepath.Join(dest, "acdsl", "policy.schema.json")); err != nil {
+			return "", fmt.Errorf("writePolicy: %w", err)
+		}
+	}
+	return policy.Mode, nil
 }
 
 // buildBinaries ships the runner and every rewritten entry's binary into the

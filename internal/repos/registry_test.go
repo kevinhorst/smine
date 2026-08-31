@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -82,6 +84,16 @@ func TestRegistryAdd(t *testing.T) {
 		assert.Contains(t, err.Error(), "Invalid field Name")
 	})
 
+	t.Run("reserved-name-fails", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": []}`)
+		require.NoError(t, registry.Reload())
+		for _, name := range []string{"default", "archived"} {
+			err := registry.Add(Repo{Name: name, Path: "/tmp/a"})
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "is reserved")
+		}
+	})
+
 	t.Run("relative-path-fails", func(t *testing.T) {
 		registry := writeRegistry(t, `{"repos": []}`)
 		require.NoError(t, registry.Reload())
@@ -130,6 +142,117 @@ func TestRegistryRemove(t *testing.T) {
 	})
 }
 
+// touchRegistry rewrites the registry file and bumps its mtime past the
+// loaded identity — same-second same-size rewrites are invisible to a bare
+// write on coarse-mtime filesystems.
+func touchRegistry(t *testing.T, registry *Registry, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(registry.path, []byte(content), 0o644))
+	future := time.Now().Add(2 * time.Second)
+	require.NoError(t, os.Chtimes(registry.path, future, future))
+}
+
+func TestRegistryRefreshOnExternalEdit(t *testing.T) {
+	t.Run("external-write-visible-without-reload", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Reload())
+
+		touchRegistry(t, registry, `{"repos": [
+			{"name": "a", "path": "/tmp/a"},
+			{"name": "b", "path": "/tmp/b"}
+		]}`)
+		assert.Len(t, registry.Repos(), 2)
+	})
+
+	t.Run("external-delete-visible-in-find", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Reload())
+
+		touchRegistry(t, registry, `{"repos": []}`)
+		_, ok := registry.Find("a")
+		assert.False(t, ok)
+	})
+
+	t.Run("unchanged-file-serves-loaded-state", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Reload())
+		assert.Len(t, registry.Repos(), 1)
+		assert.Len(t, registry.Repos(), 1)
+	})
+}
+
+func TestRegistryAddPreservesExternalEdit(t *testing.T) {
+	t.Run("external-add-survives-in-process-add", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Reload())
+
+		touchRegistry(t, registry, `{"repos": [
+			{"name": "a", "path": "/tmp/a"},
+			{"name": "b", "path": "/tmp/b"}
+		]}`)
+		require.NoError(t, registry.Add(Repo{Name: "c", Path: "/tmp/c"}))
+
+		require.NoError(t, registry.Reload())
+		assert.Len(t, registry.Repos(), 3)
+	})
+
+	t.Run("external-remove-stays-removed-after-add", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [
+			{"name": "a", "path": "/tmp/a"},
+			{"name": "b", "path": "/tmp/b"}
+		]}`)
+		require.NoError(t, registry.Reload())
+
+		touchRegistry(t, registry, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Add(Repo{Name: "c", Path: "/tmp/c"}))
+
+		require.NoError(t, registry.Reload())
+		_, ok := registry.Find("b")
+		assert.False(t, ok)
+		assert.Len(t, registry.Repos(), 2)
+	})
+}
+
+func TestRegistryRemoveAfterExternalEdit(t *testing.T) {
+	registry := writeRegistry(t, `{"repos": []}`)
+	require.NoError(t, registry.Reload())
+
+	touchRegistry(t, registry, `{"repos": [{"name": "disk-only", "path": "/tmp/d"}]}`)
+	require.NoError(t, registry.Remove("disk-only"))
+
+	require.NoError(t, registry.Reload())
+	assert.Empty(t, registry.Repos())
+}
+
+func TestRefreshKeepsLastGoodStateOnParseError(t *testing.T) {
+	registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+	require.NoError(t, registry.Reload())
+
+	touchRegistry(t, registry, `{broken`)
+	assert.Len(t, registry.Repos(), 1)
+}
+
+func TestRegistryDeleteStaysDeletedAcrossInstances(t *testing.T) {
+	registry := writeRegistry(t, `{"repos": [
+		{"name": "a", "path": "/tmp/a"},
+		{"name": "b", "path": "/tmp/b"}
+	]}`)
+	require.NoError(t, registry.Reload())
+
+	// A second instance (stale state loaded before the delete) writes after
+	// the first instance deleted — its write must not resurrect the entry.
+	stale := NewRegistry(registry.path)
+	require.NoError(t, stale.Reload())
+
+	require.NoError(t, registry.Remove("a"))
+	require.NoError(t, stale.Add(Repo{Name: "c", Path: "/tmp/c"}))
+
+	require.NoError(t, registry.Reload())
+	_, ok := registry.Find("a")
+	assert.False(t, ok)
+	assert.Len(t, registry.Repos(), 2)
+}
+
 // gitRepoWithAgentWorktrees builds a real git repo with one claude/* and one
 // claude-routines/* worktree checked out outside the repo (like routine
 // worktrees are).
@@ -148,22 +271,65 @@ func gitRepoWithAgentWorktrees(t *testing.T) string {
 	return repo
 }
 
-func TestCountWorktrees(t *testing.T) {
-	t.Run("counts-by-branch-prefix", func(t *testing.T) {
+func TestFingerprint(t *testing.T) {
+	repo := gitRepoWithAgentWorktrees(t)
+	ctx := context.Background()
+
+	first, err := Fingerprint(ctx, repo)
+	require.NoError(t, err)
+	assert.NotEmpty(t, first)
+
+	// stable while nothing changes
+	same, err := Fingerprint(ctx, repo)
+	require.NoError(t, err)
+	assert.Equal(t, first, same)
+
+	// a new agent branch changes it
+	run := func(args ...string) {
+		gitArgs := append([]string{"-C", repo}, args...)
+		output, err := exec.Command("git", gitArgs...).CombinedOutput()
+		require.NoError(t, err, string(output))
+	}
+	run("branch", "claude/extra")
+	afterBranch, err := Fingerprint(ctx, repo)
+	require.NoError(t, err)
+	assert.NotEqual(t, first, afterBranch)
+
+	// a new worktree changes it
+	run("worktree", "add", "-q", "-b", "claude/extra-wt", filepath.Join(t.TempDir(), "wt-extra"))
+	afterWorktree, err := Fingerprint(ctx, repo)
+	require.NoError(t, err)
+	assert.NotEqual(t, afterBranch, afterWorktree)
+
+	// a non-git dir errors
+	_, err = Fingerprint(ctx, t.TempDir())
+	assert.Error(t, err)
+}
+
+func TestWorktreeCounts(t *testing.T) {
+	t.Run("buckets-by-branch-prefix", func(t *testing.T) {
 		repo := gitRepoWithAgentWorktrees(t)
 		ctx := context.Background()
-		assert.Equal(t, 2, CountWorktrees(ctx, repo, []string{"claude/", "claude-routines/"}))
-		assert.Equal(t, 1, CountWorktrees(ctx, repo, []string{"claude/"}))
-		assert.Equal(t, 1, CountWorktrees(ctx, repo, []string{"claude-routines/"}))
+		expected := []WorktreeKindCount{
+			{Count: 1, Label: "claude"},
+			{Count: 1, Label: "claude-routines"},
+		}
+		assert.Equal(t, expected, WorktreeCounts(ctx, repo, []string{"claude/", "claude-routines/"}))
 	})
 
-	t.Run("non-git-dir-is-zero", func(t *testing.T) {
-		assert.Equal(t, 0, CountWorktrees(context.Background(), t.TempDir(), []string{"claude/"}))
+	t.Run("zero-count-prefix-omitted", func(t *testing.T) {
+		repo := gitRepoWithAgentWorktrees(t)
+		expected := []WorktreeKindCount{{Count: 1, Label: "claude"}}
+		assert.Equal(t, expected, WorktreeCounts(context.Background(), repo, []string{"claude/", "feature/"}))
+	})
+
+	t.Run("non-git-dir-is-nil", func(t *testing.T) {
+		assert.Nil(t, WorktreeCounts(context.Background(), t.TempDir(), []string{"claude/"}))
 	})
 
 	t.Run("no-agent-prefix-matches-nothing", func(t *testing.T) {
 		repo := gitRepoWithAgentWorktrees(t)
-		assert.Equal(t, 0, CountWorktrees(context.Background(), repo, []string{"feature/"}))
+		assert.Nil(t, WorktreeCounts(context.Background(), repo, []string{"feature/"}))
 	})
 }
 
@@ -378,4 +544,37 @@ func TestFindAndRepos(t *testing.T) {
 
 	_, ok = registry.Find("nope")
 	assert.False(t, ok)
+}
+
+func TestRepoLabel(t *testing.T) {
+	t.Run("roundtrips-through-add-and-reload", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": []}`)
+		require.NoError(t, registry.Reload())
+
+		require.NoError(t, registry.Add(Repo{Label: "Haushalt", Name: "b", Path: "/tmp/b"}))
+		require.NoError(t, registry.Reload())
+		repo, ok := registry.Find("b")
+		require.True(t, ok)
+		assert.Equal(t, "Haushalt", repo.Label)
+	})
+
+	t.Run("over-length-label-rejected", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": []}`)
+		require.NoError(t, registry.Reload())
+
+		long := strings.Repeat("x", 81)
+		err := registry.Add(Repo{Label: long, Name: "b", Path: "/tmp/b"})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "Invalid field Label")
+	})
+
+	t.Run("absent-label-omitted-from-json", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": []}`)
+		require.NoError(t, registry.Reload())
+		require.NoError(t, registry.Add(Repo{Name: "b", Path: "/tmp/b"}))
+
+		content, err := os.ReadFile(registry.path)
+		require.NoError(t, err)
+		assert.NotContains(t, string(content), "label")
+	})
 }

@@ -59,7 +59,7 @@ func Sync(ctx context.Context, opts SyncOptions, scriptsDir string) (string, err
 	}
 	args = append(args, symlink, opts.Target)
 
-	output, err := shell.Run(ctx, "", filepath.Join(scriptsDir, syncScript), args...)
+	output, err := shell.RunSync(ctx, "", filepath.Join(scriptsDir, syncScript), args...)
 	if err != nil {
 		return output, fmt.Errorf("Sync: %w", err)
 	}
@@ -86,13 +86,19 @@ func ChooseFolder(ctx context.Context, prompt string) (string, error) {
 }
 
 // folderDialogScript is the PowerShell folder-picker template (hole: the
-// prompt). The TopMost owner form brings the dialog to the foreground even
-// when the spawning server is a background windowsgui process (addendum A6).
+// prompt). The TopMost owner form is shown (invisible via Opacity) and
+// activated before the dialog opens — an unshown owner gave no z-order
+// boost and the dialog opened behind the browser (observed on the Windows
+// install; addendum A6 revised).
 const folderDialogScript = `Add-Type -AssemblyName System.Windows.Forms
-$owner = New-Object System.Windows.Forms.Form -Property @{TopMost=$true; ShowInTaskbar=$false}
+$owner = New-Object System.Windows.Forms.Form -Property @{TopMost=$true; ShowInTaskbar=$false; Opacity=0}
+$owner.Show()
+$owner.Activate()
 $d = New-Object System.Windows.Forms.FolderBrowserDialog
 $d.Description = %q
-if ($d.ShowDialog($owner) -eq 'OK') { Write-Output $d.SelectedPath } else { exit 3 }`
+$result = $d.ShowDialog($owner)
+$owner.Close()
+if ($result -eq 'OK') { Write-Output $d.SelectedPath } else { exit 3 }`
 
 // chooseFolderWindows opens the WinForms folder dialog via powershell -STA
 // (windows_support plan D19). A dismissed dialog returns ErrCanceled,

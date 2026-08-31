@@ -172,12 +172,69 @@ func TestSessionsPages(t *testing.T) {
 		assert.Contains(t, body, `title="yes (high)">analyzed<`)
 	})
 
-	t.Run("reload-renders-ok-and-triggers-refresh", func(t *testing.T) {
+	t.Run("reload-endpoint-removed", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, formPost("/sessions/reload", url.Values{}))
+		// the GET /sessions/{scope} pattern still matches the path, so the
+		// removed POST route answers 405 — either way, no reload handler
+		require.Equal(t, http.StatusMethodNotAllowed, response.Code)
+	})
+
+	t.Run("no-reload-button-rendered", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/sessions/personal", nil))
 		require.Equal(t, http.StatusOK, response.Code)
-		assert.Contains(t, response.Body.String(), ">Ok</span>")
-		assert.Equal(t, "sessions-reload", response.Header().Get("HX-Trigger"))
+		assert.NotContains(t, response.Body.String(), "Reload from disk")
+		assert.Contains(t, response.Body.String(), "Archive folder")
+		assert.Contains(t, response.Body.String(), `href="/sessions/archive"`)
+	})
+
+	t.Run("rescan-per-request-picks-up-new-batch", func(t *testing.T) {
+		lateDir := filepath.Join(sessionsDir, "latecomer", "json")
+		require.NoError(t, os.MkdirAll(lateDir, 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(lateDir, "batch1.json"), []byte(batchFixture), 0644))
+		defer os.RemoveAll(filepath.Join(sessionsDir, "latecomer"))
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/sessions/latecomer", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("archive-unarchive-delete-flow", func(t *testing.T) {
+		require.NoError(t, os.MkdirAll(filepath.Join(sessionsDir, "oldscope"), 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(sessionsDir, "oldscope", "session-analysis-batch-01.md"), []byte("# batch"), 0644))
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/sessions/oldscope/archive", url.Values{}))
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.Equal(t, "/sessions", response.Header().Get("HX-Redirect"))
+		assert.DirExists(t, filepath.Join(sessionsDir, "archived", "oldscope"))
+
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/sessions/archive", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.Contains(t, response.Body.String(), "oldscope")
+		assert.Contains(t, response.Body.String(), "Unarchive")
+
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/sessions/archive/oldscope/unarchive", url.Values{}))
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.DirExists(t, filepath.Join(sessionsDir, "oldscope"))
+
+		// delete works only on archived folders — a live name errors
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/sessions/archive/oldscope/delete", url.Values{}))
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.Contains(t, response.Body.String(), "is not archived")
+		assert.DirExists(t, filepath.Join(sessionsDir, "oldscope"))
+
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/sessions/oldscope/archive", url.Values{}))
+		require.Equal(t, http.StatusOK, response.Code)
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/sessions/archive/oldscope/delete", url.Values{}))
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.NoDirExists(t, filepath.Join(sessionsDir, "archived", "oldscope"))
 	})
 
 	t.Run("session-filter-single-id", func(t *testing.T) {
@@ -426,7 +483,7 @@ func TestBatchBands(t *testing.T) {
 	}
 
 	t.Run("groups-by-decade", func(t *testing.T) {
-		bands := batchBands([]*sessions.BatchSummary{batch(1), batch(9), batch(10), batch(11), batch(20), batch(21)})
+		bands := batchBands([]*sessions.BatchSummary{batch(1), batch(9), batch(10), batch(11), batch(20), batch(21)}, languageEnglish)
 		require.Len(t, bands, 3)
 		assert.Equal(t, "Batch 1-10", bands[0].Label)
 		assert.Len(t, bands[0].Batches, 3)
@@ -437,12 +494,12 @@ func TestBatchBands(t *testing.T) {
 	})
 
 	t.Run("empty", func(t *testing.T) {
-		assert.Empty(t, batchBands(nil))
+		assert.Empty(t, batchBands(nil, languageEnglish))
 	})
 
 	t.Run("bands-carry-date-range", func(t *testing.T) {
 		dated := &sessions.BatchSummary{Batch: sessions.Batch{Number: 1, DateRange: "2026-07-10 → 2026-07-16"}}
-		bands := batchBands([]*sessions.BatchSummary{dated})
+		bands := batchBands([]*sessions.BatchSummary{dated}, languageEnglish)
 		require.Len(t, bands, 1)
 		assert.Equal(t, "2026-07-10 → 2026-07-16", bands[0].DateRange)
 	})

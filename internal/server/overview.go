@@ -82,13 +82,14 @@ const (
 )
 
 func (s *Server) handleOverview(w http.ResponseWriter, r *http.Request) {
+	s.reloadSessions()
 	var tiles []overviewTile
-	// Non-developer installs see only the session and proposal tiles — the
+	// Casual installs see only the session and proposal tiles — the
 	// remaining tiles expose engine internals (plan D6).
-	if !s.profile.isDeveloperAudience() {
+	if !s.presentation.isDeveloperAudience() {
 		tiles = append(tiles, s.sessionTiles(parseWindow(r))...)
 		tiles = append(tiles, s.proposalsTile())
-		data := overviewPage{Page: pageOverview, Tiles: tiles, Title: translate(s.profile.Language, "Overview")}
+		data := overviewPage{Page: pageOverview, Tiles: tiles, Title: translate(s.presentation.language(), "Overview")}
 		s.renderFragment(w, tmplOverview, data)
 		return
 	}
@@ -226,7 +227,7 @@ func (s *Server) sessionTiles(window string) []overviewTile {
 
 	sessionsTile := overviewTile{
 		Id:     "sessions",
-		Detail: fmt.Sprintf("%d batches", batches),
+		Detail: fmt.Sprintf("%d %s", batches, translate(s.presentation.language(), "batches")),
 		Href:   "/sessions",
 		Label:  "Sessions analyzed",
 		Value:  fmt.Sprintf("%d", analyzed),
@@ -240,7 +241,7 @@ func (s *Server) sessionTiles(window string) []overviewTile {
 	}
 	sentimentEntriesTile := overviewTile{
 		Id:     "frustration-positive",
-		Detail: signalDetail(max(frustrationDate, positiveDate)),
+		Detail: signalDetail(max(frustrationDate, positiveDate), s.presentation.language()),
 		Label:  "Frustration / Positive",
 		Split: &tileSplit{
 			FrustrationHref:  frustrationHref,
@@ -249,7 +250,7 @@ func (s *Server) sessionTiles(window string) []overviewTile {
 			PositiveValue:    fmt.Sprintf("%d", positive),
 		},
 	}
-	if trend, delta, ok := sentimentTrend(points); ok {
+	if trend, delta, ok := sentimentTrend(s.presentation.language(), points); ok {
 		sentimentEntriesTile.Filters = windowFilters(window)
 		sentimentEntriesTile.Trend = trend
 		sentimentEntriesTile.Detail = joinDetail(sentimentEntriesTile.Detail, delta)
@@ -261,7 +262,7 @@ func (s *Server) sessionTiles(window string) []overviewTile {
 // merged Frustration / Positive card; ok is false when no batches are loaded
 // (chart and filter row are omitted, the split card stays). delta compares
 // the newest batch's frustration count to its predecessor (D5).
-func sentimentTrend(points []sessions.SentimentPoint) (*tileTrend, string, bool) {
+func sentimentTrend(language string, points []sessions.SentimentPoint) (*tileTrend, string, bool) {
 	if len(points) == 0 {
 		return nil, "", false
 	}
@@ -279,7 +280,7 @@ func sentimentTrend(points []sessions.SentimentPoint) (*tileTrend, string, bool)
 	delta := ""
 	if len(points) >= 2 {
 		latest, previous := points[len(points)-1], points[len(points)-2]
-		delta = fmt.Sprintf("%+d vs batch %d", latest.Frustration-previous.Frustration, previous.BatchNumber)
+		delta = fmt.Sprintf(translate(language, "%+d vs batch %d"), latest.Frustration-previous.Frustration, previous.BatchNumber)
 	}
 	return trend, delta, true
 }
@@ -371,11 +372,11 @@ func joinDetail(parts ...string) string {
 
 // signalDetail labels a signal tile with the batch date its link jumps to
 // (D6); batches without analyzedDate yield no detail line.
-func signalDetail(date string) string {
+func signalDetail(date, language string) string {
 	if date == "" {
 		return ""
 	}
-	return "last signal " + date
+	return fmt.Sprintf(translate(language, "last signal %s"), date)
 }
 
 // settingsTiles derives every settings.json-backed tile from one loadBoth
@@ -452,13 +453,16 @@ func (s *Server) proposalsTile() overviewTile {
 	accepted := counts["accepted"] + counts["applied"] + counts["building"]
 	open := total - accepted - counts["rejected"] - counts["postponed"]
 
-	return overviewTile{
-		Id:     "proposals",
-		Detail: fmt.Sprintf("%d accepted · %d rejected", accepted, counts["rejected"]),
-		Href:   "/proposals",
-		Label:  "Proposals",
-		Value:  fmt.Sprintf("%d open", open),
+	tile := overviewTile{
+		Id: "proposals",
+		Detail: fmt.Sprintf("%d %s · %d %s",
+			accepted, translate(s.presentation.language(), "accepted"),
+			counts["rejected"], translate(s.presentation.language(), "rejected")),
+		Href:  "/proposals",
+		Label: "Proposals",
+		Value: fmt.Sprintf("%d %s", open, translate(s.presentation.language(), "open")),
 	}
+	return tile
 }
 
 // repoTile counts registered repos and their real agent worktrees (D3/D8);

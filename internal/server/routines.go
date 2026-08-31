@@ -28,9 +28,14 @@ type standardSetting struct {
 	Default string
 }
 
+// routineModelDefault mirrors run.sh's ROUTINE_MODEL fallback; the profile
+// style test runs on it too, so the test answer previews the model the
+// pipeline actually writes with.
+const routineModelDefault = "claude-opus-4-8[1m]"
+
 var standardSettings = []standardSetting{
 	{Key: "ROUTINE_EXTRA_PROMPT", Label: "Extra prompt (appended to the routine prompt)", Default: ""},
-	{Key: "ROUTINE_MODEL", Label: "Model", Default: "claude-opus-4-8[1m]"},
+	{Key: "ROUTINE_MODEL", Label: "Model", Default: routineModelDefault},
 	{Key: "ROUTINE_MAX_BUDGET_USD", Label: "Max budget (USD)", Default: "15"},
 	{Key: "ROUTINE_MAX_OPEN_BRANCHES", Label: "Max open branches (un-merged)", Default: "unlimited"},
 	{Key: "ROUTINE_PERMISSION_MODE", Label: "Permission mode", Default: "acceptEdits"},
@@ -221,10 +226,13 @@ func (s *Server) routineView(ctx context.Context, routine *routines.Routine, ses
 	return view
 }
 
-// routineSession picks the peek session running in the routine's worktree —
-// the cwd is deterministic per the worktree.sh contract:
-// $ROUTINE_WT_ROOT/$ROUTINE_GROUP, defaulting to
-// ~/.cache/claude-routine/worktrees/<name>.
+// routineSession picks the peek session running in the routine's worktrees —
+// per the worktree.sh contract the group worktree is
+// $ROUTINE_WT_ROOT/$ROUTINE_GROUP (default
+// ~/.cache/claude-routine/worktrees/<name>), and matrix.sh runs eval cells in
+// detached worktrees under the sibling <group>-cells/. Sessions may sit in
+// subdirectories of either, so matching is by prefix; the most recently
+// active match wins.
 func routineSession(routine *routines.Routine, sessions map[string]peek.Session) *peek.Session {
 	if len(sessions) == 0 {
 		return nil
@@ -241,20 +249,31 @@ func routineSession(routine *routines.Routine, sessions map[string]peek.Session)
 	if group == "" {
 		group = routine.Name
 	}
-	if session, ok := sessions[filepath.Clean(filepath.Join(root, group))]; ok {
-		return &session
+
+	groupWorktree := filepath.Clean(filepath.Join(root, group))
+	cellsRoot := groupWorktree + "-cells"
+	var latest *peek.Session
+	for cwd, session := range sessions {
+		isGroupCwd := cwd == groupWorktree || strings.HasPrefix(cwd, groupWorktree+string(filepath.Separator))
+		isCellCwd := strings.HasPrefix(cwd, cellsRoot+string(filepath.Separator))
+		if !isGroupCwd && !isCellCwd {
+			continue
+		}
+		if latest == nil || session.LastActive.After(latest.LastActive) {
+			latest = &session
+		}
 	}
-	return nil
+	return latest
 }
 
 // peekRoutineSessions is the routines-page peek lookup; peek down → nil map,
 // the pages render with dashed session cells (mirrors repos D3).
 func (s *Server) peekRoutineSessions(ctx context.Context) map[string]peek.Session {
-	sessions, err := s.peekClient.SessionsByCwd(ctx)
+	index, err := s.peekClient.SessionIndex(ctx)
 	if err != nil {
 		return nil
 	}
-	return sessions
+	return index.ByCwd
 }
 
 // declaredPairs lists routine-specific env sorted by key; the standard

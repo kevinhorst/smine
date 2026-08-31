@@ -65,7 +65,7 @@ func IsRunning(ctx context.Context, label string) (bool, error) {
 // and enables it — the analog of launchctl enable + bootstrap. The plist is
 // never handed to the OS; it is translated to Task XML here (plan D1).
 func Start(ctx context.Context, label, plistPath string) (string, error) {
-	schedule, _, err := parseSchedule(plistPath)
+	schedule, err := parseSchedule(plistPath)
 	if err != nil {
 		return "", fmt.Errorf("Start: %s: %w", label, err)
 	}
@@ -80,7 +80,7 @@ func Start(ctx context.Context, label, plistPath string) (string, error) {
 	repoRoot := filepath.Dir(filepath.Dir(routineDir))
 	wrapperExe := filepath.Join(repoRoot, "bin", "routinewrap.exe")
 
-	taskXML, err := TaskXML(label, schedule, wrapperExe, routineDir)
+	taskXML, err := TaskXML(label, schedule.Intervals, wrapperExe, routineDir)
 	if err != nil {
 		return "", fmt.Errorf("Start: %w", err)
 	}
@@ -152,6 +152,10 @@ func SyncAll(ctx context.Context, dir string) {
 		state, err := taskState(ctx, routine.Label)
 		if err != nil {
 			log.Printf("routines: %s probe failed: %v", routine.Name, err)
+			continue
+		}
+		if state == "NotFound" && routine.DefaultDisabled {
+			log.Printf("routines: %s default-disabled, awaiting explicit enable", routine.Name)
 			continue
 		}
 		if state == "Disabled" {

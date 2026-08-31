@@ -4,35 +4,35 @@
   {{range .Sessions}}
   <details id="session-{{.Session.Id}}" class="card card-column session-card"{{if or .Selected (eq $page.Open .Session.Id)}} open{{end}}>
     <summary>
-      <span class="label"><strong>{{if .Session.Title}}{{.Session.Title}}{{else}}(untitled){{end}}</strong></span>
+      <span class="label"><strong>{{if .Session.Title}}{{.Session.Title}}{{else}}{{t "(untitled)"}}{{end}}</strong></span>
       {{$peekURL := peekSessionURL .Session.Id}}
-      <span class="meta">id: {{if $peekURL}}<a href="{{$peekURL}}" title="open in peek"><code title="{{.Session.Id}}">{{.ShortId}}</code></a>{{else}}<code title="{{.Session.Id}}">{{.ShortId}}</code>{{end}}</span>
+      <span class="meta">id: {{if $peekURL}}<a href="{{$peekURL}}" title="{{t "open in peek"}}"><code title="{{.Session.Id}}">{{.ShortId}}</code></a>{{else}}<code title="{{.Session.Id}}">{{.ShortId}}</code>{{end}}</span>
       {{if .Session.Repo}}<span class="badge badge-dim">{{.Session.Repo}}</span>{{end}}
       {{if .Session.Type}}<span class="badge badge-dim">{{.Session.Type}}</span>{{end}}
-      {{if .Session.Signal}}<span class="badge badge-ok" title="{{.Session.Signal}}">{{.SignalLabel}}</span>{{end}}
+      {{if .Session.Signal}}<span class="badge badge-ok" title="{{.Session.Signal}}">{{t .SignalLabel}}</span>{{end}}
       <input type="checkbox" class="session-select" name="session" value="{{.Session.Id}}"
              {{if .Selected}}checked{{end}} onclick="event.stopPropagation()"
              hx-get="/sessions/{{$page.Batch.Batch.Scope}}/{{$page.Batch.Batch.Number}}{{if $page.Dimension}}?dimension={{$page.Dimension}}{{end}}"
              hx-include=".session-select:checked"
              hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">
-      {{if .Session.Skipped}}<span class="badge badge-error">skipped</span>{{end}}
+      {{if .Session.Skipped}}<span class="badge badge-error">{{t "skipped"}}</span>{{end}}
     </summary>
     {{if .Session.Skipped}}
       {{if .Session.SkipReason}}<div class="meta">{{.Session.SkipReason}}</div>{{end}}
     {{else}}
       {{if .Session.DataGaps}}
-      <div class="meta data-gaps">⚠ data gaps: {{.Session.DataGaps}}</div>
+      <div class="meta data-gaps">⚠ {{t "data gaps:"}} {{.Session.DataGaps}}</div>
       {{end}}
       {{range .Findings}}
       <div class="finding">
-        <span class="badge {{if $page.Dimension}}badge-ok{{else}}badge-dim{{end}}">{{.Dimension}}</span>
+        <span class="badge {{if $page.Dimension}}badge-ok{{else}}badge-dim{{end}}">{{t .Dimension}}</span>
         <span class="label">{{.Summary}}</span>
         {{range .Quotes}}
         <blockquote class="meta">{{.}}</blockquote>
         {{end}}
         {{range .Snippets}}
         <details class="snippet">
-          <summary>{{.Kind}}{{if .Lang}} · {{.Lang}}{{end}}{{if .Source}} · from {{.Source}}{{end}}</summary>
+          <summary>{{if isDeveloperAudience}}{{.Kind}}{{if .Lang}} · {{.Lang}}{{end}}{{if .Source}} · from {{.Source}}{{end}}{{else}}{{t "technical detail"}}{{end}}</summary>
           <pre><code>{{.Code}}</code></pre>
         </details>
         {{end}}
@@ -40,7 +40,7 @@
       {{end}}
       {{if and (or (not $page.Dimension) (eq $page.Dimension "frustration")) .Session.Frustration}}
       <div class="finding">
-        <span class="badge badge-error">frustration</span>
+        <span class="badge badge-error">{{t "frustration"}}</span>
         {{range .Session.Frustration}}
         <blockquote class="meta frustration">“{{.Quote}}”{{if .Trigger}} — {{.Trigger}}{{end}}</blockquote>
         {{end}}
@@ -48,7 +48,7 @@
       {{end}}
       {{if and (or (not $page.Dimension) (eq $page.Dimension "positive")) .Session.Positive}}
       <div class="finding">
-        <span class="badge badge-ok">positive</span>
+        <span class="badge badge-ok">{{t "positive"}}</span>
         {{range .Session.Positive}}
         <blockquote class="meta positive">“{{.Quote}}”{{if .Trigger}} — {{.Trigger}}{{end}}</blockquote>
         {{end}}
@@ -57,6 +57,6 @@
     {{end}}
   </details>
   {{end}}
-  {{if not .Sessions}}<div class="empty">No sessions match the current filter.</div>{{end}}
+  {{if not .Sessions}}<div class="empty">{{t "No sessions match the current filter."}}</div>{{end}}
 </div>
 {{end}}

@@ -30,7 +30,8 @@ type Eval struct {
 	Skill string `json:"skill"`
 }
 
-// EvalDir is one evals/<skill>-<suffix>/ results directory.
+// EvalDir is one results directory — flat evals/<skill>-<suffix>/ or nested
+// evals/<skill>/<date>-<hash>/; Dir is the evals-root-relative path either way.
 type EvalDir struct {
 	Deltas []Delta
 	Dir    string // basename under the evals root, e.g. concept-2026-08-18
@@ -213,10 +214,12 @@ func loadEvalDir(path, name string) (*EvalDir, []string) {
 	return evalDir, loadErrors
 }
 
-// LoadForSkill reads every evals/<skill>-<date>/ (routine) or
-// evals/<skill>-<hex>/ (matrix mode) directory, newest eval date first.
-// eval.json is required; deltas.json is optional. Malformed files land in the
-// errors list, never fail the page (sessions LoadErrors pattern).
+// LoadForSkill reads every flat evals/<skill>-<date>/ (routine) or
+// evals/<skill>-<hex>/ (matrix mode) directory, plus every nested
+// evals/<skill>/<date>-<hash>/ run directory (per-run, hash = commit short
+// hash), newest eval date first. eval.json is required; deltas.json is
+// optional. Malformed files land in the errors list, never fail the page
+// (sessions LoadErrors pattern).
 func LoadForSkill(dir, skill string) ([]EvalDir, []string) {
 	dirPattern := regexp.MustCompile("^" + regexp.QuoteMeta(skill) + `-(\d{4}-\d{2}-\d{2}(-\d+)?|[0-9a-f]{6,12})$`)
 	entries, err := os.ReadDir(dir)
@@ -241,6 +244,24 @@ func LoadForSkill(dir, skill string) ([]EvalDir, []string) {
 			dirs = append(dirs, *evalDir)
 		}
 	}
+
+	nestedRunPattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[0-9a-f]{6,12}(-\d+)?$`)
+	skillRoot := filepath.Join(dir, skill)
+	nestedEntries, err := os.ReadDir(skillRoot)
+	if err == nil {
+		for _, entry := range nestedEntries {
+			if !entry.IsDir() || !nestedRunPattern.MatchString(entry.Name()) {
+				continue
+			}
+
+			relName := filepath.Join(skill, entry.Name())
+			evalDir, dirErrors := loadEvalDir(filepath.Join(skillRoot, entry.Name()), relName)
+			loadErrors = append(loadErrors, dirErrors...)
+			if evalDir != nil {
+				dirs = append(dirs, *evalDir)
+			}
+		}
+	}
 	sort.Slice(dirs, func(i, j int) bool {
 		if dirs[i].Eval.Eval.Date != dirs[j].Eval.Eval.Date {
 			return dirs[i].Eval.Eval.Date > dirs[j].Eval.Eval.Date
@@ -261,7 +282,7 @@ func ManifestStub(evalsDir string, examplePaths []string, skillMdPath, skillName
 	}
 	manifest := Manifest{
 		Inputs:  examplePaths,
-		Output:  filepath.Join(evalsDir, skillName+"-<date>", "eval.json"),
+		Output:  filepath.Join(evalsDir, skillName, "<date>-<hash>", "eval.json"),
 		Runs:    []ManifestRun{run},
 		Skill:   skillName,
 		SkillMd: skillMdPath,

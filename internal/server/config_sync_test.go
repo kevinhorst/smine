@@ -117,6 +117,38 @@ func TestConfigSync(t *testing.T) {
 		assert.Len(t, server.disabledHooks.Snapshot(), 1)
 	})
 
+	t.Run("revert-expands-install-markers", func(t *testing.T) {
+		installDir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(installDir, "install.env"), []byte("PEEK_CONTROL_PORT=42542\n"), 0644))
+		t.Chdir(installDir)
+
+		dir := t.TempDir()
+		livePath := filepath.Join(dir, "settings.json")
+		fragmentPath := filepath.Join(dir, "fragment.json")
+		require.NoError(t, os.WriteFile(livePath, []byte(`{"env": {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:9/otlp"}}`), 0644))
+		require.NoError(t, os.WriteFile(fragmentPath, []byte(`{"env": {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp"}}`), 0644))
+		server := newTestServer(t, &Options{ClaudeFragmentPath: fragmentPath, SettingsPath: livePath})
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/sync/revert", nil))
+		require.Equal(t, 200, response.Code, response.Body.String())
+
+		live, err := os.ReadFile(livePath)
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"env": {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:42542/otlp"}}`, string(live))
+	})
+
+	t.Run("marker-fragment-matches-expanded-live", func(t *testing.T) {
+		installDir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(installDir, "install.env"), []byte("PEEK_CONTROL_PORT=42542\n"), 0644))
+		t.Chdir(installDir)
+
+		live := `{"env": {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:42542/otlp"}}`
+		fragment := `{"env": {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp"}}`
+		server := newSectionServer(t, live, fragment)
+		assertSectionBadge(t, server, "/api/env", "env", false)
+	})
+
 	t.Run("unknown-target-404", func(t *testing.T) {
 		_, _, server := writeSyncFixtures(t)
 		response := httptest.NewRecorder()
