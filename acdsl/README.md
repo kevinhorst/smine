@@ -31,6 +31,11 @@ the loop: delivery flag, verdict log, and the eviction procedure.
 - Targets own their side: rules in any `*.acdsl` file, verifier overrides in
   `acdsl/registry.local.json` (merged over the baseline by name — any executable that
   exits 0/1 qualifies; the registry name is the contract, the binary one implementation).
+  In a `strict`/`gated` repo the overlay is policy-gated: only entries listed in the
+  policy's `local_overrides` are accepted (see Modes).
+- Dist also ships `acdsl/policy.json` (mode rewritten from the source's `dist_mode`,
+  which is stripped from the shipped copy) plus its schema — baseline-owned and
+  overwritten on every sync like the registry subset.
 - The no-match contract stands everywhere: a doctrine anchor matching nothing is tool
   breakage (the typo guard). Dist therefore ships a rule only when the target has files
   its anchor matches — skipped rules are reported and a later re-sync picks them up.
@@ -38,6 +43,48 @@ the loop: delivery flag, verdict log, and the eviction procedure.
   anchor is made portable.
 - Sync never touches a target's `.gitignore` — committing or ignoring `bin/` is the
   target's call.
+
+## Modes
+
+- `acdsl/policy.json` declares the repo's self-management stance — who may change the
+  rule system, enforced by `acdsl check` (compiled into `bin/acdsl`, so no data file can
+  neuter it) plus the `acdsl-policy-guard.sh` PreToolUse hook for immediate write-time
+  feedback. An absent file means `free`.
+- The three modes:
+  - `strict` — nothing about the rule system is editable: no rule added, modified, or
+    removed, no registry/evalgen/policy change, no unsanctioned overlay entry.
+  - `gated` — rules are editable only in the scopes listed in `editable_scopes`
+    (taxonomy SCOPE segments, e.g. `GOLANG`), binding only sanctioned verifiers
+    (`verifier_allowlist`; empty = every name in the base-ref registry). The
+    self-management surface itself (`policy.json`, `policy.schema.json`,
+    `registry.json`, `evalgen.json`) stays frozen.
+  - `free` — no policy constraints; only ACDSL's structural gates apply.
+- The privilege boundary is git topology: the check diffs the working tree against
+  `merge-base(HEAD, base_ref)` (auto-detected `origin/HEAD` → `origin/main` → `main` →
+  `master`; override with `base_ref`). On the base branch itself the diff is vacuous —
+  humans change the surface by committing there; in a target the surface changes via
+  smine sync. An agent branch can never self-escalate. An unresolvable base in
+  strict/gated is a hard tool error, never a silent free.
+- `lifetime="task"` entries (plan contracts) are exempt while `allow_task_contracts`
+  is true (the default) — task contracts stay usable in every mode.
+- New verifier *binaries* are never a mode question: they go through the evalgen
+  proposal flow (`acdsl/evalgen.json`, `autoApply: false`, human vote), in every mode.
+- smine itself runs `mode: "free"` (the generation flow commits registry entries on
+  routine branches); targets get the shipped `dist_mode` (default `gated`).
+- For client-level strictness in a target, add to its `.claude/settings.json`:
+
+  ```json
+  {
+    "permissions": {
+      "deny": [
+        "Edit(acdsl/**)",
+        "Write(acdsl/**)",
+        "Edit(**/*.acdsl)",
+        "Write(**/*.acdsl)"
+      ]
+    }
+  }
+  ```
 
 ## Delivery flag
 

@@ -18,6 +18,10 @@
 |---|---|---|---|---|
 | D1 | fixture | F1 | fixture | fixture |
 
+## Open questions
+
+None.
+
 ## Changes
 
 Fixture change.

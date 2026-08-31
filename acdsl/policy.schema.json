@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode"],
+  "properties": {
+    "mode": {"enum": ["free", "gated", "strict"]},
+    "dist_mode": {"enum": ["free", "gated", "strict"]},
+    "base_ref": {"type": "string"},
+    "editable_scopes": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z]{2,12}$"}},
+    "verifier_allowlist": {"type": "array", "items": {"type": "string"}},
+    "local_overrides": {"type": "array", "items": {"type": "string"}},
+    "allow_task_contracts": {"type": "boolean"}
+  }
+}

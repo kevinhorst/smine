@@ -1,0 +1,8 @@
+{
+  "mode": "gated",
+  "base_ref": "origin/main",
+  "editable_scopes": ["GOLANG", "SHELL"],
+  "verifier_allowlist": ["gofmt"],
+  "local_overrides": [],
+  "allow_task_contracts": true
+}
