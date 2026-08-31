@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.1",
+    "date": "2026-08-27",
+    "text": "refined report shape from the first real run: Blockers & gaps becomes a State section (FAILs/gaps first, then deployment status, required manual steps with acceptance refs, accepted risks with where recorded); How validated + How tested merge into Validation & testing with finding dispositions summarized by location class and rejected findings carrying their accepted-risk disposition; reviewed-mode DoD is a count summary + deltas since the prior round + pointer to the review's table (self-gather keeps the full table); header carries the review round trajectory and head-vs-approved-snapshot identity; date dropped from the title (the dated plan-file section carries it)"
+  },
+  {
     "version": "1.0",
     "date": "2026-08-24",
     "text": "initial: reviewer-handoff DoD report — four fixed questions (why this solution, how validated, how tested, DoD per point), DoD set queried via the [DoD] entry marker (rules entries --marker DoD), consumes a railroad-review station output when present (reconcile, never duplicate), self-gather mode stated otherwise, FAILs/gaps escalated to a top Blockers section, delivered as a dated session-plan section in English"

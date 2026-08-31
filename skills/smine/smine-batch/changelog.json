@@ -1,5 +1,25 @@
 [
   {
+    "version": "1.28",
+    "date": "2026-08-30",
+    "text": "permissions capture (peek-mcp v1.2.2): per-session permissions block in the batch JSON (granted/denied tool+command pairs from session_events + telemetry permissions view) feeding the new smine-permissions dimension, plus a #### Permissions report subsection; new --subagents flag mines per-subagent transcripts via the subagent parameter (off by default, one extra paginated pull per subagent)"
+  },
+  {
+    "version": "1.27",
+    "date": "2026-08-27",
+    "text": "self-mining exclusion (default-deny): without --dev, Select drops sessions whose cwd is inside the run's repo root (incl. .claude/worktrees/) and sessions on claude-routines/* branches, reported as one count line; new --last n keeps only the n newest qualifying sessions (silent drop) and --dev re-includes the pipeline's own sessions"
+  },
+  {
+    "version": "1.26",
+    "date": "2026-08-27",
+    "text": "presentation-profile language contract — batch JSON prose fields authored in the profile language, md report stays English"
+  },
+  {
+    "version": "1.25",
+    "date": "2026-08-27",
+    "text": "added --since <YYYY-MM-DD> (date floor on session last_active at Select); retired --scopes — output routing derives from --repos attribution: one folder per roster repo, sessions/default/ for unmatched, archived/+default reserved, per-folder batches and ledgers with a union skip-list across live and archived folders"
+  },
+  {
     "version": "1.24",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

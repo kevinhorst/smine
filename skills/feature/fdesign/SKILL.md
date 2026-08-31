@@ -2,7 +2,7 @@
 name: fdesign
 description: Produce the plan for feature work — a plan, not code — via routes new, change, and refine. Trigger on /fdesign before multi-file or architecture-touching work, /fdesign change <drivers> for changes to existing features, or /fdesign refine <plan file>. Args — change <drivers>: observed-vs-wanted statements; refine <plan file>: revise a not-yet-implemented plan; mode: unfamiliar|familiar|owned; caveman: compress prose; runbook: full request files.
 author: Kevin Horst
-version: 3.5
+version: 3.7
 argument-hint: "[change <drivers> | refine <plan file>] [mode] [caveman] [runbook]"
 acdsl-context: ACTION-CONCEPT-*, ACTION-IMPL-*, ACTION-REVIEW-*, RULE-PLAN-*, FACT-*
 ---
@@ -124,19 +124,22 @@ Deferred findings: out-of-scope discoveries, listed — never silently fixed, ne
 <[change] what must not change; intentional changes (flagged decisions, matching the behavioral/contract-touching drivers)>
 
 ## Decisions
-<table: ID | Problem | Facts | Decision | Why — one row per decision, `D<n>` IDs with anchors; "Facts" cites the `F<n>` IDs (change route: Current-state / Behavior-contract rows) the decision rests on; "Why" gives the reasoning that makes the decision follow from those facts — without it the decision is unjustified and does not stand on its own; user-made decisions marked [USER]; deliberate deviations from exemplar/doc, flagged; change route: disposal of every old structure and every deliberate adaptation is its own row; referenced docs linked>
+<table: ID | Problem | Facts | Decision | Why — one row per decision, `D<n>` IDs as plain text, referenced via section-slug links (rules/plan.md RULE-PLAN-018); "Facts" cites the `F<n>` IDs (change route: Current-state / Behavior-contract rows) the decision rests on; "Why" gives the reasoning that makes the decision follow from those facts — without it the decision is unjustified and does not stand on its own; user-made decisions marked [USER]; deliberate deviations from exemplar/doc, flagged; change route: disposal of every old structure and every deliberate adaptation is its own row; referenced docs linked>
+
+## Open questions
+<index of pointers to OPEN decision rows (`Q1 → D7`) — must be empty at approval, or the plan is presented as questions>
 
 ## Baseline (verified)
-<[new] base branch, then the facts table: ID | Fact | Needed for | Location — one fact per row, `F<n>` IDs with anchors (pivotal facts marked `F<n>!` per rules/plan.md, sorted first; anchor-only facts live in their Changes entry instead), "Needed for" links to the dependent decision/Changes entry, rows ordered by target in document order (decisions, then changes, then hot items); real data inspected>
+<[new] base branch, then the facts table: ID | Fact | Needed for | Location — one fact per row, `F<n>` IDs as plain text, referenced via section-slug links (pivotal facts marked `F<n>!` per rules/plan.md, sorted first; anchor-only facts live in their Changes entry instead), "Needed for" links to the dependent decision/Changes entry, rows ordered by target in document order (decisions, then changes, then hot items); real data inspected>
 
 ## Exemplar & reuse
 <[new] Reuses table only: Existing | Used for — cross-cutting infrastructure. Mirrors live on each Changes entry as its mirrors: line. One bullet names any change WITHOUT an exemplar — the risk signal>
 
 ## Changes
-<new route: per file, dependency order; exact signatures; full final code for small units. Change route: per phase, each independently shippable — the app works after every phase; diff blocks from THIS codebase with line references, self-contained>
+<new route: per file, dependency order; exact signatures; full final code for small units. Change route: per phase, each independently shippable — the app works after every phase; diff blocks from THIS codebase with line references, self-contained; UI-touching entries carry a ui: line linking their screenshot (RULE-PLAN-070)>
 
 ## Hot items
-<every implementation in a high-risk class: example implementation written out here; a small delta in a hot class is still hot; UI-touching changes present the rendered mockup/screenshot here (ACTION-CONCEPT-HOT-007), never a prose widget description>
+<every implementation in a high-risk class: example implementation written out here; a small delta in a hot class is still hot; UI-touching changes embed the screenshot of the actual UI under design here — captured from the running app, stored under plans/{slug}/design/ui/ (ACTION-CONCEPT-HOT-007, RULE-PLAN-069) — never a prose widget description>
 
 ## Tests
 <unit tests table: Location.Method | Cases | Comment — one case per line in the Cases cell; change route: existing tests as the safety net — which pin behavior, which get updated, what is added; integration tests with the setup each requires; "not tested: X, because Y">
@@ -152,9 +155,6 @@ Deferred findings: out-of-scope discoveries, listed — never silently fixed, ne
 
 ## Stop conditions
 <table: ID | Condition | Action — the 6 generic ones + route-specific + plan-specific>
-
-## Open questions
-<index of pointers to OPEN decision rows (`Q1 → D7`) — must be empty at approval, or the plan is presented as questions>
 ````
 
 ## Phase 4 — Approval handoff

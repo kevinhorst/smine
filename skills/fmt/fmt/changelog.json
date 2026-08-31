@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.13",
+    "date": "2026-08-27",
+    "text": "plan route follows the anchor-free plan format: audit flags HTML anchors and non-slug references, migration strips anchors and re-points references to section heading slugs"
+  },
+  {
     "version": "1.12",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

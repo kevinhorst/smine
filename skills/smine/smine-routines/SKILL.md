@@ -2,7 +2,7 @@
 name: smine-routines
 description: Extract and rank routine candidates from smine-batch reports into proposals/routines.json. Trigger on /smine-routines or "extract routine or automation candidates from batches". Args — batch file: one batch; absent means all batches with ledger-missing sessions; production cap: honored when the invocation states one.
 author: Kevin Horst
-version: 1.17
+version: 1.20
 argument-hint: "[batch file] [production cap]"
 allowed-tools: Read, Write, Edit, mcp__Peek_MCP__session_plan, mcp__Peek_MCP__session_diff, ToolSearch
 ---
@@ -25,10 +25,12 @@ Turn routine candidates from batch reports into ranked schedule proposals.
 
 ## 0. Setup
 
-- Input: batch reports `sessions/*/*batch-*.md` — every scope directory under `sessions/` except `proposals/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`).
+- Input: batch reports `sessions/*/*batch-*.md` — every folder under `sessions/` except `archived/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`).
 - Ledger: `sessions/<scope>/analyzed-routines.txt` (historical filename, predates the smine-routines rename) — first line `Last analyzed batch: <batch filename> at <YYYY-MM-DD>`, then one full session ID per line. Create on first run. Sessions already in the ledger are skipped on re-runs.
 - Scope: arg = one batch file. No arg = every batch containing session IDs missing from the ledger.
 - Output: `proposals/routines.json` — the single authoritative artifact: cumulative, cross-scope, ranked, updated in place, conforming to `proposals/schema.json`. There is no md form.
+- **Language.** Read `~/.claude/context/global/presentation-profile.md` before writing output; when its `language:` is set and not `en`, author user-visible prose fields — the title's change-name part after `<target> — `, `change`, `fields[].label/text`, `evidence[].title`, `sessions[].note`, free-form group titles — in that language, following the profile body's register and glossary. Never translate: ids, targets, file paths, code, dates, tags, schema keys and status values. Absent profile = English, unchanged.
+- **Casual presentation.** When the profile's `audience:` is `casual`, the user-visible prose fields above carry no file paths, no rule/FACT/ACDSL IDs, and no schema or taxonomy jargon — say what changes for the user; technical anchors belong in `target`/`anchor`/`code`/snippet fields.
 - Repo tags: evidence concentrated in one or more repos' sessions → tag each `repo:<name>` (roster name from the batch's `[Repo]` attribution); cross-repo evidence → no repo tag. smine-apply dispositions foreign-repo proposals `manual-external` on these tags.
 - Old batches predate dedicated sections — mine the prose: maintenance the user triggered manually on a cadence (analysis batches, worktree cleanup, settings hygiene, ledger upkeep) counts even when no batch calls it a routine.
 

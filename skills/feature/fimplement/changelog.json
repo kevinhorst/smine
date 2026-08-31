@@ -1,18 +1,33 @@
 [
   {
-    "version": "1.23",
+    "version": "1.26",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"
   },
   {
-    "version": "1.22",
+    "version": "1.25",
     "date": "2026-08-23",
     "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"
   },
   {
-    "version": "1.21",
+    "version": "1.24",
     "date": "2026-08-23",
     "text": "acdsl-context: key rename — the ACDSL declaration key moved off Claude Code's native context: frontmatter field; prose references updated"
+  },
+  {
+    "version": "1.23",
+    "date": "2026-08-21",
+    "text": "bundled workflow config-ui-fidelity-gate.js — render (throwaway harness) + screenshot + design-system diff + single-Save-button assertion, gating the first commit of any config-server template/CSS change"
+  },
+  {
+    "version": "1.22",
+    "date": "2026-08-21",
+    "text": "Phase 3 verify asserts a live listener on any host:port export target an env var points at before done — an exported telemetry endpoint nothing binds sends its data nowhere"
+  },
+  {
+    "version": "1.21",
+    "date": "2026-08-20",
+    "text": "Phase 3 verify asserts a relocated data directory is still matched by a sync_public.sh --exclude before done — guards against publishing private data when a dir moves out from under an excluded parent"
   },
   {
     "version": "1.20",

@@ -2,7 +2,7 @@
 name: smine-skills
 description: Extract and rank skill and workflow proposals from smine-batch reports into proposals/skills.json. Trigger on /smine-skills or "extract or rank skill or workflow proposals from batches". Args — batch file: one batch; absent means all batches with ledger-missing sessions; production cap: honored when the invocation states one.
 author: Kevin Horst
-version: 1.22
+version: 1.25
 argument-hint: "[batch file] [production cap]"
 allowed-tools: Read, Write, Edit, mcp__Peek_MCP__session_plan, mcp__Peek_MCP__session_diff, Bash(go run ./cmd/acdsl *), ToolSearch
 ---
@@ -25,10 +25,12 @@ Turn skill candidates and existing-skill report cards from batch reports into on
 
 ## 0. Setup
 
-- Input: batch reports `sessions/*/*batch-*.md` — every scope directory under `sessions/` except `proposals/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`).
+- Input: batch reports `sessions/*/*batch-*.md` — every folder under `sessions/` except `archived/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`).
 - Ledger: `sessions/<scope>/analyzed-skill.txt` (historical filename, predates the smine-skills rename) — first line `Last analyzed batch: <batch filename> at <YYYY-MM-DD>`, then one full session ID per line. Create on first run. Sessions already in the ledger are skipped on re-runs.
 - Scope: arg = one batch file. No arg = every batch containing session IDs missing from the ledger.
 - Output: `proposals/skills.json` — the single authoritative artifact: cumulative, cross-scope, ranked, updated in place, conforming to `proposals/schema.json`. There is no md form.
+- **Language.** Read `~/.claude/context/global/presentation-profile.md` before writing output; when its `language:` is set and not `en`, author user-visible prose fields — the title's change-name part after `<target> — `, `change`, `fields[].label/text`, `evidence[].title`, `sessions[].note` — in that language, following the profile body's register and glossary. Never translate: ids, targets, file paths, code, dates, tags, schema keys, status values, and the fixed group titles (they are machine-read keys, translated in the UI). Absent profile = English, unchanged.
+- **Casual presentation.** When the profile's `audience:` is `casual`, the user-visible prose fields above carry no file paths, no rule/FACT/ACDSL IDs, and no schema or taxonomy jargon — say what changes for the user; technical anchors belong in `target`/`anchor`/`code`/snippet fields.
 - Repo tags: evidence concentrated in one or more repos' sessions → tag each `repo:<name>` (roster name from the batch's `[Repo]` attribution); cross-repo evidence → no repo tag. smine-apply dispositions foreign-repo proposals `manual-external` on these tags.
 - Old batches predate dedicated sections — mine the prose for candidates, not only headings.
 
@@ -40,6 +42,7 @@ Turn skill candidates and existing-skill report cards from batch reports into on
 ## 2. Inventory check
 
 - Read the live `skills/` inventory (this repo). A candidate an existing skill already covers becomes an **edit** to that skill or is marked covered — never a duplicate proposal.
+- **Casual lockout** — read `~/.claude/context/global/presentation-profile.md` first; when `audience: casual`, an edit (skill or workflow) may target only a skill whose SKILL.md frontmatter carries `origin: user`. Any other edit candidate is dropped and listed in the run report (`dropped: casual lockout — <target>`); it is never written to `skills.json`. New-skill proposals stay allowed — smine-apply stamps them `origin: user` at creation.
 - A workflow candidate an existing `skills/<skill>/workflows/*.js` already covers becomes an edit to that script's owning skill or is marked covered. Edits beat new workflows: a **new-workflow** proposal carries a one-line justification of why no existing workflow or skill absorbs it.
 - Edits beat new skills: a **new-skill** proposal requires an explicit one-line justification of why no existing skill can absorb it as an edit; absent that justification, default to an edit proposal against the closest existing skill.
 
@@ -59,7 +62,7 @@ Turn skill candidates and existing-skill report cards from batch reports into on
 ## 4. Rank & write
 
 - Rank by impact, evidence-based ordering (no numeric formula): recurrence (# distinct sessions), frustration weight (attached quotes), cost of absence (burned cycles/sessions), breadth (repos/scopes affected).
-- `skills.json` has three groups (`groups[]`): **New skills**, **Edits to existing skills**, **Workflows (skill-bundled scripts)**. Per proposal: title, one-line purpose, rank evidence, status. A Workflows entry names the owning skill as `target`, its `change` is "author `workflows/<name>.js` under `<target>` per spec", and the spec fields live in `fields[]` (never a full script).
+- `skills.json` has three groups (`groups[]`): **New skills**, **Edits to existing skills**, **Workflows (skill-bundled scripts)**. These group titles are machine-read keys (smine-apply routes on them) — always written verbatim in English regardless of any presentation-profile language; the UI translates them at render time. Per proposal: title, one-line purpose, rank evidence, status. A Workflows entry names the owning skill as `target`, its `change` is "author `workflows/<name>.js` under `<target>` per spec", and the spec fields live in `fields[]` (never a full script).
 - **One proposal = one change = one vote.** Every votable proposal carries exactly one `change` field — the imperative edit, quotable into the skill file. A candidate demanding N distinct changes becomes N sibling proposals with ids `<slug>--1` … `<slug>--N`, assigned once and never renumbered on re-runs (votes bind to the id). Edit proposals name their `target`; a proposal without a concrete change is not actionable and must not be written. New proposals carry a `proposed` field (`<YYYY-MM-DD>`, the analyze-run date) — stamped once at first write, never rewritten.
 - **Title.** A proposal's `title` is `<target> — <distinct change name>` (Workflows group: `<target> — <script name>`) (its own evidence `title`). Split siblings (`<slug>--<n>`) carry only their distinct name — never a shared candidate heading repeated verbatim across every sibling (that renders the cards indistinguishable in the UI); the `--<n>` id already encodes the sibling link.
 - Status is the user's column (`proposed | accepted | building | done | rejected | postponed`): new entries get `proposed`; re-runs may add evidence to any entry but never change a user-set status or delete an entry.

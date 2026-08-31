@@ -7,7 +7,7 @@ export const meta = {
     { title: 'Dedup', detail: 'lightweight grouper per direction — text-only, no worktree: same-defect claims collapse to the best-argued survivor at max group severity' },
     { title: 'Refutation', detail: 'deduped claims at or above the refute threshold each get a fresh refuter — the claim\'s second confirmation' },
     { title: 'Station merge', detail: 'single barrier agent, the only semantic consolidator: union, dedup, verdict intake, dispositions, DoD, JSON+MD handoff' },
-    { title: 'Cleanup', detail: 'remove this round\'s claude/railroad-* worktrees and branches via the agent-toolset remove_agent_worktrees.sh — safety-gated, never forced' },
+    { title: 'Cleanup', detail: 'remove this round\'s claude-review/* worktrees and branches via the agent-toolset remove_agent_worktrees.sh — safety-gated, never forced' },
   ],
 }
 
@@ -78,8 +78,8 @@ const chunkSlug = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace
 // chunk list for one direction: contracts always reviews the full diff (cross-boundary)
 const chunkListFor = d => (chunks && d !== 'contracts') ? chunks : [null]
 const laneBranchName = (d, chunk, i) =>
-  chunk ? `claude/railroad-${d}-${chunkSlug(chunk.name)}-l${i}-r${r}-${hash6}`
-        : `claude/railroad-${d}-l${i}-r${r}-${hash6}`
+  chunk ? `claude-review/${d}-${chunkSlug(chunk.name)}-l${i}-r${r}-${hash6}`
+        : `claude-review/${d}-l${i}-r${r}-${hash6}`
 
 const rejected = Array.isArray(args.rejectedFindings) ? args.rejectedFindings : []
 const contextRefs = typeof args.contextRefs === 'string' ? args.contextRefs : ''
@@ -126,7 +126,7 @@ async function runCleanup() {
   const expectedBranches = [
     ...directions.flatMap(d => chunkListFor(d).flatMap(c => Array.from({ length: lanes }, (_, i) => laneBranchName(d, c, i + 1)))),
     ...refuterBranches,
-    `claude/railroad-station-r${r}-${hash6}`,
+    `claude-review/station-r${r}-${hash6}`,
   ].flatMap(b => [b, `${b}-2`])
   return agent(
     `You are the cleanup agent of a railroad-review round on ${args.base}...${args.head}, running in the dispatcher's checkout — ` +
@@ -183,6 +183,7 @@ function lanePrompt(direction, i, chunk) {
   const laneFiles = chunk ? chunk.files : args.diffFiles
   const fileTag = chunk ? `${direction}-${chunkSlug(chunk.name)}-lane${i}` : `${direction}-lane${i}`
   return (
+    `REQUIRE-SKILL:railroad-review\n` +
     `You are lane ${i} of ${lanes} on the "${direction}" direction of a railroad-review fan-out on ${args.base}...${args.head} (round ${r})` +
     (chunk ? `, scoped to chunk "${chunk.name}" of a chunked review` : '') + `. ` +
     `You run in your own isolated git worktree at the review head tip. Other lanes review the same direction independently — ` +
@@ -195,11 +196,13 @@ function lanePrompt(direction, i, chunk) {
     `(artifact paths empty, no artifacts written) and stop — do not review from a different premise. ` +
     `Then verify \`git merge-base --is-ancestor ${args.baseCommit} HEAD\`; a failed ancestor check also aborts. Otherwise aborted=false.\n\n` +
     `SECOND ACTION (skip if the snapshot checkout above already put you on the branch): rename your worktree branch so any ` +
-    `leftover lands in the claude/* namespace: ` +
+    `leftover lands in the claude-review/* namespace: ` +
     `\`git branch -m ${branch}\` — if the name is taken, append "-2". ` +
     `Rename only the branch; never move the worktree directory, it is harness-managed.\n\n` +
-    `Invoke the Skill tool with skill="railroad-review", then follow the "${direction}" direction definition in its ` +
-    `SKILL.md exactly — read only the context that direction needs, walk only that direction's checklist. ` +
+    `Invoke the Skill tool with skill="railroad-review" — bare, no args; the hook injects your full review context and ` +
+    `a gate blocks every other tool call until you have invoked it and read the injected spill in full. Then follow the ` +
+    `"${direction}" direction definition in its SKILL.md exactly — your context is the injection; do not read files from ` +
+    `the repo's context directory (denied; language guides excepted), walk only that direction's checklist. ` +
     `Diff with \`git diff ${args.baseCommit} HEAD\`; read each changed file in full, not just the hunks.\n` +
     (chunk
       ? `CHUNK SCOPE: you review ONLY the files of chunk "${chunk.name}" listed below — sibling lanes cover the other ` +
@@ -361,7 +364,7 @@ async function refuteDirection(report, d) {
   if (!targets.length) return { ...report, refuter_verdicts: [] }
   log(`direction ${d}: refuting ${targets.length} candidate(s) at threshold "${refuteMode}"`)
   const verdicts = (await parallel(targets.map(f => {
-    const branch = `claude/railroad-refute-${findingSlug(f.finding_id)}-r${r}-${hash6}`
+    const branch = `claude-review/refute-${findingSlug(f.finding_id)}-r${r}-${hash6}`
     refuterBranches.push(branch)
     return () => agent(refuterPrompt(d, f, branch), {
       label: `refute-${f.finding_id}`, phase: 'Refutation', agentType: 'general-purpose',
@@ -423,7 +426,7 @@ if (!finishedDirections.length) {
 // sets, disposition everything, take refuter verdicts in, verify the rest against the
 // CURRENT tree (fixes land out of band mid-review), and write the round's JSON+MD
 // handoff artifacts. Like every other agent, it renames its
-// worktree branch into the claude/* namespace so any leftover is visible to tooling.
+// worktree branch into the claude-review/* namespace so any leftover is visible to tooling.
 const CONSOLIDATION_SCHEMA = {
   type: 'object',
   required: ['dispositions', 'ranked_plan', 'unverified', 'funnel', 'permanent_checks', 'build_test', 'debunked', 'resolved', 'intentional_deviations', 'coverage_gaps', 'definition_of_done', 'recommendation', 'handoff_json', 'handoff_md', 'probes', 'probes_dir'],
@@ -529,9 +532,9 @@ const consolidation = await agent(
   `You run in your own isolated git worktree, forked from the dispatcher's checkout after the fan-out — ` +
   `for re-verification purposes it IS the current tree.\n\n` +
   `FIRST ACTION: if \`git rev-parse HEAD\` is not ${args.headCommit} and ${args.headCommit} descends from HEAD ` +
-  `(snapshot scope), run \`git checkout -B claude/railroad-station-r${r}-${hash6} ${args.headCommit}\` — ` +
+  `(snapshot scope), run \`git checkout -B claude-review/station-r${r}-${hash6} ${args.headCommit}\` — ` +
   `re-verification must run against the reviewed snapshot tree. Otherwise rename your worktree branch: ` +
-  `\`git branch -m claude/railroad-station-r${r}-${hash6}\` — ` +
+  `\`git branch -m claude-review/station-r${r}-${hash6}\` — ` +
   `if the name is taken, append "-2". Rename only the branch; never move the worktree directory.\n\n` +
   `${finishedDirections.length} direction claim sets follow — the lanes' once-confirmed claims, already deduped WITHIN ` +
   `each direction by a grouper (same-defect groups collapsed to the best-argued survivor at max group severity, ` +

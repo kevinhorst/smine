@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.28",
+    "date": "2026-08-30",
+    "text": "permissions kind branch in step 4 — a + voted permissions proposal appends its allow-rule string to permissions.allow in settings/claude_code/settings.json (sorted, never deny/ask; already-present rules archived as done without an edit); auto-apply gates unchanged"
+  },
+  {
+    "version": "1.27",
+    "date": "2026-08-27",
+    "text": "casual lockout hard gate — on a casual install a skills-kind proposal targeting an existing skill without origin: user frontmatter is never implemented (disposition casual-locked, any vote or auto-apply mode); new skills created from proposals are stamped origin: user"
+  },
+  {
+    "version": "1.26",
+    "date": "2026-08-20",
+    "text": "context route reads the registered scope/topic taxonomy (context/context.json) and the used-number set across rules.acdsl + -local before authoring a new declaration ID — no invented tokens, no reused numbers"
+  },
+  {
     "version": "1.25",
     "date": "2026-08-23",
     "text": "evalscript renamed to verifier across prose — gate.verifier field, manual-verifier disposition, cmd/acdsl/verifiers path"

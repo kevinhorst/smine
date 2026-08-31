@@ -1,5 +1,10 @@
 [
   {
+    "version": "3.3",
+    "date": "2026-08-22",
+    "text": "bundled workflow foreign-toolchain-pretag.js — for every release artifact built by a toolchain the repo does not run natively (Inno Setup .iss, GOOS cross-builds), compiles it locally (dockerized where needed), asserts exit 0, and blocks the tag on any failure so a CI run on a pushed tag is never the first compile"
+  },
+  {
     "version": "3.2",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

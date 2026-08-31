@@ -2,7 +2,7 @@
 name: railroad-review
 description: Review code changes against project conventions, specs, and definition-of-done — parallel review directions merged into one station review. Trigger on /railroad-review or "review this branch/PR/my changes". Args — directions: direction-set override; lanes: n[model-effort]; scope: branch|wip|all[base]; paths: pathspec; spec; focus: subject; refute-level: threshold; chunks: mode[maxFiles:maxLines]; expect-base-red: red-base waiver.
 author: Andreas Geßner
-version: 8.2
+version: 8.4
 acdsl-context: ACTION-CONCEPT-*, ACTION-IMPL-*, ACTION-REVIEW-*, RULE-PLAN-*, RULE-COMMIT-*, FACT-*
 allowed-tools: Read, Write, Edit, Workflow, TaskOutput, ToolSearch, Bash(git diff*), Bash(git log*), Bash(git rev-parse*), Bash(git merge-base*), Bash(git rev-list*), Bash(git status*), Bash(git branch*), Bash(git worktree add*), Bash(git worktree remove*), Bash(git worktree list*), Bash(git add*), Bash(git write-tree*), Bash(git commit-tree*), Bash(jq *), Bash(mkdir *), Bash(cp *), Bash(go run ./cmd/acdsl *), Bash(make build*), Bash(make test*)
 argument-hint: "[directions] [lanes] [scope] [paths] [spec] [focus] [refute-level] [chunks] [expect-base-red]"
@@ -90,7 +90,7 @@ Rejected: "this should use the repository pattern"                       (archit
 
 **SKILL-RAILROADREVIEW-ROUND-001** `[step]` — **Fan-out:** `lanes` lanes per selected direction (× chunks per MODES-005), each in an isolated worktree at `headCommit`, blind to sibling lanes.
 
-**SKILL-RAILROADREVIEW-ROUND-002** `[gate]` — **Lane premise:** HEAD must equal `headCommit` with `baseCommit` an ancestor; when `headCommit` is a descendant of HEAD (snapshot scope), the lane runs `git checkout -B <its claude/railroad-* branch> <headCommit>` — the one sanctioned checkout, which also anchors the unreferenced snapshot. Any other mismatch ⇒ abort with the commit facts, never review from a different premise.
+**SKILL-RAILROADREVIEW-ROUND-002** `[gate]` — **Lane premise:** HEAD must equal `headCommit` with `baseCommit` an ancestor; when `headCommit` is a descendant of HEAD (snapshot scope), the lane runs `git checkout -B <its claude-review/* branch> <headCommit>` — the one sanctioned checkout, which also anchors the unreferenced snapshot. Any other mismatch ⇒ abort with the commit facts, never review from a different premise.
 
 **SKILL-RAILROADREVIEW-ROUND-003** `[gate]` — **Lanes are review-only:** no edits, no plan mode, no tree-mutating git; artifacts are written as a JSON+MD pair under `round-{r}/` outside the worktree; the lane terminates after writing.
 
@@ -100,11 +100,11 @@ Rejected: "this should use the repository pattern"                       (archit
 
 **SKILL-RAILROADREVIEW-ROUND-006** `[step]` — **Dedup (semantic, per direction):** a lightweight grouper agent — text-only, no worktree, no code access, low effort — groups the direction's same-defect claims across lanes; the script assembles the result deterministically: best-argued survivor, **max group severity** (so any lane's higher vote still reaches the `refute-level` threshold), absorbed ids kept as `merged_from`. In doubt the grouper keeps claims separate — a wrong merge silently drops a finding, a missed merge only costs one duplicate refutation.
 
-**SKILL-RAILROADREVIEW-ROUND-007** `[step]` — **Refutation:** every deduped claim at or above the `refute-level` threshold goes to a **fresh refuter agent that did not produce it** — isolated worktree (premise per ROUND-002, branch `claude/railroad-refute-{finding-id}-r{r}-{hash6}`), pipelined per direction, second confirmation per the Probe protocol.
+**SKILL-RAILROADREVIEW-ROUND-007** `[step]` — **Refutation:** every deduped claim at or above the `refute-level` threshold goes to a **fresh refuter agent that did not produce it** — isolated worktree (premise per ROUND-002, branch `claude-review/refute-{finding-id}-r{r}-{hash6}`), pipelined per direction, second confirmation per the Probe protocol.
 
 **SKILL-RAILROADREVIEW-ROUND-008** `[review]` — **Refuter verdicts:** `confirmed` (survived, artifact in hand) | `debunked` (refuted) | `unverified` (survives but not demonstrable here). "Could not reproduce" is a successful result; evidence is never manufactured. Cross-direction duplicates may refute twice — the station reconciles.
 
-**SKILL-RAILROADREVIEW-ROUND-009** `[step]` — **Station (single barrier agent):** isolated worktree forked after the fan-out (premise per ROUND-002), branch `claude/railroad-station-r{r}-{hash6}`; unions the directions' deduped claim sets, dedups **across** directions (within-direction dedup already happened, ROUND-006), reconciles divergent severities against the code.
+**SKILL-RAILROADREVIEW-ROUND-009** `[step]` — **Station (single barrier agent):** isolated worktree forked after the fan-out (premise per ROUND-002), branch `claude-review/station-r{r}-{hash6}`; unions the directions' deduped claim sets, dedups **across** directions (within-direction dedup already happened, ROUND-006), reconciles divergent severities against the code.
 
 **SKILL-RAILROADREVIEW-ROUND-010** `[gate]` — **Verdict intake:** refuter verdicts are binding — mapped straight into dispositions with their reason, probe, and artifacts — unless internally inconsistent with the code; then the station re-verifies and says so.
 
@@ -128,7 +128,7 @@ Rejected: "this should use the repository pattern"                       (archit
 
 **SKILL-RAILROADREVIEW-ROUND-020** `[step]` — **Funnel:** `review.md` ends with one line — claims produced / confirmed / unverified / duplicates / rejected / debunked.
 
-**SKILL-RAILROADREVIEW-ROUND-021** `[step]` — **Cleanup:** a final agent in the dispatcher's checkout runs the agent-toolset `remove_agent_worktrees.sh --delete-branch` per expected `claude/railroad-*` branch — safety-gated, never forced; refusals and unattributable worktrees return in `cleanup` and the dispatcher relays them.
+**SKILL-RAILROADREVIEW-ROUND-021** `[step]` — **Cleanup:** a final agent in the dispatcher's checkout runs the agent-toolset `remove_agent_worktrees.sh --delete-branch` per expected `claude-review/*` branch — safety-gated, never forced; refusals and unattributable worktrees return in `cleanup` and the dispatcher relays them.
 
 ## Probe protocol (second confirmation)
 
@@ -156,7 +156,7 @@ Rejected: "this should use the repository pattern"                       (archit
 
 **SKILL-RAILROADREVIEW-CTX-001** `[review]` — **Dispatcher context:** the dispatcher's doctrine arrives via this skill's frontmatter `acdsl-context:` declaration, injected at invocation by the skill-context hook.
 
-**SKILL-RAILROADREVIEW-CTX-002** `[review]` — **Lane context:** lanes get no injection (they never invoke a skill) — each lane's prompt names its direction's context requirement; the Directions table is the source, lanes read the named entries' files from the repo's context directory.
+**SKILL-RAILROADREVIEW-CTX-002** `[review]` — **Lane context:** every lane invokes the Skill tool bare (no args) and receives the full doctrine injection — the `skill-invoke-gate` hook denies every other tool call until the invocation happens, and the `read-gate` hook forces the injected spill to be read in full. Lanes do not read context-entry files from the repo's context directory directly (the gate denies it; the change's language guide is the only exception, which the read-gate requires). The Directions table's Context column documents each direction's focus — it is not a lane read list.
 
 **SKILL-RAILROADREVIEW-CTX-003** `[gate]` — **Missing context:** a context source a direction requires that cannot be found is a blocker finding in the review, never silently skipped.
 

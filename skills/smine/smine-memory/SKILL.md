@@ -2,7 +2,7 @@
 name: smine-memory
 description: Route memory-dimension findings from smine-batch reports into context proposals (proposals/context.json, kind context) — never auto-memory writes. Trigger on /smine-memory or "mine batch reports into context" or "drain auto-memory". Args — batch file: one batch; absent means all batches with ledger-missing sessions; migrate: drain an auto-memory dir into proposals instead of batches.
 author: Kevin Horst
-version: 2.1
+version: 2.4
 argument-hint: "[batch file] [migrate [project-dir]]"
 allowed-tools: Read, Write, Edit, Bash(go run ./cmd/acdsl *)
 ---
@@ -25,10 +25,12 @@ Route memory candidates ("things the agent should have known") out of smine-batc
 
 ## 0. Setup
 
-- Input: batch reports `sessions/*/*batch-*.md` — every scope directory under `sessions/` except `proposals/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`) plus the batch JSON (`sessions/<scope>/json/<batch>.json`, `findings[].dimension == "memory"`). `migrate` mode: the fact files listed in the target dir's MEMORY.md instead.
+- Input: batch reports `sessions/*/*batch-*.md` — every folder under `sessions/` except `archived/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`) plus the batch JSON (`sessions/<scope>/json/<batch>.json`, `findings[].dimension == "memory"`). `migrate` mode: the fact files listed in the target dir's MEMORY.md instead.
 - Ledger (batch mode only): `sessions/<scope>/analyzed-memory.txt` (historical filename, predates the redesign) — first line `Last analyzed batch: <batch filename> at <YYYY-MM-DD>`, then one full session ID per line. Create on first run. Sessions already in the ledger are skipped on re-runs.
 - Scope: arg = one batch file. No arg = every batch containing session IDs missing from the ledger.
 - Output: `proposals/context.json` (kind `context`) — shared with /smine-context, cumulative, grouped by target surface, updated in place, conforming to `proposals/schema.json`. This skill's groups are the fact surfaces below; evidence objects carry `dimension: "memory"`.
+- **Language.** Read `~/.claude/context/global/presentation-profile.md` before writing output; when its `language:` is set and not `en`, author user-visible prose fields — the title's change-name part, `change`, `fields[].label/text`, `evidence[].title`, `sessions[].note` — in that language, following the profile body's register and glossary. Never translate: ids, targets, group titles (fact-surface paths), file paths, code, fact text destined for context docs (repo docs stay English), dates, tags, schema keys and status values. Absent profile = English, unchanged.
+- **Casual presentation.** When the profile's `audience:` is `casual`, the user-visible prose fields above carry no file paths, no rule/FACT/ACDSL IDs, and no schema or taxonomy jargon — say what changes for the user; technical anchors belong in `target`/`anchor`/`code`/snippet fields.
 - Old batches predate dedicated sections — mine the prose for memory candidates, not only "Memory candidates" headings.
 
 ## 1. Extract & cluster

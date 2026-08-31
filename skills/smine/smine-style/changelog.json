@@ -1,0 +1,12 @@
+[
+  {
+    "version": "1.1",
+    "date": "2026-08-27",
+    "text": "directive lines are written in the presentation-profile language (fallback: dominant language of the sampled turns) and the file must exemplify its own register; a target-path write failure is a reported stage failure, never a silent staging file; trigger/workflow wording moved from the retired /smine-bootstrap skill to the bootstrap wrapper (cmd/bootstrap/run.sh)"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-08-27",
+    "text": "initial version — sample the last n sessions' user messages via peek-mcp and write the machine-global style profile"
+  }
+]

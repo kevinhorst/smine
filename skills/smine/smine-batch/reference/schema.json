@@ -52,7 +52,7 @@
       "properties": {
         "scope": {
           "type": "string",
-          "description": "scope directory name under sessions/ (e.g. personal, work)"
+          "description": "folder name under sessions/ — the attributed repo's roster name, or default"
         },
         "title": {
           "type": "string",
@@ -196,6 +196,66 @@
                     }
                   }
                 }
+              }
+            }
+          },
+          "permissions": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "per-session permission decisions from session_events (permission_granted/permission_denied) and the optional telemetry permissions view; absent when the session had no permission activity",
+            "properties": {
+              "granted": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "tool",
+                    "command"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "tool": {
+                      "type": "string",
+                      "description": "the tool that was prompted and granted, e.g. Bash, WebFetch, an mcp__ server tool"
+                    },
+                    "command": {
+                      "type": "string",
+                      "description": "the concrete command/argument that was granted (Bash command line, fetched domain, tool input); empty when the harness exposed no detail"
+                    },
+                    "decision": {
+                      "enum": [
+                        "prompted_once",
+                        "prompted_always",
+                        "granted_event"
+                      ],
+                      "description": "prompted_once/prompted_always from the telemetry permissions view; granted_event when only the event stream carried the grant"
+                    }
+                  }
+                }
+              },
+              "denied": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "tool",
+                    "command"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "tool": {
+                      "type": "string"
+                    },
+                    "command": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": "prompted-and-rejected tool/command pairs — negative evidence only, never a deny/ask proposal"
+              },
+              "telemetry_present": {
+                "type": "boolean",
+                "description": "true when the telemetry permissions view was available for this session (auto-allowed vs prompted counts); false when only the event stream was mined"
               }
             }
           },

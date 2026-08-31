@@ -1,5 +1,15 @@
 [
   {
+    "version": "8.4",
+    "date": "2026-08-30",
+    "text": "lane context model reversed: lanes now invoke the Skill tool BARE and receive the full doctrine injection (the v8.3 --no-context suppression is removed) — the intended model is every lane gets all the review context, delivered identically, with zero agent discretion. A new skill-invoke-gate PreToolUse hook denies every lane tool call until the skill is invoked (forcing the invocation that was previously prose-only and sometimes skipped) and denies direct reads of context-entry files after invocation (the change's language guide excepted); read-gate's blanket subagent exemption is narrowed so a subagent that invoked a skill must read that skill's injected spill in full. CTX-002 reworded to the enforced contract; the headless eval routine drops --no-context from all cells and retires the missing-required metric (nothing to miss once context arrives injected)"
+  },
+  {
+    "version": "8.3",
+    "date": "2026-08-26",
+    "text": "lane context leak closed: the lane prompt's Skill invocation now carries --no-context (the skill-context hook's per-invocation opt-out), so lanes no longer receive the dispatcher's full acdsl-context doctrine injection — CTX-002 reworded to name the real mechanism (lanes DO invoke the Skill tool; the old 'they never invoke a skill' premise was false); all skill-created branches (lanes, refuters, station) moved from claude/railroad-* to the claude-review/* namespace (lane {direction}[-{chunk}]-l{i}-r{r}-{hash6}, refute-{finding-id}-…, station-…), cleanup enumeration and namespace prose updated to match"
+  },
+  {
     "version": "8.2",
     "date": "2026-08-24",
     "text": "probe artifact diet: review.json gains a required probes[] index (id, script, fixture, verdict, finding_id — refuter probes mapped in via the new REFUTER_SCHEMA fixture field) and review.md a Probes table before the funnel line (OUT-010); probes/ persists exactly scripts, fixtures/, registry.json, and the probes.acdsl mirror — verdicts.md dropped (content lives in probes[]) and the validity-check files lists are written to the system temp dir, never persisted (they were orphaned listNN.txt sidecars nothing re-read)"

@@ -2,7 +2,7 @@
 name: smine-context
 description: Extract context-surface rules and doc drift from smine-batch reports into proposals/context.json (kind context). Trigger on /smine-context or "extract context rules or doc fixes from batches". Args — batch file: one batch; absent means all batches with ledger-missing sessions; production cap: honored when the invocation states one.
 author: Kevin Horst
-version: 1.31
+version: 1.34
 argument-hint: "[batch file] [production cap]"
 allowed-tools: Read, Write, Edit, mcp__Peek_MCP__session_plan, mcp__Peek_MCP__session_diff, Bash(go run ./cmd/acdsl *), ToolSearch
 ---
@@ -25,10 +25,12 @@ Turn repo-surface rules and doc-drift findings from batch reports into per-surfa
 
 ## 0. Setup
 
-- Input: batch reports `sessions/*/*batch-*.md` — every scope directory under `sessions/` except `proposals/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`) plus the batch JSON (`sessions/<scope>/json/<batch>.json`) for records and context-use findings.
+- Input: batch reports `sessions/*/*batch-*.md` — every folder under `sessions/` except `archived/` (both naming schemes: `sessions-batch-NN.md`, `session-analysis-batch-NN.md`) plus the batch JSON (`sessions/<scope>/json/<batch>.json`) for records and context-use findings.
 - Ledger: `sessions/<scope>/analyzed-rules.txt` (historical filename, predates the smine-style rename) — first line `Last analyzed batch: <batch filename> at <YYYY-MM-DD>`, then one full session ID per line. Create on first run. Sessions already in the ledger are skipped on re-runs.
 - Scope: arg = one batch file. No arg = every batch containing session IDs missing from the ledger.
 - Output: `proposals/context.json` (kind `context`) — the single authoritative artifact: cumulative, cross-scope, grouped by surface, updated in place, conforming to `proposals/schema.json`. Shared with /smine-memory (its groups are the fact surfaces), which the fan-out runs after this skill — never concurrently with it. Non-context findings (project-local tooling, external-repo flags, reroutes) live there as their own groups. There is no md form and no style.json (kind `style` retired 2026-08-09).
+- **Language.** Read `~/.claude/context/global/presentation-profile.md` before writing output; when its `language:` is set and not `en`, author user-visible prose fields — the title's change-name part, `change`, `fields[].label/text`, `evidence[].title`, `sessions[].note` — in that language, following the profile body's register and glossary. Never translate: ids, targets, group titles (target-surface paths), file paths, code, rule text destined for enforcement surfaces (repo docs stay English), dates, tags, schema keys and status values. Absent profile = English, unchanged.
+- **Casual presentation.** When the profile's `audience:` is `casual`, the user-visible prose fields above carry no file paths, no rule/FACT/ACDSL IDs, and no schema or taxonomy jargon — say what changes for the user; technical anchors belong in `target`/`anchor`/`code`/snippet fields.
 - Old batches predate dedicated sections — mine the prose: corrections phrased as conventions ("never X", "always Y", test-struct rules) are rule material wherever they appear.
 
 ## 1. Extract

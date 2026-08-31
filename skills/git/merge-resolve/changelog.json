@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.6",
+    "date": "2026-08-27",
+    "text": "allowed-tools manifest now covers the skill's own git mechanics (merge, merge-tree, cherry-pick/rebase aborts, commit --no-edit) so unattended --allowedTools runs can execute the merge; unattended invocations merge directly on ours (no work branch, no cleanup)"
+  },
+  {
     "version": "1.5",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

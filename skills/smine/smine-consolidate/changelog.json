@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.4",
+    "date": "2026-08-27",
+    "text": "casual jargon sweep in the presentation pass — on audience: casual, mutable entries whose user-visible prose carries file paths, rule/FACT/ACDSL IDs, or schema/taxonomy jargon are reworded with the technical content moved to target/anchor/code/snippet fields"
+  },
+  {
+    "version": "1.3",
+    "date": "2026-08-27",
+    "text": "language arg widened to a full-store sweep — all mutable user-visible prose translated, fixed structural group titles verbatim"
+  },
+  {
     "version": "1.2",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

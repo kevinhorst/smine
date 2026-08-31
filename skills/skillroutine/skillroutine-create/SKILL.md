@@ -2,7 +2,7 @@
 name: skillroutine-create
 description: Create or modify repo skills and launchd routines — route-selected by arg or intent, enforcing the repo skill format and the routine packaging contract. Trigger on /skillroutine-create [skill|routine] or "create a skill" or "create/schedule a routine". Args — skill|routine: route selector; inferred from intent when unambiguous.
 author: Kevin Horst
-version: 1.8
+version: 1.9
 argument-hint: "[skill|routine]"
 ---
 
@@ -33,6 +33,7 @@ Author and modify skills, and scaffold launchd routines, in this repo. The deliv
 
 - Directory `skills/<group>/<name>/` for grouped skills (concept, feature, git, skillroutine, smine, util) or `skills/<name>/` top-level (e.g. `fmt`) — the **leaf** directory name is the skill name; group folders carry no SKILL.md. Deploy targets stay flat: sync copies every leaf to `~/.claude/skills/<name>/`.
 - `SKILL.md` frontmatter: `name`, `description`, `author`, `version` — single-line values preferred; the config-server parser reads line-wise between the fences but tolerates `>`/`|` block-scalar descriptions (third-party skills). Own skills stay single-line.
+- A skill created from a proposal (smine-apply, or this skill driven by an accepted `proposals/skills.json` entry) additionally carries `origin: user` (one line, after `author:`) — the provenance marker the casual lockout keys on. Never add it to shipped skills; never remove it.
 - Required sections in order: title, `## When to use` (Use when / Don't use when / Preconditions / Workflow position linking the README Skill map), `## Args` (required when the skill takes intake args), the body, `## Model`. No `## Changelog` section — history lives in `changelog.json`.
 - `## Args` declares every invocation-time input as `- <name>: <doc>` bullets (doc may wrap to indented continuation lines) — the verbose arg documentation for readers of the skill; the description carries the compressed form. A skill without intake args omits the section.
 - `## Model` fields, in order:

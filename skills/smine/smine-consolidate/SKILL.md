@@ -1,8 +1,8 @@
 ---
 name: smine-consolidate
-description: Consolidate the pending proposal store — dedup, move misplaced proposals to their right dimension, tighten presentation, validate against schema and audit. Trigger on /smine-consolidate [proposals], normally as the smine-nightly consolidate stage. Args — mode: proposals (default; skills|context reserved); caveman: compress wording, requires caveman skill; language <lang>: output language for reworded prose.
+description: Consolidate the pending proposal store — dedup, move misplaced proposals to their right dimension, tighten presentation, validate against schema and audit. Trigger on /smine-consolidate [proposals], normally as the smine-nightly consolidate stage. Args — mode: proposals (default; skills|context reserved); caveman: compress wording, requires caveman skill; language <lang>: full-store sweep — all mutable user-visible prose in <lang>.
 author: Kevin Horst
-version: 1.2
+version: 1.4
 argument-hint: "[proposals] [caveman] [language <lang>]"
 allowed-tools: Read, Write, Edit, Bash(jq *), Bash(go run ./cmd/acdsl *), Bash(make audit *), ToolSearch
 ---
@@ -22,13 +22,13 @@ Batch cleanup pass over `proposals/*.json` after the dimension fan-out: merge du
 
 - mode: positional, default `proposals`. `skills` and `context` (consolidating the actual repo surfaces) are reserved — STOP with "mode reserved, not implemented".
 - `caveman`: compress reworded prose in the caveman style; requires `~/.claude/skills/caveman`, else STOP.
-- `language <lang>`: write reworded prose in `<lang>` (default: keep the store's language).
+- `language <lang>`: all user-visible prose of the mutable set ends up in `<lang>` — reworded entries are written in it, and untouched entries whose prose is not in `<lang>` are translated in place (the title's change-name part, `change`, `fields[].label/text`, `evidence[].title`, `sessions[].note`, free-form group titles). Never translated: ids, targets, file paths, code, dates, tags, status values, schema keys, and the fixed structural group titles (machine-read keys — e.g. the three skills.json groups and "Considered, not proposed"). Default: keep the store's language.
 
 ## Hard invariants
 
 - **Mutable set:** only entries with `status: "proposed"` and no vote in `proposals/votes.jsonl` (key `<kind>/<id>`). Everything else — any user-set status, any voted entry — is immutable, including its formatting.
 - Never renumber or reuse ids; a merge keeps the strongest entry's id and archives nothing (dropped duplicates are deleted from JSON and listed in the run report — they were never voted).
-- Grouping stays the authored two-level shape (`groups[].title`); this skill never invents new group titles beyond the target kind's existing conventions.
+- Grouping stays the authored two-level shape (`groups[].title`); this skill never invents new group titles beyond the target kind's existing conventions. With `language <lang>`, free-form group titles are translated in place; fixed structural titles stay verbatim.
 
 ## 1. Validate first
 
@@ -47,7 +47,8 @@ Batch cleanup pass over `proposals/*.json` after the dimension fan-out: merge du
 
 ## 4. Presentation
 
-- Enforce the title contract (`<target> — <distinct change name>`, no shared candidate headings), one-line evidence notes, and verbosity reduction on `change`/`fields` prose. Apply `caveman`/`language` when given. Mutable set only.
+- Enforce the title contract (`<target> — <distinct change name>`, no shared candidate headings), one-line evidence notes, and verbosity reduction on `change`/`fields` prose. Apply `caveman` when given. With `language <lang>`, run the full-store language sweep from the Args section: every mutable entry whose user-visible prose is not in `<lang>` is translated — not only entries this pass rewords. Mutable set only.
+- **Casual jargon sweep.** When the presentation profile's `audience:` is `casual`: mutable entries whose user-visible prose (title's change-name, `change`, `fields[].label/text`, `evidence[].title`, `sessions[].note`) still carries file paths, rule/FACT/ACDSL IDs, or schema/taxonomy jargon are reworded — the technical content moves into `target`/`anchor`/`code`/snippet fields, never deleted.
 
 ## 5. Finish
 

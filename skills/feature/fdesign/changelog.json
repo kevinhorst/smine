@@ -1,5 +1,15 @@
 [
   {
+    "version": "3.7",
+    "date": "2026-08-22",
+    "text": "bundled workflow subsystem-grounding.js — fans one Explore agent per named subsystem over the live tree, collects each file:line report at a barrier, then folds every report verbatim into the fchange/fdesign plan; grounds a multi-subsystem plan deterministically instead of hand-deciding fan-out width each run"
+  },
+  {
+    "version": "3.6",
+    "date": "2026-08-27",
+    "text": "plan template: Open questions moved directly after Decisions; F/D IDs plain text with section-slug links instead of HTML anchors; Hot items require actual-UI screenshots under plans/{slug}/design/ui/ and Changes entries a ui: reference line"
+  },
+  {
     "version": "3.5",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

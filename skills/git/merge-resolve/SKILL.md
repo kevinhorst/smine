@@ -2,9 +2,9 @@
 name: merge-resolve
 description: Merge two diverged git branches by resolving all conflicts once at final-tree level, verified by build, tests and parent diffs. Trigger on /merge-resolve or "merge main into my branch" or "these branches conflict / cherry-picks keep failing". Args — ours: branch to merge into (default current); theirs: branch to merge in.
 author: Kevin Horst
-version: 1.5
+version: 1.6
 argument-hint: "[ours] [theirs]"
-allowed-tools: Bash(~/.claude/skills/merge-resolve/scripts/merge_branch.sh *)
+allowed-tools: Bash(~/.claude/skills/merge-resolve/scripts/merge_branch.sh *), Bash(git merge *), Bash(git merge-tree *), Bash(git cherry-pick --abort), Bash(git rebase --abort), Bash(git commit --no-edit)
 ---
 
 # Merge Resolve
@@ -36,6 +36,7 @@ Merge two diverged branches by resolving all conflicts once at final-tree level.
 ## 3. Merge on a work branch
 
 - `~/.claude/skills/merge-resolve/scripts/merge_branch.sh create <ours> <theirs>` — creates and checks out the deterministic work branch `merge/<theirs-slug>-<ours-slug>` (or merge directly on `ours` if the user says so), then `git merge <theirs>`.
+- Unattended invocations (routine runs) merge directly on `ours` — no work branch, and step 7's cleanup is skipped; HEAD must end on the branch the run started on.
 
 ## 4. Resolve per file — union of both intents
 
@@ -43,11 +44,14 @@ Merge two diverged branches by resolving all conflicts once at final-tree level.
 - Classify each hunk: additive-union (keep both) | rename collision (keep the side whose rename has external consumers or a design-doc rationale) | mechanism collision (two implementations of the same behavior — pick the designed one, delete the stopgap; commit messages saying "so X passes" mark stopgaps) | contradictory tests (auto-merge can splice assertions from both sides into one impossible test — rewrite to the surviving mechanism).
 - Sweep for what compiles but is wrong: same-typed parameter reorders (alphabetized string params), resurrected dead code (fields/channels one side deleted), constructor arity changes in files only the other side added.
 
-## 5. Verify (abort = unresolved finding, not a skipped check)
+## 5. Verify — mandatory checkpoint (abort = unresolved finding, not a skipped check)
 
+This checkpoint runs in full even when the merge auto-resolved with zero conflicts — a clean auto-merge against the wrong base ref silently drops work, so none of these steps are skippable.
+
+- **Assert the merge base ref is the exact ref the user named.** Resolve the ref actually merged and confirm it is what the user said: a bare `<theirs>`/`<ours>` means the local branch, never `origin/<theirs>`/`origin/<ours>`. Compare SHAs (`git rev-parse <named-ref>` against the merged ref); a stale `origin/<x>` used in place of the named local `<x>` is an unresolved finding — abort and re-merge against the named ref.
 - No conflict markers left (`grep -rl '<<<<<<<'` over tracked source).
 - Project build + vet + full test suite + formatter — all green.
-- `git diff <theirs> --stat` and `git diff <ours> --stat`: every delta vs each parent must be attributable to the other parent or to a named resolution decision.
+- **Attribute every parent-diff delta before accepting the merge.** `git diff <theirs> --stat` and `git diff <ours> --stat`: every delta vs each parent must be attributable to the other parent or to a named resolution decision — an unattributable delta is dropped or spurious work, not a pass.
 - `git merge-tree --write-tree <final-target> <work-branch>`: the eventual real merge must be clean.
 
 ## 6. Commit and report

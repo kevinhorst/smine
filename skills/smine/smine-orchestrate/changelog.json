@@ -1,0 +1,17 @@
+[
+  {
+    "version": "1.2",
+    "date": "2026-08-27",
+    "text": "bootstrap mode is the terminal stage of the bootstrap wrapper (cmd/bootstrap/run.sh, /smine-bootstrap skill retired); optional (since: date) suffix — mined sessions older than the floor are findings; the presentation gate names the concrete user-visible fields and forbids file paths, rule/FACT/ACDSL IDs, and schema/taxonomy jargon on casual installs"
+  },
+  {
+    "version": "1.1",
+    "date": "2026-08-27",
+    "text": "casual lockout invariant — on a casual install the judge rejects any run-branch commit modifying a skill (SKILL.md or bundled files) lacking origin: user frontmatter; a violation fails the stage"
+  },
+  {
+    "version": "1.0",
+    "date": "2026-08-26",
+    "text": "initial version — nightly stage-3 gatekeeper: judge (incl. auto-applied re-judging), merge with reconcile doctrine, deployed-state and context-pack syncs, additionalDirectories reconciliation, push-if-remote; bootstrap mode for initial setup"
+  }
+]

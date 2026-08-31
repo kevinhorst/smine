@@ -2,7 +2,7 @@
 name: skillroutine-eval
 description: Score skill runs against the skill's own rules, emitting schema-conformant JSON. Trigger on /skillroutine-eval [manifest|matrix] or "evaluate, score, or compare skill runs" or "eval a skill across models/efforts". Args — manifest: JSON eval manifest path, inline args for one quick run; matrix: generate a fresh sandboxed matrix, then score it.
 author: Kevin Horst
-version: 2.5
+version: 2.6
 argument-hint: "[manifest] [matrix]"
 allowed-tools: Read, Write, Edit, Glob, Grep, Skill(jq), Bash(jq *), Bash(go run ./cmd/rules *), Bash(bash cmd/context/context_record.sh *), Bash(git diff *), Bash(git log *), Bash(make audit *), Bash(wc *), Bash(grep *), Bash(ls *)
 ---
@@ -70,7 +70,7 @@ Deterministic checks run before any judgment, recorded as `probes[]` and cited a
 
 ## Matrix mode (skillroutine-parallel-eval pipe)
 
-Generates the runs, then scores them — a pipe workflow (`workflows/parallel-eval.js` in this skill's directory) that nests the parallelize workflow for the fan-out and hands the surviving artifacts to this skill's normal eval flow. Composition doctrine: README.md § Skill map in the smine repo (Composition section). Matrix mode needs the Workflow tool (interactive sessions only); headless A/B runs use the `skill-eval` routine (`routines/skill-eval/`, cells are real `claude -p` sessions via `routines/_lib/matrix.sh`), which writes the same v2 manifest and then invokes this skill in manifest mode.
+Generates the runs, then scores them — a pipe workflow (`workflows/parallel-eval.js` in this skill's directory) that nests the parallelize workflow for the fan-out and hands the surviving artifacts to this skill's normal eval flow. Composition doctrine: README.md § Skill map in the smine repo (Composition section). Matrix mode needs the Workflow tool (interactive sessions only); headless A/B runs use the `skill-eval` routine (`routines/skill-eval/`, cells are real `claude -p` sessions via `routines/_lib/matrix.sh`), which writes the same v2 manifest and then invokes this skill in manifest mode. Telemetry asymmetry: only CLI cells carry `model.telemetry` (wall_s / output_tokens / cost_usd) — Workflow-nested cells cannot measure usage. A model/effort bake-off whose deliverable includes time or tokens therefore runs via the CLI runner (the routine, or a one-off `run.sh` invocation with `ROUTINE_EVAL_*` overrides — recipe in the smine repo's routines/README.md), then scores here in manifest mode.
 
 1. **Intake** — the invocation under test (skill + args + optional shared context doc) and the matrix spec, exactly as in the parallelize skill's intake: `models[]`, `efforts[]` (l/m/h/xh/max shorthand), `argVariants[]`, `replicas`, base commit defaulting to HEAD, hard cap 16 cells, clean tree, unattended-safe invocation. Plus this skill's eval context: `contextFiles[]`, `qualityContext[]`. Plus `skillVariants[]`: `[{name, disable[]}]` — each variant is rendered as the skill `<leaf>--<name>` (home scope, `sync_skills.sh --variant`) before fan-out and removed after the eval; the full skill is the implicit `default`. Cells = models × efforts × argVariants × replicas × (1 + variants), hard cap 16.
 2. **Resolve paths** (the pipe script has no filesystem access — paths always travel in args):

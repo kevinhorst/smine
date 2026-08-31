@@ -1,5 +1,10 @@
 [
   {
+    "version": "2.6",
+    "date": "2026-08-26",
+    "text": "matrix mode: documented the telemetry asymmetry — only CLI cells (skill-eval routine / matrix.sh) carry model.telemetry; time/token-bearing model bake-offs route via the CLI runner, scored in manifest mode"
+  },
+  {
     "version": "2.5",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

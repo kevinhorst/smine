@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.25",
+    "date": "2026-08-27",
+    "text": "casual presentation rule — on audience: casual the user-visible prose fields carry no file paths, no rule/FACT/ACDSL IDs, and no schema or taxonomy jargon; technical anchors move to target/anchor/code/snippet fields"
+  },
+  {
+    "version": "1.24",
+    "date": "2026-08-27",
+    "text": "presentation-profile language contract for proposal prose; the three group titles flagged as verbatim machine-read keys"
+  },
+  {
+    "version": "1.23",
+    "date": "2026-08-27",
+    "text": "casual lockout at extraction — with audience: casual, edit proposals may target only skills carrying origin: user frontmatter (others dropped, listed in the run report); batch input glob now every sessions/ folder except archived/ (scopes retired for per-repo folders)"
+  },
+  {
     "version": "1.22",
     "date": "2026-08-23",
     "text": "added argument-hint frontmatter"

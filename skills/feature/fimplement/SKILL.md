@@ -2,7 +2,7 @@
 name: fimplement
 description: Carry a change to working, committed code — an /fdesign plan or findings doc binds as contract, else best-effort under the repo's context. Trigger on /fimplement [plan file or task]. Args — plan file: plan, findings doc, or task (absent = best-effort); errata: invocation feedback superseding the plan; caveman: compress prose, requires caveman skill.
 author: Kevin Horst
-version: 1.23
+version: 1.26
 argument-hint: "[plan file] [errata] [caveman]"
 acdsl-context: ACTION-CONCEPT-*, ACTION-IMPL-*, ACTION-REVIEW-*, RULE-COMMIT-*, FACT-*
 allowed-tools: Bash(go build *), Bash(go test *), Bash(go vet *), Bash(gofmt *), Bash(make build *), Bash(make test *), Bash(make generate *), Bash(git add *), Bash(git commit -m *), Bash(git diff *), Bash(git log *), Bash(jq *), Read, Write, Edit
@@ -59,6 +59,8 @@ For refactor cascades and renames in compiled code, **drive with the compiler**:
 
 - **Verify the observable path in the running app**, not only unit tests — the Definition of Done's End-to-End Verification: happy path plus the plan's edge and error cases, exercised against a running system with real values.
 - Delegate the running-app check to /verify; when the project needs a local e2e stack first, /dev-stack stands it up. This skill does not stand up infrastructure itself (ACTION-IMPL-003).
+- **When a change relocates a data directory, assert the new path is still matched by a `sync_public.sh` `--exclude`** before reporting done — moving a directory out from under an already-excluded parent silently drops it from the exclude set and can start publishing private data.
+- **When a change points an env var at a `host:port` export target, assert something is listening on that port** before reporting done — an exported telemetry/metrics endpoint that nothing binds sends its data nowhere. Probe the port (a bind check / connection attempt) as part of the running-app verification, not just that the var is set.
 - A behavior the plan's Verification checklist lists but no test or run exercises is a gap — report it, do not mark done.
 
 ## Phase 4 — Commit

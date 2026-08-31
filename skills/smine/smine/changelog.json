@@ -1,5 +1,30 @@
 [
   {
+    "version": "1.16",
+    "date": "2026-08-30",
+    "text": "fifth dimension smine-permissions wired into the fan-out (--no-permissions skip, analyzed-permissions.txt ledger, proposals/permissions.json — parallel with the other dimensions); new --subagents flag passed through to smine-batch (per-subagent transcript mining) and threaded through the session-mine workflow args"
+  },
+  {
+    "version": "1.15",
+    "date": "2026-08-27",
+    "text": "added --last <n> (newest-n session cap, --since wins when both given) and --dev (include smine-repo and routine sessions, otherwise excluded by smine-batch's default-deny rule) — both passed through verbatim to smine-batch and threaded through the session-mine workflow args"
+  },
+  {
+    "version": "1.14",
+    "date": "2026-08-27",
+    "text": "added --since <YYYY-MM-DD> (date floor on session last_active, passed through to smine-batch and the session-mine workflow); retired --scopes — folder routing now derives from --repos attribution (one folder per repo, default for unmatched), batch resolution enumerates every sessions/ folder except archived/"
+  },
+  {
+    "version": "1.13",
+    "date": "2026-08-22",
+    "text": "session-mine workflow args gain optional model/effort — a tier override spread into every agent() call so the whole fan-out runs at a chosen model/effort tier without forking a per-tier workflow file; omitting either preserves session inheritance (tier orthogonal to model, never baked into a filename)"
+  },
+  {
+    "version": "1.12",
+    "date": "2026-08-21",
+    "text": "session-mine workflow gains a pre-run Drift stage — diffs each scope's per-dimension analyzed-*.txt ledgers and reports diverging session ids (held_by/missing_from/suspected_cause); informational, never gates, surfaces silent coverage drift especially on explicit-batch runs"
+  },
+  {
     "version": "1.11",
     "date": "2026-08-23",
     "text": "allowed-tools manifest for headless runs (Skill/Task/peek-mcp/Bash union); Workflow demoted to the manual-run alternative — the direct pipeline is the primary path"

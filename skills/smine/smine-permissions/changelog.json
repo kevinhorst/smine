@@ -1,0 +1,7 @@
+[
+  {
+    "version": "0.1.0",
+    "date": "2026-08-30",
+    "text": "initial version — mines smine-batch permissions blocks (peek-mcp v1.2.2 grant capture) into proposals/permissions.json; allow-rules only, narrowest dialect-conformant rule, ≥2-session recurrence gate, live-allowlist + archive suppression, denials as negative evidence"
+  }
+]

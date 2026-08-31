@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.7",
+    "date": "2026-08-26",
+    "text": "Unified script references on the agent-toolset path ~/.claude/agents/tools/remove_agent_worktrees.sh (manual + invocation), tilde form matching the allowlist rule"
+  },
+  {
+    "version": "1.6",
+    "date": "2026-08-26",
+    "text": "documented .serena/ and .DS_Store in the untracked-gate infra exclusions (remove script change)"
+  },
+  {
     "version": "1.5",
     "date": "2026-08-23",
     "text": "Retargeted the skill-map pointer to README.md § Skill map (docs reorg)"

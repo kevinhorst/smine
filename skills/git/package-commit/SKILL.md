@@ -2,7 +2,7 @@
 name: package-commit
 description: Commit changed files grouped by package, validated first. Trigger on /package-commit or "commit per package" or when multiple packages need separate validated commits. Args — file: one commit per changed file; trust: skip validation, stated in the result.
 author: Kevin Horst
-version: 3.2
+version: 3.3
 argument-hint: "[file] [trust]"
 allowed-tools: Bash(make build *), Bash(make test *), Bash(go build *), Bash(go test *), Bash(go run ./cmd/acdsl *), Bash(git diff *), Bash(git add *), Bash(git commit -m *), Bash(git log *), Read
 acdsl-context: RULE-COMMIT-*

@@ -1,10 +1,10 @@
 ---
 name: smine-batch
-description: Mine past session transcripts into a batch report plus its schema-conformant JSON — the raw mining stage of the /smine pipeline. Trigger on /smine-batch or "mine session transcripts". Args — --nightly: unattended, all pending batches; --repos name=path,…: roster for repo attribution; --scopes name,…: restrict scope dirs.
+description: Mine past session transcripts into a batch report plus its schema-conformant JSON — the raw mining stage of the /smine pipeline. Trigger on /smine-batch or "mine session transcripts". Args — --nightly: all pending batches; --repos name=path,…: repo attribution/routing; --since/--last: date floor / newest-n cap; --dev: include smine/routine sessions; --subagents: also mine subagent transcripts (expensive).
 author: Kevin Horst
-version: 1.24
-argument-hint: "[--nightly] [--agents claude,codex] [--repos name=path,...] [--scopes name,...]"
-allowed-tools: mcp__Peek_MCP__session_list, mcp__Peek_MCP__session_events, mcp__Peek_MCP__session_full, Task, ToolSearch, Read, Write, Bash(jq *), Bash(cmd/context/context_record.sh *)
+version: 1.28
+argument-hint: "[--nightly] [--agents claude,codex] [--repos name=path,...] [--since YYYY-MM-DD] [--last n] [--dev] [--subagents]"
+allowed-tools: mcp__Peek_MCP__session_list, mcp__Peek_MCP__session_events, mcp__Peek_MCP__session_full, mcp__Peek_MCP__session_get, Task, ToolSearch, Read, Write, Bash(jq *), Bash(cmd/context/context_record.sh *)
 ---
 
 # smine-batch
@@ -23,24 +23,30 @@ Sweep stored session transcripts and distill actionable items into a batch repor
 - `--agents <claude,codex>`: agents whose sessions are mined; absent → both. Anything outside `{claude,codex}` is an arg error — state it and stop.
 - `--nightly`: unattended mode (headless `claude -p` routine) — process **all** pending batches sequentially; after each batch write the report and append the ledger as usual, but do not stop for review; end when no unanalyzed sessions remain.
 - `--repos <name=path,…>`: the working-repo roster (permission-config additionalDirectories; assembled by the nightly wrapper). Enables mechanical repo attribution: resolve each session's cwd by longest-prefix match against the paths — the `[Repo, Type]` title tag carries the matching name; no match → `[external]` (external sessions are still mined, never skipped). Absent → keep transcript inference.
-- `--scopes <name,…>`: restrict the run to these scope directories under `sessions/`. Absent → all discovered scope dirs (every directory under `sessions/`). The scope directory name is the scope's identity — `.batch.scope` in the emitted JSON carries it verbatim (see `reference/schema.json`); a scope is created by creating its directory.
+- `--since <YYYY-MM-DD>`: only sessions whose `last_active` (from `session_list`) is on or after this date qualify; older sessions are excluded before batching — never listed as skipped.
+- `--last <n>`: keep only the n newest qualifying sessions — applied at Select after the merge and every exclusion; the rest are dropped silently, never listed as skipped.
+- `--dev`: include the pipeline's own sessions — smine-repo and routine sessions — in mining; without it they are excluded at Select (default-deny, see §1).
+- `--subagents`: also mine each session's per-subagent transcripts (§2, Subagent mining). Off by default — it costs one extra paginated `session_get`/`session_events` pull per subagent. Passed through from `/smine --subagents` (nightly: `SMINE_SUBAGENTS=1`).
 
 ## 0. Setup
 
 - Data source: peek-mcp — `mcp__Peek_MCP__session_list`, `mcp__Peek_MCP__session_events`, `mcp__Peek_MCP__session_full` (paginate via `request_id` until `has_more=false`). Subagents must load these tools via ToolSearch first. Used-context record: `cmd/context/context_record.sh <transcript.jsonl> [ctx-dir]` (repo root), transcript path = `~/.claude/projects/<slug>/<id>.jsonl` where `<slug>` is the session cwd (from `session_list` meta) with every `/` and `.` replaced by `-`; Claude sessions only.
-- Output dir: `sessions/` under the cwd; per-batch JSON to `sessions/<scope>/json/<batch-stem>.json` (§4), against `reference/schema.json`.
-- Ledger: `sessions/analyzed-sessions.txt`, one full session ID per line. Skip listed sessions on re-runs; append after each batch.
+- Output routing: one folder per session, derived from `--repos` attribution — the matched roster name, or `default` when no roster entry matches (or no roster is given). Folder = `sessions/<name>/`, created on first use; `archived` and `default` are reserved names (`archived/` is never a mining target). Per-batch JSON to `sessions/<name>/json/<batch-stem>.json` (§4), against `reference/schema.json`; `.batch.scope` carries the folder name.
+- **Language.** Read `~/.claude/context/global/presentation-profile.md` before writing output; when its `language:` is set and not `en`, author the batch JSON's user-visible prose fields — batch title, theme, arc summaries, per-session titles/summaries/notes, finding titles and summaries — in that language, following the profile body's register and glossary. Never translate: ids, dates, tags, file paths, code, quotes (verbatim evidence), schema keys and dimension names. The `.md` batch report stays English (operator artifact). Absent profile = English, unchanged.
+- Ledger: `sessions/<name>/analyzed-sessions.txt`, one full session ID per line, appended after each batch. The skip-list consulted at Select is the union of every `sessions/*/analyzed-sessions.txt` and `sessions/archived/*/analyzed-sessions.txt` — a session mined into any folder, live or archived, never re-mines.
 - Gate verdicts: `~/.claude/acdsl/verdicts.jsonl` (JSONL, best-effort — absent file means no gate data, never a stop). Join key is `branch` == the session's git branch from `session_list` meta (`session` is unpopulated); extract with `jq`.
 
 ## 1. Select
 
 - `session_list` once per agent in `--agents` (`agent: claude` / `agent: codex`). Exclude the current session. Merge newest → oldest across agents.
-- Order newest → oldest unless a range is given.
-- Batch size: 10 (or user-given).
+- **Self-mining exclusion (default-deny).** Without `--dev`: drop every session whose cwd (from `session_list` meta) resolves inside the run's repo root — including `.claude/worktrees/` — and every session whose `git_branch` starts with `claude-routines/`. These are the pipeline's own runs; mining them is self-referential waste. Dropped sessions are never listed per-ID — the report states one line, `excluded N smine/routine sessions (dev mode off)`. With `--dev` they qualify normally. The flag's absence excludes, so a wrapper that forgets it cannot self-mine.
+- With `--since`, drop sessions whose `last_active` is before the date, then order newest → oldest.
+- With `--last <n>`, keep only the first n of the merged newest → oldest order (after the exclusions above); drop the rest silently.
+- Group the qualifying sessions by target folder (attribution above); a batch never spans folders. Batch size: 10 per folder (or user-given); batch numbers continue per folder (a fresh folder starts at 01).
 
 ## 2. Analyze (parallel subagents, 2–3 sessions each)
 
-Each subagent first calls `session_events` for its sessions (with the session's `agent`) — the typed event stream (permission denials, plan rejections/revisions, skill invocations, subagent results, user answers) plus counters and usage is the cheap structured signal that steers the transcript read: high denial/rejection counts flag friction before a single turn is read. Then, for Claude sessions, run the used-context record script on the session's transcript JSONL and keep the record in hand — every rule violation seen while reading is checked against it: was the rule present, through which channel. Codex sessions have no record (`context: null`). Then read the FULL transcript via `session_full`. For oversized sessions, spawn a dedicated subagent. Extract per session:
+Each subagent first calls `session_events` for its sessions (with the session's `agent`) — the typed event stream (permission denials/grants, permission-mode changes, plan rejections/revisions, skill invocations, subagent results, user answers) plus counters, usage, and a telemetry-derived `permissions` block (auto-allowed vs prompted-once vs prompted-always vs rejected, with the prompted commands) is the cheap structured signal that steers the transcript read: high denial/rejection counts flag friction before a single turn is read. Then, for Claude sessions, run the used-context record script on the session's transcript JSONL and keep the record in hand — every rule violation seen while reading is checked against it: was the rule present, through which channel. Codex sessions have no record (`context: null`). Then read the FULL transcript via `session_full`. For oversized sessions, spawn a dedicated subagent. Extract per session:
 
 - **Skill candidates**: recurring procedure whose value is judgment and convention — phases, review lenses, question protocols — one agent conversing with the user. Validated dispatch/prompt templates count (frozen-plan implement prompt, task-chip format with repro + test list, consolidation merge instruction). Check the skill inventory first: an instance of an existing skill is report-card input, not a candidate.
 - **Workflow candidates**: recurring orchestration whose value is deterministic control flow — fan-out over an enumerable item list, staged find→verify→consolidate pipelines, loop-until-dry — runnable unattended. Multi-session fan-outs the user drove by hand (parallel worktree reviews, bake-offs, consolidation passes) count as evidence.
@@ -49,6 +55,7 @@ Each subagent first calls `session_events` for its sessions (with the session's 
 - **Memory candidates**: things the agent should have known. Generalize; skip repo trivia that CLAUDE.md already covers.
 - **Repo-surface rules + doc drift**: corrections that belong in enforcement surfaces (context/rules `RULE-*` guides incl. plan.md, context/actions `ACTION` activity chapters incl. reviewing.md, AGENTS.md) — name the target surface. Session evidence contradicting checked-in docs — quote the contradiction.
 - **Harness/config friction**: recurring permission prompts → allowlist candidates; hook opportunities; worktree/infra defects; MCP capability gaps. Output is settings/hook/tooling edits, not memory.
+- **Permissions** (always captured, feeds the JSON `permissions` block for smine-permissions): from the `session_events` stream and telemetry `permissions` view already in hand, record per session `{tool, command, decision}` for each **prompted-and-granted** tool/command (`prompted_once`/`prompted_always` from the telemetry view, else `granted_event` from a `permission_granted` event) and `{tool, command}` for each **denied** one. The md report gets a `#### Permissions` subsection listing the granted pairs and denial count; omit the subsection when the session had no permission activity. Denials are negative evidence only — never a deny/ask candidate. This is capture, not proposal-authoring (smine-permissions ranks them).
 - **Nightly routine candidates**: recurring maintenance the user triggers manually on a cadence with no decisions in the loop (analysis batches, worktree cleanup, settings hygiene, ledger upkeep) → scheduled local routine. Time-driven, not on-demand — a routine typically wraps a Workflow or skill in a schedule.
 - **Exemplar validation**: friction-free sessions that confirm a pattern or skill works — flag as validation, so working patterns don't read as absence of signal.
 - **Frustration index**: cursing and corrections are a 100% interest flag. Quote verbatim, name the trigger.
@@ -58,6 +65,12 @@ Each subagent first calls `session_events` for its sessions (with the session's 
 - **Signals line**: one line per session in the report — event counters worth keeping (permission denials, plan rejections, plan revisions, subagent failures) from `session_events`; omit zeros.
   Codex sessions append `DATA GAP: <peek unsupported list>` (touched files, skill breakdown, hook context) — a gap is stated, never a skip.
 - **Gate verdicts**: filter the verdict log to the session's branch (`jq 'select(.branch == "<branch>")'` over `~/.claude/acdsl/verdicts.jsonl`); report red runs, the violated rule IDs, and whether reds converged to a clean run (retries-to-green evidence). Sessions on unlogged branches simply have no line — never reconstruct.
+
+### Subagent mining (opt-in, `--subagents`)
+
+- Off by default: without the flag, only the top-level transcript and the subagent spawn/result events + counts are mined (current behavior).
+- With `--subagents`: after the top-level pass, iterate the advertised subagent ids (always present in the `session_events` / `session_full` responses) and pull each one with the `subagent: <id>` parameter on `session_get` (turns) and `session_events` (events). Findings surfaced from a subagent scope are attributed `origin: subagent <id>` in the report; permission grants/denials found in a subagent scope merge into the same session's permissions block.
+- Cost: one extra paginated pull per subagent — this is why it is opt-in. Only run it when explicitly enabled.
 
 ## Skill vs Workflow
 
@@ -92,7 +105,7 @@ Workflow candidates are reported as a spec, never a full script:
 
 ## 4. Emit batch JSON
 
-After the md is written, produce `sessions/<scope>/json/<batch-stem>.json` (1:1 with the md, e.g. `sessions/work/json/sessions-batch-19.json`) conforming to `reference/schema.json`. The schema is the contract with the session-overview server — change it only deliberately, with the consumer in mind, never as a side effect of one awkward batch.
+After the md is written, produce `sessions/<name>/json/<batch-stem>.json` (1:1 with the md, e.g. `sessions/claude-configs/json/sessions-batch-19.json`) conforming to `reference/schema.json`. The schema is the contract with the session-overview server — change it only deliberately, with the consumer in mind, never as a side effect of one awkward batch.
 
 Parse from the batch report just written (the content is already in hand — no re-read of transcripts):
 
@@ -105,6 +118,7 @@ Parse from the batch report just written (the content is already in hand — no 
 - Carry fenced code blocks into `findings[].snippets` verbatim — `{kind: violation|fix|context, lang, code, source}` from the report's annotations; never invent or trim code.
 - `sessions[].agent` ← `claude | codex`; Codex `unsupported` signals appended to `dataGaps`.
 - `sessions[].context` ← the record verbatim (`injected`, `acdsl_rules`, `plan_rules`, `pack_reads`, `subagent_context`) plus `touched_files{reads,writes}` from `session_events` and `honored`; absent for Codex sessions.
+- `sessions[].permissions` ← the granted/denied pairs from the Permissions extraction (`{granted:[{tool, command, decision}], denied:[{tool, command}], telemetry_present}`); omit the field entirely when the session had no permission activity. Forward-only: this field is the sole input smine-permissions consumes — a batch produced before this field existed simply carries no permissions data.
 - `context-use` findings carry `dimension: "context-use"` and `contextUse: {kind, channel, ruleId}`.
 
 Validate with jq before finishing: parses; `.batch.scope` and `.batch.file` present; every `.sessions[].id` matches the UUID pattern; every finding has `dimension` + `summary`. A validation failure is fixed in the same run — never leave the batch md-only. Lossy is fine, wrong is not: omit what doesn't map cleanly and count it in the run report. Only `sessions[].id` is required per session.

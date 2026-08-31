@@ -2,7 +2,7 @@
 name: fmt
 description: Reformat a plan, concept, or skill without changing its content — arg-routed by target. Trigger on /fmt plan <plan file>, /fmt concept <slug> <audience>, or /fmt skill <name>. Args — plan|concept|skill: route selector, inferred when unambiguous; plan file: plan to migrate to rules/plan.md; mode: upward familiarity re-render; caveman: compress prose; slug + audience: business|frontend-integration|custom; name: skill leaf to migrate.
 author: Kevin Horst
-version: 1.12
+version: 1.13
 argument-hint: "[plan|concept|skill] [target] [mode] [caveman] [audience]"
 acdsl-context: RULE-PLAN-*
 ---
@@ -60,7 +60,7 @@ Walk rules/plan.md rule by rule against the plan and collect violations as a che
 - doc-assumption findings sitting inside Baseline instead of the Assumptions section
 - semicolon-chained enumerations in Scope lines or bullets; prose blobs over 3 lines
 - table cells with semicolon chains instead of `<br>`-stacked clauses (identifier first, **bold** discriminator); Cases cells not one-per-line
-- F/D IDs without anchors; F/D/§ references that are plain text instead of internal links
+- raw-HTML anchors on F/D IDs; F/D/§ references that are plain text or row-fragment links instead of section-slug links
 - code woven into prose, fragments instead of complete units or anchored diffs, code in headings
 - anchor-only facts in Baseline instead of on their Changes entry
 
@@ -68,7 +68,7 @@ Walk rules/plan.md rule by rule against the plan and collect violations as a che
 
 Apply the fixes mechanically, in place. With a `mode` arg, content identity applies to code, tables, decisions, and checklists — mode-specific prose is the one sanctioned deletion:
 
-- **Move, never rewrite.** Sections reorder; the doc-assumption table moves to Assumptions; semicolon chains split into sub-bullets or `<br>` lines with the same words; anchors and links wrap existing IDs.
+- **Move, never rewrite.** Sections reorder; the doc-assumption table moves to Assumptions; semicolon chains split into sub-bullets or `<br>` lines with the same words; HTML anchors are stripped; references re-point to the containing section's heading slug.
 - **Create only empty-shape sections.** A missing Assumptions section with nothing to move into it gets `N/A — <reason>`. A missing Changelog is created with `| — | initial | plan created (pre-format) |`.
 - **Never invent content.** A Changes entry that describes code in prose has no diff to restore — synthesizing one would be design work on stale grounding. Flag it in the report instead. Same for missing `mirrors:` lines, missing facts, missing stop conditions: reported gaps, not filled gaps.
 - IDs stay stable; nothing is renumbered, re-grounded, or re-decided.
@@ -84,7 +84,7 @@ Apply the fixes mechanically, in place. With a `mode` arg, content identity appl
 ### Plan-route self-check gate
 
 - [ ] Content identity: fenced code blocks are byte-identical and their count is unchanged; every F/D ID, decision, test case, verification item, and stop condition from the original is present.
-- [ ] The plan now passes rules/plan.md's presentation checks: section order, args line (if non-default args are recorded), stacked cells, no semicolon chains, every F/D/§ reference an internal link, anchors on ID cells.
+- [ ] The plan now passes rules/plan.md's presentation checks: section order, args line (if non-default args are recorded), stacked cells, no semicolon chains, no HTML anchors, every F/D/§ reference a section-slug link.
 - [ ] Changelog row appended; no other Changelog rows touched.
 - [ ] No invented content: every gap found in Phase 2 appears in the chat report, none was filled in.
 
