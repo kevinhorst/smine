@@ -10,9 +10,9 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 
 ## Section order
 
-**RULE-PLAN-002** `[review]` — Every plan, any route: TLDR → Context → Drivers → Scope → Assumptions → Current state → Target state → Behavior contract → Decisions → Baseline (verified) → Exemplar & reuse → Changes → Hot items → Tests → Test runbook → Contracts & sweeps → Verification → Stop conditions → Open questions → Changelog.
+**RULE-PLAN-002** `[review]` — Every plan, any route: TLDR → Context → Drivers → Scope → Assumptions → Current state → Target state → Behavior contract → Decisions → Open questions → Baseline (verified) → Exemplar & reuse → Changes → Hot items → Tests → Test runbook → Contracts & sweeps → Verification → Stop conditions → Changelog.
 **RULE-PLAN-003** `[review]` — Route-owned sections — Drivers, Current state, Target state, Behavior contract (change route); Baseline (verified), Exemplar & reuse (new route) — read exactly `N/A — <other> route` on the other route; they are never omitted.
-- Rationale: question → answer → evidence. Scope and decisions frame the plan before the evidence tables that back them.
+- Rationale: question → answer → evidence. Scope and decisions frame the plan before the evidence tables that back them. Open questions sits beside Decisions because it indexes the OPEN rows the user must answer before approval.
 
 ## TLDR
 
@@ -42,7 +42,7 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 
 ## Links
 
-**RULE-PLAN-018** `[review]` — Every reference to a fact, decision, or section (F20, D6, §11) is an internal markdown link to an anchor; IDs carry an `<a id="f20"></a>`-style anchor in their table cell.
+**RULE-PLAN-018** `[review]` — IDs (F20, D6) are plain text — never raw-HTML anchors, which the Claude plan viewer renders literally. Every reference to a fact, decision, or section is a markdown link to the containing section's heading auto-slug (`[F20](#baseline-verified)`, `[D6](#decisions)`, `[§4](#changes)`): VS Code navigates it, the Claude viewer shows clean styled text. (`<br>` in table cells stays the one sanctioned HTML tag.)
 **RULE-PLAN-019** `[review]` — Every referenced document (design doc, style guide) is a markdown link with its path — never "doc §5" without a target.
 **RULE-PLAN-020** `[review]` — Locations are markdown links to path:line where possible so the viewer can open the file; plain text fallback if the renderer doesn't linkify.
 
@@ -142,3 +142,8 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 
 **RULE-PLAN-067** `[review]` — Context: max 5 bullets — problem, cause (one path:line), the design being implemented, constraints.
 **RULE-PLAN-068** `[review]` — Baseline: one fact per row; only facts the plan depends on.
+
+## UI evidence
+
+**RULE-PLAN-069** `[review]` — UI-touching plans embed a screenshot of the **actual UI under design**, captured from the running app (browser pane, simulator); files live under `plans/{slug}/design/ui/` and are embedded with a relative `![...]` image link in Hot items. A rendered mockup stands in only when the UI does not exist yet, and says so.
+**RULE-PLAN-070** `[review]` — Every Changes entry that alters user-facing UI carries a `ui:` line (after `location:`/`mirrors:`) linking the screenshot it changes — the code delta and the picture are reviewed together.

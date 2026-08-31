@@ -104,6 +104,12 @@ bind at plan time. Cite entry IDs.
 * When the user gives an ordered sequence ("commit, then extract", "do A, then B"), run it in that order with the stated boundaries — do not reorder for convenience or fold separately-requested steps into one. A checkpoint commit requested before a refactor is load-bearing.
 * Applies: any multi-step instruction with explicit ordering.
 
+**ACTION-IMPL-TEST-001** `[review]` — Every new or changed test module is executed with the repo's documented test command before commit; a test never run counts as not written.
+
+* Why: DB-free mock tests fail on framework guards (unsaved-instance checks) that only surface at execution — authoring without running has repeatedly shipped always-red CI.
+* Applies: diff adds or changes a test file.
+* Reach: backend
+
 **ACTION-IMPL-DEPLOY-001** `[review]` — A launchd / scheduled-job manifest references the main-checkout absolute path, never a worktree.
 
 * A launchd plist's `ProgramArguments` and working directory MUST reference the main-checkout absolute path. A worktree path breaks once the worktree is destroyed, and worktrees lack untracked state files.
