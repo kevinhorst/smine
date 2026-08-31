@@ -49,7 +49,7 @@ jobs:
       - name: Fetch third-party payloads (pinned)
         run: |
           curl -fsSL -o dist/jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-amd64.exe
-          curl -fsSL -o dist/peek-mcp.exe https://github.com/kevinhorst/peek-mcp/releases/download/v1.2.0/peek-mcp-windows-amd64.exe
+          curl -fsSL -o dist/peek-mcp.exe https://github.com/kevinhorst/peek-mcp/releases/download/v1.2.2/peek-mcp-windows-amd64.exe
       - uses: actions/upload-artifact@v4
         with:
           name: windows-payload
