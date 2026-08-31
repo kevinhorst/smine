@@ -69,7 +69,7 @@ begin
     'Select how smine presents itself on this machine. This can be changed later by replacing the profile file.',
     True, False);
   ProfilePage.Add('Default - English, developer');
-  ProfilePage.Add('Deutsch - nicht-technisch (German, non-developer)');
+  ProfilePage.Add('Deutsch - nicht-technisch (German, casual)');
   ProfilePage.Values[0] := True;
 end;
 
