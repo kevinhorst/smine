@@ -1,23 +1,9 @@
-# ACDSL doctrine rules — the central declaration file.
-#
-# One rule per line. Anchors are regexes over repo paths and decide which
-# files a rule governs; where a rule is declared carries no meaning. Inline
-# //acdsl: markers in Go source remain legal but are reserved for rules that
-# genuinely concern only their own file — the projection hook already shows
-# every rule on the files it governs, so co-location adds nothing here.
-# Task contracts live in their own *.acdsl files and are retired by renaming
-# the file away from the extension.
-# reach= declares deployment reach (internal/reach grammar): "global" (would
-# bind in any repo) or a comma-separated repo-name list; this repo is named
-# "smine" (the default) — no self-keyword, smine never matches a sync target.
-# Global rules are the future distribution manifest; anchors may still be
-# repo-local until distribution validates portability.
+# synced from smine — do not edit; add repo-owned rules in any *.acdsl file, registry overrides in acdsl/registry.local.json
 
 //acdsl:ACDSL-GOLANG-ERR-001 errorf-prefix anchor="^internal/xp.*\.go$" anchor-not="(_test\.go$|/testdata/)" why="Error constructor messages carry the Component.Method: prefix (RULE-GOLANG-ERR-001) — fmt.Errorf(\"Load: reading %s: %w\", path, err), never \"failed to ...\""
 //acdsl:ACDSL-GOLANG-TEST-001 test-schema anchor="^internal/xp.*_test\.go$" anchor-not="/testdata/" why="Table tests execute via t.Run(test._id, ...) with the _id/_shouldPass testCase schema (RULE-GOLANG-TEST-001..005) — never tt.name or ad-hoc subtest names"
 //acdsl:ACDSL-GOLANG-EXEC-001 forbid-call anchor="^(cmd|internal)/.*\.go$" anchor-not="(_test\.go$|/testdata/|^internal/shell/|^cmd/routinewrap/)" pkg="os/exec" func="Command" why="Child processes run under a context deadline via internal/shell.Run — a raw exec.Command has no timeout and can wedge the caller forever; routinewrap runs multi-hour children under its own backstop-deadline context (plans/windows_support raw.md D14)"
 //acdsl:ACDSL-GOLANG-STATE-001 literal-owner anchor="\.go$" anchor-not="(_test\.go$|/testdata/)" literal="context.json" allowed="^(cmd/rules|internal/server|internal/contextdocs|internal/repos)/" why="context/context.json has exactly one producer — only cmd/rules may write it via the internal/contextdocs renderer; internal/server reads it for the coverage metric and internal/repos probes it for repo context detection; any other writer desyncs the generated context file"
-//acdsl:ACDSL-GOLANG-DOCS-001 lint-tags reach="go" anchor="(^|/)rules/go\.md$" config=".golangci.yml" projected="false" empty="ok" why="A style guide's Covered-by linter claims must be true of the repo's golangci config — a [lint] tag tells reviewers to skip the rule, so a claim naming a disabled linter means the rule is checked by nobody (replaces the go repo's check-tags.sh)"
 //acdsl:ACDSL-GOLANG-FMT-001 gofmt reach="global" anchor="\.go$" anchor-not="(/testdata/|^vendor/)" why="Every Go file is gofmt-formatted — run gofmt -w before committing; this gate replaces the raw Makefile gofmt line"
 //acdsl:ACDSL-GOLANG-FUNC-001 func-signature reach="global" anchor="\.go$" anchor-not="(_test\.go$|/testdata/|^vendor/)" why="Signatures follow RULE-GOLANG-FUNC-001 — ctx context.Context is the first parameter and is named ctx, error is the last return value, at most 3 return values"
 //acdsl:ACDSL-GOLANG-ENUM-001 exhaustive-switch reach="global" anchor="\.go$" anchor-not="(_test\.go$|/testdata/|^vendor/)" why="Every switch over a domain enum names all members (ACTION-IMPL-INTEG-005) — no default that silently swallows new ones"
@@ -26,14 +12,10 @@
 //acdsl:ACDSL-SKILL-003 skill-meta anchor="^skills/.*/SKILL\.md$" mode="allowed-tools" why="allowed-tools is one comma-separated line of permission rules in the settings-allowlist dialect — Bash entries use space wildcards, never colon forms"
 //acdsl:ACDSL-SKILL-004 skill-context anchor="^skills/.*/SKILL\.md$" index="context/context.json" needs="context/context.json" why="A skill's acdsl-context: declaration stays resolvable — every declared entry ID exists in the generated context index and every glob matches at least one entry; a declaration under the legacy context: key (Claude Code's native field) or a stale one silently injects nothing"
 //acdsl:ACDSL-SKILL-005 skill-entries anchor="^skills/.*/SKILL\.md$" why="Skill entries stay parseable and unique — the renderer strips by id, the eval scores by id, and a malformed or duplicate headline silently drops out of both"
+//acdsl:ACDSL-SKILL-007 skill-plan-template anchor="^skills/.*/SKILL\.md$" why="A plan-producing skill's plan-template: declaration names a [payload] entry whose template opens with TLDR, keeps the plan catalog's section order, and marks every non-catalog section as an override — the plan interface of rules/plan.md is machine-checked at authoring time"
 //acdsl:ACDSL-SHELL-001 shellcheck anchor="^cmd/hooks/.*\.sh$" why="Hook scripts pass shellcheck — hooks run headless on every prompt and tool call; a quoting or exit-code bug silently breaks gating"
 //acdsl:ACDSL-SHELL-002 bash32-compat reach="global" anchor="\.sh$" anchor-not="(/testdata/|^vendor/)" why="Scripts launched by hooks or launchd run under macOS bash 3.2 — no declare -A, mapfile/readarray, case expansion, |&, or parameter transformation (the launchd lesson)"
-//acdsl:ACDSL-JSON-001 jsonschema anchor="^proposals/(skills|routines|workflows|context)\.json$" schema="proposals/schema.json" empty="ok" needs="proposals/schema.json" why="Proposal files conform to proposals/schema.json — the config-server proposals page and smine-apply parse them; a schema break strands votes"
-//acdsl:ACDSL-JSON-002 jsonschema anchor="^sessions/(personal|work)/json/.*\.json$" schema="skills/smine/smine-batch/reference/schema.json" empty="ok" why="Batch summary JSON conforms to the smine-batch schema — deep links and dimension queries select on its fields; drift makes batches unqueryable"
 //acdsl:ACDSL-JSON-003 jsonschema reach="global" anchor="^acdsl/policy\.json$" schema="acdsl/policy.schema.json" empty="ok" needs="acdsl/policy.schema.json" why="acdsl/policy.json conforms to its schema — a malformed mode or scope list silently degrades the self-management gate"
 //acdsl:ACDSL-SMINE-001 rules-check anchor="^context/((actions|rules|facts)/.*\.md|aspects\.json)$" mode="validate" projected="false" needs="context/context.json" why="context entries pass cmd/rules validate — ACTION/RULE/FACT contract violations break the context sync and the generated context file; this gate replaces the raw Makefile validate line"
 //acdsl:ACDSL-SMINE-002 rules-check anchor="^context/(context\.json|aspects\.json|(actions|rules|facts)/.*\.md)$" mode="generate-check" projected="false" needs="context/context.json" why="context/context.json stays current with its sources via cmd/rules generate -check — only cmd/rules regenerates it (ACDSL-GOLANG-STATE-001); this gate replaces the raw Makefile generate line"
 //acdsl:ACDSL-GOLANG-GEN-001 evalgen-bounds anchor="^cmd/acdsl/verifiers/[^/]+/main\.go$" why="Verifiers stay inside acdsl/evalgen.json bounds — line count, stdlib/internal/go.mod-only imports; generation may never add a dependency (Band D is a user call)"
-//acdsl:ACDSL-PLAN-001 plan-format reach="global" anchor="^plans/[^/]+/design/(raw|refined)\.md$" empty="ok" why="Design plans follow style/plan.md — TLDR is the first section, canonical sections keep RULE-PLAN-002/003 order, and a Changelog section exists"
-//acdsl:ACDSL-SMINE-003 id-grammar anchor="\.acdsl$" taxonomy="context/context.json" needs="context/context.json" why="Doctrine ids follow KIND-SCOPE[-TOPIC]-NNN with taxonomy-registered segments (context/actions/README.md, Rule identity) — the naming grammar is a gate, not review vigilance"
-//acdsl:ACDSL-RUNBOOK-001 runbook-format reach="global" anchor="^plans/[^/]+/runbooks/.*\.bru$" empty="ok" why="Runbook collections follow rules/runbooks.md — every request file carries a non-empty docs block and an assert block"

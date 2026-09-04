@@ -1,3 +1,5 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # Implementing
 
 Doctrine for writing and changing code — any session, skill-driven or ad hoc. Planning skills
@@ -70,27 +72,6 @@ bind at plan time. Cite entry IDs.
 * Diagnostic: if the consumer re-saves the injected data, it parsed and validated it — the failure is downstream of decoding.
 * Applies: any cross-system artifact emulation. Overlaps the test-side RULE-GOLANG-TEST-010.
 
-**ACTION-IMPL-INTEG-012** `[review]` — DB routine files are idempotent and self-contained; a routine is deleted when the column it maintains is dropped.
-
-* Every `CREATE TRIGGER` is preceded by `DROP TRIGGER IF EXISTS <name> ON <table>;` (never a bare `DROP TRIGGER`), functions use `CREATE OR REPLACE FUNCTION`, and everything sits inside one `BEGIN; … COMMIT;` block.
-* Why: plpgsql resolves columns at execution time — a routine whose target column was dropped applies cleanly and then breaks every write to the triggering table.
-* Applies: diff touches `<app>/dbroutines/` files or drops a trigger-maintained column.
-* Reach: backend
-
-**ACTION-IMPL-INTEG-013** `[review]` — Advisory locks are transaction-scoped on the default connection, taken in sorted order when multiple, and never per-item over an unbounded set.
-
-* Acquire inside `transaction.atomic(using = "default")` (autocommit would release immediately); reads backing the lock decision pin the master with `.using("default")`.
-* Multiple locks in one transaction are acquired in stable `sorted()` order; a per-item lock over an unbounded set must be bounded or chunked (shared lock-table capacity).
-* Keep the caller registry table in `docs/context/pg-advisory-locks.md` in sync when adding or changing a `pg_advisory_*` call.
-* Applies: diff adds or changes a `pg_advisory_*` call.
-* Reach: backend
-
-**ACTION-IMPL-INTEG-014** `[review]` — A lock-guarded dedup decision recorded in Redis is written before COMMIT, while the lock is still held.
-
-* Why: a blocked waiter re-checks Redis only after COMMIT releases the lock — deferring the write to an on-commit hook reopens the duplicate-insert race the lock exists to close.
-* Applies: diff touches the comment-dedup flow or adds a lock-guarded Redis decision.
-* Reach: backend
-
 **ACTION-IMPL-MIGRATION-001** `[review]` — Migrations are minimal DDL, one concern per file; trigger/constraint logic guards the nullable-FK case.
 
 * A migration file carries the minimal DDL for exactly one concern — no bundled grants or extras. Split multi-concern changes into separate numbered files, and order FK migrations after the table they reference.
@@ -103,12 +84,6 @@ bind at plan time. Cite entry IDs.
 
 * When the user gives an ordered sequence ("commit, then extract", "do A, then B"), run it in that order with the stated boundaries — do not reorder for convenience or fold separately-requested steps into one. A checkpoint commit requested before a refactor is load-bearing.
 * Applies: any multi-step instruction with explicit ordering.
-
-**ACTION-IMPL-TEST-001** `[review]` — Every new or changed test module is executed with the repo's documented test command before commit; a test never run counts as not written.
-
-* Why: DB-free mock tests fail on framework guards (unsaved-instance checks) that only surface at execution — authoring without running has repeatedly shipped always-red CI.
-* Applies: diff adds or changes a test file.
-* Reach: backend
 
 **ACTION-IMPL-DEPLOY-001** `[review]` — A launchd / scheduled-job manifest references the main-checkout absolute path, never a worktree.
 

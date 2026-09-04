@@ -1,3 +1,5 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # Concepting
 
 Doctrine for shaping a change before code — the plan is where these gates bind. Every `[gate]`

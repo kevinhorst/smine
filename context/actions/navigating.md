@@ -1,3 +1,5 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # Navigation & Scoping
 
 Ambient doctrine for orienting in and extending a repo — every session, every task. Cite the entry

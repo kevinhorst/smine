@@ -1,3 +1,5 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # SMOKE-RUNBOOK FORMAT
 
 **Files:** `plans/*/runbooks/**`
@@ -6,7 +8,7 @@
 lintable subset (docs + assert presence) is enforced by the `runbook-format` ACDSL verifier;
 everything else is `[review]`.
 
-**Scope:** smoke-test runbook collections persisted under `plans/<feature>/runbooks/`
+**Scope:** smoke-test runbook collections persisted under the plan dir's `runbooks/` (RULE-PLAN-072)
 (ACTION-REVIEW-VERIFY-004). The tool is the repo's discovered smoke-test tool (RULE-PLAN-060);
 tool-specific mechanics below are written for Bruno — in a repo with a different tool, apply
 the same MUSTs through that tool's equivalent mechanism.

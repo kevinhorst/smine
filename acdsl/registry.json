@@ -1,117 +1,114 @@
 {
-  "forbid-call": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/forbidcall"],
-    "timeout_s": 30,
-    "description": "fails when any anchored file calls <pkg>.<func> (import-alias aware, syntax-level)"
-  },
-  "lint-tags": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/linttags"],
-    "timeout_s": 30,
-    "description": "fails when a style guide's 'Covered by' linter claims disagree with the nearest golangci config above the guide — a claimed linter must be enabled, a claimed sub-check live; a [lint] headline must carry a coverage bullet; guides with no config above them pass"
-  },
-  "literal-owner": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/literalowner"],
+  "bash32-compat": {
+    "argv": [
+      "bin/verifiers/bash32-compat"
+    ],
     "timeout_s": 20,
-    "description": "fails when a file outside the allowed path regexp contains the literal"
-  },
-  "forbid-addr-lit": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/forbidaddrlit"],
-    "timeout_s": 20,
-    "description": "fails on address-of composite literal (&T{...}) — the pre-Go-1.26 idiom new(expr) replaces"
+    "description": "fails when a shell script uses a bash-4+ construct — hooks/routines run under macOS bash 3.2 (launchd)"
   },
   "errorf-prefix": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/errorfprefix"],
+    "argv": [
+      "bin/verifiers/errorf-prefix"
+    ],
     "timeout_s": 20,
     "description": "fails when a fmt.Errorf/errors.New message literal lacks the Component.Method: prefix (RULE-GOLANG-ERR-001)"
   },
-  "test-schema": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/testschema"],
+  "evalgen-bounds": {
+    "argv": [
+      "bin/verifiers/evalgen-bounds"
+    ],
     "timeout_s": 20,
-    "description": "fails when t.Run names a case with anything but the house schema's test._id (RULE-GOLANG-TEST-001..005)"
+    "description": "fails when a verifier main.go leaves the acdsl/evalgen.json bounds — line count, or an import outside stdlib/internal/go.mod requires (generation may never add a dependency)"
   },
-  "gofmt": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/gofmtwrap"],
+  "exhaustive-switch": {
+    "argv": [
+      "bin/verifiers/exhaustive-switch"
+    ],
+    "timeout_s": 60,
+    "description": "fails when a switch over a typed-constant enum misses members (ACTION-IMPL-INTEG-005); go tool exhaustive over the anchored packages — requires the exhaustive tool dependency in the target go.mod (go tool exhaustive), or override in registry.local.json"
+  },
+  "forbid-call": {
+    "argv": [
+      "bin/verifiers/forbid-call"
+    ],
     "timeout_s": 30,
-    "description": "fails when an anchored file is not gofmt-formatted (wraps gofmt -l; exit-0-with-findings normalized to the contract)"
+    "description": "fails when any anchored file calls \u003cpkg\u003e.\u003cfunc\u003e (import-alias aware, syntax-level)"
   },
   "func-signature": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/funcsig"],
+    "argv": [
+      "bin/verifiers/func-signature"
+    ],
     "timeout_s": 20,
     "description": "fails when a FuncDecl violates RULE-GOLANG-FUNC-001: ctx first (named ctx), error last, at most 3 return values"
   },
-  "exhaustive-switch": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/exhaustivewrap"],
+  "gofmt": {
+    "argv": [
+      "bin/verifiers/gofmt"
+    ],
+    "timeout_s": 30,
+    "description": "fails when an anchored file is not gofmt-formatted (wraps gofmt -l; exit-0-with-findings normalized to the contract)"
+  },
+  "jsonschema": {
+    "argv": [
+      "bin/verifiers/jsonschema"
+    ],
+    "timeout_s": 20,
+    "description": "fails when an anchored JSON file does not conform to the draft-07 schema named by schema= (santhosh-tekuri/jsonschema/v6)"
+  },
+  "literal-owner": {
+    "argv": [
+      "bin/verifiers/literal-owner"
+    ],
+    "timeout_s": 20,
+    "description": "fails when a file outside the allowed path regexp contains the literal"
+  },
+  "rules-check": {
+    "argv": [
+      "bin/verifiers/rules-check"
+    ],
     "timeout_s": 60,
-    "description": "fails when a switch over a typed-constant enum misses members (ACTION-IMPL-INTEG-005); go tool exhaustive over the anchored packages"
+    "description": "wraps cmd/rules by mode= param: validate (ACTION/FACT contract) or generate-check (rules.json currency); replaces the raw Makefile audit lines"
   },
-  "symbol-exists": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/symbolexists"],
-    "timeout_s": 20,
-    "description": "task contract: named symbol exists in the anchored files, optionally with the planned signature"
-  },
-  "symbol-coverage": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/symbolcoverage"],
-    "timeout_s": 60,
-    "description": "task contract: named function's coverage in the anchored package is at least min percent"
-  },
-  "golden-diff": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/goldendiff"],
-    "timeout_s": 20,
-    "description": "observation anchor: GET url, normalize, materialize observed=, line-diff against the anchored golden"
-  },
-  "skill-meta": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/skillmeta"],
-    "timeout_s": 20,
-    "description": "SKILL.md metadata checks by mode= param: version-sync (frontmatter version == changelog.json[0].version), frontmatter (required single-line keys + description shape), allowed-tools (permission-rule dialect)"
+  "shellcheck": {
+    "argv": [
+      "bin/verifiers/shellcheck"
+    ],
+    "timeout_s": 30,
+    "description": "fails on shellcheck findings over the anchored scripts (brew dep, accepted Band D); missing binary is a tool error, never a silent pass"
   },
   "skill-context": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/skillcontext"],
+    "argv": [
+      "bin/verifiers/skill-context"
+    ],
     "timeout_s": 30,
     "description": "validates the SKILL.md frontmatter context: declaration — token grammar (entry ID or trailing-* glob), exact IDs exist in the index= file, globs match at least one entry"
   },
   "skill-entries": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/skillentries"],
+    "argv": [
+      "bin/verifiers/skill-entries"
+    ],
     "timeout_s": 30,
-    "description": "validates the SKILL.md entry grammar — **SKILL-<NAME>-<TOPIC>-NNN** `[class]` — statement headlines, NAME = leaf dir upper-cased without hyphens, known class tags, unique ids, payload entries followed by one fenced block; skills without entries pass"
+    "description": "validates the SKILL.md entry grammar — **SKILL-\u003cNAME\u003e-\u003cTOPIC\u003e-NNN** `[class]` — statement headlines, NAME = leaf dir upper-cased without hyphens, known class tags, unique ids, payload entries followed by one fenced block; skills without entries pass"
   },
-  "bash32-compat": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/bash32compat"],
+  "skill-meta": {
+    "argv": [
+      "bin/verifiers/skill-meta"
+    ],
     "timeout_s": 20,
-    "description": "fails when a shell script uses a bash-4+ construct — hooks/routines run under macOS bash 3.2 (launchd)"
+    "description": "SKILL.md metadata checks by mode= param: version-sync (frontmatter version == changelog.json[0].version), frontmatter (required single-line keys + description shape), allowed-tools (permission-rule dialect)"
   },
-  "shellcheck": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/shellcheckwrap"],
+  "skill-plan-template": {
+    "argv": [
+      "bin/verifiers/skill-plan-template"
+    ],
     "timeout_s": 30,
-    "description": "fails on shellcheck findings over the anchored scripts (brew dep, accepted Band D); missing binary is a tool error, never a silent pass"
+    "description": "validates a SKILL.md plan-template: declaration — the named [payload] entry exists, its template opens with ## TLDR, catalog sections (rules/plan.md RULE-PLAN-002) keep catalog order, non-catalog sections carry an \u003coverride: placeholder; skills without the key pass"
   },
-  "jsonschema": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/jsonschemacheck"],
+  "test-schema": {
+    "argv": [
+      "bin/verifiers/test-schema"
+    ],
     "timeout_s": 20,
-    "description": "fails when an anchored JSON file does not conform to the draft-07 schema named by schema= (santhosh-tekuri/jsonschema/v6)"
-  },
-  "rules-check": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/rulescheck"],
-    "timeout_s": 60,
-    "description": "wraps cmd/rules by mode= param: validate (ACTION/FACT contract) or generate-check (rules.json currency); replaces the raw Makefile audit lines"
-  },
-  "evalgen-bounds": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/evalgenbounds"],
-    "timeout_s": 20,
-    "description": "fails when a verifier main.go leaves the acdsl/evalgen.json bounds — line count, or an import outside stdlib/internal/go.mod requires (generation may never add a dependency)"
-  },
-  "id-grammar": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/idgrammar"],
-    "timeout_s": 20,
-    "description": "fails when a doctrine declaration id leaves the KIND-SCOPE[-TOPIC]-NNN grammar or uses an unregistered taxonomy scope/topic; task-lifetime entries exempt"
-  },
-  "plan-format": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/planformat"],
-    "timeout_s": 20,
-    "description": "lintable subset of style/plan.md over design plans: TLDR first, Changelog present, canonical section order"
-  },
-  "runbook-format": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/runbookformat"],
-    "timeout_s": 20,
-    "description": "fails when a Bruno runbook request file lacks a non-empty docs block or an assert block (rules/runbooks.md lintable subset)"
+    "description": "fails when t.Run names a case with anything but the house schema's test._id (RULE-GOLANG-TEST-001..005)"
   }
 }

@@ -1,8 +1,10 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # Plan Format
 
 **For reviewers / agents:** cite the stable `RULE-PLAN-*` id when flagging a format violation.
 
-Presentation rules for every plan the fdesign skill produces on any route. A plan the user cannot skim is worthless — every section must be checkable at reading speed.
+Presentation rules and the section catalog for every plan any skill produces — an artifact presented for approval or handed off as a decision basis: fdesign plans, coverage briefs, diagnoses, explorations, skill and routine plans. A plan the user cannot skim is worthless — every section must be checkable at reading speed.
 
 ## Language
 
@@ -10,9 +12,16 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 
 ## Section order
 
-**RULE-PLAN-002** `[review]` — Every plan, any route: TLDR → Context → Drivers → Scope → Assumptions → Current state → Target state → Behavior contract → Decisions → Open questions → Baseline (verified) → Exemplar & reuse → Changes → Hot items → Tests → Test runbook → Contracts & sweeps → Verification → Stop conditions → Changelog.
+**RULE-PLAN-002** `[review]` — The section catalog, in canonical order: TLDR → Context → Drivers → Scope → Assumptions → Current state → Target state → Behavior contract → Decisions → Open questions → Baseline (verified) → Exemplar & reuse → Changes → Hot items → Tests → Test runbook → Contracts & sweeps → Verification → Stop conditions → Changelog. A plan carries the catalog sections its producing skill's plan template declares (RULE-PLAN-074), in this order — fdesign plans carry the full catalog.
 **RULE-PLAN-003** `[review]` — Route-owned sections — Drivers, Current state, Target state, Behavior contract (change route); Baseline (verified), Exemplar & reuse (new route) — read exactly `N/A — <other> route` on the other route; they are never omitted.
 - Rationale: question → answer → evidence. Scope and decisions frame the plan before the evidence tables that back them. Open questions sits beside Decisions because it indexes the OPEN rows the user must answer before approval.
+
+## Plan interface
+
+**RULE-PLAN-074** `[review]` — A skill that produces a plan declares its template: one `[payload]` entry holding the template, named by the frontmatter line `plan-template: <entry id>`. The template's `## ` headings are catalog sections in catalog order, TLDR first. Gate: the skill-plan-template verifier (ACDSL-SKILL-007).
+**RULE-PLAN-075** `[review]` — Every declared section is present in the produced plan and filled per its catalog rule — the canonical structures of RULE-PLAN-038 and the per-section rules of this file; a section that does not apply reads exactly `N/A — <reason>`. A skill never redefines a catalog section's shape.
+**RULE-PLAN-076** `[review]` — Override: a section the catalog lacks is allowed when the template's placeholder line under it starts with `<override:` and states why no catalog section fits. Overrides sit where the skill puts them, the catalog sections around them keep catalog order, and every presentation rule applies to them unchanged.
+**RULE-PLAN-077** `[review]` — Delivery: a plan is delivered where the session delivers plans — the plan-mode plan file in plan mode, else chat — and persisted only where the producing skill says (a plan dir file). Approval of the plan is approval of the artifacts it carries in Changes.
 
 ## TLDR
 
@@ -102,7 +111,7 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 
 ## Changelog
 
-**RULE-PLAN-047** `[review]` — Last section of every plan. Table: `Date | Trigger | What changed`.
+**RULE-PLAN-047** `[review]` — Last section of every persisted plan (a file under a plan dir). Table: `Date | Trigger | What changed`. A session-only plan (plan-mode file, chat) carries none.
 **RULE-PLAN-048** `[review]` — One row per event: Q&A resolution (`Q: <question>`), fdesign refine pass (`refine: driver <n>`), post-implementation adjustment via the fdesign change route (`adjust: driver <n>`), local refinement without the full skill (`local: <ask>`).
 **RULE-PLAN-049** `[review]` — Any post-approval plan edit appends a row. The plan body is updated in place; history lives only here.
 **RULE-PLAN-050** `[review]` — Created empty at plan creation: `| — | initial | plan created |`.
@@ -129,7 +138,7 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 
 **RULE-PLAN-060** `[review]` — Own section between Tests and Contracts & sweeps: the feature's smoke scenarios as complete request files in the project's smoke-test tool format — the tool is taken from the project (existing collection or runbooks, Makefile smoke target, CLAUDE.md/AGENTS.md), never assumed. No discoverable tool → an OPEN row in the plan, not a guess.
 **RULE-PLAN-061** `[review]` — Scenarios mirror the DoD End-to-End Verification items: happy path, 1–2 edge cases, error cases — one request file per scenario.
-**RULE-PLAN-062** `[review]` — Each entry: a `location:` line with the file's target path under `plans/<feature>/runbooks/`, then a fenced block holding the complete tool-native file — usable out of the box, never prose-described.
+**RULE-PLAN-062** `[review]` — Each entry: a `location:` line with the file's target path under the plan dir's `runbooks/` (resolved per RULE-PLAN-072), then a fenced block holding the complete tool-native file — usable out of the box, never prose-described.
 **RULE-PLAN-063** `[review]` — Real values from the plan's evidence sections; host and auth go through the tool's environment mechanism — no other placeholders.
 **RULE-PLAN-064** `[review]` — The section closes with the run line as a fenced command using the project's tool.
 **RULE-PLAN-065** `[review]` — `N/A — <reason>` when the feature has no externally callable surface.
@@ -143,7 +152,22 @@ Presentation rules for every plan the fdesign skill produces on any route. A pla
 **RULE-PLAN-067** `[review]` — Context: max 5 bullets — problem, cause (one path:line), the design being implemented, constraints.
 **RULE-PLAN-068** `[review]` — Baseline: one fact per row; only facts the plan depends on.
 
-## UI evidence
+## Visual evidence
 
-**RULE-PLAN-069** `[review]` — UI-touching plans embed a screenshot of the **actual UI under design**, captured from the running app (browser pane, simulator); files live under `plans/{slug}/design/ui/` and are embedded with a relative `![...]` image link in Hot items. A rendered mockup stands in only when the UI does not exist yet, and says so.
+**RULE-PLAN-069** `[review]` — A plan touching user-facing UI embeds a screenshot of the **actual UI under design**, captured from the running app, in the section its template designates (fdesign: Hot items). A rendered mockup stands in only when the UI does not exist yet, and says so.
 **RULE-PLAN-070** `[review]` — Every Changes entry that alters user-facing UI carries a `ui:` line (after `location:`/`mirrors:`) linking the screenshot it changes — the code delta and the picture are reviewed together.
+**RULE-PLAN-078** `[review]` — Capture: PNGs come from the capture script deployed with the fdesign skill — `~/.claude/skills/fdesign/scripts/capture-ui.sh <url|sim> <out.png> [--size WxH] [--wait-ms N]` — headless Chrome for web UIs, the booted simulator for iOS. Never a prose description, never a widget mockup.
+**RULE-PLAN-079** `[review]` — Storage and embedding: with a plan dir, PNGs live under its `design/ui/` (resolved per RULE-PLAN-072) and persisted plan files embed them relative to the file (`![…](ui/<name>.png)`); the session plan file embeds the absolute path, and the persistence step rewrites it to the relative form; without a plan dir, PNGs live in the session scratchpad and move to `design/ui/` when a plan dir is created.
+
+## Plan directory
+
+**RULE-PLAN-071** `[review]` — A plan directory is named `plans/<created_at>-<slug>-<state>-<hash>/` — `created_at` is the `YYYY-MM-DD` creation date, the slug is kebab-case, state is `wip` in code repos or `done` in the archive, and the 7-char short hash is the base-branch HEAD at creation (`wip`) or the feature's merge commit on the main branch (`done`; fallback: main HEAD at archival).
+
+* Date-first names make `ls plans/` sort by creation date.
+* The artifact substructure inside the dir (`concept/`, `design/`, `reviews/`, `runbooks/`) is unchanged by this naming.
+
+**RULE-PLAN-072** `[review]` — Skills resolve "the plan dir for `<slug>`" via the glob `plans/*-<slug>-wip-*/` and require a unique match — zero or multiple matches is a stop-and-ask, never a guess; creation uses today's date plus the short HEAD hash.
+
+**RULE-PLAN-073** `[review]` — After the feature's merge to the main branch, its plan dir leaves the code repo: /plan-archive moves it to the plans-archive repo under `<repo-name>/`, renamed `wip-<init-hash>` → `done-<merge-hash>`; code repos never hold `done` dirs.
+
+* Archive root: the local plans-archive git repo at `~/GolandProjects/agent-plans` — the single cross-repo location for `done` plan dirs.

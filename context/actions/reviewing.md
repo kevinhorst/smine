@@ -1,3 +1,5 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # Reviewing — Definition of Done
 
 **For reviewers / agents:** every entry below is marked PASS, FAIL, or N/A when reviewing —
@@ -40,7 +42,7 @@ cite the stable id, and every N/A carries a stated reason.
 
 * Applies: every reviewed change with error paths.
 
-**ACTION-REVIEW-VERIFY-004** `[review]` `[DoD]` — Smoke-test runbook persisted under `plans/<feature>/runbooks/` in the project's smoke-test tool format, covering the verified scenarios.
+**ACTION-REVIEW-VERIFY-004** `[review]` `[DoD]` — Smoke-test runbook persisted under the plan dir's `runbooks/` (RULE-PLAN-072) in the project's smoke-test tool format, covering the verified scenarios.
 
 * Applies: every feature or change with a callable surface.
 

@@ -1,3 +1,5 @@
+<!-- synced from smine — do not edit; repo-owned files in this dir are overlays (see README.md) -->
+
 # Canon rules — authoring spec
 
 Action and fact entries of the context layer — the prose beside the ACDSL gates.
