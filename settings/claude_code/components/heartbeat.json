@@ -1,0 +1,175 @@
+{
+  "env": {
+    "HEARTBEAT_ADDR": "127.0.0.1:{{HEARTBEAT_PORT}}"
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "smineId": "heartbeat-notification",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "smineId": "heartbeat-permissionrequest",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "smineId": "heartbeat-posttooluse",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "smineId": "heartbeat-posttoolusefailure",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "smineId": "heartbeat-pretooluse",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "smineId": "heartbeat-sessionend",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "smineId": "heartbeat-sessionstart",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/heartbeatfeed",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "smineId": "heartbeat-stop",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "smineId": "heartbeat-stopfailure",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "smineId": "heartbeat-subagentstart",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "smineId": "heartbeat-subagentstop",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "smineId": "heartbeat-userpromptsubmit",
+        "smineName": "Heartbeat",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "http://127.0.0.1:{{HEARTBEAT_PORT}}/hook",
+            "timeout": 1
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "smineId": "worktrees-pretooluse-worktreewriteguard",
+        "smineName": "Worktree write guard",
+        "smineVersion": "1.0.1",
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/worktreewriteguard",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "smineId": "worktrees-sessionstart-worktreecreate",
+        "smineName": "Worktree base",
+        "smineVersion": "1.0.1",
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/worktreecreate -base",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "smineId": "worktrees-worktreecreate-worktreecreate",
+        "smineName": "Worktree create",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/worktreecreate",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

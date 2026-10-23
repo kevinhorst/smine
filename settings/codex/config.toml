@@ -41,25 +41,13 @@ command = "{{PEEK_MCP}}"
 args = ["start", "--transport=stdio", "--depth=100", "--claude-home={{HOME}}/.claude", "--codex-home={{HOME}}/.codex", "--diff-target=main", "--control-port=0"]
 enabled = true
 
-[mcp_servers.peek-mcp.tools.session_full]
-approval_mode = "approve"
-
-[mcp_servers.peek-mcp.tools.session_latest]
-approval_mode = "approve"
-
 [mcp_servers.peek-mcp.tools.session_list]
 approval_mode = "approve"
 
 [mcp_servers.peek-mcp.tools.session_get]
 approval_mode = "approve"
 
-[mcp_servers.peek-mcp.tools.session_plan]
-approval_mode = "approve"
-
-[mcp_servers.peek-mcp.tools.session_diff]
-approval_mode = "approve"
-
-[mcp_servers.peek-mcp.tools.session_uncommitted_diff]
+[mcp_servers.peek-mcp.tools.session_events]
 approval_mode = "approve"
 
 [mcp_servers.node_repl]

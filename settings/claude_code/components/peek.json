@@ -1,0 +1,29 @@
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORT_INTERVAL": "5000",
+    "OTEL_LOG_TOOL_DETAILS": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_METRIC_EXPORT_INTERVAL": "10000"
+  },
+  "mcpServers": {
+    "peek-mcp": {
+      "type": "stdio",
+      "command": "{{PEEK_MCP}}",
+      "args": [
+        "start",
+        "--transport=stdio",
+        "--depth=200",
+        "--claude-home={{HOME}}/.claude",
+        "--codex-home={{HOME}}/.codex",
+        "--control-port=0"
+      ],
+      "env": {
+        "MAX_MCP_OUTPUT_TOKENS": "125000"
+      }
+    }
+  }
+}

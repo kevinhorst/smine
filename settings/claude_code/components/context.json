@@ -1,0 +1,150 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "smineId": "context-posttooluse-readgate",
+        "smineName": "Read gate",
+        "smineVersion": "1.0.1",
+        "matcher": "Read|Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/readgate",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "smineId": "context-posttooluse-skillcontext",
+        "smineName": "Skill context",
+        "smineVersion": "1.0.1",
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillcontext",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "smineId": "context-posttooluse-acdslhook",
+        "smineName": "ACDSL context",
+        "smineVersion": "1.1.0",
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/acdslhook",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "smineId": "context-posttooluse-planmodecontext",
+        "smineName": "Plan-mode context",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/planmodecontext",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "smineId": "context-pretooluse-readgate",
+        "smineName": "Read gate",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/readgate",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "smineId": "context-sessionstart-globalcontext",
+        "smineName": "Global context",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/globalcontext",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "smineId": "context-sessionstart-readgate",
+        "smineName": "Read gate",
+        "smineVersion": "1.0.1",
+        "matcher": "compact|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/readgate",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "smineId": "context-subagentstart-globalcontext",
+        "smineName": "Global context",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/globalcontext",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "smineId": "context-userpromptsubmit-skillcontext",
+        "smineName": "Skill context",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillcontext",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "smineId": "context-userpromptsubmit-readgate",
+        "smineName": "Read gate",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/readgate",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "smineId": "context-userpromptsubmit-planmodecontext",
+        "smineName": "Plan-mode context",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/planmodecontext",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

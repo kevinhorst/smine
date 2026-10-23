@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "CwdChanged": [
+      {
+        "smineId": "skill-environment-cwdchanged-skillenv",
+        "smineName": "Skill environment",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillenv",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "smineId": "skill-environment-pretooluse-skillenv",
+        "smineName": "Skill environment",
+        "smineVersion": "1.0.0",
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillenv",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "smineId": "skill-environment-sessionstart-skillenv",
+        "smineName": "Skill environment",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillenv",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "smineId": "skill-environment-userpromptexpansion-skillenv",
+        "smineName": "Skill environment",
+        "smineVersion": "1.0.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillenv",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

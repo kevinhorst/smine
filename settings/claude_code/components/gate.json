@@ -1,0 +1,265 @@
+{
+  "hooks": {
+    "DirectoryAdded": [
+      {
+        "smineId": "gate-directoryadded-toolpolicy",
+        "smineName": "Tool policy",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/toolpolicy -ledger ~/.claude/tool-policy/denials.jsonl -gate-repo {{REPO_DIR}}",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "smineId": "gate-permissionrequest-toolpolicy",
+        "smineName": "Tool policy",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/toolpolicy -ledger ~/.claude/tool-policy/denials.jsonl -gate-repo {{REPO_DIR}}",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "smineId": "gate-posttooluse-toolpolicy",
+        "smineName": "Tool policy",
+        "smineVersion": "1.1.0",
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/toolpolicy -ledger ~/.claude/tool-policy/denials.jsonl -gate-repo {{REPO_DIR}}",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "smineId": "gate-pretooluse-toolpolicy",
+        "smineName": "Tool policy",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/toolpolicy -ledger ~/.claude/tool-policy/denials.jsonl -gate-repo {{REPO_DIR}}",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "smineId": "gate-pretooluse-skillinvokegate",
+        "smineName": "Skill invoke gate",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillinvokegate",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "smineId": "gate-userpromptsubmit-toolpolicy",
+        "smineName": "Tool policy",
+        "smineVersion": "1.1.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/toolpolicy -ledger ~/.claude/tool-policy/denials.jsonl -gate-repo {{REPO_DIR}}",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "additionalDirectories": [
+      "{{HOME}}/.cache/claude-routine/artifacts",
+      "{{HOME}}/.cache/claude-routine/steer",
+      "{{HOME}}/.claude/acdsl",
+      "{{HOME}}/.claude/skills"
+    ],
+    "allow": [
+      "Bash(cat *)",
+      "Bash(comm *)",
+      "Bash(cp *)",
+      "Bash(curl *)",
+      "Bash(defaults read *)",
+      "Bash(echo *)",
+      "Bash(find *)",
+      "Bash(gh *)",
+      "Bash(git add*)",
+      "Bash(git cat-file *)",
+      "Bash(git check-ignore *)",
+      "Bash(git commit -m *)",
+      "Bash(git commit -q -m *)",
+      "Bash(git commit-tree*)",
+      "Bash(git diff*)",
+      "Bash(git for-each-ref *)",
+      "Bash(git hash-object *)",
+      "Bash(git log*)",
+      "Bash(git merge-tree *)",
+      "Bash(git merge-base*)",
+      "Bash(git merge --ff-only *)",
+      "Bash(git mv *)",
+      "Bash(git rev-list*)",
+      "Bash(git rev-parse*)",
+      "Bash(git reset --soft*)",
+      "Bash(git restore --staged*)",
+      "Bash(git rm *)",
+      "Bash(git status*)",
+      "Bash(git switch *)",
+      "Bash(git tag *)",
+      "Bash(git version*)",
+      "Bash(git worktree add*)",
+      "Bash(git worktree list*)",
+      "Bash(git worktree remove*)",
+      "Bash(git write-tree*)",
+      "Bash(go build *)",
+      "Bash(go fmt *)",
+      "Bash(go fix *)",
+      "Bash(go mod *)",
+      "Bash(go test *)",
+      "Bash(go vet *)",
+      "Bash(gofmt *)",
+      "Bash(goimports *)",
+      "Bash(grep *)",
+      "Bash(bin/agentwt *)",
+      "Bash(./bin/agentwt remove *)",
+      "Bash(awk *)",
+      "Bash(cargo *)",
+      "Bash(git clone *)",
+      "Bash(git reflog *)",
+      "Bash(head *)",
+      "Bash(ioreg -l)",
+      "Bash(jq *)",
+      "Bash(ls *)",
+      "Bash(lsof *)",
+      "Bash(make *)",
+      "Bash(mkdir *)",
+      "Bash(pgrep *)",
+      "Bash(ps *)",
+      "Bash(pwd)",
+      "Bash(sed -n *)",
+      "Bash(smine-agentwt remove --delete-branch claude*)",
+      "Bash(smine-agentwt remove --dry-run --delete-branch claude*)",
+      "Bash(smine-agentwt status *)",
+      "Bash(smine-heartbeat done)",
+      "Bash(smine-heartbeat join *)",
+      "Bash(smine-heartbeat leave)",
+      "Bash(smine-heartbeat record *)",
+      "Bash(smine-heartbeat runtime *)",
+      "Bash(smine-heartbeat status *)",
+      "Bash(smine-heartbeat subscribe *)",
+      "Bash(smine-heartbeat unsubscribe *)",
+      "Bash(smine-rules walk *)",
+      "Bash(sw_vers)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(which *)",
+      "Bash(smine-rules capture-ui *)",
+      "Bash(smine-rules settings set *)",
+      "CronDelete",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "NotebookEdit",
+      "Read(~/.claude/context-required/**)",
+      "Workflow",
+      "Write",
+      "Skill(caveman)",
+      "Skill(clarify)",
+      "Skill(close)",
+      "Skill(code-verdict)",
+      "Skill(concept)",
+      "Skill(context-create)",
+      "Skill(coverage-increase)",
+      "Skill(dev-stack)",
+      "Skill(diagnose-debug)",
+      "Skill(discuss)",
+      "Skill(dod-report)",
+      "Skill(fexplore)",
+      "Skill(fimpact)",
+      "Skill(idea)",
+      "Skill(investigate)",
+      "Skill(join)",
+      "Skill(jq)",
+      "Skill(overlap)",
+      "Skill(package-commit)",
+      "Skill(peek)",
+      "Skill(pk)",
+      "Skill(qq)",
+      "Skill(runtime)",
+      "Skill(smine-acdsl)",
+      "Skill(smine-batch)",
+      "Skill(smine-context)",
+      "Skill(smine-permissions)",
+      "Skill(smine-routines)",
+      "Skill(smine-skills)",
+      "Skill(spec-drift)",
+      "Skill(support-decision)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Skill(watch)",
+      "Skill(workflow-authoring)",
+      "Skill(xlsx)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:crates.io)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:web.archive.org)",
+      "WebFetch(domain:youtrack.jetbrains.com)",
+      "WebSearch",
+      "mcp__Claude_Browser",
+      "mcp__Claude_Code_iOS_Simulator",
+      "mcp__ccd_connectors",
+      "mcp__ccd_directory",
+      "mcp__ccd_host",
+      "mcp__ccd_pr",
+      "mcp__ccd_session",
+      "mcp__ccd_session_mgmt",
+      "mcp__ccd_settings",
+      "mcp__ccd_sidebar",
+      "mcp__ccd_turn__update_plan",
+      "mcp__ccd_view",
+      "mcp__ccd_window",
+      "mcp__goland__cancel_sql_query",
+      "mcp__goland__get_database_object_description",
+      "mcp__goland__list_database_connections",
+      "mcp__goland__list_database_schemas",
+      "mcp__goland__list_schema_object_kinds",
+      "mcp__goland__list_schema_objects",
+      "mcp__goland__preview_table_data",
+      "mcp__goland__test_database_connection",
+      "mcp__peek-mcp",
+      "mcp__terminal",
+      "mcp__visualize"
+    ],
+    "deny": [
+      "TaskStop",
+      "Bash(git commit * --amend*)",
+      "Bash(python -c *)",
+      "Bash(python3 -c *)",
+      "Bash(python3)",
+      "Bash(git commit --amend*)",
+      "Bash(git stash*)",
+      "mcp__ccd_session__start_session",
+      "mcp__goland__execute_sql_query",
+      "Skill(smine-help)"
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "smineId": "session-helpers-notification-play-sound",
+        "smineName": "Notify sound",
+        "smineVersion": "1.2.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/playsound {{NOTIFICATION_SOUND}}",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "smineId": "session-helpers-posttooluse-sessiontitle",
+        "smineName": "Session title",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"$HOME/.claude/sessiontitle/sessions/$CLAUDE_CODE_SESSION_ID.json\" ]; then exec ~/.claude/hooks/bin/sessiontitle -skills ~/.claude/skills; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "smineId": "session-helpers-pretooluse-sessiontitle",
+        "smineName": "Session title",
+        "smineVersion": "1.0.1",
+        "matcher": "mcp__ccd_session_mgmt__set_session_title",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/sessiontitle -skills ~/.claude/skills",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "smineId": "session-helpers-sessionstart-sessiontitle",
+        "smineName": "Session title",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/sessiontitle -skills ~/.claude/skills",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "smineId": "session-helpers-stop-play-sound",
+        "smineName": "Stop sound",
+        "smineVersion": "1.2.0",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/playsound {{STOP_SOUND}}",
+            "async": true
+          }
+        ]
+      },
+      {
+        "smineId": "session-helpers-stop-sessiontitle",
+        "smineName": "Session title",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"$HOME/.claude/sessiontitle/sessions/$CLAUDE_CODE_SESSION_ID.json\" ]; then exec ~/.claude/hooks/bin/sessiontitle -skills ~/.claude/skills; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "smineId": "session-helpers-userpromptsubmit-skillhelp",
+        "smineName": "Skill help",
+        "smineVersion": "1.0.1",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/bin/skillhelp -skills ~/.claude/skills",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
