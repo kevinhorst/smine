@@ -1,0 +1,87 @@
+/* The docs: style.css is a copy of the config server's stylesheet; this file only sizes its components for doc pages. */
+
+body.docs { max-width: max(1040px, 90vw); padding: 32px 16px 64px; display: grid; grid-template-columns: 200px minmax(0, 1fr); column-gap: 32px; align-items: start; }
+body.docs.no-outline { grid-template-columns: minmax(0, 1fr); }
+body.docs > nav { grid-column: 1 / -1; align-items: center; }
+main.doc-main { min-width: 0; }
+
+/* top nav: one menu per section, its pages one click away */
+nav .nav-menu { position: relative; }
+nav .nav-menu > .nav-section::after { content: ' ▾'; font-size: 0.6875rem; color: var(--text-dim); }
+nav .nav-menu > .nav-section.active::after { content: '] ▾'; }
+nav .nav-drop { display: none; position: absolute; top: 100%; left: -14px; z-index: 10; min-width: 200px; padding: 6px 0; background: var(--surface-elev); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--glow); }
+nav .nav-menu:hover .nav-drop, nav .nav-menu:focus-within .nav-drop { display: block; }
+nav .nav-drop a { display: block; padding: 5px 14px; color: var(--text-2); white-space: nowrap; }
+nav .nav-drop a:hover { color: var(--neon); background: var(--surface-2); }
+nav .nav-drop a.active { color: var(--neon); }
+nav .nav-drop a.active::before, nav .nav-drop a.active::after { content: ''; }
+
+/* the outline: this page's sections, the current one marked */
+aside.outline { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; padding-right: 8px; font-family: var(--font-sans); font-weight: 400; letter-spacing: 0; }
+aside.outline .outline-title { margin-bottom: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+aside.outline a { display: block; padding: 3px 0 3px 12px; border-left: 1px solid var(--line); color: var(--text-3); font-size: 0.8125rem; line-height: 1.35; text-decoration: none; overflow-wrap: anywhere; }
+aside.outline a.h3 { padding-left: 24px; font-size: 0.75rem; }
+aside.outline a:hover { color: var(--text); }
+aside.outline a.active { color: var(--neon); border-left-color: var(--neon); }
+@media (max-width: 1100px) {
+  body.docs { grid-template-columns: minmax(0, 1fr); }
+  aside.outline { display: none; }
+}
+.lede { max-width: 80ch; margin: -8px 0 16px; font-family: var(--font-sans); font-weight: 400; font-size: 1.0625rem; letter-spacing: 0; color: var(--text-2); }
+
+/* prose: the server's sans register (the .description face), one width for everything that is read */
+body.docs p, body.docs ul, body.docs ol { font-family: var(--font-sans); font-weight: 400; font-size: 0.9375rem; letter-spacing: 0; color: var(--text-2); line-height: 1.55; }
+body.docs p { margin: 0 0 12px; }
+body.docs ul, body.docs ol { margin: 0 0 12px 22px; }
+body.docs li { margin-bottom: 4px; }
+body.docs li > p { margin: 0; }
+body.docs h3 { font-family: var(--font-sans); font-weight: 600; font-size: 1rem; letter-spacing: 0; color: var(--text); margin: 22px 0 8px; }
+body.docs strong { color: var(--text); font-weight: 600; }
+body.docs code { font-family: var(--font-mono); font-size: 0.8125rem; background: var(--surface-2); color: var(--aqua); padding: 1px 5px; border-radius: 4px; }
+pre.file-view code { background: none; padding: 0; color: inherit; font-size: inherit; }
+body.docs p a, body.docs li a, table.doc a, .card a, .description a, .callout a, .tile-detail a { color: var(--neon); }
+figure.doc { margin: 0 0 16px; max-width: 1100px; }
+figure.doc img { display: block; width: 100%; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+figure.doc figcaption { margin-top: 6px; font-family: var(--font-sans); font-size: 0.8125rem; color: var(--text-3); }
+
+/* cards: a named item with one explanation under it */
+.card .label strong { color: var(--text); }
+.card .description { display: block; margin-top: 2px; }
+
+/* callouts: the card surface with the kind on its left edge */
+.callout { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 12px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--neon); border-radius: var(--radius-lg); }
+.callout > .badge { flex: 0 0 auto; margin-top: 3px; }
+.callout > p { margin: 0; }
+.callout-warn { border-left-color: var(--amber); }
+.callout-stop { border-left-color: var(--rose); }
+
+/* steps: a numbered procedure, one title and one explanation per step */
+ol.steps { list-style: none; margin: 0 0 16px; padding: 0; counter-reset: step; }
+ol.steps > li { position: relative; padding: 0 0 14px 44px; counter-increment: step; }
+ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--neon); color: var(--neon); font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+ol.steps > li:not(:last-child)::after { content: ''; position: absolute; left: 14px; top: 32px; bottom: 0; border-left: 1px solid var(--line); }
+ol.steps > li > strong { display: block; font-family: var(--font-sans); font-weight: 600; font-size: 0.9375rem; line-height: 28px; margin-bottom: 4px; }
+ol.steps > li > p:last-child { margin-bottom: 0; }
+
+/* tables: the server's bordered table, first column mono unless the table is .plain */
+table.doc { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-family: var(--font-sans); font-weight: 400; font-size: 0.9375rem; letter-spacing: 0; color: var(--text-2); }
+table.doc th, table.doc td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+table.doc th { color: var(--text-3); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+table.doc td:first-child { color: var(--text); font-family: var(--font-mono); font-size: 0.8125rem; white-space: normal; overflow-wrap: anywhere; min-width: 14ch; }
+table.doc.plain td:first-child { color: var(--text); font-family: var(--font-sans); font-size: inherit; white-space: normal; }
+table.doc td.wrap { white-space: normal; }
+table.doc td p { margin: 0 0 4px; }
+table.doc td p:last-child { margin: 0; }
+table[data-sortable] th { cursor: pointer; user-select: none; }
+table[data-sortable] th:hover { color: var(--neon); }
+table[data-sortable] th[data-dir="asc"]::after { content: ' ▲'; }
+table[data-sortable] th[data-dir="desc"]::after { content: ' ▼'; }
+
+/* code windows */
+pre.file-view { margin: 8px 0 14px; padding: 0 14px 14px; font-size: 0.8125rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.file-view[data-lang]::after { content: attr(data-lang); position: absolute; top: 7px; right: 14px; font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+pre.file-view.maximized { max-width: none; }
+
+.anchor-track { margin: 4px 0 12px; }
+details.section > summary strong { color: var(--text); }
+details.section > table.doc { width: calc(100% - 32px); }

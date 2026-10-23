@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>smine docs</h1>
+<p class="lede">A component system for Claude Code: sixteen installable pieces, each a settings fragment, a hook, daemon or standalone binary, or a file tree, installed into the agent's own configuration by one installer that knows what every piece requires and what degrades without it.</p>
+<p>The skills also render for Codex. Each component grew out of necessity while working with modern agents and solves one problem; these pages are the repository's documentation, plain HTML opened from disk.</p>
+
+<h2 class="first" id="one-problem-one-component">One problem, one component</h2>
+<table class="doc plain">
+  <thead><tr><th>Problem</th><th>Component</th><th>What it does</th><th>Page</th></tr></thead>
+  <tbody>
+    <tr><td>Endless permission prompts</td><td>Never Prompter</td><td class="wrap">A filter behind every tool call, enclosing every permission mode except bypass: what may run is declared once, per settings, skill and plan. Prompts are gone; a denied call names the rule it lacked, so a permission is a one-line edit. Every denial is logged and mined, so the allow list follows use in both directions.</td><td><a href="permissions.html">Permission System</a></td></tr>
+    <tr><td>Untraceable hallucinations</td><td>Context Linting</td><td class="wrap">ACDSL, the Agentic Context Domain Specific Linter: prose rules move into checkable gates, and every rule carries its red rate, how often a session broke it while it sat in context, so a rule is sharpened, gated or fired on evidence.</td><td><a href="acdsl.html">Context Linting</a></td></tr>
+    <tr><td>Context roulette</td><td>Context injection</td><td class="wrap">A read gate denies every touch of a governed file until its guide was read in full; declared context arrives at session start, at skill invocation and after every compaction; a skill declares the entries it needs; lanes and topics cut them into slices; a repo patches in the context it owns.</td><td><a href="context-system.html">Context system</a></td></tr>
+    <tr><td>Broken, unscalable skills</td><td>Skill model</td><td class="wrap">A skill is a typed model, <code>&lt;leaf&gt;.cue</code>, and its SKILL.md is rendered from it: a wrong role, a route to nowhere or a version without its changelog row does not render. Z3 answers "can it ever prompt the user?" with unsat and the entry that proves it. Every skill declares a smoke run and an eval; an A/B changes one factor and a blind judge ranks the runs.</td><td><a href="skillcue.html">Skill model</a></td></tr>
+    <tr><td>No runtime authority</td><td>Heartbeat</td><td class="wrap">One Rust daemon under every session checks a skill's contract call by call: a violation is denied with the way back, repetition ends the run. It knows every fleet member, lands delivered ones by fast-forward, and puts every live session on one page.</td><td><a href="heartbeat.html">Heartbeat</a></td></tr>
+    <tr><td>Flying blind</td><td>Peek and ccusage</td><td class="wrap">Any session's turns, plan, diff and status are read from its transcript; a status call returns bounded counters cheap enough to poll; ccusage figures sit beside the window that is left; a skill's run is priced before it starts.</td><td><a href="peek.html">Peek</a></td></tr>
+    <tr><td>Memory that rots</td><td>Smining</td><td class="wrap">The nightly retrospective: every idle session becomes one typed record, an auto-memory dir is drained into linted context, records become problems and problems become skill or routine changes, each one commit that picks alone onto main and waits on a page where you say yes or no.</td><td><a href="smining.html">Smining</a></td></tr>
+    <tr><td>Worktree sprawl</td><td>Agentwt</td><td class="wrap">Will it merge, and is it merged? One Rust tool on gix answers both for every worktree: branch, base, what is unlanded, whether it merges clean, and the order that lands without a conflict.</td><td><a href="rust-binary.html">Agentwt</a></td></tr>
+    <tr><td>Steal my smine</td><td>Components</td><td class="wrap">Sixteen pieces, Minimal or Full or à la carte, every step shown before it runs; <code>make skill-bundle</code> writes every skill that needs no smine program as a standalone bundle. Nothing needs more than it declares.</td><td><a href="install.html">Install</a></td></tr>
+  </tbody>
+</table>
+<figure class="doc">
+  <img src="media/readme/skill-graph.png" alt="fdesign, the planning skill, drawn from its own model">
+  <figcaption>fdesign, the planning skill, drawn from its own model on the config server's Graph tab.</figcaption>
+</figure>
+
+<h2 id="start">Start here</h2>
+<div class="tiles">
+  <a class="tile" href="install.html"><span class="tile-label">Install</span><span class="tile-value">Release archive</span><span class="tile-detail">Extract, run bin/installer: no Go, no Rust. Components, ports, profiles, unattended installs, Windows.</span></a>
+  <a class="tile" href="configserver.html"><span class="tile-label">Config server</span><span class="tile-value">The web UI</span><span class="tile-detail">Every page and route of the server on :6001, the repo registry, the trash page.</span></a>
+</div>
+
+<h2 id="components">Components</h2>
+<div class="tiles">
+  <a class="tile" href="permissions.html"><span class="tile-label">Permission System</span><span class="tile-value">Tool-policy gate</span><span class="tile-detail">Closed-world permissions without prompts: denial reasons, where a rule lives, plan freezing, the # commands.</span></a>
+  <a class="tile" href="heartbeat.html"><span class="tile-label">Heartbeat</span><span class="tile-value">Session daemon</span><span class="tile-detail">Session states, the heart attack, fleets, landing turns, runtime enforcement and the merge strategy.</span></a>
+  <a class="tile" href="rust-binary.html"><span class="tile-label">Agentwt</span><span class="tile-value">Worktree judge</span><span class="tile-detail">The Rust binary behind the worktree table: branch state, merge order, one JSON document.</span></a>
+  <a class="tile" href="peek.html"><span class="tile-label">Peek</span><span class="tile-value">Session reader</span><span class="tile-detail">The MCP server every reader of a session goes through: turns, plan, diff, status, telemetry.</span></a>
+  <a class="tile" href="smining.html"><span class="tile-label">Smining</span><span class="tile-value">Nightly retrospective</span><span class="tile-detail">Sessions mined into records, records into change commits you pick on the Proposals page.</span></a>
+  <a class="tile" href="routines.html"><span class="tile-label">Routines</span><span class="tile-value">Scheduled jobs</span><span class="tile-detail">The nightly and the dispatch routines: branches, budgets, launchd and Task Scheduler, reading a run.</span></a>
+  <a class="tile" href="settings.html"><span class="tile-label">Settings</span><span class="tile-value">Every setting</span><span class="tile-detail">Each value of the hooks and the daemon with its kind, default and help.</span></a>
+  <a class="tile" href="trash.html"><span class="tile-label">Trash</span><span class="tile-value">Removed-file stash</span><span class="tile-detail">Everything smine overwrites or removes keeps its bytes here: layout, journal, restore, retention.</span></a>
+</div>
+
+<h2 id="context">Context</h2>
+<div class="tiles">
+  <a class="tile" href="context-system.html"><span class="tile-label">Context system</span><span class="tile-value">Context injection</span><span class="tile-detail">The global pack, the read gate, per-skill injection and the ACDSL rules with their red rates.</span></a>
+  <a class="tile" href="context-report.html"><span class="tile-label">Context report</span><span class="tile-value">What a session read</span><span class="tile-detail">Per session: what was injected, by week and day, with token counts and the peek link.</span></a>
+  <a class="tile" href="acdsl.html"><span class="tile-label">Context Linting</span><span class="tile-value">Lint gate for context</span><span class="tile-detail">A rule line, a registered checker, the read hook, the verdict log and the eviction loop.</span></a>
+</div>
+
+<h2 id="skills">Skills</h2>
+<div class="tiles">
+  <a class="tile" href="skills.html"><span class="tile-label">Skills directory</span><span class="tile-value">Layout and deploy</span><span class="tile-detail">Per-leaf files, the body format, one-way deployment, the bundled workflow scripts.</span></a>
+  <a class="tile" href="skillcue.html"><span class="tile-label">Skill model</span><span class="tile-value">&lt;leaf&gt;.cue</span><span class="tile-detail">The typed model behind every skill, its validation, interfaces, smoke, changelog, and the z3 analysis over it.</span></a>
+  <a class="tile" href="skill-map.html"><span class="tile-label">Skill map</span><span class="tile-value">Hand-offs</span><span class="tile-detail">The planning chain, the standalone skills and how they compose.</span></a>
+  <a class="tile" href="skill-test-layers.html"><span class="tile-label">Skill tests</span><span class="tile-value">Smoke, eval, A/B</span><span class="tile-detail">Three layers, their declarations, runners and results.</span></a>
+  <a class="tile" href="aliases.html"><span class="tile-label">Aliases</span><span class="tile-value">Short skill names</span><span class="tile-detail">/pk runs peek exactly as /peek does; one deployed copy per alias.</span></a>
+</div>
+
+<h2 id="workarounds">Workarounds</h2>
+<div class="tiles">
+  <a class="tile" href="workflow-primer.html"><span class="tile-label">Workflow primer</span><span class="tile-value">Launch workaround</span><span class="tile-detail">Why a Workflow launch after a typed turn goes through a ten-second script first.</span></a>
+</div>
+
+<h2 id="research">Research</h2>
+<div class="tiles">
+  <a class="tile" href="cache-token.html"><span class="tile-label">Caching</span><span class="tile-value">Prompt cache</span><span class="tile-detail">How Claude's cache works: written once, read on every later call, the four usage fields.</span></a>
+  <a class="tile" href="token-usage.html"><span class="tile-label">Token usage</span><span class="tile-value">Usage windows</span><span class="tile-detail">Measured capacity of the five-hour window per workload.</span></a>
+  <a class="tile" href="thinking.html"><span class="tile-label">Thinking</span><span class="tile-value">Extended thinking</span><span class="tile-detail">What grounds the effort, session-split and fan-out decisions.</span></a>
+  <a class="tile" href="compaction.html"><span class="tile-label">Compaction</span><span class="tile-value">Decision record</span><span class="tile-detail">For one long task that outgrows its window, never for a phase handoff.</span></a>
+  <a class="tile" href="sota-acp.html"><span class="tile-label">ACP</span><span class="tile-value">State of the art</span><span class="tile-detail">The Agent Client Protocol and what it means for the harness.</span></a>
+  <a class="tile" href="sota-mcp.html"><span class="tile-label">MCP</span><span class="tile-value">State of the art</span><span class="tile-detail">The 2026-07-28 revision, transports, authorization, the registry.</span></a>
+  <a class="tile" href="sota-skills.html"><span class="tile-label">Skills</span><span class="tile-value">State of the art</span><span class="tile-detail">The Agent Skills standard, agent files, where the vendors converge.</span></a>
+  <a class="tile" href="sota-telemetry.html"><span class="tile-label">Telemetry</span><span class="tile-value">State of the art</span><span class="tile-detail">The OTel GenAI semantic conventions and agent tracing.</span></a>
+</div>
+
+<h2 id="development">Development</h2>
+<div class="tiles">
+  <a class="tile" href="development.html"><span class="tile-label">Development</span><span class="tile-value">Make targets</span><span class="tile-detail">Working on smine itself: run, build, test, audit, skill and model targets, the config server's flags.</span></a>
+</div>
+
+<h2 id="install-what-you-want">Install what you want, install what you need</h2>
+<p>Minimal, Full, or à la carte, every step shown before it runs. On macOS, <code>smine-&lt;version&gt;-darwin-&lt;arch&gt;.tar.gz</code> from the <a href="https://github.com/kevinhorst/smine/releases/latest">latest release</a> carries the source tree and every binary: extract it, clear the download quarantine once (<code>xattr -dr com.apple.quarantine smine</code>, the binaries are unsigned) and run <code>smine/bin/installer</code>, no Go or Rust needed. On Windows, <code>smine-setup.exe</code> from the same page carries every binary. <code>./install.sh</code> builds from source and is for development. Ports, profiles and unattended installs: <a href="install.html">Install</a>.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Caveats</span>
+  <p>Frontier is expensive, automation breeds automation, and the token bill follows.</p>
+</div>
+<p>Thanks to Microsoft Research for Z3, and to my formal systems professor, the late Prof. Dr. rer. nat. habil. Steffen Hölldobler, for his work in computational logic and automated reasoning.</p>
+
+<h2 id="layout">Layout</h2>
+<table class="doc">
+  <thead><tr><th>Path</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td>skills/&lt;group&gt;/&lt;leaf&gt;/</td><td class="wrap">One skill: <code>&lt;leaf&gt;.cue</code> is the model, <code>payloads/</code> the templates. <a href="skills.html">Skills directory</a>.</td></tr>
+    <tr><td>context/</td><td class="wrap">The agent context: <code>actions/</code>, <code>rules/</code>, <code>facts/</code>, the <code>AGENTS.md</code> template.</td></tr>
+    <tr><td>acdsl/</td><td class="wrap">The machine-verified rule corpus and its fixtures.</td></tr>
+    <tr><td>settings/claude_code/</td><td class="wrap">The settings template, one fragment per component; <code>gate.json</code> is the allow list.</td></tr>
+    <tr><td>cmd/, internal/</td><td class="wrap">The Go hook binaries and tools, the Rust crates <code>heartbeat</code> and <code>agentwt</code>.</td></tr>
+    <tr><td>routines/, evals/, sessions/</td><td class="wrap">Scheduled jobs, eval records, mined session records.</td></tr>
+    <tr><td>docs/</td><td class="wrap">These pages.</td></tr>
+  </tbody>
+</table>
+<p>PolyForm Noncommercial 1.0.0 licensed; see <code>LICENSE</code>.</p>
+</body>
+</html>

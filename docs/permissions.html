@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permission System · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Permission System</h1>
+<p class="lede">Every tool call is allowed by a rule or read-only analysis, or denied with a reason. Nothing prompts.</p>
+<p>The tool-policy gate (<code>cmd/toolpolicy</code>) hooks every tool call, permission request, prompt submit, <code>Skill</code> result and mid-session directory add, in every host (terminal, Desktop, headless, subagents) and mode. Its settings: <a href="settings.html">Settings</a> § Permission gate.</p>
+
+<h2 class="first" id="the-closed-world">The closed world</h2>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>No dialog</td><td class="wrap">A denial stands until a rule is added; retries never help.</td></tr>
+    <tr><td>Mode <code>auto</code></td><td class="wrap">Gate denies stand, gate allows are withheld: Claude Code's own flow (settings rules, read-only auto-approval, classifier) decides admitted calls. <code>toolpolicy allow</code>, <code>revert</code>, <code>check</code>, <code>freeze</code> answers still emit. Other modes get the gate's allow; the template disables bypass.</td></tr>
+    <tr><td>Any argument shape</td><td class="wrap"><code>args</code> may be any JSON value; a Workflow stage launch's object decodes to its text, so no launch form fails open.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Fails open</span>
+  <p>Gate binary missing or failing: Claude Code decides alone, prompts reappear. Fix: <code>bin/configserver -apply</code>.</p>
+</div>
+
+<h2 id="when-something-is-denied">When something is denied</h2>
+<p>The deny reason is the model's only channel at failure: the cause, the rule that would have allowed the call, what works instead.</p>
+<pre class="file-view" data-lang="text">tool-policy: denied Bash — no allow rule matches. candidate rule: Bash(mdfind *).
+Nothing prompts in this environment; a denied capability stays denied until a rule is added.
+Use an allowlisted form or a read-only alternative; do not retry the same call.</pre>
+<table class="doc plain">
+  <thead><tr><th>Denied as</th><th>Cause</th><th>What to do</th></tr></thead>
+  <tbody>
+    <tr><td>Read-only probe</td><td class="wrap">Compound with a state-changing part.</td><td class="wrap">One command per call; read-only chains and one pipe of two allowed sides run.</td></tr>
+    <tr><td>Command, tool, domain</td><td class="wrap">No rule matches; candidate rule named, logged to <code>~/.claude/tool-policy/denials.jsonl</code>.</td><td class="wrap">Add it in its home (next section). <code>/smine-permissions</code> proposes rules denied in two or more sessions.</td></tr>
+    <tr><td>Not read-only, ungated, readable, or in a tool class</td><td class="wrap">Lists are <code>gate.*</code> settings.</td><td class="wrap">Config server Smine tab, or <code>smine-rules settings set gate.read_only_commands '["cat","git status",…]'</code> (a list takes the whole JSON array); apply renders them into <code>~/.claude/hooks/config.json</code>, section <code>toolpolicy</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="where-a-rule-belongs">Where a rule belongs</h2>
+<p>One home per rule.</p>
+<table class="doc">
+  <thead><tr><th>Home</th><th>Holds</th><th>Written by</th></tr></thead>
+  <tbody>
+    <tr><td>settings/claude_code/components/gate.json</td><td class="wrap">Global template: repo-agnostic, non-destructive mechanics, plus <code>Skill(&lt;name&gt;)</code> per skill whose invocation adds no permission. No reset, branch-deletion or push verbs.</td><td class="wrap">You; <code>bin/configserver -apply</code> deploys it.</td></tr>
+    <tr><td>&lt;worktree&gt;/.claude/settings.local.json</td><td class="wrap">Commands only one repo has. Read from the session anchor's worktree, never the main checkout. Desktop seeds a new worktree from the main checkout's file; a CLI worktree starts without.</td><td class="wrap"><code>#set</code>, <code>#add</code>, <code>#reset</code> (your grants, no shape check); <code>toolpolicy allow</code> after your <code>#allow settings.local.json</code>.</td></tr>
+    <tr><td>allowed-tools in &lt;leaf&gt;.cue</td><td class="wrap">A skill run's needs, e.g. <code>Workflow</code> (below).</td><td class="wrap">The skill's author.</td></tr>
+    <tr><td>plans/…/permissions.json</td><td class="wrap">One plan's implementation needs: <a href="#plan-rules">Plan rules</a>.</td><td class="wrap">Frozen by its design run, applied by the gate.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Planning</span>
+  <p><code>toolpolicy check [--skill &lt;leaf&gt;]… '&lt;target&gt;' …</code> reports the gate's verdict per target; no ledger line.</p>
+</div>
+
+<h3>Skill grants</h3>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Accumulate</td><td class="wrap">An active skill's grants hold for the rest of the session, subagents included.</td></tr>
+    <tr><td>Active</td><td class="wrap">Typed slash prompt: activates. Agent's <code>Skill</code> call: only if a settings <code>Skill(&lt;name&gt;)</code> allow rule or an active skill's <code>Skill(&lt;name&gt;)</code> grant admits it, or your newest message names the skill. Denied: no grant. Already active: admitted, no grant.</td></tr>
+    <tr><td>Named</td><td class="wrap">A <code>/&lt;skill&gt;</code> word anywhere in your typed message, mid-turn too (later line, mid-sentence, pasted block), until your next message. Second slash: a path. Tool results, hooks, relays, headless prompts name nothing.</td></tr>
+    <tr><td>Chains</td><td class="wrap">A skill invoking a permission-adding skill (itself or in a spawned subagent) lists it as a <code>Skill(&lt;name&gt;)</code> grant; <code>make skills-check</code> fails on a grant no routing edge reaches.</td></tr>
+    <tr><td>Two readers</td><td class="wrap">Claude Code reads the field for the invoking turn only; the gate's reading counts.</td></tr>
+    <tr><td>Repo-scoped values</td><td class="wrap">Deploys as text (<code>Bash($SKILL_PACKAGECOMMIT_PROJECT_STRIP project -strip)</code>); the gate fills it per session from the session repo, as <code>skillenv</code> resolves: registry row <code>env</code> over skill default over global default, global defaults bound via the active skills' <code>env.json</code>; a command value of several lines fills one rule per line (<code>Bash($SKILL_CLOSE_CLEAN)</code>). Dropped if the repo sets nothing, or in a render without the gate component (the bundle). <code>Bash(awk *)</code>, run by invocation placeholders: in the global template and every grant list rendering one.</td></tr>
+    <tr><td><code>Workflow</code></td><td class="wrap">Claude Code ignores a hook allow here and prompts, so the global template grants it. A launch works iff a settings rule (<code>settings.json</code> or <code>settings.local.json</code>) admits it and the caller is root (confirmed 2026-10-03); no skill grant or <code>--allowedTools</code> substitutes.</td></tr>
+  </tbody>
+</table>
+
+<h3>Self-service</h3>
+<p><code>toolpolicy allow '&lt;rule&gt;' …</code> appends to the anchor's <code>settings.local.json</code>. The agent never edits that file directly.</p>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Answer</th></tr></thead>
+  <tbody>
+    <tr><td>Rule not yet in the file</td><td class="wrap">Needs your last <code>#allow settings.local.json</code>; a last <code>#deny settings.local.json</code> refuses.</td></tr>
+    <tr><td>Rule already present</td><td class="wrap">APPLIED without either.</td></tr>
+    <tr><td>Undo</td><td class="wrap"><code>toolpolicy revert</code> undoes the last apply.</td></tr>
+    <tr><td>Headless session</td><td class="wrap">Never self-serves.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-stop">
+  <span class="badge badge-error">Never self-serviceable</span>
+  <p>Wrappers, the gate's own binary, non-literal program heads, wildcard fetch domains, MCP rules other than one exact tool, bare tool names, <code>Skill(…)</code>, <code>Agent(…)</code>, path patterns, <code>Tool(param:value)</code> rules.</p>
+</div>
+
+<h2 id="plan-rules">Plan rules</h2>
+<p>A plan's rules live in <code>plans/&lt;feature folder&gt;/&lt;plan dir&gt;/permissions.json</code> (git-ignored): <code>rules</code> (each <code>rule</code>, <code>target</code>, <code>needed_for</code>) and <code>checked</code>. Never in, or read from, the plan file. Outside plan mode, <code>smine-rules plan-display &lt;plan file&gt; &lt;session plan file&gt;</code> writes plan plus rules into the session plan file under <code>~/.claude/plans/</code>, the display copy. That directory is global, not a repo's <code>plans/</code>: it works across sessions, so a plan and its rules survive a hand-off to another session.</p>
+<ol class="steps">
+  <li>
+    <strong>The design run freezes the file</strong>
+    <p><code>toolpolicy freeze plans/&lt;feature folder&gt;/&lt;plan dir&gt;</code> records the file, even an empty set, in <code>~/.claude/tool-policy/frozen.jsonl</code> and applies its rules to that worktree. Each rule passes the self-service shape check and equals the gate's narrowest rule for its <code>target</code>.</p>
+    <pre class="file-view" data-lang="bash">toolpolicy freeze plans/2026-10-02-x-7ea30b5/2026-10-02-x-wip-7ea30b5</pre>
+  </li>
+  <li>
+    <strong>One freeze per typed design prompt</strong>
+    <p>One per <code>/fdesign</code> prompt you typed, one per unattended design run. Refreezing needs such a prompt naming the plan file. The rules file is write-protected except in a session that may still freeze its plan.</p>
+  </li>
+  <li>
+    <strong>A typed /fimplement is the code gate's approval</strong>
+    <p>Plan at its code gate, no record, session may still freeze it: the hook freezes it on that prompt (same checks), noted in the report's <code>approval:</code> line. The word counts anywhere in the prompt (later line, mid-sentence, pasted block); the freeze lands at prompt submit, before the agent acts. Never: a prompt opening with another harness tag (cross-session message), a <code>Skill(fimplement)</code> call.</p>
+  </li>
+  <li>
+    <strong>Every /fimplement applies the record</strong>
+    <p><code>/fimplement &lt;plan file name&gt;</code> applies it to the anchor's <code>settings.local.json</code>, any worktree. Plan: the first argument word naming a plan file (arguments: all after the command, line breaks included, as the harness splits them); else the plan this session last ran <code>smine-rules plan-sections</code> on (a design run's one plan record, forced by fdesign's enforce block before the code gate's turn ends); neither: best-effort. A master plan applies every derived plan whose <code>master:</code> link names it, in one write one <code>toolpolicy revert</code> undoes. No record: nothing applied, the run continues.</p>
+    <pre class="file-view" data-lang="text">tool-policy /fimplement hook:
+- plan: …/plans/2026-10-02-x-7ea30b5/2026-10-02-x-wip-7ea30b5/design/x.md
+- Permissions: appended 2 rule(s), 0 already present — Bash(lsof *) Bash(./bin/heartbeat serve *)</pre>
+  </li>
+</ol>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>Nothing waits on a freeze: neither <code>smine-rules plan-sections</code> nor any skill refuses an unfrozen plan.</p>
+</div>
+
+<h2 id="headless-cells">Headless cells</h2>
+<p>A <code>claude -p</code> session started by the routine runner, fleet worker launcher, eval runner or a config-server probe; the launcher sets <code>SMINE_HEADLESS=1</code> on the child process.</p>
+<table class="doc plain">
+  <thead><tr><th>Launcher</th><th>Marker</th></tr></thead>
+  <tbody>
+    <tr><td><code>RunCell</code> and <code>RunChat</code> in <code>internal/routinerun</code></td><td>set</td></tr>
+    <tr><td>The two probe scripts in <code>internal/server</code></td><td>set</td></tr>
+    <tr><td>A container cell</td><td class="wrap">set by an explicit <code>--env SMINE_HEADLESS=1</code> on <code>docker run</code></td></tr>
+    <tr><td>The eval and smoke runner</td><td class="wrap">reaches <code>RunCell</code> through <code>internal/skilleval/arm.go</code></td></tr>
+    <tr><td>An attended fleet worker</td><td class="wrap">off (see below)</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>In a cell</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Same gate, same sources</td><td class="wrap">Settings layers plus active skills' grants; the first prompt <code>/&lt;skill&gt; …</code> activates that skill.</td></tr>
+    <tr><td><code>--allowedTools</code></td><td class="wrap">The launcher passes the skill's <code>allowed-tools</code> (<code>claudeArgs</code> in <code>internal/routinerun</code>, <code>internal/skilleval</code>) plus extras: routine single cells <code>Write</code>, fleet workers <code>Workflow, Skill, Write</code>, eval arms <code>Workflow, Skill</code> or a fallback list. The gate never sees a command line; it decides from the deployed SKILL.md's same line alone, so both agree by construction. For Bash the gate's allow suffices; Claude Code reads the frontmatter line headless too (operator-tested, reported 2026-10-03).</td></tr>
+    <tr><td>Resume</td><td class="wrap">Sessions outlive their process: <code>claude -p --resume &lt;session id&gt;</code> continues one with context; <code>claude --resume &lt;session id&gt;</code> reopens it in your terminal to salvage, compact or steer. Not final: a session limit, <code>Prompt is too long</code>, a heartbeat stop (operator-tested, reported 2026-10-03).</td></tr>
+    <tr><td>Rules added during a run</td><td class="wrap">Apply from the next call; settings load on every call.</td></tr>
+    <tr><td>No typed turn</td><td class="wrap">A headless prompt never approves: <code>toolpolicy allow</code>, <code>toolpolicy revert</code> refused; no Workflow launch guard.</td></tr>
+  </tbody>
+</table>
+
+<h3>What the marker changes</h3>
+<table class="doc plain">
+  <thead><tr><th>Behaviour</th><th>Attended session</th><th>Headless cell</th><th>Why</th><th>Decided in</th><th>Pinned by</th></tr></thead>
+  <tbody>
+    <tr><td>Sound hooks</td><td>play</td><td>silent</td><td class="wrap">parallel cells stacked their chimes</td><td class="wrap"><code>2026-09-26-sound-hook-headless</code> D1</td><td class="wrap"><code>headless-env</code> in <code>TestRunCell</code>, <code>TestRunChat</code></td></tr>
+    <tr><td><code>/fimplement</code> plan hook</td><td class="wrap">applies the plan's frozen record to the worktree</td><td>does nothing</td><td class="wrap">a routine must not widen from a plan it wrote itself; headless never widens</td><td class="wrap"><code>2026-09-28-permission-guard</code> D9, <code>2026-10-01-permission-jailbreak-fix</code> D6</td><td class="wrap"><code>TestRunPlanHook_Headless</code>, bypass case <code>headless-applies-nothing</code></td></tr>
+    <tr><td>Freeze budget</td><td class="wrap">one per <code>/fdesign</code> prompt you typed</td><td class="wrap">one, when the first prompt is <code>/fdesign</code></td><td class="wrap">a nightly design run has no typed prompt</td><td class="wrap"><code>2026-10-01-permission-jailbreak-fix</code> D3</td><td class="wrap"><code>headless-first-prompt-freezes</code>, <code>headless-first-prompt-other-skill</code></td></tr>
+    <tr><td>Freeze effect</td><td class="wrap">record written, rules applied to the worktree</td><td class="wrap">record written, rules not applied</td><td class="wrap">headless never widens</td><td class="wrap"><code>2026-10-01-permission-jailbreak-fix</code> D20</td><td class="wrap"><code>headless-first-prompt-freezes</code></td></tr>
+  </tbody>
+</table>
+<p>Decision rows: the archived plan dirs above, in <code>~/GolandProjects/agent-plans/claude-configs/</code>.</p>
+<div class="callout">
+  <span class="badge badge-dim">Consequence</span>
+  <p>Rules an unattended design run froze apply only when an attended session runs <code>/fimplement</code> on that plan. Deliberate, not a gap.</p>
+</div>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>The marker is the test, not the mode</td><td class="wrap">An unmarked <code>claude -p</code> is attended for all four rows.</td></tr>
+    <tr><td>Attended launch</td><td class="wrap"><code>smine-routine worker -attended</code> starts the cell unmarked: its attended orchestrator's operator is the human step, so the cell's <code>/fimplement</code> applies its plan's frozen rules. Refused when the launcher runs marked: headless never hands attendance on. The fleet skill passes it for implementation cells only; designer cells stay marked, giving a nightly design run its one freeze.</td></tr>
+    <tr><td>Slash words in a launch</td><td class="wrap">A Bash argument starting with <code>/</code> is a path to the gate, so <code>/&lt;skill&gt; …</code> on a command line hits the path fence. <code>smine-routine worker</code> takes <code>-skill &lt;leaf&gt;</code>, <code>-args &lt;text&gt;</code> and writes the slash.</td></tr>
+  </tbody>
+</table>
+
+<h3>Probed 2026-10-03</h3>
+<p>CLI 2.1.282; cells started from a session's shell, unmarked, without <code>--allowedTools</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>Probe</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>SessionStart hooks</td><td class="wrap">Run: global-context file written for the cell's session id; heartbeat registered it. Cells under <code>.claude/worktrees/&lt;name&gt;</code> get the same hooks as any session.</td></tr>
+    <tr><td>Session identity</td><td class="wrap">Own <code>CLAUDE_CODE_SESSION_ID</code>, <code>CLAUDE_CODE_MESSAGING_SOCKET</code> in its Bash environment; <code>CLAUDE_CODE_MESSAGING_TOKEN</code> set. <code>CLAUDE_CODE_ENTRYPOINT</code>: the launcher's, says nothing about the cell.</td></tr>
+    <tr><td>Skill grant</td><td class="wrap">A Bash command only the active skill grants: ran.</td></tr>
+    <tr><td>Rule added mid-run</td><td class="wrap">A denied command ran once its rule entered the worktree's <code>settings.local.json</code>.</td></tr>
+    <tr><td>Gate-only rule</td><td class="wrap">Under <code>--setting-sources user</code> (no project or local settings loaded), a Bash command ruled only in the worktree's <code>settings.local.json</code> ran: Claude Code needs no own rule for a gate-allowed Bash call.</td></tr>
+    <tr><td>Plan hook in an unmarked cell</td><td class="wrap">First prompt <code>/fimplement &lt;file&gt;</code>: got the <code>tool-policy /fimplement hook:</code> lines, plan path resolved.</td></tr>
+    <tr><td>Resume</td><td class="wrap"><code>claude -p --resume &lt;session id&gt;</code> over the stream-json protocol continued a finished cell with context, same working directory; SessionStart hooks reran as <code>SessionStart:resume</code>.</td></tr>
+    <tr><td>Not probed</td><td class="wrap">Non-Bash tools without <code>--allowedTools</code>, launchd-started cells, resume from another working directory.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="how-a-call-is-decided">How a call is decided</h2>
+<p>Checks run in this order on every <code>PreToolUse</code> call; the first answer wins.</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Check</th><th>Then</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap"><code>ExitPlanMode</code>?</td><td class="wrap">The engine decides: plan approval stays yours.</td></tr>
+    <tr><td>2</td><td class="wrap">Denied tool, or a deny rule matches?</td><td class="wrap">Deny.</td></tr>
+    <tr><td>3</td><td class="wrap">Breaks an invoked skill's enforce gate rule?</td><td class="wrap">Deny.</td></tr>
+    <tr><td>4</td><td class="wrap"><code>Workflow</code> with a marked non-primer script, or a launch after a typed turn outside a notification-opened turn?</td><td class="wrap">Deny (launch guard below).</td></tr>
+    <tr><td>5</td><td class="wrap"><code>Agent</code> without an explicit non-Fable model?</td><td class="wrap">Deny.</td></tr>
+    <tr><td>6</td><td class="wrap">Ungated built-in?</td><td class="wrap">Allow.</td></tr>
+    <tr><td>7</td><td class="wrap">Bash, PowerShell</td><td class="wrap">Path fence → read-only? → one pipe? → settings rule → skill grant. A match allows, no match denies.</td></tr>
+    <tr><td>7</td><td class="wrap">Read, Glob, Grep</td><td class="wrap">Inside the read roots or a skill path grant.</td></tr>
+    <tr><td>7</td><td class="wrap">Edit, Write, NotebookEdit</td><td class="wrap">Inside the write roots and not protected.</td></tr>
+    <tr><td>7</td><td class="wrap">Rule-bearing: WebFetch, WebSearch, Skill, Agent, Workflow, Monitor, Artifact, EnterWorktree, <code>mcp__*</code></td><td class="wrap">A settings rule, a skill grant, or a <code>Skill</code> call for an active skill or one your newest message names.</td></tr>
+    <tr><td>7</td><td class="wrap">Unknown tool</td><td class="wrap">Deny.</td></tr>
+  </tbody>
+</table>
+
+<h3>The pieces</h3>
+<table class="doc plain">
+  <thead><tr><th>Piece</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Permission requests</td><td class="wrap">Claude Code checks again after the gate: a write under a <code>.claude</code> directory is a "sensitive file" whatever a hook said. The gate also answers <code>PermissionRequest</code> with its pre-call verdict (admitted: allow, else deny); admitted calls never wait on a dialog. <code>ExitPlanMode</code>: no answer. <code>toolpolicy</code> commands: answered pre-call, never rerun. No ledger line.</td></tr>
+    <tr><td>Browser sign-in</td><td class="wrap">A Browser pane call (<code>mcp__Claude_Browser__*</code>) whose URL (own <code>url</code> or a batch action's) carries credentials: denied for every host, as the pane would show a sign-in consent card no hook reaches. Checked right after the deny rules, both hook points. The dev config server needs no credential: its plain loopback URL opens card-free.</td></tr>
+    <tr><td>Enforce gate rules</td><td class="wrap">Each invoked skill's <code>enforce.json</code>: tools denied in plan mode, agent types only its Workflow spawns, paths the root may not write, a path's only writers. Unparseable: every write denied. Missing (rendered only with gate and heartbeat installed): no rule. Patterns carry the program this install filled for install-scoped variables; repo-scoped ones never reach a pattern. Stateful checks: <a href="heartbeat.html#runtime-enforcement">Heartbeat § Runtime enforcement</a>.</td></tr>
+    <tr><td>Runtime placement</td><td class="wrap">SKILL.md's <code>docker:</code>, <code>enable-delegation:</code>, <code>enforce-permissions:</code> lines (from <code>&lt;leaf&gt;.cue</code>) are declarative: shown by <code>--help</code> and the config server's Runtime block, never read by the gate. The harness withholds Workflow from subagents; root-only skills' lane subagents re-invoke with <code>lane:&lt;direction&gt;</code> for their context slice; <code>mcp__ccd_session_mgmt__set_session_permission_mode</code> is judged like any MCP call. The 2026-10-09 placement denies deadlocked every railroad-review lane; removed 2026-10-12.</td></tr>
+    <tr><td>Workflow launch guard</td><td class="wrap">The harness hands the newest typed message to every agent of a launch. So once a session has a typed turn, a <code>Workflow</code> launch is denied unless the root transcript's newest turn record (user row stamped <code>turnOrigin</code>, or mid-turn message) is a <code>task_notification</code> turn. No typed turn (headless <code>sdk</code> prompts, peer-only): unguarded. Exempt: the primer, an inline <code>script</code> equal to the <code>cmd/toolpolicy/relay.go</code> constant after collapsing whitespace runs. Only it may carry the marker <code>SMINE-PRIMER</code>; other inline scripts holding it: denied everywhere. No allow rule lifts either deny; deny and enforce rules bind first. The deny reason carries the primer and steps: launch inline, end the turn, relaunch in the turn its notification opens.</td></tr>
+    <tr><td>Deny reason</td><td class="wrap"><code>tool-policy: denied &lt;tool&gt; — &lt;cause&gt;. candidate rule: &lt;rule&gt;.</code> plus steering (what works instead).</td></tr>
+    <tr><td>Ledger</td><td class="wrap">One line per deny: <code>anchor</code>, <code>scratchpad_dir</code>, plus <code>agent_id</code>/<code>agent_type</code> in subagents.</td></tr>
+    <tr><td>Session anchor</td><td class="wrap">The transcript's first <code>cwd</code>; EnterWorktree, ExitWorktree move it. Subagents (Agent tool, Workflow) anchor at their own transcript's first <code>cwd</code> (<code>&lt;session&gt;/subagents[/workflows/&lt;run&gt;]/agent-&lt;id&gt;.jsonl</code>) if it lies directly under the session repository's <code>.claude/worktrees</code>, else at the parent's. Never the envelope <code>cwd</code>. Project settings load from the anchor.</td></tr>
+    <tr><td>Read roots</td><td class="wrap">Anchor; scratchpad; session temp dir <code>/tmp/claude-&lt;uid&gt;/&lt;project dir&gt;/&lt;session id&gt;</code> (holds <code>scratchpad/</code>, <code>images/</code>, and task outputs <code>tasks/&lt;id&gt;.output</code> named by Workflow completion notifications). That dir is rooted as the glob <code>/tmp/claude-&lt;uid&gt;/*/&lt;session id&gt;</code> from the envelope's <code>session_id</code> and the gate's uid, since the project dir differs between a cell's cwd and a Desktop session's project but the session id never does; so headless routine cells lacking <code>scratchpad_dir</code> get it too. Also as <code>scratchpad_dir</code>'s parent when present. Read-only: <code>additionalDirectories</code>, Desktop-added folders, <code>extra_read_dirs</code> (<code>~/.claude</code>, app and toolchain caches, <code>~/go/bin</code>), fixed darwin system dirs, never <code>/etc</code>: <code>/Applications/Xcode.app</code>, <code>/Library/Developer</code>, <code>/System</code>, <code>/opt/homebrew</code>, <code>/bin</code>, <code>/dev</code>, <code>/sbin</code>, <code>/usr</code>. Sole managed-settings layer read: <code>/Library/Application Support/ClaudeCode/managed-settings.json</code>. Settings layers and <code>~</code> expand against the gate process's own <code>$HOME</code>.</td></tr>
+    <tr><td>Write roots</td><td class="wrap">Anchor, scratchpad, <code>additionalDirectories</code>, Desktop-added folders, <code>extra_write_dirs</code> (plan files, auto-memory). Protected and engine-protected paths refused first; only <code>extra_write_dirs</code> skip the engine-protected check.</td></tr>
+    <tr><td>Folders added in the Desktop app</td><td class="wrap">The "+" button's Add folder, drag and drop onto the session, a directory granted via a Desktop prompt: an <code>addDirectories</code> update, destination <code>session</code>, in the Desktop session record (no removals recorded). The gate reads it every hook call (<code>internal/desktop</code>, located by <code>CLAUDE_CODE_HOST_SESSION_ID</code>), not for <code>toolpolicy check</code> (its report omits them); they count as <code>additionalDirectories</code>, <code>.claude/settings*.json</code> protected alike. Terminal sessions, launchd-started cells: no record, nothing gained. A cell launched from a Desktop session inherits its <code>CLAUDE_CODE_HOST_SESSION_ID</code> (<code>RunChat</code>, <code>RunCell</code> pass the launcher's environment unscrubbed). <code>#add</code> persists a folder instead.</td></tr>
+    <tr><td>Bash path fence</td><td class="wrap">Words expand statically, never execute; <code>cd</code> tracked; per-program path roles from <code>fence_specs.go</code>, else generic. <code>/tmp</code> writes steer to the scratchpad. Non-read-only calls may not name a protected path in any word or joined flag value; <code>go -exec</code>, <code>-toolexec</code>, <code>-vettool</code> refused.</td></tr>
+    <tr><td>acceptEdits file commands</td><td class="wrap"><code>cp</code>, <code>mkdir</code>, <code>mv</code>, <code>rm</code>, <code>rmdir</code>, <code>touch</code> run ruleless once the fence places every path inside the write roots.</td></tr>
+    <tr><td>Confined sessions</td><td class="wrap">Eval and smoke arms run under <code>SMINE_READ_FENCE</code> (set by the runner): eval dirs, plans archive. Fenced roots: denied, read and write, in every path check (file tools, every Bash path argument however spelled) and in any Bash command naming them absolutely or as <code>~/…</code>, <code>$HOME/…</code>, before any skill grant. Arm stores live in the arm's worktree (<code>SMINE_STORE_ROOT</code>).</td></tr>
+    <tr><td>Protected, never written by a session</td><td class="wrap">Settings layers, gate inputs, <code>protected_paths</code>, the transcript, <code>.git</code>, make sources until <code>#allow Makefile</code>, a plan dir's <code>permissions.json</code> outside a design run that may freeze it.</td></tr>
+    <tr><td>Not covered</td><td class="wrap">Code a command runs after launch (<code>go test</code>, a make recipe) keeps full filesystem access.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="make-is-the-command-surface">Make is the command surface</h2>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>One rule admits every target</td><td class="wrap">Every repo command is a Makefile target; <code>Bash(make *)</code> admits all.</td></tr>
+    <tr><td>Make sources are locked</td><td class="wrap"><code>Makefile</code>, <code>GNUmakefile</code>, <code>*.mk</code>: write-locked until <code>#allow Makefile</code>.</td></tr>
+    <tr><td>Declared variables only</td><td class="wrap"><code>NAME=value</code> only when the target's <code>## &lt;target&gt;:</code> help line declares <code>NAME</code>; values free of shell metacharacters.</td></tr>
+    <tr><td>Denied flags</td><td class="wrap">Those loading make code or overriding the environment: <code>-f</code>, <code>-E</code>, <code>-I</code>, <code>-e</code>.</td></tr>
+    <tr><td>Operator targets</td><td class="wrap">A help line carrying <code>[operator]</code>: refused in a linked-worktree session, as is executing <code>install.sh</code> or a script under <code>cmd/sync/</code> there.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="approvals">Approvals: the # commands</h2>
+<p>A line of your message whose first word is <code>#allow</code>, <code>#deny</code>, <code>#add</code>, <code>#set</code>, <code>#reset</code>, <code>#disable</code> or <code>#enable</code>; one grammar for all seven (<code>cmd/toolpolicy/hashtag.go</code>). Other lines: ignored prose. Lines apply in order; a misshaped one (third word on <code>#allow</code>, words after <code>#reset</code>) is nothing.</p>
+<table class="doc">
+  <thead><tr><th>Line</th><th>Effect</th><th>Answer</th></tr></thead>
+  <tbody>
+    <tr><td>#allow Makefile</td><td class="wrap">Unlocks the target for the session; <code>#deny &lt;target&gt;</code> re-locks; last wins. Targets: <code>Makefile</code>, <code>settings.local.json</code> (short forms <code>-s</code>, <code>--s</code>, <code>-settings</code>, <code>--settings</code>). Other targets: kept, unlock nothing.</td><td class="wrap"><code>tool-policy #allow: &lt;target&gt; unlocked for this session — the last #allow or #deny for it wins</code>, or <code>tool-policy #deny: &lt;target&gt; locked for this session</code></td></tr>
+    <tr><td>#add /absolute/dir</td><td class="wrap">Appends to <code>permissions.additionalDirectories</code> of the anchor's <code>settings.local.json</code>: read and write root from the gate's next call; Claude Code reloads the file too. Relative or <code>~</code> path, non-existent directory, third word: silently nothing.</td><td class="wrap"><code>tool-policy #add: … is in additionalDirectories of …</code></td></tr>
+    <tr><td>#set Bash(mdfind *)</td><td class="wrap">Appends allow rules to that file's <code>permissions.allow</code>: the rest of the line plus following lines up to a blank line or the next command line form one rule, gate dialect, no self-service shape check. Refused: path rules (<code>Read(~/x/**)</code>; settings path rules never match, use <code>#add</code>); unparseable rules (the rest still applies).</td><td class="wrap"><code>tool-policy #set: N rule(s) in permissions.allow of … — …</code> or <code>tool-policy #set: rejected — …</code></td></tr>
+    <tr><td>#reset</td><td class="wrap">One-word line: empties both lists of the file, clears the session's switches, inerts every earlier <code>#add</code>, <code>#set</code>, <code>#disable</code>, <code>#enable</code>; later lines in the message apply afresh; other keys stay. Mid-turn: earlier messages go inert, the file keeps its lists (only a typed prompt clears them); their switches return at the next gate event, the off set refolded from messages after the last <code>#reset</code>.</td><td class="wrap"><code>tool-policy #reset: cleared …</code></td></tr>
+    <tr><td>#disable rgate</td><td class="wrap">Hook effects off for the session; <code>#enable</code>: back on. Grammar below.</td><td class="wrap"><code>tool-policy #disable: off — rgate, hb (from the next hook event on)</code></td></tr>
+  </tbody>
+</table>
+<h3>What counts as your message</h3>
+<p>Counts: a typed prompt (<code>turnOrigin: human</code>, every text block) and a message typed mid-turn (<code>queued_command</code> attachment, human origin, no meta mark): interruptions, their addenda and runs of interruptions all arrive as such rows. A Desktop paste wrapper drops with its body wherever it sits: no command inside a paste counts, a pasted transcript fires nothing; typed text around it counts.</p>
+<p>Never counts (<code>internal/transcript.Classify</code>): hook block reasons written back as user rows (<code>isMeta</code>, "Stop hook feedback:", above all the session-title hook's rename instruction), the <code>[Request interrupted by user]</code> marker, tool results, compaction summaries, local commands like <code>/model</code>, peer relays, task notifications, headless prompts.</p>
+<p>The gate reads commands from the transcript on every call, plus the submitted prompt. A mid-turn <code>#add</code> counts at the agent's next tool call; a <code>#set</code> rule is written on that call and admits it. A submitted prompt prints one result line per command as context; mid-turn messages apply silently. The file is the applied state: already reflected messages write nothing; <code>toolpolicy revert</code> never touches these entries. Claude Code's <code>DirectoryAdded</code> hook (<code>/add-dir</code>, the SDK's <code>register_repo_root</code>) runs the gate, appending that directory likewise; <code>--add-dir</code> and the Desktop "+" raise no such event.</p>
+
+<h3>Features for #disable and #enable</h3>
+<table class="doc">
+  <thead><tr><th>Feature</th><th>Members</th><th>What it switches</th></tr></thead>
+  <tbody>
+    <tr><td>rgate</td><td class="wrap"><code>global</code>, <code>invoked</code>, <code>plan</code>, <code>&lt;ext|guide&gt;</code></td><td class="wrap">What the read gate owes: session global file, invoked skills' injected context, plan-mode file, language guides by extension or name. An extension (from the guides' <code>Files:</code> patterns in the anchor's context index) drops every guide covering it: <code>rgate:go</code> both Go and Go test guides; <code>rgate:cue</code> the skills guide for <code>&lt;leaf&gt;.cue</code>, <code>.md</code> payloads still owing it. A guide name (file stem) drops that guide for all files: <code>rgate:go_test</code>, <code>rgate:rust</code>, <code>rgate:skills</code>. A guide an earlier denial recorded clears by name or once all its extensions are off; a path-only guide, by name only.</td></tr>
+    <tr><td>skill</td><td class="wrap"><code>enforce</code>, <code>invokegate</code></td><td class="wrap">The gates on skill runs.</td></tr>
+    <tr><td>inject</td><td class="wrap"><code>global</code>, <code>skill</code>, <code>acdsl</code>, <code>env</code>, <code>plan</code></td><td class="wrap">Hook writes into context or the session. <code>inject:acdsl</code>: post-Read rules context. <code>inject:env</code>: <code>skillenv</code> exports and its check of an invoked skill's required repo values.</td></tr>
+    <tr><td>session</td><td class="wrap"><code>title</code></td><td class="wrap">The session-title hook.</td></tr>
+    <tr><td>hb</td><td class="wrap">(<code>heartbeat</code> spells it)</td><td class="wrap">Heartbeat.</td></tr>
+    <tr><td>all</td><td></td><td class="wrap">Everything.</td></tr>
+  </tbody>
+</table>
+<p>A bare group word names all members, <code>&lt;group&gt;:a,b</code> some; words expand before the fold, so <code>#disable rgate</code> then <code>#enable rgate:go</code> leaves all rgate members but <code>go</code> off. The gate folds these lines (last per member wins) into <code>switches.off</code> of its session record <code>~/.claude/tool-policy/state/&lt;session_id&gt;.json</code>, written only on change; every hook binary and heartbeat reads it before acting, fail-open, so switches apply from the next hook event. Each change appends to <code>switches.history</code> (<code>{action: disabled|enabled, at, feature}</code>, stamped at the gate's write), shown under Session features on the session's config-server context page <code>/sessions-report/&lt;id&gt;</code>. Never features: the gate, its message channel, the worktree write guard, the heart attack, the help hook. <code>/smine-help</code> prints what each feature keeps on.</p>
+<pre class="file-view" data-lang="text">tool-policy #disable: rejected — unknown feature "gate"; features: rgate[:global|invoked|plan|&lt;ext|guide&gt;], skill[:enforce|invokegate], inject[:global|skill|acdsl|env|plan], session[:title], hb, all
+tool-policy #disable: off — rgate, hb (from the next hook event on)
+tool-policy #enable: on — rgate:go; still off — hb</pre>
+
+<h2 id="rule-dialect">Rule dialect</h2>
+<table class="doc">
+  <thead><tr><th>Rule</th><th>Admits</th></tr></thead>
+  <tbody>
+    <tr><td>Bash</td><td class="wrap">Bare tool name: the whole tool.</td></tr>
+    <tr><td>Bash(git log*)</td><td class="wrap">Whole-command glob; without <code>*</code>, the exact command. Flags go after the rule's words: <code>git commit -s -m</code> misses <code>Bash(git commit -m*)</code>. Git's leading <code>-C &lt;dir&gt;</code>, <code>--no-pager</code>, <code>-P</code> and <code>--no-optional-locks</code> are cut before matching.</td></tr>
+    <tr><td>Skill(fdesign)</td><td class="wrap">An agent's call of that skill.</td></tr>
+    <tr><td>Agent(railroad-station)</td><td class="wrap">Spawning that agent type.</td></tr>
+    <tr><td>WebFetch(domain:docs.rs)</td><td class="wrap">Fetches from that domain.</td></tr>
+    <tr><td>mcp__server, mcp__server__tool</td><td class="wrap">Every tool of the server, or one tool.</td></tr>
+    <tr><td>Read(~/x/**), Read(//abs/**), Read(@repos/**), Edit(…), Write(…)</td><td class="wrap">Path rules: skill grants only, never from settings.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="the-git-floor">The git floor</h2>
+<p>No rule lifts these.</p>
+<table class="doc plain">
+  <thead><tr><th>Refused</th><th>Forms</th></tr></thead>
+  <tbody>
+    <tr><td>Other global options</td><td class="wrap"><code>-c</code>, <code>--git-dir</code>, <code>--work-tree</code>, <code>--exec-path</code>, <code>--bare</code></td></tr>
+    <tr><td>Environment</td><td class="wrap"><code>GIT_*</code>, except a fenced <code>GIT_INDEX_FILE</code></td></tr>
+    <tr><td>Command-running options</td><td class="wrap"><code>--upload-pack</code>, <code>--receive-pack</code>, <code>--exec</code>, <code>rebase -x</code>, <code>grep -O</code>, <code>difftool</code>, <code>mergetool</code>, <code>bisect run</code>, <code>submodule foreach</code>, <code>filter-branch</code></td></tr>
+    <tr><td>Planted bare repos</td><td class="wrap"><code>safe.bareRepository explicit</code>, set globally.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="read-only-analysis">Read-only analysis</h2>
+<p>Fail-closed: a command is read-only only when the analysis says so.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>The list</td><td class="wrap"><code>gate.read_only_commands</code>: a program, or program plus subcommand (<code>git status</code>, <code>go env</code>).</td></tr>
+    <tr><td>Wrappers</td><td class="wrap"><code>gate.wrapper_commands</code> (default <code>command</code>, <code>env</code>, <code>nice</code>, <code>time</code>, <code>timeout</code>, <code>xargs</code>), skipped to the wrapped command.</td></tr>
+    <tr><td>Disqualified</td><td class="wrap">Non-literal words on flag-checked heads; redirects other than <code>2&gt;&amp;1</code>, <code>&gt;/dev/null</code>, <code>2&gt;/dev/null</code>, <code>&lt;file</code>; heredocs; <code>&amp;</code>; <code>find -exec/-delete/-fprint*</code>; <code>sed -i</code>; <code>go env -w/-u</code>; non-literal <code>VAR=</code> prefixes.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="cards-the-gate-cannot-reach">Cards the gate cannot reach</h2>
+<p>The gate's <code>PermissionRequest</code> answer covers only what Claude Code asks through that hook; cards the Desktop app raises itself are controlled in its Settings.</p>
+<ul>
+  <li>Browser pane cards: per-site consent; "submit sign-in credentials" for a URL with embedded credentials (kept away by the gate's deny of that URL form).</li>
+  <li><code>ccd_*</code> approval cards.</li>
+  <li>Unlisted Desktop MCP servers: denied by the gate; admit by rule.</li>
+</ul>
+
+<h2 id="files-and-tests">Files and tests</h2>
+<table class="doc">
+  <thead><tr><th>Where</th><th>What</th></tr></thead>
+  <tbody>
+    <tr><td>internal/install (gate component)</td><td class="wrap"><code>bin/configserver -apply</code> builds the gate to <code>~/.claude/hooks/bin/toolpolicy</code> and owns the allow and deny entries of <code>settings/claude_code/components/gate.json</code>. The Session hooks component renders <code>~/.claude/hooks/config.json</code>; the gate reads its <code>toolpolicy</code> section at the fixed path <code>&lt;claude home&gt;/hooks/config.json</code> (no policy path on the command), strictly decoded by <code>internal/hookconfig</code>. Unknown key or invalid listing: load fails, the gate exits 1 naming the file, a failing gate to Claude Code (fail-open).</td></tr>
+    <tr><td>gate.* settings</td><td class="wrap">The former policy keys: <code>gate.read_only_commands</code>, <code>gate.ungated_tools</code>, <code>gate.tool_classes_bash|read|write|rule_bearing</code>, <code>gate.denied_tools</code>, <code>gate.protected_paths</code>, <code>gate.extra_read_dirs</code>, <code>gate.extra_write_dirs</code>, <code>gate.operator_paths</code>, plus the gate's own lists (<code>gate.wrapper_commands</code>, <code>gate.file_commands</code>, <code>gate.tmp_dirs</code>, <code>gate.engine_protected_dirs</code>, <code>gate.engine_protected_files</code>, …). Deny causes, allow reasons and steering texts too: <code>gate.cause_*</code>, <code>gate.reason_*</code>, <code>gate.steer_*</code> (sections <code>toolpolicy.causes|reasons|steers</code>; an empty text is refused at load). Only the relay primer script stays a constant, in <code>cmd/toolpolicy/protocol.go</code>: the deny hands it out, the primer exemption compares against it byte for byte.</td></tr>
+    <tr><td>~/.claude/tool-policy/state/&lt;session_id&gt;.json</td><td class="wrap">Self-service state and switches.</td></tr>
+    <tr><td>~/.claude/tool-policy/frozen.jsonl</td><td class="wrap">Frozen plan rules.</td></tr>
+    <tr><td>go test ./cmd/toolpolicy</td><td class="wrap">Bash fixtures, dialect, decision table, fence, grants, hook contract, ledger, the bypass table <code>bypass_test.go</code>.</td></tr>
+    <tr><td>~/.claude/hooks/bin/</td><td class="wrap">Other deny-only hooks, all Go binaries: <code>skillinvokegate</code>, <code>readgate</code>, <code>worktreewriteguard</code>. The read gate decides only the Bash, Read and Write classes of the same <code>toolpolicy</code> section. No hook gates commit messages: the settings' empty <code>attribution</code> stops the harness's co-author trailer; the trailer commit rule is prose.</td></tr>
+    <tr><td>Design log</td><td class="wrap">The archived <code>2026-09-17-permission-closed-world</code> plan dir and <code>plans/2026-09-26-tool-policy-cleanup-wip-4ca7753/</code>.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token usage · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Token usage</h1>
+<p class="lede">Measured capacity of subscription usage windows, for sizing eval arms and routines against the 5-hour window.</p>
+<p>Each entry drives one window from 0% to the session limit with a known workload and records raw tokens from peek plus the API-equivalent cost at list price. The Usage page converts tokens to plan percent from these numbers. Cache-field behavior: <a href="cache-token.html">Prompt caching</a>.</p>
+
+<h2 class="first" id="team-premium-opus-5-5-railroad-review-eval">Team Premium, Opus 5.5, railroad-review eval</h2>
+<p>Measured 2026-09-28.</p>
+<div class="callout">
+  <span class="badge badge-ok">Result</span>
+  <p>One Team Premium 5-hour window held <strong>$262.04</strong> of API-equivalent Opus 5.5 spend at list price, reached in ~48 minutes at this fan-out (≈ $5.5/min). The all-models weekly limit fell from 100% to 84%: one window is 16% of the week, ~6.25 windows a week. Fable was not in the run; it may use at most half the weekly limit.</p>
+</div>
+
+<h3>Setup</h3>
+<table class="doc plain">
+  <thead><tr><th>Item</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Window</td><td class="wrap">Opened 19:40 Berlin (first arm launch 19:40:22); the limit message named the reset 00:40, exactly 5 h later.</td></tr>
+    <tr><td>Workload</td><td class="wrap"><code>/skillroutine-eval railroad-review</code> preset (g2 bootstrap, smine 1.1.4..1.2.1), arm <code>claude-opus-5-5[1m]:high</code>, lanes and station <code>opus:medium</code>. All 106 agents ran <code>claude-opus-5-5</code>.</td></tr>
+    <tr><td>Telemetry</td><td class="wrap">peek 1.2.10, central instance (control port 42442). CLI <code>total_cost_usd</code> and OTEL <code>cost_usd</code> agree.</td></tr>
+  </tbody>
+</table>
+
+<h3>Window load</h3>
+<table class="doc plain">
+  <thead><tr><th>Load</th><th>Wall time</th><th>Cost (CLI/OTEL)</th></tr></thead>
+  <tbody>
+    <tr><td>Arm 1, <code>2026-09-28-a34281</code> (aborted before round 1)</td><td>19:40:22–19:41:48</td><td>$1.06</td></tr>
+    <tr><td>Arm 2, <code>2026-09-28-a34281-2</code> (dispatcher + 105 subagents, killed by the limit)</td><td>20:16:58–21:04:41</td><td>$260.98</td></tr>
+    <tr><td><strong>Window, 0% → limit</strong></td><td></td><td><strong>$262.04</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>Arm 2 tokens</h3>
+<p>Main session plus all subagents, from peek.</p>
+<table class="doc plain">
+  <thead><tr><th>Category</th><th>Tokens</th><th>Opus 5.5 rate</th><th>Cost</th><th>Share</th></tr></thead>
+  <tbody>
+    <tr><td>Cache write (all 1h TTL, subagents included)</td><td>17,216,269</td><td>$8 / MTok</td><td>$137.73</td><td>53%</td></tr>
+    <tr><td>Cache read</td><td>390,238,659</td><td>$0.20 / MTok (0.05×)</td><td>$78.05</td><td>30%</td></tr>
+    <tr><td>Output</td><td>2,137,757</td><td>$20 / MTok</td><td>$42.76</td><td>17%</td></tr>
+    <tr><td>Input</td><td>4,834</td><td>$4 / MTok</td><td>$0.02</td><td>0%</td></tr>
+    <tr><td><strong>Recomputed</strong></td><td></td><td></td><td><strong>$258.56</strong></td><td></td></tr>
+  </tbody>
+</table>
+<p>The recomputation is 0.9% below the reported $260.98, most likely calls in flight at the kill.</p>
+<p>Opus 5.5 list prices (platform.claude.com pricing, fetched 2026-09-28), per MTok: input $4, 5m write $5, 1h write $8, cache read $0.20, output $20; 1M context at standard rates. The 0.05× read rate differs from other models' 0.1× and Fable/Mythos 5.1's 0.025×.</p>
+
+<h3>Arm 2 cost by role</h3>
+<table class="doc plain">
+  <thead><tr><th>Role</th><th>Agents</th><th>Write</th><th>Read</th><th>Output</th><th>Total</th></tr></thead>
+  <tbody>
+    <tr><td>Code-style lanes</td><td>8</td><td>$25.53</td><td>$13.88</td><td>$10.13</td><td>$49.53</td></tr>
+    <tr><td>Verifiers</td><td>40</td><td>$24.98</td><td>$10.08</td><td>$9.13</td><td>$44.19</td></tr>
+    <tr><td>Tests lanes</td><td>8</td><td>$21.73</td><td>$16.81</td><td>$5.13</td><td>$43.67</td></tr>
+    <tr><td>Correctness lanes</td><td>8</td><td>$20.30</td><td>$14.69</td><td>$5.72</td><td>$40.71</td></tr>
+    <tr><td>Refuters</td><td>25</td><td>$20.77</td><td>$11.65</td><td>$6.58</td><td>$39.00</td></tr>
+    <tr><td>Security lanes</td><td>8</td><td>$18.76</td><td>$9.17</td><td>$3.98</td><td>$31.91</td></tr>
+    <tr><td>Root dispatcher</td><td>1</td><td>$1.39</td><td>$1.57</td><td>$0.73</td><td>$3.69</td></tr>
+    <tr><td>Checklist agent</td><td>1</td><td>$2.43</td><td>$0.19</td><td>$0.88</td><td>$3.49</td></tr>
+    <tr><td>Groupers</td><td>5</td><td>$1.84</td><td>$0.01</td><td>$0.49</td><td>$2.34</td></tr>
+    <tr><td>Station</td><td>2</td><td>—</td><td>—</td><td>—</td><td>$0 (never ran)</td></tr>
+  </tbody>
+</table>
+<p>Lanes are 64% of the spend. Writes, not reads, are the largest line: every agent writes its prompt at the 1h TTL (2× input), and Opus 5.5 reads are cheap. Valid only for Opus 5.5 at this fan-out shape. Earlier Team Premium estimate: $260–290 (2026-09-05).</p>
+
+<h3>Conversion to plan percent</h3>
+<p>The Usage page (<code>internal/budget/plan.go</code>) derives plan percent from this window alone; no dollar value takes part. The unit is one Opus 5.5 output token; every other token is weighted by its list-price ratio to it, cache writes at the 1-hour rate.</p>
+<table class="doc plain">
+  <thead><tr><th>Model</th><th>Output</th><th>Input</th><th>Cache write</th><th>Cache read</th></tr></thead>
+  <tbody>
+    <tr><td>Opus 5.5</td><td>1</td><td>0.2</td><td>0.4</td><td>0.01</td></tr>
+    <tr><td>Fable 5.1</td><td>2.5</td><td>0.5</td><td>1</td><td>0.0125</td></tr>
+    <tr><td>Sonnet 5.5</td><td>0.5</td><td>0.1</td><td>0.2</td><td>0.01</td></tr>
+    <tr><td>Haiku 4.5</td><td>0.25</td><td>0.05</td><td>0.1</td><td>0.005</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Measurement</th><th>Value</th><th>Provenance</th></tr></thead>
+  <tbody>
+    <tr><td>Team Premium 5-hour window</td><td class="wrap"><strong>12,927,618</strong> output-token equivalents; cache-hit rate 95.8%</td><td class="wrap">17,216,269 × 0.4 + 390,238,659 × 0.01 + 4,834 × 0.2 + 2,137,757, from the 2026-09-28 window.</td></tr>
+    <tr><td>Output only, no context</td><td class="wrap">12.9M Opus 5.5 or 5.2M Fable 5.1 output tokens per window</td><td class="wrap">Derived from the window.</td></tr>
+    <tr><td>Team Premium week</td><td class="wrap">6.25 windows, 80.8M equivalents; Fable may use half</td><td class="wrap">One window is 16% of the weekly limit.</td></tr>
+    <tr><td>Max 20x 5-hour window</td><td class="wrap">41.0M equivalents, 3.17 Team Premium windows; the page divides by exactly that</td><td class="wrap">2026-10-05, the only Max 20x measurement: railroad-review session <code>b26f7f7c</code> on the Max account, Opus 5.5 alone, 15,156,419 cache write, 353,337,991 cache read, 4,308 input, 1,876,747 output = 11,473,556 equivalents (88.75% of a Team Premium window), read 28% on the Max 5-hour meter. 11,473,556 / 0.28 = 41.0M. Anthropic's stated allowances (20 against 6.25) give 3.2.</td></tr>
+    <tr><td>Max 20x week</td><td class="wrap">One window is 36% of the weekly limit, ~2.8 windows a week</td><td class="wrap">The same session moved the Max weekly meter ~10 points: 10 / 28. Eyeballed; confirm with a reading before and after one session.</td></tr>
+    <tr><td>Team Premium check</td><td class="wrap">Confirmed 2026-10-05</td><td class="wrap">Railroad-review session <code>e82362c0</code> on the Team Premium account, Opus 5.5 alone, 10,143,570 equivalents: the page showed 78% of the window and 13% of the week, matching the Team Premium meters.</td></tr>
+  </tbody>
+</table>
+<p>The page offers only these two plans; Pro, Max 5x and Team Standard are unmeasured.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Assumption</span>
+  <p>The plan meters each token class in proportion to its list price. One window fixes a total, not a per-class weight; a second window with a different mix would test it.</p>
+</div>
+</body>
+</html>

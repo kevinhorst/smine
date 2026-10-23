@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peek · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Peek</h1>
+<p class="lede">An MCP server that reads every Claude Code and Codex session from its transcript: turns, plan, diff, status, cost.</p>
+<p><a href="https://github.com/kevinhorst/peek-mcp">peek-mcp</a> is its own project; smine installs it as the Peek component, runs one central instance per profile and reads sessions through it. Sessions never talk to each other directly: an agent that wants to know what another session is doing asks peek. The config server's session pages, the context report, heartbeat's subagent tree, the nightly miner and the usage page all read through it.</p>
+
+<h2 class="first" id="what-it-answers">What it answers</h2>
+<p>Three MCP tools, each taking <code>agent</code> (<code>claude</code> or <code>codex</code>) and a session <code>id</code> or <code>title</code> (exact match first, else substring; omitted: the most recent session).</p>
+<table class="doc">
+  <thead><tr><th>Tool</th><th>Returns</th></tr></thead>
+  <tbody>
+    <tr><td>session_list</td><td class="wrap">Every session with its plan and diff flags.</td></tr>
+    <tr><td>session_get</td><td class="wrap">One session's sections, each switched by a flag: <code>turns</code> (last <code>n</code>, default 20; <code>tools</code> adds each turn's tool calls, <code>thinking</code> the thinking text), <code>events</code>, <code>plan</code>, <code>diff</code> (merge-base diff against the inferred base), <code>uncommitted_diff</code>, <code>remember</code> (the project's auto-memory). <code>subagent</code> scopes it to one subagent's transcript. Paginated: while <code>has_more</code> is true, call again with the returned <code>request_id</code>; <code>json</code> returns the whole typed response unpaginated.</td></tr>
+    <tr><td>session_events</td><td class="wrap">A bounded status: counters, cost, wall and active time, the last activity. Cheap enough to poll: monitoring loops use it, never a full-turn read, whose payload compounds.</td></tr>
+  </tbody>
+</table>
+<p>In a session, <code>/peek</code> (alias <code>/pk</code>, <a href="aliases.html">Aliases</a>) routes to these tools: <code>/peek 5</code>, <code>/peek list</code>, <code>/peek plan</code>, <code>/peek diff</code>, <code>/peek status &lt;id|title&gt;</code>, <code>/peek &lt;title&gt;</code>, <code>/peek codex</code>.</p>
+
+<h2 id="how-smine-runs-it">How smine runs it</h2>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Version</td><td class="wrap">Pinned in <code>PEEK_MCP_VERSION</code> (1.2.14 today). On Windows <code>peek-mcp.exe</code> ships in <code>smine-setup.exe</code> and lands in <code>%LOCALAPPDATA%\smine\bin</code>.</td></tr>
+    <tr><td>Started by</td><td class="wrap">The config server, at boot (<code>-peek-start</code>): it spawns peek when nothing serves the port; no standalone <code>peek-mcp start</code> is needed. It reuses a listener only if that listener's <code>/healthz</code> identity matches this profile's homes; otherwise peek integration is disabled with a logged error.</td></tr>
+    <tr><td>Client</td><td class="wrap">The config server is peek's MCP client over Streamable HTTP at <code>127.0.0.1:&lt;peek.port&gt;/mcp</code>.</td></tr>
+    <tr><td>Back link</td><td class="wrap">The spawn passes <code>--back-link</code> with the server's address, so peek's dashboard nav links back as "Hub". Older peek binaries lack the flag and fail to start; keep peek current.</td></tr>
+    <tr><td>Peek down</td><td class="wrap">The config server's session column degrades and the pages still render; live lists retry every 15 s. Heartbeat marks its <code>peek</code> sensor degraded and retries every <code>heartbeat.peek_retry</code> (default 30s).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="ports-and-settings">Ports and settings</h2>
+<p>Component <code>peek</code> in the install record. Set a value on the config server's Smine tab or with <code>smine-rules settings set peek.&lt;key&gt; &lt;value&gt;</code>; all four apply on restart.</p>
+<table class="doc">
+  <thead><tr><th>Setting</th><th>Default</th><th>Installer flag</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>peek.port</td><td>4242</td><td><code>-peek-port</code></td><td class="wrap">The central peek MCP server; heartbeat's peek address follows it. <code>0</code> disables peek entirely.</td></tr>
+    <tr><td>peek.control_port</td><td>42442</td><td><code>-peek-control-port</code></td><td class="wrap">peek's control dashboard and OTLP telemetry receiver; also fills <code>{{PEEK_CONTROL_PORT}}</code> in the settings template. <code>0</code> disables the dashboard.</td></tr>
+    <tr><td>peek.claude_home</td><td>""</td><td></td><td class="wrap">Claude home peek reads sessions from; empty takes <code>~/.claude</code>.</td></tr>
+    <tr><td>peek.codex_home</td><td>""</td><td></td><td class="wrap">Codex home peek reads sessions from; empty takes <code>~/.codex</code>.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Several profiles</span>
+  <p>Profiles on one Mac share the loopback ports. A second profile's config server finds the first's peek on the shared port and refuses it, so its session column stays disabled rather than show another user's sessions. Give every install its own ports (<a href="install.html#multiple-macos-profiles-on-one-mac">Install § Multiple macOS profiles</a>).</p>
+</div>
+
+<h2 id="claude-code-telemetry">Claude Code telemetry</h2>
+<p>The peek settings fragment (<code>settings/claude_code/components/peek.json</code>) carries the OTLP export env: <code>CLAUDE_CODE_ENABLE_TELEMETRY</code> and the endpoint <code>http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp</code>, expanded from <code>peek.control_port</code>. The receiver is the central peek's control server; per-session peeks run <code>--control-port=0</code> in both fragments and never contend for the port. Skill and tool efficacy on the config server come from these OpenTelemetry (OTel) events.</p>
+<div class="callout callout-stop">
+  <span class="badge badge-error">Never</span>
+  <p>Never run <code>peek-mcp setup</code> on a managed machine: <code>bin/configserver -apply</code> deploying the fragment is the setup step. The template is the single source of truth, byte-equal to what setup would write.</p>
+</div>
+<p>Drift, say after a peek version bump, surfaces through peek's own detector: its startup log, <code>/stats</code> and <code>session_events</code>' <code>time.telemetry</code> report <code>misconfigured</code> with the expected values.</p>
+
+<h2 id="who-reads-through-it">Who reads through it</h2>
+<table class="doc plain">
+  <thead><tr><th>Reader</th><th>Uses</th></tr></thead>
+  <tbody>
+    <tr><td><a href="configserver.html#sessions-pages">Config server</a></td><td class="wrap">The live session list of every registered repo, by week and day; the session column of the pages.</td></tr>
+    <tr><td><a href="context-report.html">Context report</a></td><td class="wrap">What a session was given, its invoked skills (peek's <code>skill_invoked</code> events and per-skill runs), the peek tiles.</td></tr>
+    <tr><td><a href="heartbeat.html#peek">Heartbeat</a></td><td class="wrap">A subscriber's spawn tree after a restart and after each subscriber turn; background agents finish on peek's <code>task_completed</code> event (peek 1.2.9 and later). Heartbeat never starts a peek.</td></tr>
+    <tr><td><a href="smining.html">Smining</a></td><td class="wrap">The nightly miner reads each idle session's transcript through peek, within peek's 13-day window, one record each; <code>SMINE_SUBAGENTS=1</code> adds the subagent transcripts.</td></tr>
+    <tr><td><a href="configserver.html#telemetry-and-usage-analytics">Usage page</a></td><td class="wrap">The hourly <code>smine-budget</code> routine captures each session's peek usage (root, skill runs, subagents) beside ccusage, the second cost source.</td></tr>
+    <tr><td>Skills</td><td class="wrap"><code>/peek</code>, <code>/watch</code> (one status line per tick), <code>/overlap</code> (which recent sessions touch the plan's files), <code>/runtime</code>.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

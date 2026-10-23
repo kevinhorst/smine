@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heartbeat · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Heartbeat</h1>
+<p class="lede">A background daemon per Claude profile tracking each session's state: running, waiting, blocked, idle, ended or died.</p>
+<p>You and orchestrator agents read session state here, not from transcripts. Landing flow: <a href="#merge-strategy">Merge strategy</a>; stateless gate rules: <a href="permissions.html">Permission System</a>.</p>
+
+<h2 class="first" id="status-commands">Status commands</h2>
+<p><code>smine-heartbeat status</code> queries the daemon; flags narrow or reshape it.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>smine-heartbeat status</td><td class="wrap">One line per session (<code>*</code>: start unseen by this daemon), then degraded sensors.</td></tr>
+    <tr><td>smine-heartbeat status --format json</td><td class="wrap">Status document (schema 1, <code>cmd/heartbeat/schema/status-v1.json</code>).</td></tr>
+    <tr><td>smine-heartbeat status --session self</td><td class="wrap">Calling session (from a Claude Code Bash tool).</td></tr>
+    <tr><td>smine-heartbeat status --repo &lt;path&gt;</td><td class="wrap">Sessions in the repository and its worktrees.</td></tr>
+    <tr><td>smine-heartbeat status --worktree . --format json</td><td class="wrap">Worktree holding the path (<code>.</code>: cwd's, resolved to its canonical toplevel) and its sessions. <code>branches</code>: its row, if a registered repository's last scan holds it; <code>branches[0].target</code>: its landing target.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Exit</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td>3</td><td class="wrap">No daemon answers.</td></tr>
+    <tr><td>4</td><td class="wrap">Port's daemon serves another Claude profile.</td></tr>
+    <tr><td>1</td><td class="wrap">Anything else.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="running-the-daemon">Running the daemon</h2>
+<table class="doc plain">
+  <thead><tr><th>Item</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Install</td><td class="wrap">The installer: on macOS the LaunchAgent <code>com.smine.heartbeat</code> (KeepAlive) and <code>~/go/bin/smine-heartbeat</code>; on Windows the logon task <code>\smine\com.smine.heartbeat</code> (restarts on failure) running the checkout's <code>bin\heartbeat.exe</code>, with <code>%LOCALAPPDATA%\smine\bin\smine-heartbeat.exe</code> on PATH.</td></tr>
+    <tr><td>Logs</td><td class="wrap"><code>~/Library/Logs/smine-heartbeat.{out,err}.log</code>; on Windows <code>%LOCALAPPDATA%\claude-routine\logs\heartbeat.log</code>, written through <code>--log-file</code> (Task Scheduler captures nothing).</td></tr>
+    <tr><td>Port</td><td class="wrap"><code>heartbeat.port</code> (install record), default 6101; Config page Smine tab or <code>smine-rules settings set heartbeat.port &lt;port&gt;</code>.</td></tr>
+    <tr><td>Platform</td><td class="wrap"><code>serve</code> runs on macOS and Windows. macOS watches process exits through kqueue; elsewhere the daemon polls pid liveness every <code>heartbeat.exits_poll</code> (default 1s), so an exit is seen up to one interval late. Fleet messaging sockets are unix-only: on Windows <code>subscribe</code> is refused and the daemon logs it once at start (<a href="#fleets">Fleets</a>).</td></tr>
+    <tr><td>Capture hook bodies</td><td class="wrap">Boot the agent out, run <code>bin/heartbeat serve --record /tmp/hooks.jsonl</code>, boot it in.</td></tr>
+    <tr><td>Load evidence</td><td class="wrap"><code>make heartbeat-load</code></td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Address</span>
+  <p><code>--addr</code> / <code>HEARTBEAT_ADDR</code> binds any address; only the LaunchAgent's or logon task's <code>127.0.0.1:&lt;heartbeat.port&gt;</code> is loopback. No route checks the caller.</p>
+</div>
+<h3>When heartbeat is down</h3>
+<p>Sessions keep working, with a hook error notice per event; no heart attack runs.</p>
+<p>A restart rebuilds only sessions with a <code>~/.claude/sessions/</code> file and a transcript at <code>&lt;claude home&gt;/projects/*/&lt;id&gt;.jsonl</code>. Hook-only sessions stay unknown until their next hook, then show <code>since_restart</code>; old ledger denials do not re-block them.</p>
+
+<h2 id="how-states-are-decided">How states are decided</h2>
+<p>Inputs: hook events, the toolpolicy denial-ledger tail, process exits, registry seeds.</p>
+<table class="doc plain">
+  <thead><tr><th>Event</th><th>State</th></tr></thead>
+  <tbody>
+    <tr><td><code>SessionStart</code></td><td>idle</td></tr>
+    <tr><td><code>UserPromptSubmit</code></td><td>running</td></tr>
+    <tr><td class="wrap">A permission prompt; a root <code>PreToolUse</code> of <code>AskUserQuestion</code> or <code>ExitPlanMode</code>; the notifications <code>permission_prompt</code>, <code>elicitation_dialog</code>, <code>elicitation_url_dialog</code>, <code>agent_needs_input</code></td><td>waiting</td></tr>
+    <tr><td><code>Stop</code></td><td class="wrap">idle; blocked if the turn's last tool outcome was a toolpolicy denial, until a later call completes.</td></tr>
+    <tr><td>A denial-ledger line for an idle session</td><td>blocked</td></tr>
+    <tr><td><code>SessionEnd</code></td><td>ended</td></tr>
+    <tr><td class="wrap"><code>StopFailure</code>, or a process exit without <code>SessionEnd</code></td><td>died</td></tr>
+    <tr><td class="wrap">A root <code>Stop</code> a runtime stop check blocked (<a href="#runtime-enforcement">Runtime enforcement</a>)</td><td class="wrap">running (no turn end); under <code>#disable hb</code> no block, the turn ends.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Pids</td><td class="wrap">Exits count only for sessions with a pid, taken only from <code>~/.claude/sessions/&lt;pid&gt;.json</code> or the container file.</td></tr>
+    <tr><td>Hook-only sessions</td><td class="wrap">No exit watch: ended or died only via <code>SessionEnd</code> or <code>StopFailure</code>, else the last state stays.</td></tr>
+    <tr><td>Unknown pid</td><td class="wrap">Registry pid unknown to the host: a hook-seen session is died at once.</td></tr>
+    <tr><td>Container cells</td><td class="wrap">Pid file <code>&lt;claude home&gt;/smine/container-sessions/&lt;pid&gt;.json</code>, written by the routine runner once the session id is known: the host pid of the cell's <code>docker run</code> client, so exit watch and died work as for <code>sessions/</code>.</td></tr>
+    <tr><td>SessionStart</td><td class="wrap">Via the command hook binary <code>heartbeatfeed</code> (<code>~/.claude/hooks/bin</code>), which posts the body to <code>HEARTBEAT_ADDR</code> and discards the answer; every other event is an HTTP hook.</td></tr>
+    <tr><td>Subagents</td><td class="wrap">Under their root, never change its state; own their permission requests and notifications. A tool hook whose <code>agent_id</code> no <code>SubagentStart</code> registered counts as the root's only in an open turn (<code>--agent</code> session); after the root's <code>Stop</code> it is a background helper, the root idle until its next prompt.</td></tr>
+    <tr><td>Foreign bodies</td><td class="wrap"><code>transcript_path</code> outside the served Claude home: refused (409), degrades <code>hooks</code>; none: accepted.</td></tr>
+    <tr><td>Sensors</td><td class="wrap">Degraded inputs show in <code>sensors</code> (hooks, registry, process_exit, ledger, peek, action_ledger, config, and with <code>--repos</code> git, agentwt), never as blank rows.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="heart-attack">Heart attack</h2>
+<p>The heart attack is heartbeat's own kill: heartbeat alone, no orchestrator or subscription, is allowed to end a session's agent automatically. Its one application today is the model policy: it stops any subagent on a forbidden model, spawned without a model, or whose transcript model lacks the named one.</p>
+<table class="doc plain">
+  <thead><tr><th>Aspect</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Spared</td><td class="wrap">Root session; subagents with an allowed, matching named model.</td></tr>
+    <tr><td><code>#disable hb</code></td><td class="wrap">Ignored (<code>heartbeat</code> spells it); mutes every other <code>/hook</code> answer.</td></tr>
+    <tr><td>Policy</td><td class="wrap"><code>heartbeat.forbidden_subagent_models</code>: globs over model ids and <code>Agent</code>-call aliases; default empty (forbids nothing), set per install. Live key, via the config watch.</td></tr>
+    <tr><td>Sightings</td><td class="wrap">A denied <code>Agent</code> call with forbidden <code>model</code> input; a transcript whose first assistant line shows a forbidden model (read on tool hooks until known).</td></tr>
+    <tr><td>Stop</td><td class="wrap">Then every <code>PreToolUse</code>, <code>PostToolUse</code>, <code>PostToolUseFailure</code> of the subagent gets <code>continue: false</code>, reason as <code>stopReason</code> and <code>systemMessage</code>; it ends at its next tool hook. An inherited forbidden model gets one tool call before it is read.</td></tr>
+    <tr><td>See it</td><td class="wrap"><code>smine-heartbeat status --session &lt;id&gt; --format json</code>: each subagent's <code>model</code>.</td></tr>
+    <tr><td>Model aliases</td><td class="wrap">Requested token proves nothing: <code>haiku</code> runs the session model on this account; hence stopping missing or mismatched models.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Limits</span>
+  <p>Long tool call: the subagent stops when it returns. Started before a heartbeat restart: unregistered, never stopped. Hook answered past Claude Code's 1 s timeout: no stop; the next carries it.</p>
+</div>
+
+<h2 id="git-state">Git state</h2>
+<p><code>serve --repos &lt;claude home&gt;/smine/repos.json</code> enables git state. The file is read at start and watched: a repo registered on the Repos page is scanned and watched at once, a removed one leaves the rows, no restart. A file not written yet (no repo registered) is an empty registry; a malformed one degrades the <code>git</code> sensor and keeps the running set.</p>
+<h3>Config</h3>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>File</td><td class="wrap"><code>serve --config &lt;claude home&gt;/heartbeat/config.json</code> (default under <code>--claude-home</code>), rendered by the install's heartbeat component from catalog defaults plus record overrides (<a href="settings.html">Settings</a> § heartbeat).</td></tr>
+    <tr><td>Directory</td><td class="wrap">0700, tightened at start; also orchestrator state.</td></tr>
+    <tr><td>Contents</td><td class="wrap">Exemptions, forbidden subagent models, staging target, texts, caps, timeouts, <code>peek_addr</code> (from <code>peek.port</code>); unknown keys refused.</td></tr>
+    <tr><td>Reload</td><td class="wrap"><code>live</code> keys via the <code>config</code> watch; a <code>restart</code> key makes the apply restart the agent, losing open runs and findings.</td></tr>
+    <tr><td>Bad file</td><td class="wrap">Malformed or unreadable: fatal at start; on reload ignored (running config kept, <code>config</code> sensor degraded).</td></tr>
+    <tr><td>Hand edits</td><td class="wrap">Overwritten on apply; use the Hooks tab or <code>smine-rules settings set heartbeat.&lt;key&gt; &lt;value&gt;</code>.</td></tr>
+    <tr><td>Staging target</td><td class="wrap"><code>heartbeat.staging_target</code>, where <code>/done branch:</code> lands. Unset by default: no staging landing row or train base, <code>/done branch:</code> refuses naming the setting. Set: top-level <code>staging_target</code> in status.</td></tr>
+  </tbody>
+</table>
+<h3>What a scan reports</h3>
+<table class="doc plain">
+  <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Scans</td><td class="wrap">Ref change in any worktree, git-changing Bash call or turn end in an agent worktree: one in-process agentwt scan; per repo one running, one queued; a 250 ms settle merges one command's triggers. Count <code>heartbeat.scans_completed</code>; last-scan failures <code>repos[].scan_error</code>, <code>repos[].warnings</code>.</td></tr>
+    <tr><td>Branch states</td><td class="wrap"><code>uncommitted</code>, <code>no_work</code>, <code>removable</code>, <code>merged</code>, <code>conflicting</code>, <code>merge_ready</code>, <code>unmerged</code>; first match wins, against the landing target's train, else the default branch's.</td></tr>
+    <tr><td>Landing target</td><td class="wrap"><code>branches[].target</code>: a fleet member's merge branch; else the base, if a local branch neither agent-owned nor default; else absent. agentwt reads the base off the reflog creation line the worktree hook writes when recreating the untouched session branch from the picked branch's name.</td></tr>
+    <tr><td>Work items</td><td class="wrap">Wip plan dirs with a new or changed <code>design/*.md</code> in a worktree's feature folders; fleet targets and merge branches; the fork point. A merged plan is no branch's pending work.</td></tr>
+    <tr><td>Subagent branches</td><td class="wrap"><code>isolation: "worktree"</code> subagents run on <code>claude/agent-&lt;agent_id&gt;</code>, in the row's <code>agents</code> (session, agent id); no fleet members. <code>sessions</code>: root sessions with cwd in the worktree.</td></tr>
+    <tr><td>Collisions</td><td class="wrap">Levels <code>planned_file</code>, <code>planned_symbol</code>, <code>touched</code>, <code>confirmed</code>; a row per branch pair and level. Never counted: <code>exempt_paths</code>, version-only plan hunks and edits. Lanes: branches under a <code>collision_prefixes</code> prefix (default and deployed <code>["claude/"]</code>; empty: none). Routine, review, restack, fleet merge branches and detached worktrees never collide, so a member's merge-branch conflict shows only as its branch state.</td></tr>
+    <tr><td>Train bases</td><td class="wrap">Bound fleets add trains for target (<code>subscribe --target feature/heartbeat</code>) and merge branch (<code>claude-orch/T1-&lt;run uuid&gt;</code>), also a containment candidate: a member landed there reads merged, as <code>agentwt status --candidate &lt;merge branch&gt; --train-base &lt;merge branch&gt; --train-base feature/heartbeat</code> shows. Also: a configured staging target in each repo whose last scan saw it; every non-default local base the last scan's rows resolved. Old <code>train_bases</code> key: refused as unknown.</td></tr>
+    <tr><td>Health</td><td class="wrap">Sensor <code>git</code>: ref watch; <code>agentwt</code>: each repo's last scan.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="fleets">Fleets</h2>
+<p>A fleet: joined sessions, each subscriber, its registered worker branches. <code>/join fleet: T1</code> runs <code>smine-heartbeat join --fleet T1</code>. Heartbeat never reads or writes titles for membership; the session-title hook adds the member token after a join.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>smine-heartbeat status --fleet T1 --format json</td><td class="wrap">Members' sessions, fleet row, member rows; once bound, only the bound repository's <code>repos</code>, <code>branches</code>, <code>work_items</code>, <code>collisions</code> (scoped like digests), <code>trains</code>.</td></tr>
+    <tr><td>smine-heartbeat status --fleet</td><td class="wrap">Every fleet: id, run, target, state, members, subscriber.</td></tr>
+    <tr><td>smine-heartbeat status --fleet T1</td><td class="wrap">Text, plus member table.</td></tr>
+  </tbody>
+</table>
+<h3>Runs</h3>
+<table class="doc plain">
+  <thead><tr><th>Stage</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Start</td><td class="wrap">A name's first admitted join or subscribe starts a run (UUID v7: <code>fleets[].instance</code>, <code>fleets[].started_at</code>) owning letters, journal, roster; one live run per name.</td></tr>
+    <tr><td>Join</td><td class="wrap">Refused: unknown or ended session; fleet bound to a repository other than the cwd's. Rejoin keeps the letter; joining another fleet leaves this one.</td></tr>
+    <tr><td>Leave</td><td class="wrap"><code>/close</code> runs <code>smine-heartbeat leave</code> (token-checked against the join). Automatic when the session ends, dies, or is gone after a heartbeat restart (checked after the registry scan). A joined subscriber leaves at subscribe.</td></tr>
+    <tr><td>Remove</td><td class="wrap"><code>smine-heartbeat remove --fleet T1 --member A</code>: any lettered member, workers too; a human act, no session, also the fleet page's Remove button. A new join restores the member.</td></tr>
+    <tr><td>Windows</td><td class="wrap">No fleet subscriptions: digests travel over the subscriber's messaging socket, which the daemon reaches only on unix, so <code>subscribe</code> is refused (<code>messaging sockets are not supported on windows</code>, logged once at start). join, done, fleet and runtime deploy; their subscribe step reports the refusal.</td></tr>
+    <tr><td>Dissolve</td><td class="wrap">No joined member, no active subscription: archived in full to <code>~/.claude/heartbeat/archive/&lt;uuid&gt;.json</code> (members with token, branch, delivery, join/leave time; subscriptions; journal; <code>0600</code> in a <code>0700</code> dir; schema <code>cmd/heartbeat/schema/archive-v1.json</code>), then dropped from <code>status</code>. Name and letters free up: the next <code>/join fleet: T1</code> starts at <code>T1-MA</code>.</td></tr>
+  </tbody>
+</table>
+<h3>Members</h3>
+<table class="doc plain">
+  <thead><tr><th>Topic</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Letters</td><td class="wrap">Joined sessions and registered workers get letters in join or registration order (<code>A</code> … <code>Z</code>, <code>AA</code>, …), never reused in a run. <code>members[].token</code> = <code>&lt;fleet&gt;-M&lt;letter&gt;</code> (<code>T1-MA</code>): printed by join; used in titles, digests, journal, page.</td></tr>
+    <tr><td>Operator</td><td class="wrap">The subscriber: no letter, token <code>&lt;fleet&gt;-O</code>.</td></tr>
+    <tr><td>Member guard</td><td class="wrap"><code>/done</code> is a member's one channel to the orchestrator: its and its subagents' <code>SendMessage</code> calls are denied; each prompt gets a token-and-role reminder.</td></tr>
+    <tr><td>Workers</td><td class="wrap">Headless cells; an ended session leaves its fleet, so a cell cannot stay a member. The active subscriber registers the branch via <code>smine-heartbeat worker --branch claude/&lt;name&gt; --state running</code> (token-checked like <code>record</code>), printing the token. Row: <code>via: worker</code>, branch, subscriber's session id. Registrations replay from the action ledger at start; <code>member_assigned</code> lines with an <code>agent_id</code> (from subagent membership) replay to nothing.</td></tr>
+    <tr><td>Delivered</td><td class="wrap"><code>/done</code> (<code>smine-heartbeat done</code>, token-checked) sets <code>members[].delivered</code> until the member's next prompt. Workers: once the subscriber ran <code>smine-heartbeat worker --branch claude/&lt;name&gt; --state delivered</code>; <code>--state running</code> reopens. Landed only when delivered and its branch holds the merge branch's tip.</td></tr>
+    <tr><td>No fleet</td><td class="wrap">A done outside a fleet is no delivery (<a href="#landing">Landing</a>).</td></tr>
+    <tr><td>Journal</td><td class="wrap"><code>fleets[].journal</code>: run acts the active subscriber recorded:</td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="bash">smine-heartbeat record --kind assigned|decided|merged|spawned|note --subject &lt;text&gt; [--member &lt;letter&gt;]… [--detail &lt;text&gt;]</pre>
+<h3>Binding and branches</h3>
+<table class="doc plain">
+  <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Binding</td><td class="wrap">Subscribe binds the fleet to the subscriber's repository (the registered one holding its cwd) and target branch (<code>fleets[].repo</code>, <code>fleets[].target</code>); earlier joiners from other repositories are no members, listed in <code>fleets[].foreign</code>.</td></tr>
+    <tr><td>Merge branch</td><td class="wrap"><code>fleets[].merge_branch</code>: <code>claude-orch/&lt;fleet&gt;-&lt;run uuid&gt;</code> once bound (the uuid keeps a reused name off an old run's branch). Members are judged against it and fast-forward onto it.</td></tr>
+    <tr><td>Synced</td><td class="wrap"><code>fleets[].synced</code>: target holds the merge branch, so true from the cut, before any landing; "all work is on the target" only with <code>target_state: integrated</code>.</td></tr>
+    <tr><td>Member branches</td><td class="wrap"><code>members[].branch</code>: worker: registered branch; session: its worktree's. The orchestrator sees all branches, acts on these only.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Target state</th><th>When</th></tr></thead>
+  <tbody>
+    <tr><td>open</td><td class="wrap">Otherwise; also before the first scan requesting target and merge branch, and after a daemon restart for a merged, cleaned-up fleet until a worker branch reappears.</td></tr>
+    <tr><td>integrated</td><td class="wrap">At least one worker, all delivered, every worker branch still merged or removable, at least one seen in a scan since subscribing (this daemon run). Removed or never-created worker branches and joined workers in the main checkout count as done; subscriber, merge and target branches do not count.</td></tr>
+    <tr><td>missing</td><td class="wrap">The requesting scan found no such local branch.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="subscribe">Subscribe</h2>
+<p>An orchestrator subscribes from its Bash tool, handing the daemon its messaging socket and token (<code>CLAUDE_CODE_MESSAGING_SOCKET</code>, <code>CLAUDE_CODE_MESSAGING_TOKEN</code>).</p>
+<pre class="file-view" data-lang="bash">smine-heartbeat subscribe --fleet T1 --target feature/heartbeat</pre>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>subscribe --fleet T1 --target &lt;branch&gt;</td><td class="wrap">Binds the fleet. Refused: unknown or ended session, socket not the registered one, cwd in no registered repository, T1 bound to another repository or branch.</td></tr>
+    <tr><td>subscribe --outside-collisions</td><td class="wrap">Also hears collisions with non-fleet branches.</td></tr>
+    <tr><td>unsubscribe</td><td class="wrap">Ends the subscription (same session, matching token), recorded so restarts don't revive it. Joined members stay: a handover to another orchestrator.</td></tr>
+    <tr><td>unsubscribe --finish</td><td class="wrap">Ends the run: members leave, the run dissolves into its archive.</td></tr>
+  </tbody>
+</table>
+<p>A restarted session has a new socket and must subscribe again; the old subscription ends itself.</p>
+
+<h2 id="digests">Digests</h2>
+<p>Member changes collect while the subscriber works; on idle, one digest carries them as a new turn.</p>
+<table class="doc plain">
+  <thead><tr><th>Kind</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Member states</td><td class="wrap">waiting, idle, blocked, died, done, delivered (a joined member ran <code>/done</code>).</td></tr>
+    <tr><td><code>collision</code></td><td class="wrap">Any level (<a href="#git-state">Git state</a>). Member branch versus member, never the subscriber's own; the merge branch only if <code>collision_prefixes</code> lists its prefix; any lane with <code>subscribe --outside-collisions</code>. Once per branch pair and level until gone; 8 paths, then <code>+N more</code> (paths may shift; <code>status</code> shows all current).</td></tr>
+    <tr><td>Other git kinds</td><td class="wrap"><code>work_item_changed</code>, <code>merge_ready</code>, <code>fleet_integrated</code>, all of the bound repository.</td></tr>
+  </tbody>
+</table>
+<p>Latest member state wins; stale changes and fleet lines drop (<code>fleet_integrated</code> after a reopen). Joins, restarts and the first scan after start announce nothing. Member lines lead with the token:</p>
+<pre class="file-view" data-lang="text">idle(T1-MA CC,FD - Design - T1-MA[WIP])
+done(T1-MC general-purpose a1)</pre>
+<p>Digests are ledger-claimed before sending, never sent twice.</p>
+<table class="doc">
+  <thead><tr><th>Outcome</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td>sent</td><td class="wrap">Delivered.</td></tr>
+    <tr><td>refused</td><td class="wrap">Nothing sent; the subscription ends.</td></tr>
+    <tr><td>unconfirmed</td><td class="wrap">Claimed, then the write failed or the daemon died.</td></tr>
+    <tr><td>unclaimed</td><td class="wrap">Ledger write failed; nothing sent.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>With <code>bypassPermissions</code>, or <code>crossSessionInbound</code> set to <code>hold</code>, a subscriber holds digests for its human's approval instead of starting a turn.</p>
+</div>
+
+<h2 id="landing">Landing</h2>
+<p>One landing turn per registered repository and target; a branch's landing target is its <code>branches</code> row's <code>target</code>, the staging target a setting (<a href="#git-state">Git state</a> § Config). Only the done skill creates or moves targets. Who lands what, when: <a href="#merge-strategy">Merge strategy</a>.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Answers</th></tr></thead>
+  <tbody>
+    <tr><td>smine-heartbeat done</td><td class="wrap">Unjoined session, fleet subscriber included: requests its branch's landing-target turn in its cwd's repository. <code>accepted &lt;target&gt; granted</code> or <code>accepted &lt;target&gt; queued &lt;n&gt;</code> (place, from 1). No target: nothing requested, <code>no-target &lt;base&gt;</code> (row's base or <code>unknown</code>), exit 0. A repeat re-answers the current state.</td></tr>
+    <tr><td>smine-heartbeat land --target &lt;branch&gt;</td><td class="wrap">Turn without acceptance: <code>granted &lt;branch&gt;</code> or <code>queued &lt;branch&gt; &lt;n&gt;</code>. Refused: <code>&lt;branch&gt; is the default branch</code>, <code>&lt;branch&gt; is an agent branch</code>, <code>&lt;branch&gt; is no local branch</code>, <code>&lt;repo&gt; is not scanned yet</code>. A configured staging target is accepted before it exists; the done skill creates it in the granted turn.</td></tr>
+    <tr><td>land --end landed</td><td class="wrap">Holder only: <code>ended &lt;branch&gt; landed</code>.</td></tr>
+    <tr><td>land --end abandoned</td><td class="wrap">Holder or queued session: <code>ended &lt;branch&gt; abandoned</code>.</td></tr>
+    <tr><td>land --release &lt;branch&gt;</td><td class="wrap">Your override, in the repository, no session: <code>released &lt;branch&gt; &lt;session id&gt;</code>.</td></tr>
+  </tbody>
+</table>
+<p>Refusals exit 1, reason on stderr: unknown, ended or died session; cwd unknown or in no registered repo; or below (<code>no branch row</code>: done from a worktree no scan listed yet).</p>
+<pre class="file-view" data-lang="text">no branch row for &lt;cwd&gt;
+the session already has a landing entry for &lt;target&gt; in &lt;repo&gt;
+token does not match the landing request
+not the turn holder
+no landing turn is held for &lt;branch&gt;</pre>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Token</td><td class="wrap">The first request stores the session's messaging token; later calls must present it.</td></tr>
+    <tr><td>Grant</td><td class="wrap">A freed turn passes, same step, to the oldest waiter for that repository and target: one ledger-claimed message over its messaging socket:</td></tr>
+    <tr><td>Entry ends</td><td class="wrap"><code>landed</code>, <code>abandoned</code>, <code>released</code>, <code>session_gone</code> (ended, died, or unknown after the registry edge's startup scan); never a prompt or clock. At most one entry per session across repositories and targets.</td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="text">heartbeat: landing turn granted for &lt;target&gt; in &lt;repo&gt;. Continue the landing steps, then run: smine-heartbeat land --end landed</pre>
+<h3>Entry states</h3>
+<table class="doc plain">
+  <thead><tr><th>From</th><th>Event</th><th>To</th></tr></thead>
+  <tbody>
+    <tr><td>start</td><td class="wrap">request, turn free</td><td>holding</td></tr>
+    <tr><td>start</td><td class="wrap">request, turn held</td><td>queued</td></tr>
+    <tr><td>queued</td><td class="wrap">turn freed, grant message</td><td>holding</td></tr>
+    <tr><td>queued</td><td class="wrap">abandoned, or session_gone</td><td>end</td></tr>
+    <tr><td>holding</td><td class="wrap">landed or abandoned, released, or session_gone</td><td>end</td></tr>
+  </tbody>
+</table>
+<h3>Read it</h3>
+<p>Status <code>landings</code>: a row per selected repository and target with holder or queue, plus a staging-target row per selected repository while one is configured. <code>--fleet</code> selects the bound repository only, none before binding.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>repo, branch</td><td class="wrap">Repository and target.</td></tr>
+    <tr><td>holder</td><td class="wrap"><code>session_id</code>, <code>title</code>, <code>since</code>; absent while the turn is free.</td></tr>
+    <tr><td>queue</td><td class="wrap">Oldest first, each with <code>session_id</code>, <code>title</code>, <code>since</code>.</td></tr>
+    <tr><td>release</td><td class="wrap">Staging only: <code>exists</code>, <code>releasable</code> (holds the default branch's tip: a release fast-forwards), <code>unreleased</code> (its commits the default branch lacks).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="runtime-enforcement">Runtime enforcement</h2>
+<p>Skills declare enforcement in the <code>enforce</code> block of <code>&lt;leaf&gt;.cue</code>; deploy renders <code>enforce.json</code> beside the deployed SKILL.md only if the install holds both gate and heartbeat components. No file: no enforced run, no gate rule.</p>
+<p>Patterns carry install-scoped <code>$SKILL_…</code> variables, filled with this install's program, regex-quoted (<code>^smine-rules base </code>). An unset variable drops its anchor plus the checks and judgments naming it. The model check refuses repo-scoped variables in anchors (<a href="skillcue.html#interfaces-and-environment">Skillcue § Interfaces and environment</a>).</p>
+<p>Stateless gate rules: the tool-policy gate (<a href="permissions.html">Permissions</a>). Heartbeat enforces anchors and checks in every session, reporting failed checks and judgment points to the session's one watcher, its bound <code>/runtime</code> agent.</p>
+<div class="callout">
+  <span class="badge badge-ok">Tip</span>
+  <p><code>/heartbeat-demo scenario:&lt;name&gt;</code> shows each layer acting, one scenario per rule, check and ladder step. Only tests cover the <code>rootDenied</code> gate rule and the <code>runtime stop</code> move (<code>cmd/toolpolicy/enforce_test.go</code>, <code>cmd/heartbeat/tests/scenarios/runtime.rs</code>).</p>
+</div>
+
+<h3>Runs</h3>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Open</td><td class="wrap">Root slash-command prompt or root <code>Skill</code> call with a deployed <code>enforce.json</code>, read by the hook edge then: a run keeps its starting declaration.</td></tr>
+    <tr><td>Root only</td><td class="wrap">The declaration attaches only to hook bodies without agent id; <code>--agent</code> Skill calls open none.</td></tr>
+    <tr><td>No declaration</td><td class="wrap">Missing or malformed (logged) <code>enforce.json</code>: no run; the slash prompt still ends open runs.</td></tr>
+    <tr><td>Nested</td><td class="wrap">A root <code>Skill</code> call inside an open run nests.</td></tr>
+    <tr><td>End</td><td class="wrap">Root slash prompt, non-compact <code>SessionStart</code> or terminal session only.</td></tr>
+    <tr><td>Unwatched</td><td class="wrap">Runs exist unwatched too; a watcher's own session is never enforced.</td></tr>
+  </tbody>
+</table>
+
+<h3>Anchors</h3>
+<p>An anchor is a named call, logged on a successful <code>PostToolUse</code> with its response's captures; failed calls never log.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Tool</td><td class="wrap">A tool regex.</td></tr>
+    <tr><td>Input matches, excludes</td><td class="wrap">Unanchored regex on a named top-level <code>tool_input</code> field (non-strings as compact JSON); an absent field never matches.</td></tr>
+    <tr><td><code>agent</code></td><td class="wrap">root (default), subagent or any.</td></tr>
+    <tr><td><code>capture</code></td><td class="wrap">RFC 6901 pointers into the result. Bash: the JSON document closing <code>stdout</code> (suffix from the first line start where the rest parses as one value; earlier log lines skipped, later output voids it). Other tools: the response object.</td></tr>
+    <tr><td>Voided capture</td><td class="wrap">Absent on that log entry; provenance against it fails, naming the value absent.</td></tr>
+    <tr><td>Parsing</td><td class="wrap"><code>tool_response</code> stays raw text; parsed for anchor-matched calls only.</td></tr>
+  </tbody>
+</table>
+
+<h3>Checks</h3>
+<table class="doc">
+  <thead><tr><th>Kind</th><th>Fires at</th><th>Fails when</th></tr></thead>
+  <tbody>
+    <tr><td>provenance {on, arg, from, capture}</td><td class="wrap"><code>PreToolUse</code> of an <code>on</code> call</td><td class="wrap">Input at <code>arg</code> differs from capture <code>capture</code> of the last <code>from</code> call, or that call yielded none, or no <code>from</code> exists.</td></tr>
+    <tr><td>requires {on, after, since?}</td><td class="wrap"><code>PreToolUse</code> of an <code>on</code> call</td><td class="wrap">No <code>after</code> since the last <code>since</code>; a <code>since</code> that never happened owes nothing.</td></tr>
+    <tr><td>phase {deny, from, until}</td><td class="wrap"><code>PreToolUse</code> of a <code>deny</code> call</td><td class="wrap">A <code>from</code> succeeded and no <code>until</code> followed.</td></tr>
+    <tr><td>stop {require, after}</td><td class="wrap">Root <code>Stop</code> without <code>background_tasks</code> (one awaiting a background Workflow, agent or shell is not finishing).</td><td class="wrap"><code>after</code> succeeded, no <code>require</code> followed; answered <code>{"decision": "block"}</code>.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Ladder</td><td class="wrap">Failures before a run's eighth deny the call (or block the Stop) with the check's <code>reason</code>, raising a <code>check_failed</code> finding with its <code>recovery</code> template. The eighth kills the run: its call gets <code>continue: false</code>, kill reason as <code>stopReason</code> and <code>systemMessage</code>, shown to the user at once.</td></tr>
+    <tr><td>Killed session</td><td class="wrap">Every agent of the session gets that answer until the human's next root prompt, which resets open runs (<code>killed</code> false, failures emptied, passes and findings kept). A prompt lifting no kill resets nothing.</td></tr>
+    <tr><td>Settings</td><td class="wrap">Threshold <code>heartbeat.kill_at</code> (default 8), text <code>heartbeat.kill_reason</code>; both live keys.</td></tr>
+    <tr><td>Passes</td><td class="wrap">Each hook judges every guard-matching check, not only up to the first failure: provenance and requires on <code>on</code>, phase on <code>deny</code>, stop on a judged root <code>Stop</code> after <code>after</code> succeeded. Runs count holds per check, also on calls another check denied: row <code>passes</code> (<code>{check, count}</code> by check id, empty if none), kept after a kill.</td></tr>
+    <tr><td>First failure</td><td class="wrap">Only the first failing check (id order, outermost run first) is denied and counted.</td></tr>
+    <tr><td>In-flight Stops</td><td class="wrap">The <code>Stop</code> body's <code>background_tasks</code> decides: an in-flight entry defers stop checks to the next root <code>Stop</code> with none (a launch turn by its own tasks); nothing else exempts. A pending runtime send still reaches a deferred <code>Stop</code> as block reason.</td></tr>
+    <tr><td>Captures</td><td class="wrap">Runtime document <code>anchors[].captures</code>: each anchored call's output. Provenance reads the producing (last <code>from</code>) call's; judgment evidence the newest value per capture name.</td></tr>
+    <tr><td>Judgment points</td><td class="wrap">A successful anchor call named by a <code>judgment</code> entry raises a <code>judgment</code> finding with evidence (capture values, <code>arg:&lt;pointer&gt;</code> inputs) while the session has a watcher.</td></tr>
+  </tbody>
+</table>
+
+<h3>Watching a session</h3>
+<p>A watch is one-to-one: <code>/runtime session: &lt;id or title&gt; [mode: act]</code> runs the subscribe below, binding the watcher to exactly one session; only its findings reach the watcher or can be answered.</p>
+<pre class="file-view" data-lang="bash">smine-heartbeat runtime subscribe --target &lt;id or exact title&gt; --mode report|act</pre>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Refused</td><td class="wrap">Target unknown, ambiguous, the watcher itself, a watcher, or already watched.</td></tr>
+    <tr><td>Several watchers</td><td class="wrap">Side by side, one per watched session; mode fixed at subscribe.</td></tr>
+    <tr><td>End</td><td class="wrap"><code>runtime unsubscribe</code> or either session ending; when the watched one ends, a last digest (undelivered findings, <code>watch ended — …</code>) makes the watcher stop instead of waiting. A restart rebinds from the ledger.</td></tr>
+    <tr><td>Digests</td><td class="wrap">To an idle or blocked watcher, claim-then-send like fleet digests: one line per finding, max 50.</td></tr>
+    <tr><td>Subscriber guard</td><td class="wrap">The watcher's <code>SendMessage</code>, <code>mcp__ccd_session_mgmt__send_message</code> and <code>mcp__ccd_session_mgmt__stop_session</code> calls are denied; it acts through heartbeat only.</td></tr>
+  </tbody>
+</table>
+
+<h3>Moves</h3>
+<p>Each finding (<code>check_failed</code>, <code>judgment</code>) unlocks one move, once, while its run is open: <code>send</code> or <code>stop</code>, ledger-claimed (synced) before going live.</p>
+<table class="doc">
+  <thead><tr><th>Move</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>runtime send &lt;finding&gt;</td><td class="wrap">
+      <p>Renders the finding's template (the check's <code>recovery</code> or the judgment's <code>send</code> from <code>enforce.json</code>; placeholders <code>{finding}</code>, <code>{skill}</code>, <code>{version}</code>, <code>{check}</code>, <code>{reason}</code>, <code>{evidence}</code>). The act agent names finding and move, never text.</p>
+      <p>Reaches the raising agent (root or subagent) at its first chance: <code>PostToolUse</code> <code>additionalContext</code> on its next successful tool call. A root, usually waiting, gets it as <code>Stop</code> block reason or as <code>UserPromptSubmit</code> <code>additionalContext</code> on its next prompt.</p>
+      <p>At most once: lost if Claude Code drops the answer past its 1 s timeout; void if pending at run end.</p>
+    </td></tr>
+    <tr><td>runtime stop &lt;finding&gt;</td><td class="wrap">Arms (session, agent): that agent's tool hooks get <code>continue: false</code> until the root's next <code>UserPromptSubmit</code> (root) or its <code>SubagentStop</code> (subagent). Text <code>heartbeat.runtime_stop_reason</code> (kill: <code>heartbeat.kill_reason</code>), carried twice in every stop answer, as <code>stopReason</code> and <code>systemMessage</code>.</td></tr>
+  </tbody>
+</table>
+<p>Verdict chain per hook answer: heart attack → member guard → runtime (subscriber guard, the hook's check decision incl. a killed session, armed stop, hand-over).</p>
+
+<h3>Read it</h3>
+<p><code>smine-heartbeat runtime status [--format json]</code> or <code>GET /runtime</code>: the runtime document (schema 1, <code>cmd/heartbeat/schema/runtime-v1.json</code>) with watches (<code>subscriptions</code>, each with <code>target</code>), runs (<code>open</code>, <code>ended</code>, <code>killed</code>, each with <code>anchors</code>, <code>failures</code>, <code>passes</code>) and every session's findings; no token.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Fails open</span>
+  <p>Heartbeat checks lapse on HTTP hook failures (non-blocking in Claude Code), answers past the 1 s hook timeout, runs opened before a daemon restart (runs and findings are memory-only), <code>--agent</code> sessions and <code>#disable hb</code> sessions. Gate rules hold while the deployed <code>enforce.json</code> exists (gate and heartbeat installed); on an unparseable one the gate fails closed and heartbeat opens no run. <code>SubagentStop</code> runs no stop check.</p>
+</div>
+
+<h2 id="action-ledger">Action ledger</h2>
+<p><code>~/.claude/heartbeat/actions.jsonl</code>: append-only, <code>0600</code>, in the <code>0700</code> heartbeat dir; replayed at start, so runs, letters, delivered members, journals and landing turns survive restarts.</p>
+<table class="doc plain">
+  <thead><tr><th>Records</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Fleet acts</td><td class="wrap">Subscriptions (repository, integration branch), digest claims, joins, member letters, deliveries and resumes, journal entries.</td></tr>
+    <tr><td>Run lifecycle</td><td class="wrap"><code>fleet_started</code>, <code>left</code>, <code>dissolved</code> (the last only after the run's archive file).</td></tr>
+    <tr><td>Landings</td><td class="wrap"><code>land_requested</code>, <code>land_granted</code>, <code>land_ended</code>, carrying the turn's target; turns re-derive from requested and ended. Records from before targets hold <code>develop</code> and replay unchanged.</td></tr>
+    <tr><td>Old runs</td><td class="wrap">Runs predating <code>fleet_started</code>: UUID derived from name and first line, stable across restarts.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-stop">
+  <span class="badge badge-error">Never share</span>
+  <p>The ledger holds messaging tokens.</p>
+</div>
+
+<h2 id="peek">Peek</h2>
+<p>The daemon uses the config server's central <a href="peek.html">peek</a> on <code>127.0.0.1:&lt;peek.port&gt;</code> when its <code>/healthz</code> serves the same Claude home; it never starts one. <code>peek_addr</code> renders from the <code>peek.port</code> setting, default 4242.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>When it asks</td><td class="wrap">For a subscriber's spawn tree, after a restart and after each subscriber turn. Its subagents feed runtime checks and branch attribution, never fleet membership.</td></tr>
+    <tr><td>Finished subagents</td><td class="wrap">Rebuilt subagents finish on a foreground result, background agents on peek's <code>task_completed</code> event (peek 1.2.9 and later); an older peek keeps background agents finished while the daemon was down listed as running.</td></tr>
+    <tr><td>Without peek</td><td class="wrap"><code>peek</code> sensor degraded; subagents started while the daemon was down stay unknown until their next hook.</td></tr>
+    <tr><td>Retry</td><td class="wrap">Degraded rounds repeat every <code>heartbeat.peek_retry</code> (default 30s) until one succeeds, so a peek restart recovers the sensor unasked.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="fleet-page-and-orchestrator">Fleet page and orchestrator</h2>
+<h3>Page</h3>
+<p>The config server's Heartbeat section has two tabs, Fleet and Runtime.</p>
+<table class="doc plain">
+  <thead><tr><th>Tab</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>Runtime</td><td class="wrap"><code>http://127.0.0.1:6001/runtime</code>: the runtime document, read-only (watches; runs with session, skill, version, state, anchors, failures, findings; findings), refreshed every 5 s. Send and stop stay with the <code>/runtime</code> agent.</td></tr>
+    <tr><td>Fleet</td><td class="wrap"><code>http://127.0.0.1:6001/fleet</code>, filtered by <code>?fleet=T1</code>; runs <code>bin/heartbeat status --format json</code> (plus <code>--fleet &lt;id&gt;</code> under <code>?fleet=</code>) every 5 s. Tables wrap, so refreshes keep the scroll position.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Fleet tab block</th><th>Content</th></tr></thead>
+  <tbody>
+    <tr><td>Human-layer queue</td><td class="wrap">Permission candidates, waiting members, merge-ready members without <code>/done</code>, fleets ready to sync or whose sync git refused, targets ready for main or missing. Heartbeat state only, nothing agent-filed.</td></tr>
+    <tr><td>Per fleet</td><td class="wrap">Header (run, target, merge branch, state, synced, collision scope), train-step chips, member table (state first, token and name with Remove button, role operator/member/worker, latest skill, work item, branch, since, last active), journal newest first.</td></tr>
+    <tr><td>Collisions</td><td class="wrap">The repo's collisions, one shortened path per line, 10 shown, rest folded.</td></tr>
+    <tr><td>Landings</td><td class="wrap">Per repository the staging target (<code>releasable</code>, <code>diverged</code>, <code>absent</code>) with unreleased commits; per target holder and queue. Blocks no release.</td></tr>
+    <tr><td>Fleet sessions</td><td class="wrap">Joined members, the orchestrator, worker cells in a worker's branch.</td></tr>
+    <tr><td>Archived fleets</td><td class="wrap"><code>/fleet/archive/&lt;uuid&gt;</code> per archived run: members, subscriptions, journal.</td></tr>
+    <tr><td>Errors</td><td class="wrap">Unreachable or foreign daemon: a banner. Degraded sensor or failed repo scan: a collapsed card each, details listing every repo error and warning.</td></tr>
+  </tbody>
+</table>
+
+<h3>Members</h3>
+<p>Attended sessions run <code>/join fleet: T1</code> once, <code>/done</code> when work is committed and finished. Titles: <code>… - T1-MA[WIP]</code>, <code>[READY]</code> after a committing turn, then <code>[DONE]</code>; <code>/close</code> leaves the fleet, ending at <code>[CLOSED]</code>. Outside a fleet, <code>/done</code> lands the session's own branch on its landing target; one based on the default branch lands nothing.</p>
+
+<h3>Orchestrator</h3>
+<ol class="steps">
+  <li>
+    <strong>Start it</strong>
+    <p>From a session worktree of the repo:</p>
+    <pre class="file-view" data-lang="text">/fleet fleet: T1 target: &lt;branch&gt; [playbook: feature|design] [master: &lt;plan file&gt;] [collisions: all]</pre>
+  </li>
+  <li>
+    <strong>Subscribe</strong>
+    <p>Subscribes as <code>… - T1-O[WIP]</code>, never a member; switches its worktree to the run's merge branch (<code>fleets[].merge_branch</code>).</p>
+  </li>
+  <li>
+    <strong>Land members</strong>
+    <p>Judges collisions, fast-forwards delivered members onto the merge branch (<code>git merge --ff-only</code>), journals every act; never checks out the target. Members behind the merge branch are asked to restack and <code>/done</code> again; delivered worker branches behind it the orchestrator restacks on a work branch. Never a merge commit.</p>
+  </li>
+  <li>
+    <strong>Sync the target</strong>
+    <p>Once integrated, syncs the target via <code>/done</code> in its landing turn: restack if it moved, then an ancestry-checked fast-forward (<code>smine-agentwt forward</code>). A target checked out elsewhere moves in that worktree, refused only while it has uncommitted changes to tracked files (queue: <code>sync blocked</code> until you commit). A target that is no landing target answers <code>no-target</code>; the orchestrator stops.</p>
+  </li>
+  <li>
+    <strong>Finish</strong>
+    <p>Removes worker branches, runs <code>unsubscribe --finish</code> (the run dissolves). <code>/close</code> in its session removes the merge branch. Landing on main stays yours.</p>
+  </li>
+</ol>
+<table class="doc">
+  <thead><tr><th>Playbook</th><th>Runs</th></tr></thead>
+  <tbody>
+    <tr><td>feature</td><td class="wrap">Lands a delivered design member's plan first, then one implementation worker at a time; holds the sync while a landed plan awaits implementation.</td></tr>
+    <tr><td>design</td><td class="wrap">One unattended designer per master-plan split row, two at a time in Depends-on order; ends with every derived plan through its code gate, implements nothing.</td></tr>
+  </tbody>
+</table>
+
+<h3>Worker cells</h3>
+<p>Each worker starts as a background command: a <code>claude -p</code> cell in <code>.claude/worktrees/&lt;name&gt;</code> on <code>claude/&lt;name&gt;</code>.</p>
+<pre class="file-view" data-lang="bash">smine-routine worker -base &lt;merge branch&gt; -name &lt;name&gt; -skill &lt;leaf&gt; -args &lt;text&gt;</pre>
+<p>The launcher commits leftovers, removes the worktree, prints one JSON result line (status <code>done</code>, <code>failed</code> or <code>stopped</code>); its exit wakes the orchestrator. A cell is a root session, so its subagents work in its own worktree; a subagent's subagents were fenced to the orchestrator's.</p>
+<p><code>-keep-stopped</code> keeps a stopped cell's worktree; <code>-resume &lt;session id&gt;</code> continues it there with <code>-args</code> as next prompt, how the feature playbook hands a stopped implementer its refined plan.</p>
+
+<h2 id="merge-strategy">Merge strategy</h2>
+<p>A session's branch lands on the branch it started from, by replay and fast-forward, never by a merge commit. Heartbeat grants the turns (<a href="#landing">Landing</a>); this section is who lands what, when.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>Land on the base</td><td class="wrap">A session lands on its base, the branch it started from, if that is a local branch neither agent-owned nor default; a fleet member on its fleet's merge branch; any other branch on none. This is its heartbeat row's <code>target</code>.</td></tr>
+    <tr><td>No target</td><td class="wrap">Started from <code>main</code> or with an unknown base: nothing restacks or lands it; you pick its commits.</td></tr>
+    <tr><td>Staging target</td><td class="wrap">Unset unless <code>heartbeat.staging_target</code> names one (<code>develop</code> below). Takes finished feature branches; you release it to <code>main</code>.</td></tr>
+    <tr><td>Replay</td><td class="wrap">Never a merge commit: a branch behind its target is restacked onto the target's tip, then the target fast-forwards.</td></tr>
+    <tr><td>One at a time</td><td class="wrap">Heartbeat grants one landing turn per repository and target.</td></tr>
+    <tr><td><code>main</code></td><td class="wrap">No agent session pushes or moves it. Two operator tools write it: the routine runner lands the nightly's session records (with auto-merge on, also a judge-accepted night's ready changes), never pushing; the Proposals page's Pick uses <code>smine-agentwt pick</code>.</td></tr>
+    <tr><td>Your git acts</td><td class="wrap">Unbound: no hook, no deny. The next landing handles any ref state you produce.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="refs">Branches and landing targets</h3>
+<p>Flows between refs, in order:</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>From</th><th>How</th><th>To</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap">Session picker</td><td class="wrap">Worktree hook recreates the untouched branch from the picked branch by name.</td><td class="wrap"><code>claude/NAME</code> (session branch)</td></tr>
+    <tr><td>2</td><td class="wrap"><code>claude/NAME</code></td><td class="wrap"><code>/done</code>: restack, fast-forward</td><td class="wrap"><code>feature/x</code> (its base)</td></tr>
+    <tr><td>3</td><td class="wrap"><code>claude/NAME</code></td><td class="wrap"><code>/done</code>: restack, fast-forward</td><td class="wrap"><code>develop</code> (staging target)</td></tr>
+    <tr><td>4</td><td class="wrap"><code>claude/NAME</code> based on main</td><td class="wrap">No target: you pick.</td><td class="wrap"><code>main</code></td></tr>
+    <tr><td>5</td><td class="wrap"><code>claude/NAME</code>, <code>claude/agent-ID</code> (fleet member)</td><td class="wrap">Orchestrator: fast-forward</td><td class="wrap"><code>claude-orch/FLEET-RUN</code> (merge branch)</td></tr>
+    <tr><td>6</td><td class="wrap"><code>claude-orch/FLEET-RUN</code></td><td class="wrap">Sync: <code>/done</code></td><td class="wrap">The fleet target</td></tr>
+    <tr><td>7</td><td class="wrap"><code>feature/x</code></td><td class="wrap"><code>/done branch: feature/x</code></td><td class="wrap"><code>develop</code></td></tr>
+    <tr><td>8</td><td class="wrap"><code>develop</code></td><td class="wrap">You: fast-forward</td><td class="wrap"><code>main</code></td></tr>
+    <tr><td>9</td><td class="wrap"><code>main</code></td><td class="wrap">You moved main: catch-up at the next landing.</td><td class="wrap"><code>develop</code></td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Ref</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td>main</td><td class="wrap">Default branch. Only you move it; never a landing target.</td></tr>
+    <tr><td>staging target</td><td class="wrap">Named by <code>heartbeat.staging_target</code>, unset by default. Unset, <code>/done branch:</code> refuses with <code>no staging target configured — set heartbeat.staging_target</code> and heartbeat shows no staging row. Local, created from <code>main</code> by its first landing. The one ref a landing moves non-forward, only in a catch-up.</td></tr>
+    <tr><td>feature/&lt;x&gt;</td><td class="wrap">Any other local branch a session starts from: that session's landing target. Nothing creates or catches it up.</td></tr>
+    <tr><td>claude/&lt;name&gt;</td><td class="wrap">A session's branch; keeps its name through every restack.</td></tr>
+    <tr><td>claude-orch/&lt;fleet&gt;-&lt;run uuid&gt;</td><td class="wrap">A fleet's merge branch, checked out by its orchestrator; its members' landing target.</td></tr>
+    <tr><td>claude-restack/&lt;slug&gt;-&lt;short&gt;</td><td class="wrap">A running restack's work branch; with <code>-orig</code>, the archive of the series it replaced. <code>&lt;slug&gt;</code>: branch name lower-cased, each run of characters outside a-z and 0-9 one dash. <code>&lt;short&gt;</code>: first 8 hex characters of the target's tip.</td></tr>
+    <tr><td>claude-routines/&lt;group&gt;-&lt;date&gt;[-n]</td><td class="wrap">A routine's dated run branch. The nightly mints a pair: <code>…-proposals</code> holds its change commits, each picked, rejected, or dropped by the runner once the night ages out of the window or <code>smine-agentwt probe --onto main</code> answers <code>conflict</code> for it; <code>…-batch</code> holds its session records, landed the same night. A short-lived <code>…-landing</code> scratch branch exists while auto-merge lands.</td></tr>
+    <tr><td>refs/smine/rejected/&lt;sha&gt;</td><td class="wrap">A change commit refused on the Proposals page: settled, kept reachable. The user's reason sits in the backlog's <code>archive.rejected</code> row whose <code>commit</code> names the sha, read there by the miners.</td></tr>
+    <tr><td>refs/smine/dropped/&lt;sha&gt;</td><td class="wrap">A change commit the runner aged out or found stale: kept reachable, listed in History, never suppresses re-mining.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="branch-states">Branch states</h3>
+<p>A branch enters Working when its worktree is created and leaves from On main with <code>/close</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>State</th><th>Who acts</th><th>What happens</th><th>Next state (event)</th></tr></thead>
+  <tbody>
+    <tr><td>Working</td><td>session agent</td><td class="wrap">Commits on its <code>claude/&lt;name&gt;</code> branch.</td><td class="wrap">In review (turn ends, audit green); Working (<code>/fimplement</code> starts behind its target: re-anchor); Partly landed (you pick some commits)</td></tr>
+    <tr><td>In review</td><td>you</td><td class="wrap">Accept with <code>/done</code>, or ask for a fix.</td><td class="wrap">Working (fix asked); Accepted (you type <code>/done</code>, has a target); No target (you type <code>/done</code>, based on main); Delivered (fleet member runs <code>/done</code>); Partly landed (you pick some commits); On main (you pick every commit)</td></tr>
+    <tr><td>Accepted</td><td>heartbeat</td><td class="wrap">Grants the target's landing turn or queues the session.</td><td class="wrap">Restacking (granted, behind the target); Ready (granted, at the target's tip); On target (every commit already placed)</td></tr>
+    <tr><td>No target</td><td>you</td><td class="wrap">Pick its commits onto <code>main</code>; nothing lands.</td><td class="wrap">On main (you pick every commit)</td></tr>
+    <tr><td>Restacking</td><td>owning session</td><td class="wrap">Replays the commits the target lacks onto its tip, runs the audit.</td><td class="wrap">Ready (replay done, audit green); In review (restack stopped, turn abandoned)</td></tr>
+    <tr><td>Ready</td><td>owning session</td><td class="wrap">Fast-forwards the target, ends the turn.</td><td class="wrap">On target (target fast-forwards)</td></tr>
+    <tr><td>Delivered</td><td>orchestrator</td><td class="wrap">Fast-forwards its merge branch, or asks the member to restack.</td><td class="wrap">On merge branch (fast-forwarded); In review (behind, restack asked)</td></tr>
+    <tr><td>On merge branch</td><td>orchestrator</td><td class="wrap">Syncs the fleet's target once every member landed.</td><td class="wrap">On target (fleet synced through <code>/done</code>)</td></tr>
+    <tr><td>On target</td><td>you</td><td class="wrap">Land a feature target with <code>/done branch: &lt;target&gt;</code>, or fast-forward <code>main</code> from the staging target.</td><td class="wrap">On staging (feature target landed with <code>/done</code>); On main (staging target, you fast-forward main)</td></tr>
+    <tr><td>On staging</td><td>you</td><td class="wrap">Fast-forward <code>main</code>.</td><td class="wrap">On main (you fast-forward main)</td></tr>
+    <tr><td>Partly landed</td><td>owning session</td><td class="wrap">The next <code>/done</code> replays only the remainder.</td><td class="wrap">Accepted (you type <code>/done</code>)</td></tr>
+    <tr><td>On main</td><td>you</td><td class="wrap"><code>/close</code></td><td class="wrap">Done (<code>/close</code>)</td></tr>
+  </tbody>
+</table>
+
+<h3 id="landing-a-session">Landing a session</h3>
+<p><code>/done</code> in a session in no fleet. You type it; an agent's own call is admitted only after <code>/join</code> or inside <code>/fleet</code>.</p>
+<ol class="steps">
+  <li><strong>Clean tree</strong><p>Uncommitted work is committed first.</p></li>
+  <li><strong>Accept</strong><p><code>smine-heartbeat done</code> resolves the landing target and requests its turn: <code>accepted &lt;target&gt; granted</code> or <code>queued &lt;n&gt;</code>. Queued: the session ends its turn; heartbeat's message when the turn frees resumes it at step 3. No target: <code>no-target &lt;base&gt;</code>, title to DONE, nothing lands.</p></li>
+  <li><strong>Create</strong><p>A missing staging target is created from <code>main</code>'s tip after the grant; heartbeat grants its turn before it exists.</p></li>
+  <li><strong>Catch up</strong><p>If <code>main</code> holds commits the staging target lacks, the staging target's unreleased commits replay onto <code>main</code>'s tip and it moves; the old tip stays as <code>claude-restack/&lt;slug&gt;-&lt;short&gt;-orig</code>.</p></li>
+  <li><strong>Placed check</strong><p><code>smine-agentwt unplaced --onto &lt;target&gt; &lt;branch&gt;</code> lists the commits the target lacks; none: the turn ends <code>abandoned</code>.</p></li>
+  <li><strong>Restack</strong><p>They replay onto the target's tip on a work branch (conflicts resolved by both sides' intent, audit run), unless the target's tip is already in the branch. The checked-out branch keeps its name; its old series becomes the <code>-orig</code> archive, removed through the safety-gated remove once adoption is green (kept if the removal is skipped). Any other branch stays on its work branch for the caller to adopt, with no archive.</p></li>
+  <li><strong>Fast-forward</strong><p><code>smine-agentwt forward --onto &lt;target&gt; &lt;tip&gt;</code> moves the target after checking the tip holds the target's tip.</p></li>
+  <li><strong>End</strong><pre class="file-view" data-lang="bash">smine-heartbeat land --end landed</pre></li>
+  <li><strong>Close</strong><p><code>/done --close</code> then runs <code>/close</code>, removing the session's worktree and branch; the Desktop session stays open.</p></li>
+</ol>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Every exit ends the turn</td><td class="wrap">Stopped restack, unmoved target, nothing to land: <code>abandoned</code>. Fix the cause, type <code>/done</code> again; <code>--close</code> then closes nothing.</td></tr>
+    <tr><td>Checked-out target</td><td class="wrap">Checked out in another worktree (your main checkout on the feature branch): fast-forwarded there, index and files following. Refused while that worktree has uncommitted changes to tracked files: commit there, type <code>/done</code> again.</td></tr>
+    <tr><td>Restack never asks</td><td class="wrap">Decides every conflict, contradicting changes included, naming each call in its report. Where nothing decides between two intents, it keeps the target's behavior and fits the replayed commit to it.</td></tr>
+    <tr><td>Stopped restack</td><td class="wrap">Only a red audit or an unattributable file stops it: branch untouched, work branch kept; a rerun onto the same tip resumes.</td></tr>
+    <tr><td>Fleet member</td><td class="wrap"><code>/done --close</code> delivers and closes nothing: the orchestrator lands the branch first.</td></tr>
+    <tr><td>Feature branch</td><td class="wrap"><code>/done branch: &lt;local branch&gt;</code> lands a branch without a live session, always on the staging target; refused for the staging target itself, <code>main</code> and agent branches. Turn via <code>smine-heartbeat land --target &lt;staging target&gt;</code>; no rename.</td></tr>
+    <tr><td>Plans</td><td class="wrap">Only a feature-branch landing archives plans. Between restack and fast-forward, each feature folder under <code>plans/</code> it brings goes through <code>/plan-archive</code> on the tip: <code>wip</code> plan dirs are copied to the plans archive as <code>done-&lt;tip hash&gt;</code>, committed there, then removed by a commit landing with the feature. The staging target and <code>main</code> never hold a <code>wip</code> plan. A session's own <code>/done</code> leaves plans on the feature branch for later sessions. A stopped archive ends the turn <code>abandoned</code>; the next landing replaces the archived copy.</td></tr>
+    <tr><td>Other target</td><td class="wrap"><code>/done</code> takes no target; only <code>/restack onto: &lt;branch&gt;</code> moves a session, making that branch its base.</td></tr>
+    <tr><td>Archives</td><td class="wrap">Restack removes its own <code>-orig</code> archive after adoption. <code>/close</code> removes the session's <code>claude-restack/&lt;slug&gt;-…</code> branches (slug from the session branch) through the same safety-gated remove, keeping and reporting any whose commits nothing else holds.</td></tr>
+    <tr><td>Stuck turn</td><td class="wrap"><code>smine-heartbeat land --release &lt;target&gt;</code>, in the repository, ends the holder's turn. A turn also ends when its session ends or dies; never by clock or prompt.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="landing-a-fleet">Landing a fleet</h3>
+<p>Members land on the fleet's merge branch; only the orchestrator moves it.</p>
+<table class="doc plain">
+  <thead><tr><th>Step</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Deliver</td><td class="wrap">A member runs <code>/done</code> (<code>delivered &lt;token&gt;</code>); a spawned worker counts once stopped.</td></tr>
+    <tr><td>At the tip</td><td class="wrap">A member whose branch holds the merge branch's tip lands by <code>git merge --ff-only</code>.</td></tr>
+    <tr><td>Behind</td><td class="wrap">An attended member is asked once to restack onto the merge branch and <code>/done</code> again; the orchestrator never writes into a member's branch.</td></tr>
+    <tr><td>Stopped worker</td><td class="wrap">No session: the orchestrator restacks its branch on a work branch, fast-forwards to it, deletes the work branch.</td></tr>
+    <tr><td>Sync</td><td class="wrap">Once every worker landed, the orchestrator calls <code>/done</code>. The merge branch was cut from the fleet's target, its landing target, so <code>/done</code> lands it in that target's turn, staging create and catch-up included. A target that is no landing target: <code>no-target</code>, the fleet stops.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="starting-behind">Starting behind</h3>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Re-anchor</td><td class="wrap"><code>/fimplement</code> first resolves its landing target (heartbeat row <code>target</code>) and restacks before reading the tree if the target's tip is not in the branch. No target: no re-anchor.</td></tr>
+    <tr><td>Heartbeat down</td><td class="wrap">Same rule on the base from <code>smine-agentwt status</code>; the run never stops for it.</td></tr>
+    <tr><td>Restack fails</td><td class="wrap">The run never stops: it implements on the current base, naming the restack's reason in its report.</td></tr>
+    <tr><td>Retarget guard</td><td class="wrap"><code>/restack onto: &lt;branch&gt;</code> other than the base stops if <code>&lt;branch&gt;</code> lacks base commits the branch carries; bring <code>&lt;branch&gt;</code> up to the base first.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="release">Release</h3>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>You release</td><td class="wrap">Fast-forward <code>main</code> to the staging target and push; no agent session does either (record landings and picks are the operator tools above).</td></tr>
+    <tr><td>Signal</td><td class="wrap">The fleet page's landings block: per repository the staging target as <code>releasable</code> (<code>main</code>'s tip in it), <code>diverged</code> (<code>main</code> holds commits it lacks) or <code>absent</code>, with the unreleased commit count; every target's turn holder and queue.</td></tr>
+    <tr><td>Never a gate</td><td class="wrap">Nothing reads the signal before acting for you. A release while diverged is caught up by the next staging landing.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="what-you-may-do">What you may do</h3>
+<table class="doc plain">
+  <thead><tr><th>You do</th><th>What happens next</th></tr></thead>
+  <tbody>
+    <tr><td>Commit on <code>main</code></td><td class="wrap">The next staging landing first replays its unreleased commits onto <code>main</code>'s tip. No other target catches up.</td></tr>
+    <tr><td>Cherry-pick some commits of a branch</td><td class="wrap">Placed, conflict-adapted picks included; <code>/done</code> lands the rest.</td></tr>
+    <tr><td>Pick every commit of a branch</td><td class="wrap"><code>/done</code> finds nothing and ends its turn.</td></tr>
+    <tr><td>Land an accepted branch by hand</td><td class="wrap">Commits placed; its <code>/done</code> ends the turn <code>abandoned</code>.</td></tr>
+    <tr><td>Start a session from a feature branch</td><td class="wrap">Lands there; <code>/fimplement</code> and <code>/done</code> restack it onto that tip.</td></tr>
+    <tr><td>Start a session from <code>main</code></td><td class="wrap">No target: you pick its commits.</td></tr>
+    <tr><td>Move a session to another branch</td><td class="wrap"><code>/restack onto: &lt;branch&gt;</code>, under the <a href="#starting-behind">retarget guard</a>.</td></tr>
+    <tr><td>Rewrite the staging target</td><td class="wrap">Landings continue from the ref as it is.</td></tr>
+    <tr><td>Merge with <code>/merge-resolve</code></td><td class="wrap">Still there for merges outside this strategy; a later restack replays the branch's own commits without the merge commit.</td></tr>
+    <tr><td>Bump a skill's version on two branches</td><td class="wrap">The skillcue driver keeps both changelog rows; a real content conflict in the file is left to git (<a href="#skill-model-merges">below</a>).</td></tr>
+  </tbody>
+</table>
+
+<h3 id="skill-model-merges">Skill model merges</h3>
+<p>A custom git merge driver merges two branches' version bumps of one skill model file.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Binding</td><td class="wrap"><code>.gitattributes</code> binds every <code>&lt;leaf&gt;.cue</code> with <code>skills/*/*.cue merge=skillcue</code> and <code>skills/*/*/*.cue merge=skillcue</code>; root files <code>interfaces.cue</code> and <code>vocabulary.cue</code> keep git's text merge. Git calls the driver in <code>merge</code>, <code>cherry-pick</code> and <code>merge-tree</code>.</td></tr>
+    <tr><td>Driver</td><td class="wrap"><code>smine-rules merge-skillcue %O %A %B %P %X %Y</code>, registered as <code>merge.skillcue.driver</code> by the installer (<code>git config --global</code>) and the routine cell image (<code>git config --system</code>).</td></tr>
+    <tr><td>Order</td><td class="wrap">Both sides' new changelog rows stay. The side with the later committer time (from git's <code>%X</code>/<code>%Y</code> conflict labels) goes on top, a tie to the incoming side; row dates decide when a label resolves to no commit. Rows renumber upward from the base version, each by its bump kind; the frontmatter version follows the top row.</td></tr>
+    <tr><td>Fallback</td><td class="wrap">Any other conflict in the file: git's text merge with markers, exit 1, one stderr line naming the reason.</td></tr>
+    <tr><td>Probes without a worktree</td><td class="wrap">Agentwt runs <code>merge-tree</code> with <code>GIT_ATTR_SOURCE=&lt;onto tip&gt;</code>, so the binding applies in a container cell with no <code>.gitattributes</code> on disk.</td></tr>
+    <tr><td>Placement checks stay driver-free</td><td class="wrap">Agentwt's in-memory gix merges (<code>status</code>, <code>unplaced</code>, the fleet order, heartbeat's git edge) only ask whether a change is already on a candidate, which no driver changes. Agentwt drops every <code>merge.&lt;name&gt;</code> config section on opening the repository: gix turns a driver's conflict exit into a hard error.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="landing-commands">Landing commands</h3>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Who runs it</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>/done</td><td class="wrap">you outside a fleet; a member or the orchestrator inside</td><td class="wrap">Lands the session's branch on its landing target (none: nothing), or delivers a member.</td></tr>
+    <tr><td>/done branch: &lt;branch&gt;</td><td class="wrap">you</td><td class="wrap">Lands a feature branch on the staging target.</td></tr>
+    <tr><td>/restack</td><td class="wrap">a session, or a skill behind its target</td><td class="wrap">Replays unlanded commits onto the target's tip; lands nothing.</td></tr>
+    <tr><td>/close</td><td class="wrap">you</td><td class="wrap">Removes the session's worktree, branch and restack branches.</td></tr>
+    <tr><td>smine-heartbeat done</td><td class="wrap">the done skill</td><td class="wrap">Accepts for the landing target, answers <code>no-target &lt;base&gt;</code>, or delivers a member.</td></tr>
+    <tr><td>smine-heartbeat land --target &lt;staging target&gt;</td><td class="wrap">the done skill</td><td class="wrap">Requests the staging target's turn for a named branch.</td></tr>
+    <tr><td>smine-heartbeat land --end landed</td><td class="wrap">the done skill</td><td class="wrap">Ends the holder's turn after the move.</td></tr>
+    <tr><td>smine-heartbeat land --end abandoned</td><td class="wrap">the done skill</td><td class="wrap">Ends the turn without landing, or leaves the queue.</td></tr>
+    <tr><td>smine-heartbeat land --release &lt;target&gt;</td><td class="wrap">you</td><td class="wrap">Ends a stuck holder's turn.</td></tr>
+    <tr><td>smine-agentwt unplaced --onto &lt;target&gt; &lt;branch&gt;</td><td class="wrap">the restack and done skills, you</td><td class="wrap">Lists the commits the target lacks, oldest first.</td></tr>
+    <tr><td>smine-heartbeat status --format json</td><td class="wrap">anyone</td><td class="wrap"><code>branches[].target</code> per branch; <code>staging_target</code>; <code>landings</code>: holders and queues per target, the staging target's release state.</td></tr>
+    <tr><td>smine-rules settings set heartbeat.staging_target &lt;branch&gt;</td><td class="wrap">you (or the Config page's Smine tab)</td><td class="wrap">Names the staging target (unset by default); restart-class, so the apply restarts heartbeat.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="landing-files">Landing files</h3>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Files</th></tr></thead>
+  <tbody>
+    <tr><td>Skills</td><td class="wrap"><code>skills/git/restack</code>, <code>skills/orchestration/done</code>, <code>skills/orchestration/fleet</code>, <code>skills/orchestration/close</code>, <code>skills/feature/fimplement</code></td></tr>
+    <tr><td>Daemon</td><td class="wrap"><code>cmd/heartbeat/src/land.rs</code>; targets in <code>cmd/heartbeat/src/branch.rs</code>; lane prefixes in <code>settings/claude_code/heartbeat.json</code></td></tr>
+    <tr><td>Base</td><td class="wrap"><code>cmd/worktreecreate/main.go</code> recreates the untouched session branch from the picked branch's name at SessionStart, so its reflog's one creation line names the base; <code>cmd/agentwt/src/gitstate.rs</code> reads that line, unchanged.</td></tr>
+    <tr><td>Placement query</td><td class="wrap"><code>cmd/agentwt/src/unplaced.rs</code>, schema <code>cmd/agentwt/schema/unplaced-v1.json</code></td></tr>
+    <tr><td>Merge driver</td><td class="wrap"><code>cmd/rules/mergeskillcue.go</code>, <code>internal/skillgraph/merge.go</code></td></tr>
+    <tr><td>Page</td><td class="wrap">Landings block of <code>internal/server/templates/_fleet_status.html</code></td></tr>
+  </tbody>
+</table>
+</body>
+</html>

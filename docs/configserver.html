@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Config server · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Config server</h1>
+<p class="lede">A Go and htmx web app on <code>:6001</code> that edits <code>~/.claude/settings.json</code> and shows what the loop produces.</p>
+<p>It reads the nightly's open change commits (<code>claude-routines/smine-nightly-*-proposals</code> branches, via <code>agentwt unplaced</code>) with run-report verdicts and task records, rejected and dropped refs (History tab), session records and skills. Applicability: one <code>agentwt probe</code> per refresh, cached behind a ref fingerprint. Feedback-loop diagram: <a href="index.html">overview</a>; setup: <a href="install.html">Install</a>.</p>
+<div class="callout">
+  <span class="badge badge-dim">Access token</span>
+  <p>Every request needs the access token as HTTP Basic password; only its SHA-256 digest is stored, in <code>~/.claude/configserver/credential</code>.</p>
+</div>
+
+<h2 class="first" id="sessions-pages">Sessions pages</h2>
+<p>Mined session records, never the transcript.</p>
+<table class="doc">
+  <thead><tr><th>Route</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>/sessions</td><td class="wrap">Mined weeks per repo; live list from <code>GET /sessions-context</code>.</td></tr>
+    <tr><td>/sessions/&lt;scope&gt;/&lt;week&gt;</td><td class="wrap">A week's session cards from <code>sessions/&lt;scope&gt;/&lt;week&gt;/*.json</code>.</td></tr>
+    <tr><td>/sessions-report/&lt;id&gt;</td><td class="wrap">One session's <a href="context-report.html">context report</a>.</td></tr>
+    <tr><td>/sessions-archive</td><td class="wrap">Archived scopes.</td></tr>
+  </tbody>
+</table>
+
+<h3>Week page addresses</h3>
+<table class="doc">
+  <thead><tr><th>Parameter or anchor</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>session=&lt;id&gt;[,&lt;id&gt;]</td><td class="wrap">Only those sessions, opened.</td></tr>
+    <tr><td>open=&lt;id&gt;</td><td class="wrap">Opens one card.</td></tr>
+    <tr><td>dimension=&lt;name&gt;</td><td class="wrap">Only that dimension's findings.</td></tr>
+    <tr><td>#session-&lt;id&gt;</td><td class="wrap">Scrolls to a card.</td></tr>
+    <tr><td>#f-&lt;id&gt;-&lt;n&gt;</td><td class="wrap">Opens the card and its n-th finding, 0-based in record order.</td></tr>
+  </tbody>
+</table>
+<p>A finding row shows <code>headline</code>; records mined before format 2, the first sentence of <code>summary</code>. A quote's <code>turn</code> is the 1-based transcript turn in peek's order.</p>
+
+<h3>Live sessions</h3>
+<p><code>GET /sessions-context</code> lists peek's sessions of every registered repo, or the picked one, by ISO week (newest open) and local day (each week's newest open, others closed until their label is clicked), three rows per day until "show all". Empty while peek is disabled; retries every 15 s while peek does not answer. A row's title opens <code>/sessions-report/&lt;id&gt;</code>.</p>
+
+<h3>Archive</h3>
+<table class="doc">
+  <thead><tr><th>Action</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>Archive: POST /sessions-archive</td><td class="wrap" rowspan="2"><code>git mv</code> of a scope's folder, committing only the moved paths: records stay tracked. A folder git does not track (archived before these actions used git) is renamed plainly.</td></tr>
+    <tr><td>Unarchive: POST /sessions-archive/{name}/unarchive</td></tr>
+    <tr><td>Delete: POST /sessions-archive/{name}/delete</td><td class="wrap">Moves the archived folder to the trash; commits its removal from the index.</td></tr>
+  </tbody>
+</table>
+<p>Actions are refused unless the sessions dir is a git checkout; the page redirects only on success.</p>
+
+<h2 id="context-page-and-repo-registry">Context page and repo registry</h2>
+<p>The server also manages multi-repo worktrees, scheduled routines (launchd, Task Scheduler on Windows) and per-skill analytics. Its command-line flags: <a href="development.html#config-server-flags">Development § Config server flags</a>.</p>
+<p>The Context page (<code>/context</code>) browses the docs and sets each entry's and rule's reach, per detail page or in bulk (reach row's <code>bulk reach</code> picker, <code>set reach</code> button). It builds a registered repo's context overlay, picked by registry name; Write to Repo writes it into the repository. Engine: Go deploy engine in <code>internal/contextdocs</code> (<a href="install.html#deployment">Install § Deployment</a>).</p>
+
+<h3>The repo registry</h3>
+<p><code>~/.claude/smine/repos.json</code> lists the registered repos. <code>env</code> holds the repo's skill values: <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code> keys only, none empty. Each skill page's <a href="#environment-page">Environment section</a> writes its own keys.</p>
+<pre class="file-view" data-lang="json">{
+  "repos": [
+    {
+      "name": "smine",
+      "path": "/absolute/path/to/smine",
+      "env": { "SKILL_FIMPLEMENT_CHECK": "make audit" }
+    }
+  ]
+}</pre>
+
+<h3>Session liveness</h3>
+<p>Live session data comes from peek, which the server spawns and talks to over MCP. Peek down: the session column degrades, pages still render. Details: <a href="peek.html">Peek</a>.</p>
+
+<h2 id="config-page">Config page</h2>
+<p>Five tabs: Smine, Hooks, Permissions, Claude, Codex. <code>/config</code> lands on Smine.</p>
+
+<h3>Smine tab</h3>
+<p><code>/config/smine</code> configures the hooks and the heartbeat daemon. A tile grid, three per row, has one tile per catalog component with settings: title, settings count, on/off, overridden count. Below: one component's settings, the tile <code>?component=</code> names or else the first (active tile highlighted).</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Rows</td><td class="wrap">One per setting: key, kind, help, control, default, sink. Reference: <a href="settings.html">Settings</a>.</td></tr>
+    <tr><td>List kinds</td><td class="wrap"><code>strings</code>, <code>globs</code>, <code>paths</code>, <code>models</code>: list editor, never a JSON textarea. One item per line with Remove, an Add field, the default list folded below. Add, Remove and Reset edit the form only; a text left in the Add field is folded in by Save. A yellow <code>pending</code> badge in the panel title shows while the form differs from what was saved.</td></tr>
+    <tr><td>Hidden rows</td><td class="wrap">Rows the catalog marks hidden: off the page, kept in the CLI and the reference: the gate's deny-cause, allow-reason and steering texts; the hook groups' matcher and async fields.</td></tr>
+    <tr><td>Save</td><td class="wrap"><code>POST /config/smine/{component}</code> is the only write: it validates rows against the schema, stores overrides in the install record (empty field or default resets a row), applies the component under the one sync lock, re-renders the panel with the apply report under the Save button. The report reads per component <code>changes applied</code>, <code>changes applied: daemon restarted</code> when the heartbeat LaunchAgent was bootstrapped again, or <code>saved, nothing to apply</code> when the deployed files already held every value; it names changed <code>restart</code> rows whose consumer needs a restart.</td></tr>
+  </tbody>
+</table>
+
+<h3>Hooks tab</h3>
+<p><code>/config/hooks</code> shows only hook groups: a collapsed card per component whose fragment owns live or parked groups (first open), then Other hooks with every live or parked group no component fragment declares, idless ones included.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Group row</td><td class="wrap"><code>smineName</code>; a toggle parking it in <code>hooks.disabled.json</code> or bringing it back; Remove, which keeps the file's previous bytes in the trash and journals the group.</td></tr>
+    <tr><td>Parked by the engine</td><td class="wrap">Component off: <code>smineReason: "component off"</code>, live again once the component is reselected. Parked here: no reason.</td></tr>
+    <tr><td>Card toggle</td><td class="wrap">Parks or restores all the component's groups in one write (<code>POST /config/hooks/{component}/groups/toggle?enabled=</code>). Mixed: <code>N of M off</code>.</td></tr>
+    <tr><td>Filter bar</td><td class="wrap">Name, event, matcher or command (<code>?q=</code>); state (<code>?state=all|disabled|local|changed</code>). Every card a filter leaves is open.</td></tr>
+    <tr><td>Group routes</td><td class="wrap"><code>POST /config/hooks/{card}/groups/{event}/{index}/toggle</code>, <code>DELETE /config/hooks/{card}/groups/{event}/{index}</code>; <code>{card}</code>: a component id or <code>other</code>. Addressed by event and position, never <code>smineId</code>.</td></tr>
+    <tr><td>Parked file</td><td class="wrap"><code>hooks.disabled.json</code>, read per request, never cached: a toggle after an apply sees the engine's result. The Overview's Hooks tile counts it too and links the tab.</td></tr>
+    <tr><td>Render-owned fields</td><td class="wrap">Every apply copies timeout, matcher and async onto an equal-version live group, so a cleared hook-group override reverts at once.</td></tr>
+    <tr><td>Global context</td><td class="wrap">The Context page's global-context toggle parks and unparks the two global-context hook groups through the same store.</td></tr>
+  </tbody>
+</table>
+
+<h3>Permissions tab</h3>
+<p><code>/config/permissions</code> shows the live permission lists of <code>~/.claude/settings.json</code> under the top-level headings Allow, Ask and Deny. Each rule head is a collapsed section (first open); its rows toggle a rule into <code>settings.disabled.json</code> or remove it. Each list has an add form.</p>
+<p>Above sits the Claude settings' Sync, Force sync and Persist overrides widget (overridden count at its right end), to write live rules back into the repo fragment. Counts and state badges sit at the right edge of their heading or head row.</p>
+
+<h3>Claude tab</h3>
+<p>Edits the live <code>~/.claude/settings.json</code> key by key. Hook groups and permissions have their own tabs, so those five keys never render as generic rows.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Generic row</td><td class="wrap">Bool, enum, number, string, array or map key (<code>skillOverrides</code>: one select per skill). Other objects: read-only JSON plus Remove.</td></tr>
+    <tr><td>Mutations</td><td class="wrap">Hook, permission, env, MCP, model and generic-row mutations answer with their own fragment, section and group badges swapped out of band. A generic row that changes state keeps its place until the next page load. Only Sync, Force sync and Persist overrides reload the page body.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Button</th><th>Direction</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>Sync</td><td>repo → live</td><td class="wrap">The install engine's settings step over the stored selection. Adds absent base keys (present values stay) and missing declared permission rules and env keys (live extras stay). Parks unselected components' hook groups with <code>smineReason</code>; removes only groups the repo's retire list names.</td></tr>
+    <tr><td>Force sync</td><td>repo → live</td><td class="wrap">Previews every key, hook group, env key, permission entry and parked group it drops. On your confirm, rebuilds the live file from the template alone (base plus selected components' fragments), empties the parked sidecar; both previous files go to the trash. <code>~/.claude.json</code> keeps its own MCP servers; only the fragments' are reconciled.</td></tr>
+    <tr><td>Persist overrides</td><td>live → repo</td><td class="wrap">Writes the live file into the template by ownership: env keys a component fragment declares land there, the rest in <code>settings/claude_code/base.json</code>, which then holds exactly the live keys no fragment owns. Hook groups never write back (their component's fragment owns them by smineId). Install markers (<code>{{HOME}}</code>, ports) collapse on the way back.</td></tr>
+  </tbody>
+</table>
+
+
+<h2 id="environment-page">Environment page</h2>
+<p>The Skills page's Environment tab (<code>/scripts/skills/environment</code>) shows the install's tools, the global defaults and one skill's Environment widget. Value resolution: <a href="install.html#per-repo-values">Install § Per-repo values</a>.</p>
+<table class="doc plain">
+  <thead><tr><th>Section</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Tools</td><td class="wrap">A card per provider the selected skills bind through an install-scoped variable, with state: <code>current</code>, <code>stale</code> (missing version, "rebuild and install the &lt;component&gt; component") or <code>missing</code> ("install the &lt;component&gt; component"). Per-provider program override in a folded section. <code>POST /scripts/skills/environment</code> writes the install record's <code>PROVIDER_</code> rows (<code>skills.providers</code>) and syncs the skills: every deployed copy runs the program in effect.</td></tr>
+    <tr><td>Global defaults</td><td class="wrap">One card, a row per repo-scoped kind a selected skill reads (<code>test</code>, <code>check</code>, <code>build</code>, …): interface id, summary, a field with the example as placeholder, the skills using it. Its one Save, <code>POST /scripts/skills/environment/defaults</code>, checks each value against its interface and writes the record's <code>skills.defaults</code> (empty field clears one), deploying nothing. Every skill on every repo reads it at next invocation unless a skill default or repo value overrides it. The card swaps itself with a notice.</td></tr>
+    <tr><td>Skill widget</td><td class="wrap">A select shows one skill's Environment widget, as on its skill page. <code>GET /scripts/skills/environment/widget?skill=&lt;name&gt;&amp;repo=&lt;name&gt;</code> renders it alone; <code>?skill=</code> and <code>?repo=</code> on the tab open it there.</td></tr>
+  </tbody>
+</table>
+
+<h3>A skill's Environment section</h3>
+<p>The widget lists every variable the skill declares, install- and repo-scoped (build, check and test commands, the acdsl program, the plans archive among them). Each row shows interface, <code>required</code> or <code>optional</code>, scope and state. Chips select the default or one registered repo and swap the widget in place, never the page.</p>
+<table class="doc plain">
+  <thead><tr><th>View</th><th>Edits</th><th>Save</th></tr></thead>
+  <tbody>
+    <tr><td>Default</td><td class="wrap">The record's <code>skills.variables</code> rows, each listing the repos overriding it. An empty repo-scoped row shows the global default beneath (<code>global</code> badge, value as placeholder).</td><td class="wrap"><code>POST /scripts/skills/{origin}/{name}/env</code> redeploys the skill only when an install-scoped value changed.</td></tr>
+    <tr><td>Repo</td><td class="wrap">That repo's values; an empty field falls back to the default, then the global default.</td><td class="wrap"><code>POST /scripts/skills/{origin}/{name}/env/{repo}</code> checks every value against its interface (a relative program resolved inside the repo), writes the skill's keys into the registry row, keeps other skills' keys. Deploys nothing: the <code>skillenv</code> hook exports the row into the repo's sessions.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>One Save</td><td class="wrap">Its target is named beside it (<code>· default</code>, <code>· &lt;repo&gt;</code>). Both forms answer with the re-rendered widget and a notice line; a refused value answers 400, shown in the error banner.</td></tr>
+    <tr><td>Unset required</td><td class="wrap"><code>⚠ unset</code> on its row; <code>⚠ n unset</code>, naming the variables, on the skill head and index card, any scope. Install-scoped: the deploy skips the skill. Repo-scoped: invocation stops until it is set. Not counted when a global default fills it.</td></tr>
+    <tr><td>Unset optional</td><td class="wrap">The row names the entries, grants and anchors it drops.</td></tr>
+    <tr><td>Layout</td><td class="wrap">The default view names the skill's tools with their state above the rows and links the Environment tab (hidden on that tab). Rows and Save share one card. The contract and per-capability overrides follow in an advanced disclosure behind a divider, a second Save at its end: one form, one widget.</td></tr>
+    <tr><td>Widget alone</td><td class="wrap"><code>GET /scripts/skills/{origin}/{name}/env?repo=&lt;name&gt;</code>, what the chips fetch.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="skill-graph">Skill graph</h2>
+<p>A skill's Graph tab (<code>GET /scripts/skills/{origin}/{name}/graph</code>) draws its model; <code>GET /scripts/skills/graph?skill=&lt;value&gt;</code> is the same view with a skill picker, defaulting to the first listed skill. It has a row per entry by section, the invocation column on the left (env tiles above args and session tiles) and the all-warnings panel.</p>
+<table class="doc plain">
+  <thead><tr><th>Element</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Env tile</td><td class="wrap">One <code>$SKILL_</code> variable with its state mark: <code>●</code> set, <code>⚠</code> unset required, <code>○</code> unset optional, <code>↯</code> deferred to invocation. Focus draws edges to the entries and params reading it and to the enforce card's anchor rows. Its card: interface, scope, source, value or cause, every reader (grants and checks included).</td></tr>
+    <tr><td>Arg tile</td><td class="wrap">Edges to the entries its Args Effect cell links; an Args row linking none is a structure warning.</td></tr>
+    <tr><td>Warnings panel</td><td class="wrap">Structure warnings and battery findings, each entry named by its title.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Endpoint</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>…/graph/scenario</td><td class="wrap">Evaluates the invocation scenario as JSON for the inputs switched on (<code>on=</code>, repeated) and one flipped pred (<code>flip=</code>).</td></tr>
+    <tr><td>…/graph/findings</td><td class="wrap">Runs the model battery.</td></tr>
+    <tr><td>…/graph/diff</td><td class="wrap">Diffs the skill's model files against <code>HEAD</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="telemetry-and-usage-analytics">Telemetry and usage analytics</h2>
+<p>Spend history lives in the usage store <code>~/.claude/smine/usage</code>, filled by the routine <code>smine-budget</code>: an hourly launchd job (minute 7) that starts no agent. Each run:</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Step</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap">Mirrors every Claude Code transcript and its subagent files into <code>usage/archive/</code>. The archive only grows: only a larger source replaces a copy, never an equal, truncated or emptied one. History outlives Claude Code's transcript cleanup and peek's watch window.</td></tr>
+    <tr><td>2</td><td class="wrap">Captures each session's peek usage (root, skill runs, subagents) and session-report context breakdown.</td></tr>
+    <tr><td>3</td><td class="wrap">Runs <code>ccusage</code> (v20.0.20 or newer, on <code>PATH</code>) over that archive and Codex's store: the independent price check.</td></tr>
+  </tbody>
+</table>
+<p>Peek and ccusage, the two cost sources, are each an installation component. One off: smine-budget skips that side, the page offers the other alone. Both off, or Routines off (nothing else fills the store): no Usage page, no Overview cost tile.</p>
+<p><code>/usage</code> reads only that store: one source, or both with agreement verdicts, plus an error card per source that failed in the last run. Cost-per-day chart: dollars or plan percent (tokens weighted per model against the one measured Team Premium 5-hour window) for the plan picked on the page, Team Premium or Max 20x.</p>
+<p>Skill and tool efficacy still come from Claude Code's native OpenTelemetry (OTel) events, received by peek (<a href="peek.html#claude-code-telemetry">Peek § Claude Code telemetry</a>).</p>
+
+<h2 id="routines">Routines</h2>
+<p>Routines wrap <code>claude -p</code> in launchd jobs; the <code>routine</code> binary runs every job and holds its locks and timeout. Operations manual: <a href="routines.html">Routines</a>.</p>
+<p>To add one, copy <code>routines/_templates/</code> into <code>routines/&lt;name&gt;/</code>, rename the plist to the label and edit the marked spots, or use <code>/skillroutine-create</code>. First real routine: <code>routines/smine-nightly/</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>Aspect</th><th>smine-nightly</th></tr></thead>
+  <tbody>
+    <tr><td>Schedule and cell</td><td class="wrap">03:00, one dispatcher cell: <code>claude-opus-5-5[1m]</code>, effort high, budget $300.</td></tr>
+    <tr><td>Stages</td><td class="wrap">style (when a taste source changed), batch, memory, context, permissions, acdsl, problems, implement, consolidate, judge.</td></tr>
+    <tr><td>Output</td><td class="wrap">Change commits plus one ledger commit, on a night branch cut from <code>main</code>.</td></tr>
+    <tr><td>Environment</td><td class="wrap">Non-bare, against the shared <code>~/.claude</code> (skills, peek-mcp, allowlist).</td></tr>
+    <tr><td>Auth</td><td class="wrap"><code>CLAUDE_CODE_OAUTH_TOKEN</code> from <code>~/.config/claude-routine/token</code> (0600, written from <code>claude setup-token</code>, never committed).</td></tr>
+    <tr><td>Plist</td><td class="wrap">Ships as <code>.plist.template</code>; the Routines component (<code>bin/configserver -apply</code>) materializes the real, gitignored plist.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="trash">Trash</h2>
+<p>Nothing smine removes or overwrites is lost: previous bytes go to <code>~/.claude/smine/trash/&lt;stamp&gt;/&lt;original path&gt;</code>, each event appends a line to <code>~/.claude/smine/journal.jsonl</code> (<a href="trash.html">Trash</a>).</p>
+<p><code>/trash</code> opens from the trash icon at the Overview's bottom right; no nav tab. It lists stashes newest first, each file with size and a Restore button, then the newest 200 journal lines.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Restore</td><td class="wrap"><code>POST /trash/{stamp}/restore</code> puts the file back at its original path. Refused over an existing file unless "replace the current file" is ticked, which stashes that file first.</td></tr>
+    <tr><td>Retention</td><td class="wrap"><code>config-server.trash_retention_days</code> (default 0, keep forever): every stash and server boot removes stamp dirs older than that many days.</td></tr>
+    <tr><td>Journal</td><td class="wrap">Never truncated.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

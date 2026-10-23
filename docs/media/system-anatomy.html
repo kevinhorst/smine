@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Anatomy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3efe6;
+    --paper-2: #ebe6da;
+    --fur: #c9a97e;
+    --fur-dark: #a98a62;
+    --muzzle: #f6ead6;
+    --cheek: #e9a7a0;
+    --ink: #1f1d1a;
+    --ink-2: #5a564f;
+    --ink-3: #8f8a80;
+    --line: #c9c2b4;
+    --accent: #b8432e;
+    --accent-soft: rgba(184, 67, 46, 0.16);
+    --vessel: rgba(184, 67, 46, 0.42);
+    --nerve: rgba(58, 90, 140, 0.55);
+    --string: #7a7468;
+    --panel: #faf8f2;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 10px 30px rgba(40, 30, 10, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16171a;
+      --paper-2: #1d1f23;
+      --fur: #7a6246;
+      --fur-dark: #5a4733;
+      --muzzle: #c9b296;
+      --cheek: #c27a72;
+      --ink: #ebe7dd;
+      --ink-2: #b3ada0;
+      --ink-3: #7c776d;
+      --line: #33363c;
+      --accent: #e06a52;
+      --accent-soft: rgba(224, 106, 82, 0.22);
+      --vessel: rgba(224, 106, 82, 0.5);
+      --nerve: rgba(120, 160, 220, 0.6);
+      --string: #8a847a;
+      --panel: #1b1d21;
+      --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #16171a;
+    --paper-2: #1d1f23;
+    --fur: #7a6246;
+    --fur-dark: #5a4733;
+    --muzzle: #c9b296;
+    --cheek: #c27a72;
+    --ink: #ebe7dd;
+    --ink-2: #b3ada0;
+    --ink-3: #7c776d;
+    --line: #33363c;
+    --accent: #e06a52;
+    --accent-soft: rgba(224, 106, 82, 0.22);
+    --vessel: rgba(224, 106, 82, 0.5);
+    --nerve: rgba(120, 160, 220, 0.6);
+    --string: #8a847a;
+    --panel: #1b1d21;
+    --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 300;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    padding: 28px 16px 10px; max-width: 1240px; margin: 0 auto;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  header h1 { font-size: clamp(26px, 3.4vw, 38px); font-weight: 300; letter-spacing: -0.01em; margin: 0; }
+  header h1 em { font-style: italic; color: var(--accent); }
+  .plate { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  main {
+    max-width: 1240px; margin: 0 auto; padding: 0 16px 48px;
+    display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr); gap: 24px; align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  .figure { background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow: hidden; }
+  .figure svg { width: 100%; height: auto; display: block; }
+
+  /* body drawing (not parts) */
+  .fur { fill: var(--fur); stroke: var(--ink); stroke-width: 1.5; }
+  .fur-line { stroke: var(--fur); stroke-width: 26; stroke-linecap: round; fill: none; }
+  .fur-edge { stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; fill: none; }
+  .muzzle { fill: var(--muzzle); stroke: var(--ink); stroke-width: 1.2; }
+  .cheek { fill: var(--cheek); opacity: .75; }
+
+  /* parts */
+  .organ { fill: var(--paper-2); stroke: var(--ink); stroke-width: 1.2; cursor: pointer; transition: fill .18s, stroke .18s; }
+  .organ.ghost { fill: none; stroke: var(--ink-2); stroke-width: 1; }
+  .organ.fur { fill: var(--fur); }
+  .joint { fill: var(--muzzle); stroke: var(--ink); stroke-width: 1.2; cursor: pointer; }
+  .string { stroke: var(--string); stroke-width: 0.9; stroke-dasharray: 3 3; fill: none; cursor: pointer; }
+  .spine { stroke: var(--ink); stroke-width: 1.2; fill: none; cursor: pointer; }
+  .vert { stroke: var(--ink); stroke-width: 1; }
+  .nerve { stroke: var(--nerve); stroke-width: 0.9; fill: none; stroke-dasharray: 2 2; cursor: pointer; }
+  .vessel { stroke: var(--vessel); stroke-width: 1.1; fill: none; cursor: pointer; }
+  .leader { stroke: var(--ink-3); stroke-width: 0.8; fill: none; }
+  .leader-dot { fill: var(--ink-3); }
+  .label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; fill: var(--ink-2); cursor: pointer; letter-spacing: 0.02em; }
+  .label .num { fill: var(--accent); font-weight: 500; }
+  .label .organ-name { fill: var(--ink-3); font-size: 9.5px; }
+  .hit { fill: transparent; stroke: transparent; cursor: pointer; }
+  .eye-white { fill: #fff; stroke: var(--ink); stroke-width: 1.2; }
+  .pupil { fill: var(--ink); }
+  .shine { fill: #fff; }
+
+  g.part.active .organ, g.part:hover .organ { fill: var(--accent-soft); stroke: var(--accent); }
+  g.part.active .organ.ghost, g.part:hover .organ.ghost { stroke: var(--accent); fill: var(--accent-soft); }
+  g.part.active .organ.fur, g.part:hover .organ.fur { fill: var(--accent-soft); }
+  g.part.active .joint, g.part:hover .joint { stroke: var(--accent); fill: var(--accent-soft); }
+  g.part.active .string, g.part:hover .string { stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: none; }
+  g.part.active .spine, g.part:hover .spine, g.part.active .vert, g.part:hover .vert { stroke: var(--accent); }
+  g.part.active .nerve, g.part:hover .nerve { stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: none; }
+  g.part.active .vessel, g.part:hover .vessel { stroke: var(--accent); stroke-width: 2; }
+  g.part.active .eye-white, g.part:hover .eye-white { stroke: var(--accent); stroke-width: 2; }
+  g.part.active .label, g.part:hover .label { fill: var(--ink); }
+  g.part.active .leader, g.part:hover .leader { stroke: var(--accent); }
+  g.part.active .leader-dot, g.part:hover .leader-dot { fill: var(--accent); }
+
+  .pulse { transform-origin: 280px 354px; animation: beat 1.3s ease-in-out infinite; }
+  @keyframes beat {
+    0%, 100% { transform: scale(1); } 12% { transform: scale(1.08); } 24% { transform: scale(1); }
+    36% { transform: scale(1.05); } 48% { transform: scale(1); }
+  }
+  .breathe { transform-origin: 300px 348px; animation: breathe 4.2s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  .wag { transform-origin: 352px 436px; animation: wag 3.6s ease-in-out infinite; }
+  @keyframes wag { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-5deg); } }
+  .drift { animation: drift 5s ease-in-out infinite; }
+  @keyframes drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  @media (prefers-reduced-motion: reduce) { .pulse, .breathe, .wag, .drift { animation: none; } }
+
+  aside { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); padding: 18px 20px; }
+  .card .kicker { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  .card h2 { font-size: 24px; font-weight: 500; margin: 0 0 2px; letter-spacing: -0.01em; }
+  .card .organ-line { font-style: italic; color: var(--ink-2); margin: 0 0 12px; }
+  .card p { margin: 0 0 10px; font-size: 15px; }
+  .card h3 { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin: 14px 0 6px; font-weight: 500; }
+  .card ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); }
+  .card li { margin: 0 0 4px; }
+  .comp { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); }
+
+  .index { padding: 10px 8px; }
+  .index button {
+    all: unset; display: grid; grid-template-columns: 24px 1fr auto; align-items: baseline; gap: 8px;
+    width: 100%; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; color: var(--ink);
+  }
+  .index button:hover, .index button.active { background: var(--accent-soft); }
+  .index button .n { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--accent); }
+  .index button .o { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--ink-3); }
+  .index button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  footer { max-width: 1240px; margin: 0 auto; padding: 0 16px 40px; color: var(--ink-3); font-size: 13px; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>smine, <em>drawn as a monkey</em></h1>
+  <div class="plate">Plate II · one component per organ · click an organ or an index row</div>
+</header>
+
+<main>
+  <div class="figure">
+    <svg viewBox="0 0 760 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A cute monkey marionette looking at its tail; its organs are the smine components">
+
+      <!-- 18 · Transcript trail: the tail (behind the body) -->
+      <g class="part" data-id="transcripts">
+        <g class="wag">
+          <path class="organ fur" d="M352 436 C 420 452, 470 412, 462 352 C 456 312, 412 302, 402 334" style="fill:none; stroke:var(--fur); stroke-width:15; stroke-linecap:round"/>
+          <path class="fur-edge" d="M352 436 C 420 452, 470 412, 462 352 C 456 312, 412 302, 402 334" style="stroke-width:1.4"/>
+          <path class="hit" d="M352 436 C 420 452, 470 412, 462 352 C 456 312, 412 302, 402 334" style="stroke:transparent; stroke-width:24; fill:none"/>
+        </g>
+        <path class="leader" d="M 466 380 L 560 480 L 580 480"/>
+        <circle class="leader-dot" cx="466" cy="380" r="2"/>
+        <text class="label" x="586" y="483"><tspan class="num">18</tspan> Transcript trail <tspan class="organ-name">· tail</tspan></text>
+      </g>
+
+      <!-- the monkey (drawing only) -->
+      <circle class="fur" cx="232" cy="205" r="26"/>
+      <circle class="fur" cx="368" cy="205" r="26"/>
+      <circle class="muzzle" cx="232" cy="205" r="13" style="stroke-width:1"/>
+      <circle class="muzzle" cx="368" cy="205" r="13" style="stroke-width:1"/>
+      <circle class="fur" cx="300" cy="215" r="70"/>
+      <path class="fur-edge" d="M288 150 C 290 138, 298 136, 300 146 M300 146 C 302 134, 312 134, 312 146" style="stroke-width:1.5"/>
+      <rect class="fur" x="288" y="288" width="24" height="16"/>
+      <rect class="fur" x="238" y="298" width="124" height="156" rx="52"/>
+      <path class="fur-line" d="M254 324 L208 388 L196 446"/>
+      <path class="fur-line" d="M346 324 L392 388 L404 446"/>
+      <path class="fur-line" d="M272 446 L266 528 L262 592"/>
+      <path class="fur-line" d="M328 446 L334 528 L338 592"/>
+      <path class="fur-edge" d="M243 332 L197 394 M265 316 L219 382 M197 394 L184 448 M219 382 L208 440"/>
+      <path class="fur-edge" d="M357 332 L403 394 M335 316 L381 382 M403 394 L416 448 M381 382 L392 440"/>
+      <path class="fur-edge" d="M259 448 L253 530 M285 448 L279 530 M253 530 L249 592 M279 530 L275 592"/>
+      <path class="fur-edge" d="M341 448 L347 530 M315 448 L321 530 M347 530 L351 592 M321 530 L325 592"/>
+      <!-- face patch -->
+      <ellipse class="muzzle" cx="300" cy="238" rx="46" ry="34"/>
+      <ellipse class="muzzle" cx="279" cy="222" rx="22" ry="20" style="stroke:none"/>
+      <ellipse class="muzzle" cx="321" cy="222" rx="22" ry="20" style="stroke:none"/>
+      <path class="muzzle" d="M257 222 C 262 200, 296 200, 300 214 C 304 200, 338 200, 343 222" style="stroke-width:1.2; fill:none"/>
+      <ellipse class="muzzle" cx="300" cy="396" rx="38" ry="36"/>
+
+      <!-- 11 · Permission gate: the immune system, drawn as the bloodstream -->
+      <g class="part" data-id="gate">
+        <path class="vessel" d="M284 352 C 296 330, 300 310, 300 296 C 300 280, 300 264, 300 250"/>
+        <path class="vessel" d="M284 352 C 272 346, 262 336, 254 324 C 240 342, 224 366, 208 388 C 204 410, 200 428, 196 446"/>
+        <path class="vessel" d="M284 352 C 300 346, 326 338, 346 324 C 360 342, 376 366, 392 388 C 396 410, 400 428, 404 446"/>
+        <path class="vessel" d="M284 352 C 280 380, 276 410, 272 446 C 270 474, 268 500, 266 528 C 264 550, 263 572, 262 592"/>
+        <path class="vessel" d="M284 352 C 300 380, 316 410, 328 446 C 330 474, 332 500, 334 528 C 336 550, 337 572, 338 592"/>
+        <path class="vessel" d="M300 250 C 286 240, 276 228, 272 216 M300 250 C 314 240, 324 228, 328 216"/>
+        <path class="hit" d="M284 352 C 272 346, 262 336, 254 324 C 240 342, 224 366, 208 388 C 204 410, 200 428, 196 446" style="stroke:transparent; stroke-width:10; fill:none"/>
+        <path class="hit" d="M284 352 C 300 346, 326 338, 346 324 C 360 342, 376 366, 392 388 C 396 410, 400 428, 404 446" style="stroke:transparent; stroke-width:10; fill:none"/>
+        <path class="leader" d="M 206 400 L 150 530 L 128 530"/>
+        <circle class="leader-dot" cx="206" cy="400" r="2"/>
+        <text class="label" x="20" y="533"><tspan class="num">11</tspan> Permission gate <tspan class="organ-name">· immune system</tspan></text>
+      </g>
+
+      <!-- 12 · Session hooks: the nervous system -->
+      <g class="part" data-id="hooks">
+        <path class="nerve" d="M300 318 C 280 318, 262 320, 254 324 C 236 348, 220 370, 208 388 C 202 410, 198 430, 192 456"/>
+        <path class="nerve" d="M300 318 C 320 318, 338 320, 346 324 C 364 348, 380 370, 392 388 C 398 410, 402 430, 408 456"/>
+        <path class="nerve" d="M300 446 C 288 446, 278 446, 272 446 C 268 474, 266 500, 266 528 C 264 552, 263 580, 262 604"/>
+        <path class="nerve" d="M300 446 C 312 446, 322 446, 328 446 C 332 474, 334 500, 334 528 C 336 552, 337 580, 338 604"/>
+        <path class="nerve" d="M300 300 C 300 280, 300 262, 300 246 C 290 234, 284 226, 280 222 M300 246 C 310 234, 316 226, 320 222"/>
+        <path class="nerve" d="M300 372 C 290 366, 284 360, 280 354"/>
+        <path class="hit" d="M300 318 C 280 318, 262 320, 254 324 C 236 348, 220 370, 208 388 C 202 410, 198 430, 192 456" style="stroke:transparent; stroke-width:8; fill:none"/>
+        <path class="hit" d="M300 318 C 320 318, 338 320, 346 324 C 364 348, 380 370, 392 388 C 398 410, 402 430, 408 456" style="stroke:transparent; stroke-width:8; fill:none"/>
+        <path class="leader" d="M 394 400 L 560 400 L 580 400"/>
+        <circle class="leader-dot" cx="394" cy="400" r="2"/>
+        <text class="label" x="586" y="403"><tspan class="num">12</tspan> Session hooks <tspan class="organ-name">· nervous system</tspan></text>
+      </g>
+
+      <!-- 13 · Context system: the spine -->
+      <g class="part" data-id="context">
+        <path class="spine" d="M300 302 L300 448"/>
+        <g class="vert">
+          <line x1="293" y1="316" x2="307" y2="316"/><line x1="293" y1="334" x2="307" y2="334"/>
+          <line x1="293" y1="352" x2="307" y2="352"/><line x1="293" y1="370" x2="307" y2="370"/>
+          <line x1="293" y1="388" x2="307" y2="388"/><line x1="293" y1="406" x2="307" y2="406"/>
+          <line x1="293" y1="424" x2="307" y2="424"/><line x1="293" y1="442" x2="307" y2="442"/>
+        </g>
+        <rect class="hit" x="290" y="302" width="20" height="146"/>
+        <path class="leader" d="M 300 440 L 300 460 L 560 440 L 580 440"/>
+        <circle class="leader-dot" cx="300" cy="440" r="2"/>
+        <text class="label" x="586" y="443"><tspan class="num">13</tspan> Context system <tspan class="organ-name">· spine</tspan></text>
+      </g>
+
+      <!-- 9 · The model: the lungs -->
+      <g class="part" data-id="model">
+        <g class="breathe">
+          <path class="organ ghost" d="M290 320 C 268 320, 254 344, 258 376 C 260 390, 274 396, 286 386 C 292 380, 292 334, 290 320 Z"/>
+          <path class="organ ghost" d="M310 320 C 332 320, 346 344, 342 376 C 340 390, 326 396, 314 386 C 308 380, 308 334, 310 320 Z"/>
+        </g>
+        <path class="leader" d="M 340 336 L 560 330 L 580 330"/>
+        <circle class="leader-dot" cx="340" cy="336" r="2"/>
+        <text class="label" x="586" y="333"><tspan class="num">9</tspan> The model <tspan class="organ-name">· lungs</tspan></text>
+      </g>
+
+      <!-- 10 · heartbeat: the heart -->
+      <g class="part" data-id="heartbeat">
+        <g class="pulse">
+          <path class="organ" d="M280 372 C 263 361, 256 348, 263 341 C 268 335, 278 337, 280 344 C 282 337, 292 335, 297 341 C 304 348, 297 361, 280 372 Z"/>
+        </g>
+        <path class="leader" d="M 262 352 L 150 352 L 128 352"/>
+        <circle class="leader-dot" cx="262" cy="352" r="2"/>
+        <text class="label" x="20" y="355"><tspan class="num">10</tspan> heartbeat <tspan class="organ-name">· heart</tspan></text>
+      </g>
+
+      <!-- 14 · ccusage, smine-budget: the belly -->
+      <g class="part" data-id="usage">
+        <path class="organ ghost" d="M300 384 C 322 380, 336 394, 331 412 C 327 426, 313 432, 300 426 C 290 422, 286 408, 289 396 C 291 390, 295 386, 300 384 Z"/>
+        <path class="leader" d="M 288 408 L 150 408 L 128 408"/>
+        <circle class="leader-dot" cx="288" cy="408" r="2"/>
+        <text class="label" x="20" y="411"><tspan class="num">14</tspan> ccusage, smine-budget <tspan class="organ-name">· metabolism</tspan></text>
+      </g>
+
+      <!-- 5 · Skills: the brain -->
+      <g class="part" data-id="skills">
+        <path class="organ" d="M262 190 C 258 170, 274 158, 290 162 C 296 154, 312 154, 318 162 C 336 160, 346 176, 338 192 C 342 200, 332 206, 318 202 C 310 206, 290 206, 282 202 C 268 206, 258 200, 262 190 Z"/>
+        <path class="leader" d="M 340 178 L 560 176 L 580 176"/>
+        <circle class="leader-dot" cx="340" cy="178" r="2"/>
+        <text class="label" x="586" y="179"><tspan class="num">5</tspan> Skills <tspan class="organ-name">· brain</tspan></text>
+      </g>
+
+      <!-- 6 · Mining pipeline: the dream -->
+      <g class="part" data-id="mining">
+        <g class="drift">
+          <circle class="organ ghost" cx="236" cy="150" r="3"/>
+          <circle class="organ ghost" cx="222" cy="136" r="4.5"/>
+          <path class="organ" d="M196 124 C 180 124, 172 110, 184 100 C 184 86, 204 80, 214 90 C 220 76, 244 78, 246 94 C 258 92, 266 106, 258 116 C 262 126, 250 132, 240 126 C 230 134, 210 134, 196 124 Z"/>
+        </g>
+        <path class="leader" d="M 184 112 L 150 140 L 128 140"/>
+        <circle class="leader-dot" cx="184" cy="112" r="2"/>
+        <text class="label" x="20" y="143"><tspan class="num">6</tspan> Mining pipeline <tspan class="organ-name">· dream</tspan></text>
+      </g>
+
+      <!-- 4 · Routines: the sleep cycle -->
+      <g class="part" data-id="routines">
+        <path class="organ" d="M452 92 C 436 92, 424 106, 426 122 C 428 138, 444 148, 460 144 C 448 140, 440 128, 442 114 C 444 102, 450 96, 452 92 Z"/>
+        <path class="leader" d="M 462 122 L 560 130 L 580 130"/>
+        <circle class="leader-dot" cx="462" cy="122" r="2"/>
+        <text class="label" x="586" y="133"><tspan class="num">4</tspan> Routines <tspan class="organ-name">· body clock</tspan></text>
+      </g>
+
+      <!-- 7 · peek: the eyes, looking at the tail -->
+      <g class="part" data-id="peek">
+        <circle class="eye-white" cx="280" cy="224" r="11"/>
+        <circle class="eye-white" cx="320" cy="224" r="11"/>
+        <circle class="pupil" cx="284.5" cy="227.5" r="6"/>
+        <circle class="pupil" cx="324.5" cy="227.5" r="6"/>
+        <circle class="shine" cx="287" cy="224.5" r="2"/>
+        <circle class="shine" cx="327" cy="224.5" r="2"/>
+        <path class="leader" d="M 332 222 L 560 224 L 580 224"/>
+        <circle class="leader-dot" cx="332" cy="222" r="2"/>
+        <text class="label" x="586" y="227"><tspan class="num">7</tspan> peek <tspan class="organ-name">· eyes</tspan></text>
+      </g>
+
+      <!-- 8 · Session helpers: the mouth -->
+      <g class="part" data-id="helpers">
+        <circle cx="295" cy="243" r="1.6" fill="var(--ink)"/><circle cx="305" cy="243" r="1.6" fill="var(--ink)"/>
+        <path class="organ ghost" d="M284 254 Q 300 268, 316 254" style="stroke:var(--ink); stroke-width:1.4"/>
+        <rect class="hit" x="280" y="246" width="40" height="22"/>
+        <path class="leader" d="M 318 258 L 560 270 L 580 270"/>
+        <circle class="leader-dot" cx="318" cy="258" r="2"/>
+        <text class="label" x="586" y="273"><tspan class="num">8</tspan> Session helpers <tspan class="organ-name">· mouth</tspan></text>
+      </g>
+
+      <!-- 15 · Sessions and subagents: the limbs -->
+      <g class="part" data-id="sessions">
+        <circle class="joint" cx="254" cy="324" r="6"/><circle class="joint" cx="346" cy="324" r="6"/>
+        <circle class="joint" cx="208" cy="388" r="6"/><circle class="joint" cx="392" cy="388" r="6"/>
+        <circle class="joint" cx="272" cy="446" r="6"/><circle class="joint" cx="328" cy="446" r="6"/>
+        <circle class="joint" cx="266" cy="528" r="6"/><circle class="joint" cx="334" cy="528" r="6"/>
+        <path class="hit" d="M254 324 L208 388 L196 446" style="stroke:transparent; stroke-width:24; fill:none"/>
+        <path class="hit" d="M346 324 L392 388 L404 446" style="stroke:transparent; stroke-width:24; fill:none"/>
+        <path class="hit" d="M272 446 L266 528 L262 592" style="stroke:transparent; stroke-width:24; fill:none"/>
+        <path class="hit" d="M328 446 L334 528 L338 592" style="stroke:transparent; stroke-width:24; fill:none"/>
+        <path class="leader" d="M 214 380 L 150 470 L 128 470"/>
+        <circle class="leader-dot" cx="214" cy="380" r="2"/>
+        <text class="label" x="20" y="473"><tspan class="num">15</tspan> Sessions, subagents <tspan class="organ-name">· limbs</tspan></text>
+      </g>
+
+      <!-- 16 · Session worktrees: mittens and boots -->
+      <g class="part" data-id="worktrees">
+        <circle class="organ fur" cx="190" cy="458" r="17"/>
+        <circle class="organ fur" cx="410" cy="458" r="17"/>
+        <path class="organ fur" d="M240 596 C 236 612, 246 622, 266 622 C 286 622, 294 612, 288 596 Z"/>
+        <path class="organ fur" d="M360 596 C 364 612, 354 622, 334 622 C 314 622, 306 612, 312 596 Z"/>
+        <path class="leader" d="M 288 612 L 150 612 L 128 612"/>
+        <circle class="leader-dot" cx="288" cy="612" r="2"/>
+        <text class="label" x="20" y="615"><tspan class="num">16</tspan> Session worktrees <tspan class="organ-name">· mittens, boots</tspan></text>
+      </g>
+
+      <!-- 17 · agentwt: the joints of the worktrees -->
+      <g class="part" data-id="agentwt">
+        <circle class="joint" cx="196" cy="446" r="5"/><circle class="joint" cx="404" cy="446" r="5"/>
+        <circle class="joint" cx="262" cy="592" r="5"/><circle class="joint" cx="338" cy="592" r="5"/>
+        <path class="leader" d="M 408 450 L 560 530 L 580 530"/>
+        <circle class="leader-dot" cx="408" cy="450" r="2"/>
+        <text class="label" x="586" y="533"><tspan class="num">17</tspan> agentwt <tspan class="organ-name">· wrists, ankles</tspan></text>
+      </g>
+
+      <!-- 3 · Deployed configuration: the strings -->
+      <g class="part" data-id="deployed">
+        <path class="string" d="M300 96 L300 150"/>
+        <path class="string" d="M226 70 C 206 200, 192 340, 190 442"/>
+        <path class="string" d="M374 70 C 394 200, 408 340, 410 442"/>
+        <path class="string" d="M262 70 C 262 240, 266 420, 266 522"/>
+        <path class="string" d="M338 70 C 338 240, 334 420, 334 522"/>
+        <path class="hit" d="M226 70 C 206 200, 192 340, 190 442" style="stroke:transparent; stroke-width:14; fill:none"/>
+        <path class="hit" d="M374 70 C 394 200, 408 340, 410 442" style="stroke:transparent; stroke-width:14; fill:none"/>
+        <path class="leader" d="M 208 160 L 150 90 L 128 90"/>
+        <circle class="leader-dot" cx="208" cy="160" r="2"/>
+        <text class="label" x="20" y="93"><tspan class="num">3</tspan> Deployed configuration <tspan class="organ-name">· strings</tspan></text>
+      </g>
+
+      <!-- 2 · Config server: the control bar -->
+      <g class="part" data-id="configserver">
+        <rect class="organ" x="218" y="66" width="164" height="8" rx="4"/>
+        <rect class="organ" x="296" y="40" width="8" height="58" rx="4"/>
+        <circle class="joint" cx="226" cy="70" r="3"/><circle class="joint" cx="262" cy="70" r="3"/>
+        <circle class="joint" cx="338" cy="70" r="3"/><circle class="joint" cx="374" cy="70" r="3"/>
+        <path class="leader" d="M 382 70 L 560 80 L 580 80"/>
+        <circle class="leader-dot" cx="382" cy="70" r="2"/>
+        <text class="label" x="586" y="83"><tspan class="num">2</tspan> Config server <tspan class="organ-name">· control bar</tspan></text>
+      </g>
+
+      <!-- 1 · Operator: the puppet master's hand -->
+      <g class="part" data-id="operator">
+        <path class="organ" d="M276 14 C 276 6, 288 4, 292 12 L 292 30 C 292 36, 300 36, 300 30 L 300 10 C 300 2, 312 2, 312 10 L 312 30 C 312 36, 320 36, 320 30 L 320 16 C 320 8, 332 8, 332 16 L 332 40 C 332 54, 318 60, 300 60 C 282 60, 272 50, 272 40 Z"/>
+        <path class="leader" d="M 272 36 L 150 36 L 128 36"/>
+        <circle class="leader-dot" cx="272" cy="36" r="2"/>
+        <text class="label" x="20" y="39"><tspan class="num">1</tspan> Operator <tspan class="organ-name">· puppet master</tspan></text>
+      </g>
+
+      <text class="label" x="20" y="676" style="fill: var(--ink-3)">Fig. 2 — the monkey marionette, looking at its tail. Strings are what a session is given; nerves are the hooks that carry every event to the heart; the tail is what trails behind every session.</text>
+    </svg>
+  </div>
+
+  <aside>
+    <div class="card" id="detail" aria-live="polite"></div>
+    <div class="card index" id="index" role="list"></div>
+  </aside>
+</main>
+
+<footer>Component summaries and failure modes are the catalog's own lines (internal/components); the organ reading is the README's puppet note made visible.</footer>
+
+<script>
+const PARTS = [
+  {
+    id: "operator", n: 1, name: "Operator", organ: "the puppet master",
+    comp: "you",
+    why: "Every string ends in this hand. Nothing lands on main, nothing is voted on, nothing is trusted that the operator did not pick.",
+    does: "Reads the config server, says yes or no on the Proposals page, approves plans at their gates, sends #allow, #set and #add to the gate.",
+    brings: ["the only authority: approvals are chat messages the user sent, never a tool result or a hook", "picks nightly change commits onto main one by one", "holds the control bar"],
+    without: ["the marionette hangs limp: the nightly still dreams and proposes, but nothing is ever picked"]
+  },
+  {
+    id: "configserver", n: 2, name: "Config server", organ: "the control bar",
+    comp: "config-server · fixed, always installed",
+    why: "The cross bar is what the master actually holds. Every string attaches to it, and every page the operator looks at is served from it.",
+    does: "The web UI and the smine-rules tool, always on.",
+    brings: ["builds the config server and the rules tool into bin/configserver and ~/go/bin/smine-rules", "writes the access credential and prints its token once", "macOS: LaunchAgent com.smine.configserver on the configured port"],
+    without: ["not an option: the one fixed component"]
+  },
+  {
+    id: "deployed", n: 3, name: "Deployed configuration", organ: "the strings",
+    comp: "config-server sync · global-instructions · settings template",
+    why: "What a session is given before it moves: the strings run from the bar into every limb. Pull one and the limb moves the way the operator set it.",
+    does: "Everything the config server writes into ~/.claude for a session to find.",
+    brings: ["the base keys of ~/.claude/settings.json where absent — present values stay yours", "~/.claude/AGENTS.md from the checkout's global instruction file", "the hook wiring, the permission template, the deployed skills and the global context pack"],
+    without: ["cut strings: the limb hangs on whatever ~/.claude holds already, stock Claude Code, your own files untouched"]
+  },
+  {
+    id: "routines", n: 4, name: "Routines", organ: "the body clock",
+    comp: "routines · macOS, Windows",
+    why: "Not an organ, a rhythm. launchd is the clock: at night it sends the monkey to sleep and the dream runs, every hour it ticks the budget, and the bootstrap is a first wake.",
+    does: "Scheduled unattended runs.",
+    brings: ["builds the routine runner into ~/go/bin/smine-routine", "renders routines/<name>/*.plist once — an existing plist stays yours; launchd on macOS, Task Scheduler on Windows"],
+    without: ["no clock, no sleep: the nightly dream never runs", "every loaded routine job is suspended — turning Routines back on resumes it", "no Routines and Backlog pages", "no Usage page and no Overview cost tile"]
+  },
+  {
+    id: "skills", n: 5, name: "Skills", organ: "the brain",
+    comp: "skills",
+    why: "Procedural thinking: planning, implementing, reviewing, mining are programs compiled from each skill's model file with roles, routes and gates, and a Z3 model you can ask questions of. The brain acts on what the spine holds.",
+    does: "The repo's skills as slash commands in Claude Code and Codex.",
+    brings: ["renders every selected skill into ~/.claude/skills/<leaf> and ~/.codex/skills/<leaf>, marked .smine-deployed", "copies the agent definitions of the selected skills into ~/.claude/agents", "smoke, eval and A/B tests per skill"],
+    without: ["no smine slash command in any session", "every folder marked .smine-deployed under ~/.claude/skills and ~/.codex/skills moves to the trash"]
+  },
+  {
+    id: "mining", n: 6, name: "Mining pipeline", organ: "the dream",
+    comp: "mining · requires peek, context",
+    why: "What the brain does at night. It replays the day's trail, every denial, every 'no, not like that', every rule ignored while in context, and rewrites what brain and spine hold: one branch, one commit per fix, nothing landed without the hand.",
+    does: "Session retrospectives and proposals.",
+    brings: ["the smine pipeline skills (every smine-* skill but smine-help) and the four skillroutine-* skills join the skill deploy", "the routine smine-nightly loads at config server start when Routines is on, unless you suspended it", "a Proposals page to say yes or no"],
+    without: ["the monkey sleeps without dreaming: no retrospectives, no proposals, no nightly change commits"]
+  },
+  {
+    id: "peek", n: 7, name: "peek", organ: "the eyes",
+    comp: "peek",
+    why: "The monkey sees itself through peek: conversation, plan, diff, telemetry. It is looking at its tail, the trail of what it did, which is also what the dream replays at night.",
+    does: "Session inspection and telemetry.",
+    brings: ["installs peek-mcp to ~/go/bin/peek-mcp and registers it as an MCP server", "sets the OTEL telemetry env keys so sessions export their telemetry to peek"],
+    without: ["the peek, overlap and watch skills are not deployed", "the Mining pipeline cannot be selected", "no Peek link in the nav", "session columns show no session data", "eval runs record no telemetry"]
+  },
+  {
+    id: "helpers", n: 8, name: "Session helpers", organ: "the mouth",
+    comp: "session-helpers",
+    why: "What the monkey says about itself: the session title it speaks into the sidebar, the sound on a finished turn, the answer to --help.",
+    does: "Session titles, skill help, sounds.",
+    brings: ["the hook binaries sessiontitle, skillhelp and playsound in ~/.claude/hooks/bin", "their hook groups: Notification, Stop, SessionStart, PreToolUse, PostToolUse, UserPromptSubmit"],
+    without: ["session titles stay whatever Claude Code generates", "/<skill> --help is not answered", "no sound on a notification or a finished turn", "the smine-help skill is not deployed"]
+  },
+  {
+    id: "model", n: 9, name: "The model", organ: "the lungs",
+    comp: "not a component: Claude Code and the model behind it",
+    why: "Prompt in, tokens out, every turn a breath. Nothing on this plate lives without it, and every breath burns tokens the metabolism counts.",
+    does: "Runs every session, subagent and headless cell.",
+    brings: ["the session model, the subagent models heartbeat allows", "claude -p cells for the routines and the evals, fed by the headless token"],
+    without: ["nothing breathes"]
+  },
+  {
+    id: "heartbeat", n: 10, name: "heartbeat", organ: "the heart",
+    comp: "heartbeat · macOS, Windows · requires session-hooks",
+    why: "One beat per hook event, call after call. The pulse is how anyone, operator or orchestrator, knows whether a session is running, waiting, blocked, idle, ended or died. A heart attack stops a subagent on a forbidden model.",
+    does: "Fleet state, orchestration, runtime checks.",
+    brings: ["the Rust daemon smine-heartbeat as LaunchAgent com.smine.heartbeat (macOS) or logon task \\smine\\com.smine.heartbeat (Windows)", "its HTTP hook feed: every hook event, and HEARTBEAT_ADDR in settings", "fleets, member letters, merge branches, collision scans via agentwt"],
+    without: ["sessions keep working: without a pulse nobody can tell which limb is alive, waiting or dead", "the join, done, runtime, fleet and heartbeat-demo skills are not deployed", "no Fleet and Runtime tabs", "skill runs are not checked while they run"]
+  },
+  {
+    id: "gate", n: 11, name: "Permission gate", organ: "the immune system",
+    comp: "gate · requires session-hooks · smine-permissions",
+    why: "Self or not, on every call, without asking. Closed world is self-recognition: an unknown call is rejected and the rejection names the rule that would have admitted it. smine-permissions, mining denials into allow rules, is acquired tolerance: the body learning to accept something new as its own.",
+    does: "Closed-world permissions without prompts.",
+    brings: ["the hook binaries toolpolicy and skillinvokegate", "the permission template and the toolpolicy section of ~/.claude/hooks/config.json (the gate.* settings)", "plan permission freezing, #allow / #set / #add self-service", "the denial ledger the dream reads"],
+    without: ["Claude Code prompts for every permission natively", "no frozen plan permissions and no toolpolicy allow self-service from inside a session", "any session may invoke any skill: no skill-invoke gate", "Context system, and with it the Mining pipeline, cannot be selected", "the heartbeat-demo and smine-help skills are not deployed"]
+  },
+  {
+    id: "hooks", n: 12, name: "Session hooks", organ: "the nervous system",
+    comp: "session-hooks",
+    why: "Every event in any limb travels the nerves: to the heart as a beat, to the gate as a reflex, along the spine as the context hooks. Cut them and the body is numb: it still moves, but nothing in it is felt.",
+    does: "The master switch for everything that intercepts a session.",
+    brings: ["the hooks config ~/.claude/hooks/config.json, rendered from every selected hook component's settings", "the master switch of the six hook components: Skill environment, Context system, Permission gate, Session worktrees, Session helpers and heartbeat", "SessionStart, CwdChanged, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SubagentStart, Notification, SessionEnd"],
+    without: ["none of the six hook components can be selected", "Claude Code runs stock: no hook of this checkout touches a session"]
+  },
+  {
+    id: "context", n: 13, name: "Context system", organ: "the spine",
+    comp: "context · requires session-hooks, gate",
+    why: "What holds the body up: doctrine. The global pack at session start, per-skill entries at invocation, ACDSL rules with their red rates, and the read gate that locks a vertebra until the language guide is read.",
+    does: "Context docs injected into sessions, skills and plan mode, plus the read gate.",
+    brings: ["the hook binaries readgate, globalcontext, skillcontext, planmodecontext, acdslhook", "the global context pack rendered from the checkout's context/", "ACDSL: the machine-verified rule corpus"],
+    without: ["no context reaches a session: the global pack and the per-skill entries are not injected", "no plan-format rules on plan-mode entry and no ACDSL rules delivered with a governed file's Read", "the read gate no longer enforces the language guides before an edit", "Mining pipeline cannot be selected", "the context-create and context-bootstrap skills are not deployed"]
+  },
+  {
+    id: "usage", n: 14, name: "ccusage, smine-budget", organ: "the metabolism",
+    comp: "ccusage · the smine-budget routine",
+    why: "What it costs to keep the monkey alive. Every breath burns tokens, and the count is kept here, from peek and from ccusage, and shown on the Usage page.",
+    does: "Cost figures per session and per window.",
+    brings: ["ccusage: checks ccusage 20.0.20+ is on PATH", "the smine-budget routine records its figures beside peek's in the usage store"],
+    without: ["the Usage page loses its ccusage column and the recalculate ccusage button", "with peek off too, no Usage page and no Overview cost tile"]
+  },
+  {
+    id: "sessions", n: 15, name: "Sessions, subagents", organ: "the limbs",
+    comp: "Claude Code and Codex sessions",
+    why: "The arms do the work. A root session is a limb; its subagents are the fingers. Nerves reach every joint, so every move is a beat the heart counts.",
+    does: "Plans, diffs, commits, reviews: everything that touches a repository.",
+    brings: ["root sessions in their own worktree, fleet members with a letter", "subagents under their root, never changing its state", "headless cells for the nightly and the evals"],
+    without: ["nothing moves"]
+  },
+  {
+    id: "worktrees", n: 16, name: "Session worktrees", organ: "the mittens and boots",
+    comp: "worktrees · requires session-hooks",
+    why: "Each hand works inside its own mitten. A session never touches the main checkout; the write guard keeps the bare paw off it.",
+    does: "Every session in its own worktree.",
+    brings: ["the hook binaries worktreecreate and worktreewriteguard", "their hook groups: WorktreeCreate, SessionStart, PreToolUse"],
+    without: ["no .claude/worktrees/<name> per session — every session edits the checkout it starts in", "no write guard: a session may write into the main checkout or another session's worktree"]
+  },
+  {
+    id: "agentwt", n: 17, name: "agentwt", organ: "the wrists and ankles",
+    comp: "agentwt",
+    why: "Where the mittens come off. It judges every worktree's branch, uncommitted, merged, conflicting, merge_ready, removable, and lets a mitten go only when the work has landed.",
+    does: "Worktree status, merge order, safe removal.",
+    brings: ["the prebuilt Rust binary as ~/go/bin/smine-agentwt", "branch states and collision scans for heartbeat"],
+    without: ["the close, done, fleet, restack, smine and smine-consolidate skills are not deployed", "the Repos page shows no worktree table and offers no removal", "a review's cleanup leaves its worktrees for manual removal"]
+  },
+  {
+    id: "transcripts", n: 18, name: "Transcript trail", organ: "the tail",
+    comp: "transcripts · sessions/<repo>/<week>/<id>.json · the denial ledger",
+    why: "What drags behind every move: the transcripts, the mined session records, the ledger of denials. The eyes look at it, the dream replays it, and nothing in it is ever rewritten, only read.",
+    does: "The record of everything the body did.",
+    brings: ["one JSON record per mined session, checked by make sessions", "the transcript peek exposes: conversation, plan, diff, cost", "the tool-policy denial ledger"],
+    without: ["the dream has nothing to replay: no retrospective, no proposals"]
+  }
+];
+
+const detail = document.getElementById("detail");
+const index = document.getElementById("index");
+const groups = Array.from(document.querySelectorAll("g.part"));
+
+function render(part) {
+  const li = (xs) => xs.map(x => `<li>${x}</li>`).join("");
+  detail.innerHTML = `
+    <p class="kicker">${part.n} · ${part.organ}</p>
+    <h2>${part.name}</h2>
+    <p class="organ-line">${part.does}</p>
+    <p>${part.why}</p>
+    <h3>What it writes</h3><ul>${li(part.brings)}</ul>
+    <h3>When the organ fails</h3><ul>${li(part.without)}</ul>
+    <h3>Component</h3><p class="comp">${part.comp}</p>`;
+}
+
+function select(id) {
+  groups.forEach(g => g.classList.toggle("active", g.dataset.id === id));
+  index.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.id === id));
+  const part = PARTS.find(p => p.id === id);
+  if (part) render(part);
+  try { localStorage.setItem("anatomy.selected", id); } catch (e) {}
+}
+
+PARTS.forEach(p => {
+  const b = document.createElement("button");
+  b.dataset.id = p.id;
+  b.setAttribute("role", "listitem");
+  b.innerHTML = `<span class="n">${p.n}</span><span>${p.name}</span><span class="o">${p.organ}</span>`;
+  b.addEventListener("click", () => select(p.id));
+  index.appendChild(b);
+});
+
+groups.forEach(g => g.addEventListener("click", () => select(g.dataset.id)));
+
+let initial = "transcripts";
+try { initial = localStorage.getItem("anatomy.selected") || initial; } catch (e) {}
+if (!PARTS.some(p => p.id === initial)) initial = "transcripts";
+select(initial);
+</script>
+</body>
+</html>

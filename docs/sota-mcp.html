@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>MCP</h1>
+<p class="lede">State of the art of the Model Context Protocol (MCP) after its 2026-07-28 revision, and what the revision means for peek-mcp.</p>
+<p>Researched 2026-09-18 in session <code>4f0a68f9-1435-4150-bb9e-84567dc7db02</code> (harness-exploration-status). Source: the <a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">2026-07-28 changelog</a>.</p>
+
+<h2 class="first" id="2026-07-28-revision">2026-07-28 revision</h2>
+<p>The largest revision since launch.</p>
+<table class="doc plain">
+  <thead><tr><th>Change</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Stateless core</td><td class="wrap">No <code>initialize</code> handshake: protocol version, client capabilities and clientInfo ride per-request <code>_meta</code> keys. No sessions (<code>Mcp-Session-Id</code>); cross-call state is server-minted handles passed as ordinary tool arguments.</td></tr>
+    <tr><td>Multi Round-Trip Requests</td><td class="wrap">Replace server-initiated requests (sampling, elicitation, roots). The server returns <code>resultType: "input_required"</code> plus <code>inputRequests</code>; the client retries with responses. Every result carries <code>resultType</code> (<code>"complete"</code> default).</td></tr>
+    <tr><td><code>server/discover</code></td><td class="wrap">Mandatory; doubles as the stdio backward-compat probe.</td></tr>
+    <tr><td>Cacheable lists</td><td class="wrap"><code>ttlMs</code> + <code>cacheScope</code> on <code>tools/list</code> and the other lists. Deterministic tool order is recommended for prompt caching.</td></tr>
+    <tr><td>Extensions framework</td><td class="wrap">Formalized: reverse-DNS IDs, independent versioning. Tasks moved out of core to <code>io.modelcontextprotocol/tasks</code> (polling <code>tasks/get</code>, no blocking result). MCP Apps and Enterprise Managed Authorization are extensions.</td></tr>
+    <tr><td>HTTP only</td><td class="wrap">Header routing (<code>Mcp-Method</code>/<code>Mcp-Name</code>). <code>subscriptions/listen</code> replaces the GET stream and resource subscribe; SSE resumability is removed. OAuth 2.1/OIDC alignment; DCR is deprecated for Client ID Metadata Documents.</td></tr>
+    <tr><td>Deprecations</td><td class="wrap">12-month minimum, removable ≥ 2027-07-28: Roots, Sampling, Logging (→ stderr/OTel), the HTTP+SSE transport.</td></tr>
+    <tr><td>Governance</td><td class="wrap">Linux Foundation / Agentic AI Foundation (AAIF, Dec 2025; ~190 member orgs), SEP process, working groups, a formal feature lifecycle. The official MCP registry is still preview.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="implications-for-peek-mcp">Implications for peek-mcp</h2>
+<p>peek is the conservative subset (tools only, stdio-deployed, nothing server-initiated, no auth), so nearly every change is a no-op for it. No urgency: 2026-07-28 clients must interoperate with legacy servers, and the deprecation clocks run on features peek does not use.</p>
+<table class="doc plain">
+  <thead><tr><th>Area</th><th>Finding</th></tr></thead>
+  <tbody>
+    <tr><td>Client identity</td><td class="wrap">The one real coupling. <code>AddAfterInitialize</code> (<code>cmd/start.go:193</code>) and the session-based <code>clientNameFromRequest</code> → <code>isClaude</code> pagination switch (<code>tools/forms.go:36-59</code>) must rekey to per-request <code>_meta</code> clientInfo on the SDK bump. Alternative, more stateless in spirit: drop client sniffing for an explicit page-size tool argument.</td></tr>
+    <tr><td>SDK</td><td class="wrap"><code>mark3labs/mcp-go</code> v0.52.0 negotiates up to 2025-11-25; v1.1.0 (2026-09-15) supports 2026-07-28. v0.52→v1.x is a breaking bump around exactly the touched surfaces (hooks, session-from-context, result construction); <code>AddTool</code>/<code>ServeStdio</code>/<code>NewStreamableHTTPServer</code> are likely intact.</td></tr>
+    <tr><td>Pagination</td><td class="wrap">peek's cursor-token <code>PageStore</code> already matches the spec's blessed stateless-handle pattern; <code>resultType</code> comes free with the bumped types.</td></tr>
+    <tr><td>Nit</td><td class="wrap">A resource capability is declared but no resources are registered (<code>cmd/start.go:196-200</code>).</td></tr>
+    <tr><td>Control port</td><td class="wrap">The dashboard, SSE and OTLP ingest port is plain HTTP, not MCP: untouched by the revision.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

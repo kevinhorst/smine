@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context system · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Context system</h1>
+<p class="lede">Hooks inject the context every session must read, and the read gate denies work until the agent has read it.</p>
+<p>Settings: <a href="settings.html#context-system">Settings § Context system</a>; per-session switches: <a href="permissions.html#approvals">Permissions § Approvals</a>.</p>
+
+<h2 class="first" id="global-context-and-the-read-gate">Global context and the read gate</h2>
+<p>Three hooks inject context; the read gate makes reading it binding.</p>
+<table class="doc">
+  <thead><tr><th>Hook</th><th>Runs on</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>cmd/globalcontext</td><td class="wrap"><code>SessionStart</code>, <code>SubagentStart</code> (wired in <code>settings.json</code>)</td><td class="wrap">Injects always-read global content: what every session needs that belongs neither in <code>AGENTS.md</code> nor in a skill's <code>acdsl-context:</code> declaration.</td></tr>
+    <tr><td>cmd/skillcontext</td><td class="wrap">A skill invocation</td><td class="wrap">Injects an entry's body once per agent; a repeat invocation or an overlapping skill gets only ids, from the <code>context</code> records the hook keeps in the agent's read ledger.</td></tr>
+    <tr><td>cmd/readgate</td><td class="wrap"><code>PreToolUse</code>; its ledger fills on <code>PostToolUse</code></td><td class="wrap">Denies gated calls until the required reading is done, making the injection files binding.</td></tr>
+    <tr><td>cmd/planmodecontext</td><td class="wrap"><code>UserPromptSubmit</code> and after every tool call</td><td class="wrap">Injects the plan-format rules while in plan mode.</td></tr>
+  </tbody>
+</table>
+
+<h3>Global content</h3>
+<p><code>~/.claude/context/global/*.md</code>, then <code>&lt;cwd&gt;/&lt;context-dir&gt;/global/*.md</code> (company facts, for example); the hook is silent when both are absent or empty. Context entries with <code>Reach: always</code> are the authored source of machine-global content: <code>cmd/rules pack</code>, the install engine's context component and every context deploy render them into <code>~/.claude/context/global/always-context.md</code>.</p>
+
+<h3>Large injections</h3>
+<p>Claude Code caps hook output at 10,000 characters and passes only a 2KB preview of anything longer, so content over 9,000 bytes goes to <code>~/.claude/context-required/&lt;session&gt;/global.md</code> behind an injected pointer. The skill-context hook writes large skill context to the same dir as <code>&lt;skill&gt;[--&lt;slice&gt;]--&lt;agent&gt;.md</code>, appended per invocation.</p>
+
+<h3>The read gate</h3>
+<p>On <code>PreToolUse</code> it denies Bash, Read and Write class calls (the tool classes of the <code>toolpolicy</code> section of <code>~/.claude/hooks/config.json</code>) until the agent has read in full everything it owes; other tools pass.</p>
+<table class="doc plain">
+  <thead><tr><th>Owed</th><th>When</th></tr></thead>
+  <tbody>
+    <tr><td>Language guides</td><td class="wrap">Every guide whose glob matches a file the call touches.</td></tr>
+    <tr><td>Required reading</td><td class="wrap">Under <code>context-required/&lt;session&gt;/</code>: every agent, root or subagent, owes <code>global.md</code> plus its own injection files of the skills it invoked (a typed <code>/&lt;skill&gt;</code> prompt for the root, a Skill call for any agent).</td></tr>
+    <tr><td>Review manifests</td><td class="wrap">A review lane's manifest files.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>A denied guide stays owed</td><td class="wrap">A guide denial leaves a <code>guide</code> record in the agent's ledger: the guide is then owed on every gated call, whatever it touches, and only Reads of the agent's required readings pass until it is read in full.</td></tr>
+    <tr><td>Ledger</td><td class="wrap">Per agent under <code>~/.claude/read-gate-state/</code> (<code>internal/readledger</code>), filled on <code>PostToolUse</code> from what the harness actually returned: a Read cut short by the token cap owes the rest.</td></tr>
+    <tr><td>Chunking</td><td class="wrap">Deny and pointer Read lines are chunked to the 55 KB budget that <code>rules validate</code> (so <code>make audit</code>) enforces on every language guide and the always pack.</td></tr>
+    <tr><td>Compaction, /clear</td><td class="wrap">The next <code>SessionStart</code> drops the root's read records, pending guides and inline context records, so everything is owed again; invocations and context records with an injection file stay.</td></tr>
+  </tbody>
+</table>
+
+<h3>Plan-mode context</h3>
+<p>Plan mode is switched on in the UI; the tool-policy gate denies <code>EnterPlanMode</code>. While it is on, <code>cmd/planmodecontext</code> writes the plan-format rules of the repo's context index to <code>~/.claude/context-required/&lt;session&gt;/planmode.md</code> and injects a pointer once per plan-mode stretch; the root agent owes that file to the read gate. The first event outside plan mode removes it.</p>
+
+<h3>Configuration</h3>
+<p>Every hook reads its section of <code>~/.claude/hooks/config.json</code>, rendered by the install from the <code>context.*</code> settings (caps, budgets, banners, pointer texts, patterns): set them on the Config page's Smine tab or with <code>smine-rules settings set context.&lt;key&gt; &lt;value&gt;</code>.</p>
+<p>The context dir, <code>context.context_dir</code>, is unset by default. Unset, each hook falls back and names the setting in one line:</p>
+<table class="doc">
+  <thead><tr><th>Hook</th><th>Without a context dir</th></tr></thead>
+  <tbody>
+    <tr><td>globalcontext</td><td class="wrap">Injects only <code>~/.claude/context/global/*.md</code>, appending the line.</td></tr>
+    <tr><td>planmodecontext</td><td class="wrap">Injects nothing; answers the line in plan mode.</td></tr>
+    <tr><td>skillcontext</td><td class="wrap">Answers the line instead of a skill's context, unless <code>SKILL_CONTEXT_INDEX</code> names an index.</td></tr>
+    <tr><td>readgate</td><td class="wrap">Owes nothing, allows every call, logs the line at session start.</td></tr>
+  </tbody>
+</table>
+<p><code>SKILL_CONTEXT_INDEX</code> and <code>SKILL_CONTEXT_MAP</code> stay process environment (eval arms set them), in <code>skillcontext</code> and <code>skillinvokegate</code> alike.</p>
+
+<h3>Switching hooks off</h3>
+<p>For every session, park the hook group on the Hooks tab (<code>hooks.disabled.json</code>); the Context page's global-context toggle parks and unparks the two global-context groups. There are no env-file kill switches.</p>
+<p>For one session, touching no file, type <code>#disable &lt;word…&gt;</code>: off from the next hook event; <code>#enable</code> turns it back, <code>#reset</code> clears every switch.</p>
+<table class="doc">
+  <thead><tr><th>Word</th><th>Switches off</th></tr></thead>
+  <tbody>
+    <tr><td>inject:global, inject:skill, inject:plan, inject:acdsl, inject:env</td><td class="wrap">The injections; <code>inject:env</code> also the skillenv check of an invoked skill's required repo values.</td></tr>
+    <tr><td>rgate:global, rgate:invoked, rgate:plan, rgate:&lt;ext|guide&gt;</td><td class="wrap">What the read gate owes: <code>rgate:go</code> drops every guide covering <code>.go</code> files, <code>rgate:go_test</code> that guide alone.</td></tr>
+    <tr><td>skill:invokegate</td><td class="wrap">The skill invoke gate.</td></tr>
+    <tr><td>rgate (a bare group word)</td><td class="wrap">Every member of the group.</td></tr>
+  </tbody>
+</table>
+<p>Full grammar: <a href="permissions.html#approvals">Permissions § Approvals</a>; <code>/smine-help</code> prints the full list.</p>
+
+<h2 id="acdsl">Context Linting</h2>
+<p>ACDSL (Agentic Context Domain Specific Linter) makes repo conventions machine-verifiable; its rules live in <code>acdsl/rules.acdsl</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>Piece</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Delivery</td><td class="wrap">In a session the Read hook delivers a governed file's rules as additional context; the file on disk is never touched.</td></tr>
+    <tr><td>Projection</td><td class="wrap"><code>acdsl project -file</code> writes the same rules as a header block for consumers outside Claude; <code>make audit</code>, the pre-commit guard and <code>acdsl check</code> strip or refuse such blocks.</td></tr>
+    <tr><td>Fixtures</td><td class="wrap">44 of the 48 rules carry pass/fail fixtures, run in <code>make audit</code> and <code>make test</code>.</td></tr>
+    <tr><td>Red rates</td><td class="wrap">Every gate run logs to <code>~/.claude/acdsl/verdicts.jsonl</code>; the config server's context page shows each rule's red rate per delivery arm (delivered or gate-only).</td></tr>
+    <tr><td>Deploy</td><td class="wrap">When a context sync writes to a target repo with "sync acdsl" on, the deploy engine ships the reach-covered gate slice (rules, registry subset, policy, prebuilt <code>bin/acdsl</code> + verifier binaries); the deployed read hook activates it automatically.</td></tr>
+  </tbody>
+</table>
+<p>The gate, its commands and the loop around it: <a href="acdsl.html">Context Linting</a>. The full specification: <a href="media/acdsl-spec.pdf">acdsl-spec.pdf</a>.</p>
+</body>
+</html>

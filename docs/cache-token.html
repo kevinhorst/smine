@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt caching · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Prompt caching</h1>
+<p class="lede">How Claude's prompt cache keys a request, what the cache read and cache write token fields count, and what a cache miss costs.</p>
+<p>Verified 2026-09-04: three independent investigations (<code>/investigate</code>, run <code>wf_6d36f04f-246</code>) merged adversarially against primary sources and jq-mined local transcripts, recomputing a review-skill run whose tokens exploded. <span class="badge badge-ok">FACT</span>: primary source or reproduced. <span class="badge badge-warn">HYPOTHESIS</span>: unproven; the <a href="#runbook-measure-the-plan-window-weighting">runbook</a> measures it. Session-level numbers: <a href="token-usage.html">Token usage</a>.</p>
+
+<h2 class="first" id="method-and-sources">Method and sources</h2>
+<table class="doc plain">
+  <thead><tr><th>Source</th><th>Used for</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching">Prompt-caching docs</a></td><td class="wrap">Breakpoints, keys, TTL, invalidation table.</td></tr>
+    <tr><td>Messages API reference</td><td class="wrap"><code>usage</code> field semantics.</td></tr>
+    <tr><td><a href="https://code.claude.com/docs/en/costs">Claude Code costs</a>, <a href="https://code.claude.com/docs/en/prompt-caching">Claude Code prompt caching</a></td><td class="wrap">How plan usage draws on cache reads.</td></tr>
+    <tr><td><a href="https://platform.claude.com/docs/en/api/rate-limits">API rate limits</a></td><td class="wrap">Cache-aware ITPM (input tokens per minute).</td></tr>
+    <tr><td>Local transcripts</td><td class="wrap"><code>~/.claude/projects/**/*.jsonl</code>, mined with jq.</td></tr>
+    <tr><td>The review-skill run</td><td class="wrap"><code>~/Downloads/d3337a3f-a576-4040-a271-29ef4474e801.jsonl</code> plus its <code>subagents/</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="the-api-has-no-memory">The API has no memory</h2>
+<p>The Messages API is stateless: Anthropic keeps no session. Every call resends the whole conversation in order (tool definitions, system prompt, all messages), and the model processes all of it before generating a token. A 60-turn Claude Code session processes turn 1's content ~60 times, turn 2's ~59; uncached, each pass pays full input price.</p>
+<p>Prompt caching stores the processed state of a request's beginning, the <strong>prefix</strong>; the next request computes only the new end, the <strong>suffix</strong>.</p>
+<pre class="file-view" data-lang="text">request N:   [tools][system][msg1][msg2]...[msgK]
+             └────────── prefix ─────────┘
+request N+1: [tools][system][msg1][msg2]...[msgK][asst reply][new msg]
+             └── identical to request N, cached ──┘└─ new suffix ──┘</pre>
+
+<h2 id="how-cache-keys-are-created">How cache keys are created</h2>
+<p><span class="badge badge-ok">FACT</span> From the prompt-caching docs.</p>
+<ol class="steps">
+  <li><strong>Mark breakpoints</strong><p><code>cache_control</code> marks a breakpoint, at most 4 per request. Claude Code sets them; you never do.</p></li>
+  <li><strong>Hash the prefix</strong><p>The server hashes everything from the request's start to each breakpoint: tools, system, messages, in order, byte for byte. The hash is the cache key; it stores key → processed model state.</p></li>
+  <li><strong>Match the longest key</strong><p>The next request matches the longest stored key equal to its beginning, checking breakpoint positions backward within a ~20-position lookback window. Everything up to the match comes from cache.</p></li>
+</ol>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Matches only from the start</td><td class="wrap">A change at byte 3,000 of the system prompt breaks every key over positions ≥ 3,000, though 99% of the content is unchanged.</td></tr>
+    <tr><td>Not session-scoped</td><td class="wrap">Same starting bytes from your account hit the same entries. Observed: a new session's first call read <code>cache_read = 45,383</code> that a parallel session in the same directory (same system prompt and CLAUDE.md) wrote minutes earlier.</td></tr>
+    <tr><td>Minimum size</td><td class="wrap">512 tokens; shorter prompts are silently uncached.</td></tr>
+    <tr><td>TTL</td><td class="wrap">5 minutes on API keys; 1 hour on subscriptions (Pro/Max/Team), 5m once on usage credits.</td></tr>
+    <tr><td>Refresh</td><td class="wrap">A hit refreshes the TTL for free; an active session never expires its own cache.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="the-four-usage-fields">The four usage fields</h2>
+<p><span class="badge badge-ok">FACT</span> Each response's <code>usage</code> splits the request into three input buckets plus output (docs semantics, verbatim).</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Counts</th><th>Price (× base input)</th></tr></thead>
+  <tbody>
+    <tr><td>cache_read_input_tokens</td><td class="wrap">The matched prefix, served from cache.</td><td>0.1×</td></tr>
+    <tr><td>cache_creation_input_tokens</td><td class="wrap">Processed fresh and written to cache, up to the last breakpoint.</td><td class="wrap">1.25× (5m TTL) / 2× (1h TTL)</td></tr>
+    <tr><td>input_tokens</td><td class="wrap">Leftover after the last breakpoint: fresh, uncached.</td><td>1×</td></tr>
+    <tr><td>output_tokens</td><td class="wrap">Generated tokens; thinking counts as output.</td><td>5×</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Trap</span>
+  <p><code>input_tokens</code> is not the prompt size. Full context per call: <code>context = input_tokens + cache_creation_input_tokens + cache_read_input_tokens</code>.</p>
+</div>
+<h3>Why input_tokens is about 2 in Claude Code</h3>
+<p>Claude Code puts a breakpoint at essentially every request's end, so the whole conversation lands in the two cache buckets; ~2 tokens of structural wrapper remain. <span class="badge badge-ok">FACT</span> <code>input_tokens ≤ 2</code> on all ~470 sampled Claude Code calls.</p>
+<p>A raw API call without a breakpoint at the end (no <code>cache_control</code>) reports the whole prompt as <code>input_tokens</code>, both cache fields 0. In Claude Code the new suffix (new message, previous assistant reply, new tool results) bills once as <code>cache_creation</code>, then as <code>cache_read</code> on every later call.</p>
+
+<h2 id="worked-example-cache-hits">Worked example: cache hits</h2>
+<p>A fresh Claude Code session; system prompt, CLAUDE.md and tool definitions total ~5,000 tokens.</p>
+<ol class="steps">
+  <li><strong>Call 1: a 100-token question</strong><p>Request <code>[5,000 system/tools][100 user]</code>, cold, breakpoint at the end. Stores a 5,100-token key over system, tools and question.</p><pre class="file-view" data-lang="text">usage: input=2, cache_creation=5,100, cache_read=0, output=300</pre></li>
+  <li><strong>Call 2: a tool runs</strong><p>Resent with the 300-token assistant reply (the tool call) and a 400-token tool result appended. Call 1's key matches: 5,100 served at 0.1×, the new 700 processed fresh, a new key covers 5,800.</p><pre class="file-view" data-lang="text">usage: input=2, cache_read=5,100, cache_creation=700, output=250</pre></li>
+  <li><strong>Call 3: the next tool result, 1,000 tokens</strong><pre class="file-view" data-lang="text">cache_read=5,800, cache_creation=1,250 (prev output 250 + result 1,000), input=2</pre></li>
+</ol>
+<table class="doc plain">
+  <thead><tr><th>Claim</th><th>Evidence</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><code>cache_read(N+1) = cache_read(N) + cache_creation(N)</code></td><td class="wrap">Exact on 268/285, 51/52, 129/130 and 32/32 consecutive calls across four transcripts.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+    <tr><td><code>session cache_read total ≈ Σ over calls (context size at that call)</code></td><td class="wrap">Review-skill run: Σ cache_read 60.84M vs Σ per-call context 63.5M, a 95.7% match.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+  </tbody>
+</table>
+<p>Each token is written once, on its first turn, and read on every later call: at 200k context every call, even "say ok", pays ~200k cache-read tokens.</p>
+
+<h2 id="worked-example-cache-miss">Worked example: cache miss</h2>
+<p>Same session, call 40, context 115,000 tokens. Between calls 39 and 40 you toggle a hook, changing the system prompt at about token 2,000. Every long key hashed the old bytes; the longest surviving match is a breakpoint before the change, perhaps the tools block.</p>
+<p><span class="badge badge-ok">FACT</span> Real event from a local transcript, 2026-07-14T19:04:24:</p>
+<pre class="file-view" data-lang="text">call 39: cache_read=114,903  cache_creation=1,850   input=2   ← normal
+call 40: cache_read=32,852   cache_creation=88,743  input=2   ← MISS
+call 41: cache_read=121,595  cache_creation=...     input=2   ← healed (32,852+88,743 exactly)</pre>
+<p>Call 40 read the 32,852 tokens before the change at 0.1× and re-wrote the other 88,743 (everything from the changed byte on, messages unchanged) at the 2× write rate. Misses never bill at base rate or show in <code>input_tokens</code>, which stays 2. Call 41 resumes the recurrence on the rebuilt cache.</p>
+<table class="doc plain">
+  <thead><tr><th>Claim</th><th>Evidence</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>A miss turns the turn's full-context 0.1× read into a partial or full 2× write: up to a ~20× cost spike for that turn.</td><td class="wrap">Worst observed: 791,843 tokens re-written in one call, <code>cache_read</code> down to 36,106: ≈ 1.58M input-token equivalents, dozens of normal turns.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+  </tbody>
+</table>
+<p><span class="badge badge-ok">FACT</span> The invalidation hierarchy is <code>tools → system → messages</code>: a change invalidates its level and everything after.</p>
+<table class="doc plain">
+  <thead><tr><th>Miss trigger</th><th>Level</th></tr></thead>
+  <tbody>
+    <tr><td>Tool set changes mid-session: an MCP server connects or disconnects, ToolSearch loads a tool</td><td>tools</td></tr>
+    <tr><td>Hooks toggled, settings edits, CLAUDE.md reload</td><td>system</td></tr>
+    <tr><td>Compaction rewrites the whole message list</td><td>messages: full rebuild</td></tr>
+    <tr><td>Idle past the TTL</td><td class="wrap">all: entries expired, the next call re-writes the whole context at write rates. Subscription main conversation: 1h. Subagents, workflows and compaction: 5m unless <code>subagentPromptCacheTtl</code> is set, so a slow fan-out can quietly miss.</td></tr>
+  </tbody>
+</table>
+
+<h3>Switching thinking levels mid-session</h3>
+<p><span class="badge badge-ok">FACT</span> Per the docs' "What invalidates the cache" table (fetched 2026-09-04), the thinking configuration (mode on/off, <code>budget_tokens</code>) is rendered into the prompt. Changing it invalidates the messages-level cache, plus tools and system on models that render it ahead of them. Messages are almost all of a long session's context: treat a mid-session thinking or effort change as a near-full-context 2×-rate rebuild on the next call.</p>
+<p>Same for the speed setting (system and message caches), <code>tool_choice</code> and image changes (message blocks).</p>
+<p><span class="badge badge-ok">FACT</span> Thinking blocks cache like other content and count as input when read back. Opus 4.5+ and Sonnet 4.6+ keep previous-turn thinking blocks by default, so a normal user message keeps the cache valid. Older Opus/Sonnet and all Haiku strip prior thinking blocks on non-tool-result user content: the bytes change, invalidating from there.</p>
+
+<h3>Switching models mid-session</h3>
+<p>The docs are silent on whether entries are model-specific. Measured: <code>claude-fable-5</code> and <code>claude-opus-4-8</code> share them, on two transcripts with mid-session <code>/model</code>-style switches (<code>8d6cc0a1</code> in the smine worktree, <code>5f9a7ba3</code> in remove-agent-worktree-bug).</p>
+<pre class="file-view" data-lang="text">fable-5:    in=2  cw=687      cr=187,489    ← last fable call, context ~188k
+--- switch ---
+opus-4-8:   in=2  cw=0        cr=162,961    ← first opus call READ 163k from
+opus-4-8:   in=2  cw=18,659   cr=162,961      cache written by fable, wrote 0
+--- switch back ---
+fable-5:    in=2  cw=23,317   cr=190,576    ← fable read opus's writes back</pre>
+<p>The read prefix holds the session's own unique messages, so only the other model can have written it: cross-model reads in both directions.</p>
+<table class="doc plain">
+  <thead><tr><th>Claim</th><th>Evidence</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>For this model pair a switch is a partial miss, not a full rebuild.</td><td class="wrap">~87–96% of the context survived; the ~13–25k rebuilt at write rates fits messages-level invalidation (stripped thinking blocks, re-rendered config in recent turns).</td><td><span class="badge badge-ok">FACT</span></td></tr>
+    <tr><td>This generalizes to other model pairs.</td><td class="wrap">Unmeasured. Across model families or tokenizers a switch may be a full-context rebuild; budget for one.</td><td><span class="badge badge-warn">HYPOTHESIS</span></td></tr>
+  </tbody>
+</table>
+<p>The full rebuild 2.4h after a switch in <code>8d6cc0a1</code> was TTL expiry, not the model change.</p>
+
+<h2 id="pricing-reference">Pricing reference</h2>
+<p><span class="badge badge-ok">FACT</span> Opus 5 prices.</p>
+<table class="doc plain">
+  <thead><tr><th>Bucket</th><th>Price per MTok</th></tr></thead>
+  <tbody>
+    <tr><td>Base input</td><td>$5</td></tr>
+    <tr><td>5m cache write</td><td>$6.25</td></tr>
+    <tr><td>1h cache write</td><td>$10</td></tr>
+    <tr><td>Cache read</td><td>$0.50</td></tr>
+    <tr><td>Output</td><td>$25</td></tr>
+  </tbody>
+</table>
+<p><span class="badge badge-ok">FACT</span> Fable/Mythos 5.1 reads cost 0.025× ($0.125), 4× cheaper than the 0.1× of non-.1 models.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">HYPOTHESIS</span>
+  <p>Staleness: cost conclusions frozen at 0.1× reads go stale on 5.1-generation models, where 1h writes clearly dominate weighted cost.</p>
+</div>
+
+<h2 id="rate-limits-vs-plan-usage-windows">Rate limits vs plan usage windows</h2>
+<p>Two systems meter cache tokens differently.</p>
+<table class="doc plain">
+  <thead><tr><th>Claim</th><th>Evidence</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>API rate limits: <code>input_tokens</code> and <code>cache_creation</code> count toward ITPM, <code>cache_read</code> does not (except Haiku 3.5). Cache-read growth is rate-limit free; a miss costs twice: 2×-rate billing and full ITPM.</td><td class="wrap">Rate-limits page, "Cache-aware ITPM".</td><td><span class="badge badge-ok">FACT</span></td></tr>
+    <tr><td>Subscription 5h and weekly windows: cache reads draw plan usage, at the cached token rate.</td><td class="wrap">Claude Code costs doc: a one-line question in a long-open session "still draws usage for the whole conversation". <code>/usage</code> flags long-context and cache-miss behavior at ≥10% of recent usage.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+    <tr><td>The formula mapping the four fields to window drain.</td><td class="wrap">Unpublished; pricing-multiplier weighting is a proxy, not documented arithmetic. The <a href="#runbook-measure-the-plan-window-weighting">runbook</a> measures it.</td><td><span class="badge badge-warn">HYPOTHESIS</span></td></tr>
+  </tbody>
+</table>
+
+<h2 id="mining-usage-from-transcripts">Mining usage from transcripts</h2>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Evidence</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Dedup by <code>message.id</code></td><td class="wrap">The JSONL repeats a response's usage on each content-block row; per-row sums inflate 1.84×–3.2×.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+    <tr><td>Take the per-id max of <code>output_tokens</code></td><td class="wrap">Subagent transcripts stream output: an id's early rows carry partial values (1 → … → 548). First-row dedup undercounted the review-skill run's subagent output 4.7×.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+    <tr><td>Ignore the <code>iterations</code> array</td><td class="wrap">Duplicates the top-level usage numbers.</td><td><span class="badge badge-ok">FACT</span></td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="bash">jq -s '[group_by(.message.id)[] | map(.message.usage) | {
+    in: .[0].input_tokens, cw: .[0].cache_creation_input_tokens,
+    cr: .[0].cache_read_input_tokens, out: (map(.output_tokens) | max)}] |
+  {calls: length, input: (map(.in)|add), cache_write: (map(.cw)|add),
+   cache_read: (map(.cr)|add), output: (map(.out)|add)}' \
+  &lt;(jq -c 'select(.message.usage != null and .message.id != null)' SESSION.jsonl)</pre>
+
+<h2 id="verdicts-on-the-review-skill-diagnosis">Verdicts on the review-skill diagnosis</h2>
+<p>The peeked diagnosis plan's claims, checked against the transcripts.</p>
+<table class="doc plain">
+  <thead><tr><th>Claim</th><th>Evidence</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Every call re-reads the full accumulated context as cache_read</td><td class="wrap">Exact recurrence identity (<a href="#worked-example-cache-hits">cache hits</a>).</td><td><span class="badge badge-ok">HOLDS</span></td></tr>
+    <tr><td>cache_read ≈ Σ(context × calls)</td><td class="wrap">Accurate to ~4–5%.</td><td><span class="badge badge-ok">HOLDS</span></td></tr>
+    <tr><td>Dedup usage by message.id</td><td class="wrap">Plus the subagent per-id max for output (<a href="#mining-usage-from-transcripts">mining</a>).</td><td><span class="badge badge-ok">HOLDS</span></td></tr>
+    <tr><td>Write-once / read-many per turn; input_tokens small</td><td class="wrap">~2 per call (<a href="#the-four-usage-fields">usage fields</a>).</td><td><span class="badge badge-ok">HOLDS</span></td></tr>
+    <tr><td>Run totals 541 calls / 60.8M read / 2.70M write / 575k output</td><td class="wrap">Reproduced exactly from the raw transcripts in <code>~/Downloads/d3337a3f-*</code>, not <code>~/.claude/projects</code>.</td><td><span class="badge badge-ok">HOLDS</span></td></tr>
+    <tr><td>"165 API calls" for the orchestrator</td><td class="wrap">Internally inconsistent; the transcripts show 80 main-session calls.</td><td><span class="badge badge-error">REFUTED</span></td></tr>
+    <tr><td>TTL framing "expiry &gt;5 min"</td><td class="wrap">1h on a subscription's main conversation; 5m for subagents and compaction (<a href="#worked-example-cache-miss">cache miss</a>).</td><td><span class="badge badge-warn">CORRECTED</span></td></tr>
+    <tr><td>"Output ruled out at &lt;1% of read volume"</td><td class="wrap">As a cost statement it compares categories priced 50× apart. Cost-weighted: ~42% reads ($30.4-equiv), ~37% writes ($27.0), ~20% output ($14.4). Pre-429, reads were 94.6% of raw tokens, ~49% cost-weighted.</td><td><span class="badge badge-error">REFUTED</span></td></tr>
+    <tr><td>"Cache-read is what exhausts the 5-hour window"</td><td class="wrap">Reads draw plan usage (FACT). Raw-volume metering (reads dominate) vs price-weighted (reads ≈ writes ≈ half) is unmeasured; the runbook settles it.</td><td><span class="badge badge-warn">DOWNGRADED to directional</span></td></tr>
+    <tr><td>Architectural root cause: a context-accumulating orchestrator plus 17 re-grounding subagents</td><td class="wrap">Holds under either weighting; attribution softens to context re-read compounding plus 2×-rate rebuilds plus output, together.</td><td><span class="badge badge-ok">HOLDS</span></td></tr>
+  </tbody>
+</table>
+<p>Also refuted: "cache hits don't count against your limit" holds only for API ITPM, not plan windows; a fresh session need not start cold (<a href="#how-cache-keys-are-created">cache keys</a>); misses never bill as base-rate <code>input_tokens</code>.</p>
+
+<h2 id="runbook-measure-the-plan-window-weighting">Runbook: measure the plan-window weighting</h2>
+<p>Does the Team-plan 5-hour window drain per raw or per price-weighted token? Each cell isolates one variable in a fresh 5-hour window: read <code>/usage</code> before and after, compute drain per token from the transcript, deduped as in <a href="#mining-usage-from-transcripts">Mining</a>.</p>
+<ol class="steps">
+  <li><strong>Cell 0: control</strong><p>Fresh window, zero activity, same wall clock as cell 1. Bounds <code>/usage</code> display drift.</p></li>
+  <li><strong>Cell 1: cache-read-heavy</strong><p>Build ~150k context (paste a large file), then loop ~30 one-liners ("say ok"): each re-reads ~150k with minimal write and output, ~5M cache_read in total. The <code>/usage</code> delta gives drain per cache_read token. Transcript:</p><pre class="file-view" data-lang="bash">ls -t ~/.claude/projects/&lt;project-dir&gt;/*.jsonl | head -1</pre></li>
+  <li><strong>Cell 2: fresh-input-heavy</strong><p>Fresh window, same volume as truly uncached input: unique content per turn so no prefix matches, or prompts under the 512-token floor. Wall clock and output matched; decision rule pre-registered below.</p></li>
+  <li><strong>Cell 3: write-heavy</strong><p>Force misses: toggle a hook (system-prompt change) several times in a large-context session, each a 2×-rate rebuild. Compare drain per write token with cell 1's per read token; pricing predicts ~20×.</p></li>
+  <li><strong>Cell 4: output-heavy</strong><p>Small stable prompt, long generations. Drain per output token; pricing predicts ~5× the input rate.</p></li>
+  <li><strong>Cell 5: TTL checks</strong><p>Subagent TTL: fan out Task subagents without <code>subagentPromptCacheTtl</code>, check each subagent transcript's <code>ephemeral_5m</code> vs <code>ephemeral_1h</code> split (docs predict 5m); repeat with <code>subagentPromptCacheTtl: "1h"</code>, confirm the flip. Main-session TTL: idle 50 min → full cache_read (1h intact); idle 70 min → full-context <code>cache_creation</code> rebuild.</p><pre class="file-view" data-lang="bash">jq -s '[.[] | select(.message.usage.cache_creation) | .message.usage.cache_creation] |
+  {m5: (map(.ephemeral_5m_input_tokens)|add), h1: (map(.ephemeral_1h_input_tokens)|add)}' \
+  &lt;(jq -c 'select(.message.usage != null)' SESSION.jsonl)</pre></li>
+</ol>
+<table class="doc plain">
+  <thead><tr><th>Cell 1 vs cell 2 outcome</th><th>Conclusion</th></tr></thead>
+  <tbody>
+    <tr><td>Drain per cache_read token ≈ drain per fresh input token</td><td class="wrap">Raw-count metering: cache-read is the window killer at volume.</td></tr>
+    <tr><td>Cell 1 ~10× cheaper per token (~40× on a 5.1 model)</td><td class="wrap">Pricing-mirror weighting: writes and output matter as much as reads.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Fold back</span>
+  <p>Re-invoke the investigation with <code>resumeFromRunId: wf_6d36f04f-246</code> to make results binding facts. The fan-out replays from cache; only the merge re-runs.</p>
+</div>
+
+<h2 id="practical-consequences">Practical consequences</h2>
+<ul>
+  <li>Context size costs on every call. Levers: short-lived conversations (file handoff, not chat plumbing), capped context growth, fewer calls.</li>
+  <li>Avoid miss triggers in big-context sessions (hook, settings or tool changes, compaction): each is a ~20×-rate rebuild consuming full ITPM.</li>
+  <li>Never compare raw token counts across categories ("output &lt;1% of reads"); weight by pricing multipliers first.</li>
+  <li>Subagent-heavy runs on a subscription: consider <code>subagentPromptCacheTtl</code>; subagents default to a 5m TTL and can miss on slow fan-outs.</li>
+  <li>Transcript mining: dedup by <code>message.id</code>, per-id max for <code>output_tokens</code>, ignore <code>iterations</code>.</li>
+</ul>
+</body>
+</html>

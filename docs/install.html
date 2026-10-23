@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Install</h1>
+<p class="lede">The extracted release archive is the install and your own git repository; every binary ships prebuilt, no Go or Rust needed.</p>
+<p>What the <a href="index.html">quick start</a> leaves out: components, ports, profiles, unattended installs, skill values, deployment, releases. Every setting: <a href="settings.html">Settings</a>; the installed server: <a href="configserver.html">Config server</a>.</p>
+
+<h2 class="first" id="macos-and-linux">macOS and Linux</h2>
+<ol class="steps">
+  <li>
+    <strong>Download</strong>
+    <p>Get <code>smine-&lt;version&gt;-darwin-arm64.tar.gz</code> (Apple silicon) or <code>-darwin-amd64</code> (Intel) from the <a href="https://github.com/kevinhorst/smine/releases/latest">latest release</a> and extract it to any folder. It unpacks as <code>smine/</code>: the source tree plus every binary prebuilt under <code>bin/</code> (<code>bin/PAYLOAD</code> carries the version).</p>
+    <p>The binaries are unsigned, and macOS marks everything it downloads as quarantined: Gatekeeper kills a quarantined unsigned binary on launch, the installer included. Clear the flag once before the first run; the installer clears it from the rest of the folder itself.</p>
+    <pre class="file-view" data-lang="bash">xattr -dr com.apple.quarantine smine</pre>
+  </li>
+  <li>
+    <strong>Run the installer</strong>
+    <p>Needs git and nothing else. It asks for a preset (Minimal, Full, Custom), the components, the skills (all, none, or a numbered list of the repo's skills to toggle) and whether to keep that skill selection. A kept selection skips the skill question next install; <code>-reset-skills</code> or the Profile page's Installer tick asks again.</p>
+    <p>It checks only what the selection needs (a headless token for Routines or the Mining pipeline), shows every step and applies after your yes through <code>bin/configserver -install</code>, which also sets up git: <code>safe.bareRepository explicit</code>, the <code>skillcue</code> merge driver and the pre-commit hook.</p>
+    <pre class="file-view" data-lang="bash">cd smine &amp;&amp; ./bin/installer</pre>
+  </li>
+  <li>
+    <strong>Keep the access token</strong>
+    <p>On macOS the server runs as LaunchAgent <code>com.smine.configserver</code> on <code>:6001</code>, logs in <code>~/Library/Logs/</code>; on Linux the installer prints the start command. The first install prints the access token once, the browser's HTTP Basic password; only its SHA-256 digest is stored.</p>
+    <p>To rotate it, run the command below. The running server follows the file; an open page reloads and asks for the new token.</p>
+    <pre class="file-view" data-lang="bash">./bin/configserver -new-credential</pre>
+  </li>
+  <li>
+    <strong>Prepare the nightly (optional)</strong>
+    <p>Routines and the Mining pipeline need one thing, a token: the installer offers the one from <code>claude setup-token</code>, or add labeled per-account tokens on the Profile page (Account tokens, <code>~/.config/claude-routine/tokens/&lt;label&gt;</code>) and pick one per routine in the Configure widget's Token setting. Operations manual: <a href="routines.html">Routines</a>.</p>
+  </li>
+</ol>
+
+<h3>Change the selection later</h3>
+<p>The selection lives in <code>~/.claude/smine/install.json</code>. Change it under Profile → Installation: Preview changes lists the steps, Apply selection stores the selection over the record and runs them.</p>
+<p>Apply keeps every setting override and skill row. Unticking a component puts its dependents in <code>suspended</code> until it is ticked again. An unchanged selection re-runs whatever is missing.</p>
+<p>Later re-deploys run from the Overview's Sync widget: settings, hooks or skills alone over the stored selection, or all of them (the whole installation apply).</p>
+
+<h3>Unattended installs</h3>
+<table class="doc">
+  <thead><tr><th>Command or flag</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>./bin/installer -components minimal -skills all -yes</td><td class="wrap">Installs without asking.</td></tr>
+    <tr><td>-preview</td><td class="wrap">Prints the steps, writes nothing.</td></tr>
+    <tr><td>-yes without -components</td><td class="wrap">Keeps the stored selection; Minimal if none.</td></tr>
+    <tr><td>-reset-skills -yes</td><td class="wrap">Only clears the kept skill selection.</td></tr>
+    <tr><td>-addr, -peek-port, -peek-control-port, -heartbeat-port</td><td class="wrap">Ports, stored as settings in <code>~/.claude/smine/install.json</code> (<a href="#multiple-macos-profiles-on-one-mac">Multiple macOS profiles</a>).</td></tr>
+  </tbody>
+</table>
+
+<h3>From source (development)</h3>
+<p><code>./install.sh</code> is the development path: it needs <code>go</code> (and <code>cargo</code> when agentwt or heartbeat is selected), runs the Go installer with <code>go run</code> and builds every binary from the checkout. The same flags apply. A checkout without <code>bin/PAYLOAD</code> is a development checkout: the apply engine and every later Sync build its binaries with <code>go build</code> there.</p>
+<pre class="file-view" data-lang="bash">./install.sh</pre>
+
+<h3>Seed from your session history</h3>
+<p>A one-shot bootstrap mines this machine's past sessions: the Welcome page's Bootstrap button, the <code>/smine-bootstrap</code> skill in a session, or <code>bin/routine bootstrap</code> (installed copy <code>smine-routine bootstrap</code>). Run it from the main checkout on <code>main</code>, with a clean tree and the smine peek entry in <code>~/.claude.json</code>.</p>
+<p>Needs <code>BOOTSTRAP_TOKEN_FILE</code>; optional <code>BOOTSTRAP_SINCE=YYYY-MM-DD</code> or <code>BOOTSTRAP_N</code>. <code>BOOTSTRAP_DRY_RUN=1</code> prints the stage commands and runs nothing. Four stages:</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Stage</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap">A headless claude cell runs <code>/smine-style</code>.</td></tr>
+    <tr><td>2</td><td class="wrap">A second cell runs <code>/smine --nightly</code>, mining stages through consolidate.</td></tr>
+    <tr><td>3</td><td class="wrap">A third cell runs <code>/smine-orchestrate bootstrap</code>.</td></tr>
+    <tr><td>4</td><td class="wrap">Context packs deploy to the registered repos.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Your repository</span>
+  <p>The install dir is not connected to the GitHub repo; to push anywhere, add your own remote: <code>git remote add origin &lt;url&gt;</code>. Updates never run git, so commit local changes before updating.</p>
+</div>
+
+<h2 id="windows">Windows</h2>
+<ol class="steps">
+  <li>
+    <strong>Run smine-setup.exe</strong>
+    <p>Download it from the <a href="https://github.com/kevinhorst/smine/releases/latest">latest release</a> and run it. The wizard lays the full source tree and prebuilt binaries into the chosen folder (default <code>%USERPROFILE%\smine</code>) and hands the rest to <code>configserver.exe -install</code>.</p>
+  </li>
+  <li>
+    <strong>Get past SmartScreen</strong>
+    <p>The setup exe is unsigned, so SmartScreen may warn on first run. Choose <strong>More info → Run anyway</strong>, or unblock it in PowerShell:</p>
+    <pre class="file-view" data-lang="powershell">Unblock-File smine-setup.exe</pre>
+  </li>
+  <li>
+    <strong>Keep the access token</strong>
+    <p>The first install shows the config server's access token once in a message box (Ctrl+C copies it); the browser asks for it as the password.</p>
+  </li>
+  <li>
+    <strong>Log off and back on once</strong>
+    <p>Or restart the config server, so the routine runtime picks up the new PATH entry: <code>%LOCALAPPDATA%\smine\bin</code> with the <code>smine-*.exe</code> binaries, <code>jq.exe</code>, <code>peek-mcp.exe</code> and the claude shim.</p>
+  </li>
+</ol>
+<p>A fresh folder becomes a standalone git repository with no remote. An existing install updates in place: commit local changes first, review the update with <code>git status</code>.</p>
+<table class="doc">
+  <thead><tr><th>Install path</th><th>Needs</th><th>Bundled or handled</th></tr></thead>
+  <tbody>
+    <tr><td>smine-setup.exe</td><td class="wrap">Git for Windows (the wizard offers winget), a Claude runtime.</td><td class="wrap">No Go, no Rust. <code>jq.exe</code>, <code>peek-mcp.exe</code>, every smine binary (<code>agentwt.exe</code> and <code>heartbeat.exe</code> included), the <code>bin\PAYLOAD</code> marker and the repo files ship in the installer.</td></tr>
+    <tr><td>From source (install.ps1)</td><td class="wrap">Git for Windows and Go, installed via winget after a consent prompt; <code>cargo</code> for agentwt and heartbeat.</td><td class="wrap">Runs the Go installer (<code>cmd/installer</code>): builds the binaries, asks for the selection, delegates to <code>configserver.exe -install</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>From source</h3>
+<p>Run <code>.\install.bat</code> from the repo root: a thin launcher running <code>install.ps1</code> under <code>-ExecutionPolicy Bypass</code>, since a PowerShell script cannot lift the default <code>Restricted</code> policy itself. <code>install.ps1</code> passes every argument unchanged to the Go installer: <code>-components</code>, <code>-skills</code>, <code>-yes</code>, <code>-preview</code>, <code>-addr</code>, <code>-peek-port</code>, <code>-peek-control-port</code>, <code>-heartbeat-port</code>.</p>
+<pre class="file-view" data-lang="powershell">.\install.bat</pre>
+
+<h3>What configserver.exe -install does</h3>
+<p>The install logic both paths share:</p>
+<ul>
+  <li>Self-elevates once (<code>Register-ScheduledTask</code> needs an elevated token); the task itself runs at logon as your plain user.</li>
+  <li>Locates Git Bash and resolves a Claude runtime.</li>
+  <li>Registers <code>%LOCALAPPDATA%\smine\bin</code> on your User PATH and copies the <code>smine-*.exe</code> binaries there.</li>
+  <li>Sets up git: <code>safe.bareRepository explicit</code>, the <code>skillcue</code> merge driver and the pre-commit hook, as on macOS.</li>
+  <li>Applies the selection (<code>install.json</code>) and registers the logon tasks: the config server, and heartbeat when selected (<code>\smine\com.smine.heartbeat</code>, log <code>%LOCALAPPDATA%\claude-routine\logs\heartbeat.log</code>).</li>
+</ul>
+
+<h3>Claude runtime</h3>
+<p>Claude Desktop or the claude CLI (native installer or npm).</p>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>A <code>claude</code> visible from Git Bash</td><td class="wrap">Wins.</td></tr>
+    <tr><td>None visible</td><td class="wrap">The installer deploys a shim at <code>%LOCALAPPDATA%\smine\bin\claude</code> that re-resolves Claude Desktop's bundled <code>claude.exe</code> per call; Desktop updates need no re-install.</td></tr>
+    <tr><td>Neither found</td><td class="wrap">A warning, not an error: the install completes; routines won't run until a runtime appears.</td></tr>
+    <tr><td>Routine token</td><td class="wrap"><code>install.ps1</code> offers the routine OAuth token once when Routines or the Mining pipeline is selected; setup.exe prints a note instead. Skipped: routines exit 78 until a token exists.</td></tr>
+  </tbody>
+</table>
+
+<h3>Shell and logs</h3>
+<p>Git Bash is the one Git for Windows supplies; no WSL. The server, the routine wrapper and the heartbeat daemon run fully detached (windowsgui subsystem): no console window, no Quick-Edit freezes.</p>
+<table class="doc">
+  <thead><tr><th>Log in %LOCALAPPDATA%\claude-routine\logs\</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>configserver.log</td><td class="wrap">The config server.</td></tr>
+    <tr><td>heartbeat.log</td><td class="wrap">The heartbeat daemon (<code>--log-file</code>).</td></tr>
+    <tr><td>&lt;routine label&gt;.out.log, &lt;routine label&gt;.err.log</td><td class="wrap">One routine.</td></tr>
+  </tbody>
+</table>
+<p>Follow a log live with <code>Get-Content &lt;log&gt; -Wait</code>.</p>
+<div class="callout">
+  <span class="badge badge-dim">Your repository</span>
+  <p>As on macOS: no connection to the GitHub repo; add your own remote with <code>git remote add origin &lt;url&gt;</code>, and commit local changes before updating.</p>
+</div>
+
+<h2 id="multiple-macos-profiles-on-one-mac">Multiple macOS profiles on one Mac</h2>
+<p>All user profiles share the machine's loopback port space, so each install needs its own four ports.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Shared ports</span>
+  <p>The second profile's config server finds the first's peek on the shared port and refuses it: the log names the foreign homes, and the session column stays disabled rather than show another user's sessions. The second heartbeat cannot bind; its sessions' hooks reach the first profile's daemon, which rejects them as a foreign claude home and marks its own hooks sensor degraded.</p>
+</div>
+<p>Install each profile with explicit ports:</p>
+<pre class="file-view" data-lang="bash">./bin/installer -addr 127.0.0.1:6002 -peek-port 4243 -peek-control-port 42443 -heartbeat-port 6102</pre>
+<table class="doc">
+  <thead><tr><th>Setting</th><th>Default</th><th>Flag</th><th>What listens</th></tr></thead>
+  <tbody>
+    <tr><td>config-server.port</td><td>6001</td><td><code>-addr</code></td><td class="wrap">The config server.</td></tr>
+    <tr><td>peek.port</td><td>4242</td><td><code>-peek-port</code></td><td class="wrap">The central peek MCP server; heartbeat's peek address follows it.</td></tr>
+    <tr><td>peek.control_port</td><td>42442</td><td><code>-peek-control-port</code></td><td class="wrap">peek's control dashboard and OTLP telemetry receiver.</td></tr>
+    <tr><td>heartbeat.port</td><td>6101</td><td><code>-heartbeat-port</code></td><td class="wrap">The heartbeat daemon.</td></tr>
+  </tbody>
+</table>
+<p>The ports are install-record settings, so plain re-runs and a Profile apply keep them. <code>peek.control_port</code> also fills <code>{{PEEK_CONTROL_PORT}}</code> in the settings template, so each profile's Claude Code exports telemetry to its own peek. <code>peek.claude_home</code> and <code>peek.codex_home</code> point the spawned peek at non-default agent homes.</p>
+
+<h2 id="the-install-record">The install record</h2>
+<p><code>~/.claude/smine/install.json</code> holds only overrides, under <code>settings</code>; every other value is the catalog default. Schema 2: an older schema is refused, never imported.</p>
+<table class="doc">
+  <thead><tr><th>Setting</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>config-server.port, peek.port, peek.control_port, heartbeat.port</td><td class="wrap">This install's ports (<code>-addr</code>, <code>-peek-port</code>, <code>-peek-control-port</code>, <code>-heartbeat-port</code>).</td></tr>
+    <tr><td>config-server.init_welcome, routines.count_tokens</td><td class="wrap">Installer flags.</td></tr>
+    <tr><td>peek.claude_home, peek.codex_home, config-server.server_path</td><td class="wrap">Optional; empty takes the default home or the installer's <code>PATH</code>.</td></tr>
+  </tbody>
+</table>
+<p>Change a setting on the config server's Smine tab or with <code>smine-rules settings set &lt;component&gt;.&lt;key&gt; &lt;value&gt;</code>. Kind, default and help per setting: <a href="settings.html">Settings</a>.</p>
+
+<h2 id="skill-values">Skill values</h2>
+<p>The record's <code>skills</code> object holds the skill rows.</p>
+<table class="doc">
+  <thead><tr><th>Row</th><th>Maps</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>skills.variables</td><td class="wrap"><code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code> → value</td><td class="wrap">Install-wide default of a repo-scoped variable, or pinned value of an install-scoped one (<a href="skillcue.html#interfaces-and-environment">Skill model § Interfaces and environment</a>).</td></tr>
+    <tr><td>skills.providers</td><td class="wrap"><code>PROVIDER_&lt;ID&gt;</code> → program</td><td class="wrap">A row per provider whose program this install overrides, e.g. <code>PROVIDER_SMINE_RULES</code>.</td></tr>
+    <tr><td>skills.defaults</td><td class="wrap">interface id → value</td><td class="wrap">Global default of a repo-scoped kind (<a href="#per-repo-values">Per-repo values</a>).</td></tr>
+  </tbody>
+</table>
+
+<h3>Install-scoped values</h3>
+<p>The skills sync fills each install-scoped capability into the skill's deployed copy; the first source with a value wins.</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Source</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap">Process environment variable named like the row</td><td class="wrap">Overrides the row for every deploy that process runs; a long-running config server keeps its launch environment.</td></tr>
+    <tr><td>2</td><td class="wrap">The record's <code>SKILL_*</code> row</td><td class="wrap">That one capability of that one skill.</td></tr>
+    <tr><td>3</td><td class="wrap"><code>PROVIDER_*</code> environment variable or row</td><td class="wrap">Moves every capability of the provider's program at once. A provider implements the capability's interface in <code>skills/interfaces.cue</code>.</td></tr>
+    <tr><td>4</td><td class="wrap">Catalog program of an installed component</td><td class="wrap"><code>smine-rules</code>, <code>smine-agentwt</code>, <code>smine-heartbeat</code>, <code>smine-routine</code>, <code>toolpolicy</code>: bare names on PATH, copied into the smine bin dir on every platform (<code>~/go/bin</code>, <code>%LOCALAPPDATA%\smine\bin</code> as <code>smine-&lt;name&gt;.exe</code> on Windows). The routine runner and bootstrap prepend that dir to the scheduler's minimal PATH; the container image sets it.</td></tr>
+  </tbody>
+</table>
+<p>The deploy asks each provider <code>&lt;program&gt; interfaces</code> once per run. A capability stays unset when the answer lacks its interface version, the program does not resolve, a path does not exist or the value breaks the value rules; the deploy log and the skill page name the cause.</p>
+<p>The skill page's Environment section edits the defaults and, in its advanced disclosure, the provider and capability overrides; it refuses a bad value. A row no skill or provider declares stays, listed as an orphan with a Forget button; <code>configserver -install</code> prints <code>orphan row kept: &lt;key&gt;</code>.</p>
+
+<h3>Repo-scoped defaults</h3>
+<p>Command and path capabilities, and <code>acdsl</code>, have no provider program and are repo-scoped. Their <code>SKILL_*</code> row is only the default for repos that set nothing on the skill's page. A multi-line command keeps its line breaks in the record.</p>
+<pre class="file-view" data-lang="bash">SKILL_FIMPLEMENT_CHECK="make audit"
+SKILL_FIMPLEMENT_BUILD="go build ./..."
+SKILL_PACKAGECOMMIT_PROJECT_STRIP="bin/acdsl"</pre>
+<p><code>bin/acdsl</code> is each <a href="acdsl.html">ACDSL</a> (Context Linting) repo's own copy, never a PATH program. A vendoring repo tracks it; a repo holding the acdsl source (<code>cmd/acdsl</code>, this checkout) gets it built by the worktree hook on worktree creation and after a base move.</p>
+
+<h2 id="per-repo-values">Per-repo values</h2>
+<p>A repo-scoped value fills at invocation, never at deploy: the deployed SKILL.md reads <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code> from the session's environment. An unset required one aborts the invocation with a sentence naming the variable, an example and the fix.</p>
+<table class="doc plain">
+  <thead><tr><th>Level</th><th>Set on</th><th>Stored in</th></tr></thead>
+  <tbody>
+    <tr><td>Repo value</td><td class="wrap">A repo chip in the skill page's Environment section (same widget on the Skills Environment tab), commands one per line.</td><td class="wrap">The <code>env</code> map of the repo's row in <code>~/.claude/smine/repos.json</code>. Nothing goes into the repository; a save needs no deploy.</td></tr>
+    <tr><td>Skill default</td><td class="wrap">The same section's default view.</td><td class="wrap"><code>skills.variables</code></td></tr>
+    <tr><td>Global default</td><td class="wrap">The Environment tab's global defaults card: one value per kind a selected skill reads (<code>test</code>, <code>build</code>, <code>check</code>, <code>lint</code>, the acdsl programs, the plans archive).</td><td class="wrap"><code>skills.defaults</code>, keyed by interface id, for every skill on every repo.</td></tr>
+  </tbody>
+</table>
+<p>Per variable the strongest set value wins: repo value, else skill default, else global default. Example: railroad-review's build and test commands are the repo's <code>SKILL_RAILROADREVIEW_BUILD</code> and <code>_TEST</code> values on its skill page.</p>
+
+<h3>The skillenv hook</h3>
+<p>The <code>skillenv</code> hook belongs to the Skill environment component, its own row under Session hooks; without that component it is off. Two modes:</p>
+<table class="doc plain">
+  <thead><tr><th>Event</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>SessionStart, CwdChanged</td><td class="wrap">Resolves the session's main checkout to its registry row and appends <code>export SKILL_…='…'</code> lines to the harness's <code>CLAUDE_ENV_FILE</code>: the resolved repo-scoped values plus the record's install-scoped <code>SKILL_</code> rows. An unregistered repo gets the defaults alone.</td></tr>
+    <tr><td>A typed <code>/&lt;skill&gt;</code> (UserPromptExpansion), the agent's Skill call (PreToolUse)</td><td class="wrap">Reads the deployed skill's <code>env.json</code>, the repo values its body reads. An unset required one blocks the command or denies the call, so the body never expands and its guard never runs. The reason names the variable, its purpose, an example, the repo's skill page link, a hint to start a new session after setting it, and the <code>#disable inject:env</code> way out. Otherwise one context line per value.</td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="text">skillenv: &lt;NAME&gt; = "&lt;value&gt;" (&lt;source&gt;)
+skillenv: &lt;NAME&gt; not set — optional, its steps are left out</pre>
+<p><code>-repos</code> names the registry, <code>-env-file</code> overrides the target file, <code>-claude-home</code> the Claude home. <code>#disable inject:env</code> turns both modes off for a session. Without the hook (a standalone skill, a bundle user, a session with <code>#disable inject:env</code>) the shell's own exports reach the skill the same way.</p>
+
+<h2 id="deployment">Deployment</h2>
+<p>Deployment runs one way: the repo is the source of truth, nothing is read in place.</p>
+<table class="doc">
+  <thead><tr><th>Source</th><th>Target</th><th>Written by</th></tr></thead>
+  <tbody>
+    <tr><td>skills/</td><td class="wrap"><code>~/.claude/skills/</code> and <code>~/.codex/skills/</code>, one dir per skill and per <a href="aliases.html">alias</a></td><td class="wrap">the skills sync</td></tr>
+    <tr><td>skills/**/agents/*.md</td><td class="wrap"><code>~/.claude/agents/</code></td><td class="wrap">the skills sync</td></tr>
+    <tr><td>install.json skills.variables</td><td class="wrap">install-scoped values in <code>~/.claude/skills/</code></td><td class="wrap">the skills sync</td></tr>
+    <tr><td>settings/claude_code/base.json + components/*.json</td><td class="wrap"><code>~/.claude/settings.json</code> and <code>~/.claude.json</code> (mcpServers)</td><td class="wrap"><code>configserver -apply</code></td></tr>
+    <tr><td>cmd/&lt;name&gt;/ (14 Go hook binaries)</td><td class="wrap"><code>~/.claude/hooks/bin/</code></td><td class="wrap"><code>configserver -apply</code></td></tr>
+    <tr><td>cmd/rules, cmd/agentwt, cmd/heartbeat, cmd/routine</td><td class="wrap">The smine bin dir: <code>~/go/bin/smine-*</code>, <code>%LOCALAPPDATA%\smine\bin\smine-*.exe</code> on Windows</td><td class="wrap"><code>configserver -apply</code>, per selected component</td></tr>
+    <tr><td>settings/codex/config.toml</td><td class="wrap"><code>~/.codex/config.toml</code></td><td class="wrap"><code>configserver -apply</code></td></tr>
+    <tr><td>context/</td><td class="wrap"><code>AGENTS.md</code> and the context dirs of the target project repos</td><td class="wrap"><code>configserver /context/sync</code></td></tr>
+  </tbody>
+</table>
+
+<h3>bin/configserver -apply</h3>
+<p>Applies the stored selection (<code>~/.claude/smine/install.json</code>) through <code>internal/install</code>, per component: hook binaries, PATH binaries, settings entries, MCP registration, Codex config, LaunchAgents or logon tasks, routines. A release archive (<code>bin/PAYLOAD</code> present) copies the prebuilt binaries; a development checkout builds them with <code>go build</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Hook binaries</td><td class="wrap"><code>toolpolicy</code>, <code>skillhelp</code>, <code>worktreecreate</code>, <code>sessiontitle</code>, <code>readgate</code>, <code>globalcontext</code>, <code>skillcontext</code>, <code>planmodecontext</code>, <code>acdslhook</code>, <code>skillinvokegate</code>, <code>worktreewriteguard</code>, <code>skillenv</code>, <code>playsound</code> (the sound hook: <code>afplay</code> on macOS, <code>PlaySoundW</code> on Windows), <code>heartbeatfeed</code> (posts SessionStart to the daemon, no curl).</td></tr>
+    <tr><td>Settings entries</td><td class="wrap">From <code>settings/claude_code/base.json</code> plus <code>components/*.json</code>, own entries only; base keys added only where absent.</td></tr>
+    <tr><td>Hook groups</td><td class="wrap">Matched by smineId; replaced when its semantic smineVersion exceeds the live one (a legacy integer counts as its major release). An unselected component's groups park in <code>hooks.disabled.json</code> with <code>smineReason</code>. Only the repo's retire list (<code>settings/claude_code/retired-hooks.json</code>) removes a group.</td></tr>
+    <tr><td>Owned files</td><td class="wrap"><code>~/.codex/config.toml</code> and every copied file are rewritten only while unchanged since smine wrote them.</td></tr>
+    <tr><td>Trash</td><td class="wrap">Every overwritten or removed file keeps its previous bytes in <code>~/.claude/smine/trash/</code>, shown on the config server's <a href="configserver.html#trash">Trash page</a>.</td></tr>
+  </tbody>
+</table>
+
+<h3>configserver -sync-skills</h3>
+<p>The Go skills sync (<code>internal/skills</code>, also run in process by the config server) writes skills to <code>~/.claude/skills/</code> and <code>~/.codex/skills/</code>, agent definitions to <code>~/.claude/agents/</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Selection</td><td class="wrap">Like the install engine, renders the selected skills for the record's component set and skill rows (<code>skills.variables</code>, <code>skills.providers</code>, <code>skills.defaults</code>). Skipped <code>unavailable</code>: a skill whose <code>requires</code> the set misses. Skipped <code>unconfigured</code>: one with an unset required install-scoped variable.</td></tr>
+    <tr><td>Repo-scoped variables</td><td class="wrap">In <code>~/.claude/skills</code>: invocation placeholders (<a href="#per-repo-values">Per-repo values</a>). In <code>~/.codex/skills</code>: filled from the deploy environment, the record row, the global default (<code>skills.defaults</code>), then the provider.</td></tr>
+    <tr><td>Rendered files</td><td class="wrap">SKILL.md, <code>help-test.md</code>, <code>title.json</code>, <code>enforce.json</code>, <code>env.json</code>, <code>answer.md</code>, rendered in process from the model file <code>&lt;leaf&gt;.cue</code> beside the <code>.smine-deployed</code> marker. <code>env.json</code> needs the Skill environment component and a body reading a repo value; <code>~/.claude/skills</code> only.</td></tr>
+    <tr><td>Filled variables</td><td class="wrap">Install-scoped ones, in SKILL.md, every copied sibling text file (<code>workflows/</code>, <code>schemas/</code>, <code>context-map.json</code>) and the <code>agents/</code> files.</td></tr>
+    <tr><td>Never shipped</td><td class="wrap"><code>&lt;leaf&gt;.cue</code>, <code>payloads/</code>, <code>eval/</code>, <code>smoke/</code>.</td></tr>
+    <tr><td>Pruning</td><td class="wrap">Skills gone from the repo are kept and listed. <code>-sync-prune</code>, and every sync the install engine or the config server runs, moves marked dirs outside the selection into the trash.</td></tr>
+    <tr><td>Foreign dirs</td><td class="wrap">An unmarked or locally modified dir under a deployed name is stashed whole before the write.</td></tr>
+  </tbody>
+</table>
+
+<h3>The context deploy engine</h3>
+<p><code>internal/contextdocs</code> runs from the Context page's sync form and is replayed by <code>routine bootstrap</code>. It builds one overlay per registered repo under <code>~/.claude/smine/context/&lt;name&gt;/</code>.</p>
+<table class="doc">
+  <thead><tr><th>File</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>context.json</td><td class="wrap">The source index cut by each entry's <code>Reach:</code> and its scope's language binding, a <code>deploy</code> record first. The repo's own entries (files under its context folder without the synced header) are merged in.</td></tr>
+    <tr><td>aspects.json</td><td class="wrap">The aspects file, beside it.</td></tr>
+    <tr><td>overlay.patch</td><td class="wrap">Adds both files under the context folder; <code>git apply</code>-able, passed by reviews and evals as <code>overlay-patch:</code>.</td></tr>
+  </tbody>
+</table>
+<p>Only the form's Write to Repo box writes into the repository's working tree; nothing is ever committed. It writes the two files. "project markdown" adds the expanded <code>AGENTS.md</code>, the actions chapters, the rules guides and the facts files, and removes a leftover <code>CLAUDE.md -&gt; AGENTS.md</code> symlink. "sync acdsl" adds the reach-covered gate slice via <code>acdsl.Dist</code>: rules, registry subset, policy, prebuilt <code>bin/acdsl</code> and verifier binaries.</p>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>A repo-owned file under a baseline name</td><td class="wrap">Aborts the run.</td></tr>
+    <tr><td>A repo-owned entry that fails validation</td><td class="wrap">Aborts the run.</td></tr>
+    <tr><td>A rewritten baseline file</td><td class="wrap">Previous bytes kept in the trash.</td></tr>
+    <tr><td>The always pack</td><td class="wrap">Refreshed by every sync: rewritten only when its content changed, the previous pack stashed. A pack file without the smine header is kept, with an error.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="releases">Releases</h2>
+<p>Tagged releases (<code>v*.*.*</code>) run through GitHub Actions (<code>.github/workflows/ci.yml</code>). Every push runs <code>test</code>, <code>test-windows</code>, <code>audit</code>, <code>darwin-payload</code>, <code>windows-payload</code> and <code>installer</code>; on a tag, <code>publish</code> waits for <code>test</code>, <code>darwin-payload</code> and <code>installer</code> and attaches every asset in one shot.</p>
+<p>One payload, built by <code>make payload-bin GOOS=&lt;os&gt; GOARCH=&lt;arch&gt; VERSION=x.y.z</code> for every platform: <code>configserver</code>, <code>routine</code>, <code>acdsl</code>, <code>rules</code>, <code>installer</code>, every verifier binary, the fourteen hook binaries and the <code>bin/PAYLOAD</code> marker holding the version. The marker is what makes an extracted archive take its binaries from <code>bin/</code> instead of building them.</p>
+<table class="doc">
+  <thead><tr><th>Platform</th><th>Release assets</th></tr></thead>
+  <tbody>
+    <tr><td>darwin</td><td class="wrap"><code>smine-&lt;version&gt;-darwin-arm64.tar.gz</code> and <code>-darwin-amd64.tar.gz</code>: the source tree at the tag as <code>smine/</code> with the payload plus <code>agentwt</code> and <code>heartbeat</code> (<code>make payload-rust</code>, cargo cross targets) under <code>smine/bin/</code>. A macOS job builds one per arch; <code>make payload GOOS=darwin GOARCH=arm64 VERSION=x.y.z</code> is the same build locally into <code>dist/</code>.</td></tr>
+    <tr><td>windows</td><td class="wrap">
+      <p>A linux job cross-builds the windows payload (<code>make payload-bin GOOS=windows GOARCH=amd64 PAYLOAD_DIR=dist</code>) and fetches the pinned third-party payloads (<code>jq.exe</code>, <code>peek-mcp.exe</code>).</p>
+      <p>A windows job then builds <code>agentwt.exe</code> and <code>heartbeat.exe</code> and compiles <code>smine-setup.exe</code> from <code>installer/windows/smine.iss</code> with Inno Setup; the tag's publish job attaches it to the same release.</p>
+    </td></tr>
+  </tbody>
+</table>
+<p>Every payload job, and <code>go build ./...</code> on a windows runner, runs on every push and pull request (version <code>0.0.0</code> off-tag), so a broken archive, installer script or <code>*_windows.go</code> file fails CI before a tag exists. <code>make installer-check</code> is the Inno Setup compile locally, against a dummy payload via a dockerized <code>iscc</code>.</p>
+</body>
+</html>

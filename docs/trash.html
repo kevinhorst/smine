@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trash · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Trash</h1>
+<p class="lede">The one stash for everything smine removes or replaces.</p>
+<p>Every writer deleting or overwriting a file it does not own outright calls its <code>*trash.Store</code> (<code>internal/trash</code>) before the destructive step.</p>
+
+<h2 class="first" id="layout">Layout</h2>
+<p>Under the state dir <code>~/.claude/smine</code>:</p>
+<table class="doc">
+  <thead><tr><th>Path</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>trash/&lt;stamp&gt;/&lt;rel&gt;</td><td class="wrap">The stashed file or dir; <code>&lt;rel&gt;</code> is the original absolute path minus volume and leading separator (<code>C:\Users\k</code> → <code>C/Users/k</code>).</td></tr>
+    <tr><td>owned/&lt;rel&gt;.sha256</td><td class="wrap">Hex sha256 of the bytes smine last wrote there, plus a newline.</td></tr>
+    <tr><td>journal.jsonl</td><td class="wrap">One line per event: <code>{time, action, kind, path, reason?, stash?}</code></td></tr>
+  </tbody>
+</table>
+<p>Stamp: UTC time, RFC 3339 shape with nanoseconds, <code>-</code> for the time's colons (NTFS refuses a colon in a file name). Two stashes in one nanosecond share a stamp dir.</p>
+<pre class="file-view" data-lang="text">2026-10-17T13-07-01.000000000Z</pre>
+
+<h2 id="rules">Rules</h2>
+<table class="doc">
+  <thead><tr><th>Call</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>Move</td><td class="wrap">Renames a file or dir into the stash; across devices, copies then removes.</td></tr>
+    <tr><td>Keep</td><td class="wrap">Copies the current bytes before the caller overwrites them.</td></tr>
+    <tr><td>Note</td><td class="wrap">Journals a fileless event: a forgotten row, a deleted branch.</td></tr>
+    <tr><td>Restore</td><td class="wrap">Target derived from the stash path alone. A present target is refused unless replacing, which stashes it first. An emptied stamp dir is removed.</td></tr>
+    <tr><td>IsUnchanged</td><td class="wrap">"Did smine write these bytes", from the owned digest; no record means no.</td></tr>
+    <tr><td>HasMarker, MarkerLine, StripMarker</td><td class="wrap">Read and write the <code># smine-deployed &lt;sha256&gt;</code> line, the ownership proof of hook scripts and agent files.</td></tr>
+    <tr><td>nil store</td><td class="wrap">Keeps and journals nothing; passed by a caller writing its own scratch file.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Retention</span>
+  <p>The retention sweep is the trash's only deletion: with <code>config-server.trash_retention_days</code> above 0, every stash and server boot remove stamp dirs older than that many days. The journal is never truncated.</p>
+</div>
+</body>
+</html>

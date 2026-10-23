@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill tests · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Skill tests</h1>
+<p class="lede">Three layers test a skill: smoke, eval and A/B, each answering one question.</p>
+<p>The skill (producer) declares its own smoke and eval; the runners (consumers) read the declarations and name no skill. Chain position: <a href="skill-map.html">Skill map</a>.</p>
+
+<h2 class="first" id="the-three-layers">The three layers</h2>
+<table class="doc plain">
+  <thead><tr><th>Aspect</th><th>Smoke</th><th>Eval</th><th>A/B</th></tr></thead>
+  <tbody>
+    <tr><td>Question</td><td class="wrap">Runs end to end under its own constraints?</td><td class="wrap">How good is one configuration's output on a real task?</td><td class="wrap">What did one change do?</td></tr>
+    <tr><td>Declared in</td><td class="wrap"><code>smoke</code> block in <code>&lt;leaf&gt;.cue</code></td><td class="wrap"><code>eval/definition.json</code> in the skill dir</td><td class="wrap">variant descriptor at invocation</td></tr>
+    <tr><td>Entry point</td><td class="wrap"><code>make skill-smoke SKILL=&lt;leaf&gt; TOKEN=&lt;label&gt;</code></td><td class="wrap"><code>/skillroutine-eval &lt;skill&gt; token: &lt;label&gt;</code></td><td class="wrap"><code>/skillroutine-ab &lt;skill&gt; variant: &lt;descriptor&gt;</code></td></tr>
+    <tr><td>Result</td><td class="wrap">verdict and coverage in the artifacts cache</td><td class="wrap"><code>evals/&lt;skill&gt;/&lt;date&gt;-&lt;hash6&gt;/</code></td><td class="wrap"><code>evals/&lt;skill&gt;/ab-&lt;date&gt;-&lt;hash6&gt;/</code></td></tr>
+  </tbody>
+</table>
+<p><code>/&lt;skill&gt; --help</code> prints under <code>Tests</code> the smoke command with its required token label and whether an eval is declared. It reads the deployed <code>help-test.md</code>, rendered only with the session-helpers component (the skillhelp hook's).</p>
+<pre class="file-view" data-lang="text">Smoke: make skill-smoke SKILL=&lt;leaf&gt; TOKEN=&lt;label&gt;</pre>
+
+<h2 id="run-record">Run record</h2>
+<p><code>runs/&lt;label&gt;/result.json</code> is every layer's run record; A/B selects records by its fields.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>session, model, cost, end state, check exit</td><td class="wrap">Every run.</td></tr>
+    <tr><td>layer</td><td class="wrap"><code>smoke</code> or <code>eval</code></td></tr>
+    <tr><td>skill, skillVersion</td><td class="wrap">The skill and the deployed version the run loaded.</td></tr>
+    <tr><td>mode</td><td class="wrap"><code>nightly</code> or <code>interactive</code></td></tr>
+    <tr><td>smoke</td><td class="wrap">Smoke runs: verdict, cause, coverage.</td></tr>
+    <tr><td>scores</td><td class="wrap">Eval runs with a scorer.</td></tr>
+  </tbody>
+</table>
+<p>The session's heartbeat rows sit beside it in <code>runtime.json</code>.</p>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>The workflow layer has no behaviour test: <code>make workflow-gen-check</code> (an audit unit) proves block freshness and the shape rules of every committed stage file. Only smoke and eval runs exercise a script's logic.</p>
+</div>
+
+<h2 id="smoke-layer">Smoke layer</h2>
+<p>Checks the skill runs end to end under its own constraints, on a dummy input, in minutes. Never a quality judgement.</p>
+
+<h3>Declaration</h3>
+<p>The <code>smoke</code> block in <code>&lt;leaf&gt;.cue</code>: a skip reason or a run. Every skill declares it; <code>make skills-check</code> fails without. The runner loads the model and resolves the defaults in memory; no file is rendered.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Meaning</th><th>Default</th></tr></thead>
+  <tbody>
+    <tr><td>skip</td><td class="wrap">Why the skill has no smoke run.</td><td></td></tr>
+    <tr><td>invoke</td><td class="wrap">Text after <code>/&lt;leaf&gt;</code>. <code>{token}</code> becomes the run's <code>TOKEN</code> label, so no label is checked in.</td><td></td></tr>
+    <tr><td>mode</td><td class="wrap"><code>nightly</code> or <code>interactive</code> (Modes).</td><td>nightly</td></tr>
+    <tr><td>fixture</td><td class="wrap"><code>tree</code> and <code>patch</code> under the skill's <code>smoke/</code> dir.</td><td></td></tr>
+    <tr><td>expect</td><td class="wrap">Anchors, or a check command.</td><td></td></tr>
+    <tr><td>env</td><td class="wrap">Repo-scoped values the run sets, by env key: every required repo-scoped variable of the skill, model-checked.</td><td></td></tr>
+    <tr><td>limits</td><td class="wrap">Budget and timeout.</td><td>3 USD, 15 minutes</td></tr>
+    <tr><td>model</td><td class="wrap">Run model.</td><td>sonnet</td></tr>
+    <tr><td>effort</td><td class="wrap">Run effort.</td><td>low</td></tr>
+  </tbody>
+</table>
+<p><code>smoke/</code> is never deployed.</p>
+
+<h3>Runner</h3>
+<p>The consumer, <code>skilleval</code>, reads only the declaration and names no skill. It runs on the eval's machinery: provision, headless arm, heartbeat capture, cleanup.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Runs</th></tr></thead>
+  <tbody>
+    <tr><td>make skill-smoke SKILL=&lt;leaf&gt; TOKEN=&lt;label&gt;</td><td><code>skilleval smoke</code></td></tr>
+    <tr><td>make skill-smoke-verdict SKILL=&lt;leaf&gt; SESSION=&lt;id&gt;</td><td><code>skilleval smoke-verdict</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Deployed copy first</h3>
+<p>A smoke runs only the deployed skill, so the runner first checks it came from the checkout's source. Deploy writes <code>source &lt;sha256&gt;</code> into <code>~/.claude/skills/&lt;leaf&gt;/.smine-deployed</code>: the hash of every skill-dir file but <code>eval/</code> and <code>smoke/</code>, projection blocks stripped. The runner hashes the checkout's skill dir alike (<code>skills.IsDeployedCurrent</code>); a different or missing stamp refuses with exit 3.</p>
+<div class="callout">
+  <span class="badge badge-dim">Order</span>
+  <p>Change, deploy, smoke. The check hashes sources only, reading no install or repo values, so a smoke runs from any checkout.</p>
+</div>
+
+<h3>No machine values</h3>
+<p>A nightly smoke never sees the machine's repo-scoped values. Before the session starts, the runner:</p>
+<ul>
+  <li>unsets every inherited <code>SKILL_*</code> variable but the arm's <code>SKILL_CONTEXT_INDEX</code>;</li>
+  <li>sets the smoke block's <code>env</code> values as <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code>;</li>
+  <li>sets <code>SMINE_SKILLENV_OFF</code>: the skillenv hook exports nothing, neither the install record's defaults nor a registry row.</li>
+</ul>
+<table class="doc plain">
+  <thead><tr><th>Value</th><th>In the smoke</th></tr></thead>
+  <tbody>
+    <tr><td>An optional variable the block leaves out</td><td class="wrap">Unset; its items drop as anywhere.</td></tr>
+    <tr><td>Install-scoped values</td><td class="wrap">The deployed skill's, filled at deploy.</td></tr>
+    <tr><td>An interactive smoke</td><td class="wrap">Runs in the person's own session, reading its values.</td></tr>
+    <tr><td><code>context/context.json</code></td><td class="wrap">Regenerated in each arm worktree at provisioning, as in session worktrees.</td></tr>
+  </tbody>
+</table>
+
+<h3>Modes</h3>
+<table class="doc">
+  <thead><tr><th>Mode</th><th>Runs</th></tr></thead>
+  <tbody>
+    <tr><td>nightly (default)</td><td class="wrap">One headless <code>claude -p "/&lt;leaf&gt; &lt;invoke&gt;"</code> in a throwaway worktree at the checkout's HEAD: declared model and effort, <code>limits.usd</code> budget, <code>limits.minutes</code> timeout, billed to the stored token. Fixture patch as the overlay, fixture tree copied onto the root, never over an existing file. Cleanup removes the arm worktree and every isolation worktree of a workflow the session launched (<code>.claude/worktrees/&lt;run id&gt;-&lt;n&gt;</code>), with branches.</td></tr>
+    <tr><td>interactive</td><td class="wrap">The runner prints the prompt; a person runs it in a session; <code>smoke-verdict</code> judges that session from heartbeat's rows.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Stores</span>
+  <p>A nightly session never touches the live proposal and backlog stores; the plans archive is fenced (no read, no write, whatever grant the skill holds). The store root is <code>store/</code> in the throwaway worktree (<code>SMINE_STORE_ROOT</code>), as <code>make rules ARGS="store-root"</code> and <code>store-check</code> answer there.</p>
+</div>
+
+<h3>Verdict</h3>
+<p>Mechanical; a failure names its first cause.</p>
+<table class="doc plain">
+  <thead><tr><th>Verdict</th><th>When</th><th>Passes when</th></tr></thead>
+  <tbody>
+    <tr><td>Terminal</td><td class="wrap"><code>expect.check</code>, or no expectation</td><td class="wrap">Wall time under <code>limits.minutes</code>, cost under <code>limits.usd</code>; a session exists, exit status 0, terminal reason completed, result success, no error flag; the check, run in the worktree after the session, exits 0.</td></tr>
+    <tr><td>Heartbeat</td><td class="wrap"><code>expect.anchors</code></td><td class="wrap">Terminal rules; the session's run row of the skill exists, not killed, no failed check, every expected anchor; coverage minimums. A missing row's cause tells heartbeat not answering from no enforced run of the skill opening.</td></tr>
+    <tr><td>Interactive</td><td class="wrap"><code>smoke-verdict</code></td><td class="wrap">No stream, so no limits or session rules: the run row exists and has ended, then the heartbeat row rules and coverage minimums.</td></tr>
+  </tbody>
+</table>
+
+<h3>Coverage</h3>
+<p>Heartbeat smokes only; zero for a terminal-verdict smoke. Two ratios, each over its total in the deployed <code>enforce.json</code>: declared anchors hit, declared checks passed at least once. <code>expect.minAnchors</code> (hits over all declared anchors) and <code>expect.minChecks</code> are minimum ratios; unset means 0.</p>
+
+<h3>Record and cache</h3>
+<p>Each run writes one record per skill and deployed version to <code>~/.cache/claude-routine/artifacts/smoke/&lt;leaf&gt;/&lt;version&gt;/</code>, never under <code>~/.claude/smine</code>, never committed; the previous same-version record stays beside it as <code>&lt;version&gt;.&lt;n&gt;</code>. A run executes in <code>smoke/.staging/</code> and moves into place after cleanup.</p>
+<table class="doc">
+  <thead><tr><th>File</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>run.json</td><td class="wrap">The manifest, with the token label.</td></tr>
+    <tr><td>runs/A/result.json</td><td class="wrap">The run record.</td></tr>
+    <tr><td>runs/A/runtime.json</td><td class="wrap">Heartbeat's rows.</td></tr>
+    <tr><td>stream, trace, diff</td><td class="wrap">Nightly runs only; an interactive verdict writes just the three files above.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>smoke.coverage field</th><th>Counts</th></tr></thead>
+  <tbody>
+    <tr><td>anchorsDeclared</td><td class="wrap">Anchors in the deployed <code>enforce.json</code>.</td></tr>
+    <tr><td>anchorsExpected</td><td class="wrap"><code>expect.anchors</code> ids the run was judged against.</td></tr>
+    <tr><td>anchorsExpectedHit, anchorsHit</td><td class="wrap">Expected anchors hit; declared anchors hit.</td></tr>
+    <tr><td>checksDeclared, checksPassed</td><td class="wrap">Declared checks; checks passed at least once.</td></tr>
+  </tbody>
+</table>
+<p>The printed and badged summary; the second form is for a record without an expectation:</p>
+<pre class="file-view" data-lang="text">anchors &lt;expected hit&gt;/&lt;expected&gt; (&lt;declared&gt;), checks &lt;passed&gt;/&lt;declared&gt;
+anchors &lt;hit&gt; (&lt;declared&gt;), …</pre>
+<p>The config server shows the newest record on the skill card and skill head, dim and marked <code>stale</code> when its version is not the skill's. The Tests tab shows it as a card: expected anchors hit or missed, checks, cost, session, record dir, run line.</p>
+
+<h3>Fixtures</h3>
+<table class="doc">
+  <thead><tr><th>Path</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>smoke/tree/</td><td class="wrap">Files the runner copies onto the worktree root.</td></tr>
+    <tr><td>smoke/*.patch</td><td class="wrap">One patch of new-file changes, applied uncommitted. Go code goes only here: a <code>.go</code> file under <code>smoke/tree/</code> would join the module's build. It never edits a tracked file, so it applies at any head.</td></tr>
+    <tr><td>smoke/tree/store/</td><td class="wrap">Seeded store of a skill working on the stores (<code>proposals/&lt;kind&gt;.json</code>, <code>backlog/backlog.json</code>); without it the store root is empty.</td></tr>
+  </tbody>
+</table>
+
+<h3>Output and exit codes</h3>
+<pre class="file-view" data-lang="text">smoke &lt;leaf&gt; &lt;version&gt;: pass
+smoke &lt;leaf&gt; &lt;version&gt;: fail — &lt;cause&gt;
+coverage: anchors &lt;expected hit&gt;/&lt;expected&gt; (&lt;declared&gt;), checks &lt;passed&gt;/&lt;declared&gt;</pre>
+<p>The coverage line follows for a heartbeat smoke. A skip prints its reason.</p>
+<table class="doc">
+  <thead><tr><th>Exit</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td class="wrap">Pass, skip, or interactive instructions.</td></tr>
+    <tr><td>1</td><td class="wrap">Fail or harness error.</td></tr>
+    <tr><td>2</td><td class="wrap">Usage.</td></tr>
+    <tr><td>3</td><td class="wrap">The deployed copy differs.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="eval-layer">Eval layer</h2>
+<p>Measures how good one skill configuration's output is on a real task, with time, tokens and cost.</p>
+
+<h3>Declaration</h3>
+<p><code>eval/definition.json</code> in the skill dir, schema <code>skills/skillroutine/skillroutine-eval/reference/definition.schema.json</code> (4.0, gate ACDSL-JSON-005).</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Declares</th></tr></thead>
+  <tbody>
+    <tr><td>Invocation</td><td class="wrap">Free text, the skill's args as data, the args a run may <code>set:</code>.</td></tr>
+    <tr><td>Environment</td><td class="wrap">Registry repo, range or checkout commit, overlay.</td></tr>
+    <tr><td>Limits</td><td class="wrap">Budgets and prerequisites.</td></tr>
+    <tr><td>Configuration</td><td class="wrap"><code>model</code> (default opus), <code>effort</code> (default high), <code>replicas</code> (default 1).</td></tr>
+    <tr><td>Check and reference</td><td class="wrap">Optional <code>check</code> argv and <code>reference</code> commit.</td></tr>
+    <tr><td>Scoring</td><td class="wrap">The scoring contract, below.</td></tr>
+  </tbody>
+</table>
+
+<h3>Running</h3>
+<pre class="file-view" data-lang="text">/skillroutine-eval &lt;skill&gt; [replicas: &lt;n&gt;] token: &lt;label&gt; [golden: produce|test] [set: &lt;name&gt;=&lt;value&gt;]</pre>
+<ol class="steps">
+  <li>
+    <strong>Init freezes the run</strong>
+    <p><code>go run ./cmd/skilleval init</code> composes the prompt and freezes the run from the definition: prerequisites, the golden kind's file, token label, runs × armUsd against the window.</p>
+  </li>
+  <li>
+    <strong>The skill runs the replicas</strong>
+    <p>Provisions, launches the replicas, spawns the adherence judge (plus golden judges on a test run).</p>
+  </li>
+  <li>
+    <strong>Cleanup and report</strong>
+    <p>Cleans up, folds, reports. The skill interprets nothing in the definition.</p>
+  </li>
+</ol>
+
+<h3>Scoring</h3>
+<p>Exactly one scoring contract per skill.</p>
+<table class="doc plain">
+  <thead><tr><th>Contract</th><th>Keys</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Golden</td><td class="wrap"><code>findings</code>, <code>goldens</code>, <code>scoring</code></td><td class="wrap">The golden path, unchanged: candidates, golden judge, review score and minutes.</td></tr>
+    <tr><td>Scorer</td><td class="wrap"><code>scorer.command</code></td><td class="wrap">An argv run in each run's worktree after the check; stdout is one JSON object <code>{"metrics": {"&lt;name&gt;": &lt;number&gt;}}</code>, names <code>[a-z][a-z0-9_]*</code>. Values land in <code>result.json</code> <code>scores</code> and in <code>eval.json</code> as <code>score_&lt;name&gt;</code>. A failing scorer leaves <code>scores</code> absent, its cause in <code>runs/&lt;label&gt;/scorer.log</code>.</td></tr>
+  </tbody>
+</table>
+<p>Every run also gets generic measures: mechanical verdict (<code>smoke_pass</code>), <code>check_pass</code>, wall and active time, output tokens, cost, permission denials, heartbeat check failures, adherence-judge step misses. Wall is the arm stream's own span summed per process, excluding a resumed run's session-limit pause; active time is peek's main-loop figure. The eval's notes give the definition's open args at the run prompt's values.</p>
+
+<h3>Output</h3>
+<p>Record dir <code>evals/&lt;skill&gt;/&lt;date&gt;-&lt;hash6&gt;[-&lt;n&gt;]/</code>: the hash is the checkout commit, <code>-&lt;n&gt;</code> a same-day repeat.</p>
+<table class="doc plain">
+  <thead><tr><th>Written</th><th>Files</th></tr></thead>
+  <tbody>
+    <tr><td>Always</td><td class="wrap"><code>run.json</code> and its <code>run.json.sha256</code> digest, <code>SKILL.md</code> (the deployed skill the runs loaded), <code>overlay.patch</code>, <code>provision.json</code>, <code>eval.json</code> (2.12, validated), <code>report.md</code>, <code>interpretation.md</code> (bullets only, at most 8 of 160 runes, gated)</td></tr>
+    <tr><td>Golden test run</td><td class="wrap"><code>golden.json</code>, <code>scoring.json</code></td></tr>
+    <tr><td>Produce run</td><td class="wrap"><code>seed.json</code></td></tr>
+    <tr><td>With a reference commit</td><td class="wrap"><code>reference.patch</code></td></tr>
+    <tr><td>Per run, <code>runs/&lt;label&gt;/</code></td><td class="wrap"><code>result.json</code> (the run record: <code>layer: eval</code>, <code>skill</code>, <code>skillVersion</code>, <code>mode: nightly</code>, <code>scores</code>), <code>stream.jsonl</code>, <code>trace.md</code>, <code>diff.patch</code>, <code>check.log</code>, <code>scorer.log</code>, <code>runtime.json</code>, <code>adherence.json</code>, <code>artifacts/</code> (what the skill left in its artifact dir)</td></tr>
+    <tr><td>Per run, golden path</td><td class="wrap"><code>candidates.json</code>, <code>judge.json</code></td></tr>
+  </tbody>
+</table>
+<p>Cleanup salvages worktrees into the arm's <code>&lt;worktree&gt;-out/</code> beside the worktree, never into the record, and removes it once every worktree is gone. The prebuild log lives there too.</p>
+
+<h3>Tests tab</h3>
+<p>The config server renders the records at <code>/scripts/skills/{origin}/{name}/tests</code> (<code>?run=&lt;dir&gt;</code> features a dir, <code>?focus=&lt;run id&gt;</code> one run), top to bottom:</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Block</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Smoke card</td><td class="wrap">The newest smoke record's version (<code>stale</code> when not the skill's), verdict and cause, a hit-or-missed chip per expected anchor, checks, cost, session, record dir, and <code>make skill-smoke SKILL=&lt;leaf&gt; TOKEN=&lt;label&gt;</code> with the run's token label.</td></tr>
+    <tr><td>2</td><td>Config line</td><td class="wrap">The eval run's configuration.</td></tr>
+    <tr><td>3</td><td>Hero</td><td class="wrap">Review score, lost minutes and the minutes bar: the headline run's escaped, false-positive and found minutes from <code>golden.perRun[].severities</code>, oracle and null as ticks.</td></tr>
+    <tr><td>4</td><td>Breakdown table</td><td class="wrap">Per severity: price, the golden's entries, the run's found, missed and false-positive counts and minutes, oracle, lost; the score spelled out from the totals.</td></tr>
+    <tr><td>5</td><td>Interpretation, Result, heatmap</td><td class="wrap">Interpretation bullets, Result table, entry heatmap by topic.</td></tr>
+    <tr><td>6</td><td>Artifacts table</td><td class="wrap">What each file is.</td></tr>
+    <tr><td>7</td><td>Golden cards</td><td class="wrap">One per definition golden; production contributions are keyed by their <code>dir</code>, leave the history, get their own selector group.</td></tr>
+    <tr><td>8</td><td>History, definition</td><td class="wrap">Run history, then the test definition.</td></tr>
+  </tbody>
+</table>
+
+<h3>Accounts</h3>
+<p><code>token: &lt;label&gt;</code> names an OAuth token stored from the config server in <code>~/.config/claude-routine/tokens/&lt;label&gt;</code>. Only the label travels; the arm process exports the value as <code>CLAUDE_CODE_OAUTH_TOKEN</code>. Init refuses an unknown or missing label, listing the stored ones. Reports name <code>token &lt;label&gt;</code>.</p>
+
+<h3>Limits</h3>
+<ul>
+  <li>Headless has no plan mode: fdesign ends at the written plan.</li>
+  <li>Runs of one eval run in parallel inside one usage window.</li>
+  <li>A skill without a definition cannot be evaluated.</li>
+</ul>
+
+<h2 id="a-b-layer">A/B layer</h2>
+<p>What one change did: the difference between two record sets of a lower layer.</p>
+<pre class="file-view" data-lang="text">/skillroutine-ab &lt;skill&gt; [layer: eval|smoke] variant: &lt;descriptor&gt; [replicas: &lt;n&gt;] token: &lt;label&gt;</pre>
+
+<h3>Variant descriptor</h3>
+<p>Names exactly one factor against the definition's baseline. Two changes, none or an unknown factor is refused (<code>ab-init</code> exit 72).</p>
+<table class="doc">
+  <thead><tr><th>Descriptor</th><th>Layer</th><th>How it runs</th></tr></thead>
+  <tbody>
+    <tr><td>model:&lt;name&gt;, effort:&lt;level&gt;</td><td>eval</td><td class="wrap">Side by side: both sides in one run dir, equal replicas, shuffled blind labels.</td></tr>
+    <tr><td>no-&lt;mcp server&gt;</td><td>eval</td><td class="wrap">Side by side. Void unless the baseline shows the server connected.</td></tr>
+    <tr><td>overlay:&lt;repo-relative patch&gt;</td><td>eval</td><td class="wrap">Side by side; the variant applies the definition's overlay plus the patch.</td></tr>
+    <tr><td>version:&lt;a&gt;..&lt;b&gt;</td><td>eval, smoke</td><td class="wrap">Runs nothing. Heartbeat and the gate read the one deployed copy, so versions compare sequentially: run at <code>&lt;a&gt;</code>, deploy, run at <code>&lt;b&gt;</code>, then A/B. The smoke layer's only descriptor, as its cache keeps one record per deployed version (exit 73 otherwise).</td></tr>
+  </tbody>
+</table>
+<p>Side by side, the blind compare judge ranks the outputs against the definition's <code>reference</code> commit when one exists.</p>
+
+<h3>Record selection</h3>
+<table class="doc plain">
+  <thead><tr><th>Comparison</th><th>Records</th></tr></thead>
+  <tbody>
+    <tr><td>Side by side</td><td class="wrap">The A/B dir's own runs, by configuration key.</td></tr>
+    <tr><td>Version, eval layer</td><td class="wrap">Every <code>evals/&lt;skill&gt;/&lt;date&gt;-&lt;hash&gt;/</code> run with <code>layer: eval</code>, the skill, and <code>skillVersion</code> <code>&lt;a&gt;</code> or <code>&lt;b&gt;</code>, measured by that dir's <code>eval.json</code>. Unfolded dirs are noted and skipped.</td></tr>
+    <tr><td>Version, smoke layer</td><td class="wrap"><code>~/.cache/claude-routine/artifacts/smoke/&lt;skill&gt;/&lt;version&gt;/runs/A/result.json</code>, measured by its verdict, cost, tokens, denials, wall time and coverage ratios.</td></tr>
+  </tbody>
+</table>
+
+<h3>Output</h3>
+<p>Record dir <code>evals/&lt;skill&gt;/ab-&lt;date&gt;-&lt;hash6&gt;/</code>.</p>
+<table class="doc">
+  <thead><tr><th>File</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>ab.json</td><td class="wrap">Descriptor, layer, both record sets with measures, and per-measure differences: means, standard deviations, n, Δ mean, Welch's t, df, significance at alpha 0.05.</td></tr>
+    <tr><td>report.md, interpretation.md</td><td class="wrap">The report and its interpretation.</td></tr>
+    <tr><td>run.json, eval.json, compare.json, stats.json, runs/</td><td class="wrap">Added by side-by-side runs.</td></tr>
+  </tbody>
+</table>
+<p>Statistics come from <code>go run ./cmd/evalstats -ab &lt;ab.json&gt;</code>; fewer than two records per side gives df 0 and no significance.</p>
+
+<h3>Limits</h3>
+<p>An IDE comparison (<code>no-goland</code>) needs a definition whose invocation opts into the server: the descriptor varies the runner, never the invocation.</p>
+</body>
+</html>

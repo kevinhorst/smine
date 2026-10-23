@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smining · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Smining</h1>
+<p class="lede">The nightly retrospective: finished sessions become typed records, records become change commits, and you pick the ones you want onto main.</p>
+<p>Every stage is a skill, chained by the <code>smine</code> dispatcher and run by the <code>smine-nightly</code> routine (<a href="routines.html">Routines</a>). Its output waits on the config server's Proposals page (<a href="configserver.html">Config server</a>). The planning skills it hands work to are on the <a href="skill-map.html">Skill map</a>.</p>
+
+<h2 class="first" id="the-feedback-loop">The feedback loop</h2>
+<p>Sessions produce evidence, nightly mining turns it into commits, you accept a commit by picking it.</p>
+<ol class="steps">
+  <li>
+    <strong>Sessions do the work</strong>
+    <p>Local Claude Code and Codex sessions work in the project repos, accumulating plans, diffs and transcripts.</p>
+  </li>
+  <li>
+    <strong>peek-mcp exposes them</strong>
+    <p>Over MCP (Model Context Protocol) to other agents: agent–user conversation, plan, diff, metadata such as touched files and used skills (<code>skills/orchestration/peek</code>).</p>
+  </li>
+  <li>
+    <strong>Session mining</strong>
+    <p><code>/smine</code> mines idle sessions newest first, one JSON record each, checked by <code>make sessions</code>. The memory, context, permissions and ACDSL miners read the records directly; <code>smine-problems</code> synthesizes cross-session problems against design intent (context, docs, plans, backlog) for the skills and routines planners. Each finding becomes a change task, one <code>/fimplement</code> commit on the night's branch.</p>
+  </li>
+  <li>
+    <strong>You pick on the Proposals page</strong>
+    <p>The config server's Proposals page lists change commits: skill rules, context-doc entries (a typed entry in <code>context/actions/</code>), ACDSL rules, allow rules, whole skills (<code>fexplore</code> came from a retrospective). Picking one onto <code>main</code> accepts it; nothing is voted on.</p>
+  </li>
+  <li>
+    <strong>Sync deploys</strong>
+    <p>Skills and context deploy; the next session runs under the improved rules.</p>
+  </li>
+  <li>
+    <strong>Repeat</strong>
+    <p>The next sessions feed the next run.</p>
+  </li>
+</ol>
+
+<h2 id="the-pipeline">The pipeline</h2>
+<p>The nightly run mines sessions into change tasks, implements each as one commit, judges the commits.</p>
+<table class="doc">
+  <thead><tr><th>Step</th><th>Skill</th><th>Artifact out</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td><code>smine-style</code></td><td class="wrap"><code>~/.claude/context/global/style-profile.md</code>: the user's voice (transcripts) plus a <code>## Design taste</code> block (plan Decisions tables, rejection reasons). Injected into every session; smine-problems reads it for solution directions. The nightly runs it when a taste source changed.</td></tr>
+    <tr><td>1</td><td><code>smine</code></td><td class="wrap">Pipeline dispatcher: runs the requested stages (<code>--stages</code>) inline in one session via the Skill tool, owns the <code>implement</code> stage, ends on the run summary.</td></tr>
+    <tr><td>2</td><td><code>smine-batch</code></td><td class="wrap"><code>sessions/&lt;repo&gt;/&lt;YYYY-Www&gt;/&lt;id&gt;.json</code> with a <code>cost</code> object from peek, checked and canonically rewritten by <code>make sessions ARGS="check …"</code>. <code>make sessions ARGS="pending"</code> picks sessions newest first; the <code>smine-mine</code> workflow runs one <code>smine-miner</code> per session.</td></tr>
+    <tr><td>3m</td><td><code>smine-memory</code></td><td class="wrap">Change tasks draining the auto-memory dir into context facts; ends <code>no auto-memory</code> without one.</td></tr>
+    <tr><td>3c</td><td><code>smine-context</code></td><td class="wrap">Change tasks for context entries and <code>acdsl-context</code> declarations, from the records' context-use signals.</td></tr>
+    <tr><td>3p</td><td><code>smine-permissions</code></td><td class="wrap">Change tasks adding the gate's candidate allow rules; intended denials dropped.</td></tr>
+    <tr><td>3a</td><td><code>smine-acdsl</code></td><td class="wrap">Change tasks for ACDSL rules (rule line, verifier, fixtures) for prose rules sessions kept violating.</td></tr>
+    <tr><td>4</td><td><code>smine-problems</code></td><td class="wrap">Cross-session problems, checked against design intent (intended costs dropped), solved as change tasks by the <code>smine-skills</code> and <code>smine-routines</code> planners. One neither solves becomes a backlog Icebox row marked <code>mined</code>, or enriches a matching item's <code>mined</code> marker. Reads the records <code>make sessions ARGS="unsynthesized"</code> lists, marks them <code>mark --synthesized</code>.</td></tr>
+    <tr><td>4c</td><td><code>smine-consolidate</code> <code>carry</code></td><td class="wrap">Cherry-picks every unsettled older change onto this night's proposals branch before the implement stage.</td></tr>
+    <tr><td>5</td><td><code>smine</code> <code>implement</code></td><td class="wrap"><code>/fimplement</code> per change task; each change one commit with trailers <code>Smine-Change: &lt;kind&gt;/&lt;slug&gt;</code> and <code>Smine-Sessions: &lt;ids&gt;</code>.</td></tr>
+    <tr><td>6</td><td><code>smine-consolidate</code></td><td class="wrap"><code>run</code>: every change commit picks onto <code>main</code> alone; changes sharing a file fold into one commit.</td></tr>
+    <tr><td>7</td><td><code>smine-orchestrate</code></td><td class="wrap"><code>run</code>: judges every change commit (ready, or rejected with a reason) and the run. <code>bootstrap</code>: finalizes an initial-setup run.</td></tr>
+  </tbody>
+</table>
+
+<h3>Data flow</h3>
+<table class="doc plain">
+  <thead><tr><th>From</th><th>To</th><th>Kind</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><code>smine-style</code></td><td><code>smine-problems</code></td><td>feeds</td><td class="wrap">voice + design taste</td></tr>
+    <tr><td><code>smine-batch</code></td><td>session record JSON</td><td>writes</td><td class="wrap">cost from peek</td></tr>
+    <tr><td>session record JSON</td><td><code>smine-memory</code>, <code>smine-context</code>, <code>smine-permissions</code>, <code>smine-acdsl</code>, <code>smine-problems</code></td><td>read by</td><td></td></tr>
+    <tr><td><code>smine-problems</code></td><td><code>smine-skills</code>, <code>smine-routines</code> planners</td><td>hands off</td><td></td></tr>
+    <tr><td><code>smine-problems</code></td><td>backlog row</td><td>writes</td><td class="wrap">marked mined</td></tr>
+    <tr><td>the four miners and the planners</td><td>change tasks</td><td>write</td><td class="wrap"><code>.smine-run/changes/</code></td></tr>
+    <tr><td>change tasks</td><td><code>smine-consolidate</code> carry</td><td>next</td><td class="wrap">older unsettled changes onto this night</td></tr>
+    <tr><td><code>smine-consolidate</code> carry</td><td>implement</td><td>next</td><td class="wrap"><code>/fimplement</code> per task, one commit per change</td></tr>
+    <tr><td>implement</td><td><code>smine-consolidate</code></td><td>next</td><td class="wrap">each commit picks alone</td></tr>
+    <tr><td><code>smine-consolidate</code></td><td><code>smine-orchestrate</code> run</td><td>next</td><td class="wrap">verdict per change</td></tr>
+    <tr><td><code>smine-orchestrate</code> run</td><td>Proposals page</td><td>next</td><td class="wrap">pick onto main</td></tr>
+  </tbody>
+</table>
+
+<h3>Store and caps</h3>
+<table class="doc">
+  <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>&lt;store&gt;</td><td class="wrap"><code>~/GolandProjects/agent-plans/&lt;repo&gt;/</code> (<code>&lt;repo&gt;</code> = the main checkout's directory name): the one live backlog store, committed by the routine runner after each run. Skills resolve it via <code>make rules ARGS="store-root"</code>, never spelling the path. A smoke or eval run gets its own (<code>store/</code> in its throwaway worktree), out of the live one's reach.</td></tr>
+    <tr><td>--cap</td><td class="wrap">Change tasks per mining stage per run. Default 5.</td></tr>
+    <tr><td>/smine-batch</td><td class="wrap">The raw miner alone.</td></tr>
+    <tr><td>/smine-problems</td><td class="wrap">The synthesis alone.</td></tr>
+  </tbody>
+</table>
+
+<h3>Cost</h3>
+<p>The nightly is one <code>claude-opus-5-5[1m]</code> dispatcher cell, effort high, $300 budget (<code>routines/smine-nightly/</code>). Measured spend: the usage store behind the config server's <code>/usage</code> page, filled hourly by the <code>smine-budget</code> routine from peek and ccusage, and <a href="token-usage.html">Token usage</a>. One Team Premium 5-hour window held $262.04 of API-equivalent spend.</p>
+<div class="callout">
+  <span class="badge badge-ok">Tip</span>
+  <p>Schedule the routine when interactive usage is low: it shares the plan's window.</p>
+</div>
+</body>
+</html>

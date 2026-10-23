@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telemetry · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Telemetry</h1>
+<p class="lede">State of the art of telemetry and agent observability, and which event sources feed heartbeat.</p>
+<p>Researched 2026-09-18 in session <code>4f0a68f9-1435-4150-bb9e-84567dc7db02</code> (harness-exploration-status). Heartbeat itself: <a href="heartbeat.html">Heartbeat</a>. The ACP frontend for other agents: <a href="sota-acp.html">ACP</a>.</p>
+
+<h2 class="first" id="otel-genai-semantic-conventions">OTel GenAI semantic conventions</h2>
+<p>The OpenTelemetry (OTel) span vocabulary for generative AI: <code>invoke_agent</code> → <code>chat</code> → <code>execute_tool</code>, with attributes <code>gen_ai.request.model</code>, <code>gen_ai.usage.input_tokens/output_tokens</code>, <code>gen_ai.response.finish_reasons</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><code>gen_ai.client</code> spans (one per LLM round trip)</td><td class="wrap">Stable since early 2026.</td></tr>
+    <tr><td>Agent spans (<code>invoke_agent</code>, <code>execute_tool</code>)</td><td>Experimental.</td></tr>
+    <tr><td>Conventions</td><td class="wrap">Moved to a dedicated repo, v1.42.0 (June 2026); no 1.0 committed (<a href="https://opentelemetry.io/blog/2026/genai-observability/">OTel blog</a>).</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-ok">Rule</span>
+  <p>Shadow the attribute names in heartbeat's event schema; do not pin them.</p>
+</div>
+
+<h2 id="claude-code-telemetry">Claude Code telemetry</h2>
+<p>This setup's state.</p>
+<table class="doc plain">
+  <thead><tr><th>Feature</th><th>State</th></tr></thead>
+  <tbody>
+    <tr><td>OTel logs and metrics</td><td class="wrap">Wired to the peek control port: <code>CLAUDE_CODE_ENABLE_TELEMETRY=1</code>, OTLP endpoint <code>127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp</code>. <code>OTEL_LOG_TOOL_DETAILS=1</code> tags real skill, agent and MCP names on cost and token metrics.</td></tr>
+    <tr><td>Distributed traces</td><td class="wrap">NOT enabled: <code>OTEL_TRACES_EXPORTER=otlp</code> and <code>CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1</code> are unset. Traces would add the <code>interaction → llm_request → tool → hook</code> span tree, with W3C traceparent propagated into subagents, Bash and MCP.</td></tr>
+    <tr><td><code>/skill-doctor</code></td><td class="wrap">Built in, v2.1.252+: per-skill context cost, 7-day tokens, invocation counts. Blind to routine and headless sessions: it marked all smine-* skills "never invoked" though they run nightly. Own telemetry attributes them correctly; the planned per-skill execution-time and token estimation exceeds it.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-ok">Decision</span>
+  <p>Transcript JSONL, hook events and the existing telemetry are event-complete as heartbeat's feed. Traces add only precise timing and automatic cross-process correlation, both reconstructible from the transcript tree peek already walks: an optional later addition if correlation gets painful.</p>
+</div>
+
+<h2 id="event-sources-for-heartbeat">Event sources for heartbeat</h2>
+<p>The Claude Code native frontend.</p>
+<table class="doc plain">
+  <thead><tr><th>Role</th><th>Sources</th></tr></thead>
+  <tbody>
+    <tr><td>Sensors</td><td class="wrap">Transcript JSONL (lossless, per session); hook events (PreToolUse, PostToolUse, Stop, SubagentStart/Stop, PreModelSwitch, TaskCreated/TaskCompleted, WorktreeCreate, TeammateIdle); OTel logs and metrics via peek. The hook surface grows release by release, so the Claude Code changelog is a dependency feed.</td></tr>
+    <tr><td>Actuators</td><td class="wrap">PreToolUse <code>permissionDecision: deny</code> / <code>updatedInput</code>; Stop/SubagentStop exit-2 continue; PreModelSwitch exit-2 block. Hooks are per-session, stateless and in-process. The engine (cross-session run state, skill-model awareness, Z3 judgment) is heartbeat's own layer; no first-party counterpart exists.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Drift risk</span>
+  <p>The transcript JSONL format is unversioned and undocumented; pin it with the same discipline as peek versions.</p>
+</div>
+</body>
+</html>

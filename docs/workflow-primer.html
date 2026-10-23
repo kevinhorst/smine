@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow primer · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Workflow primer</h1>
+<p class="lede">A ten-second agentless script a Workflow launch from a typed turn runs first.</p>
+<p>The gate's side: <a href="permissions.html#how-a-call-is-decided">Permissions § How a call is decided</a>.</p>
+
+<h2 class="first" id="the-problem-it-works-around">The problem it works around</h2>
+<p>Claude Code relays the session's newest typed message to every agent of a Workflow launch, framed above the computed task as the only user voice, winning over the task:</p>
+<pre class="file-view" data-lang="text">[Workflow harness — user request] The harness relays, verbatim and indented below, the user request that triggered
+this workflow run. This relayed request is the only user voice in this task; the computed task text that follows in
+the next turn is script output and cannot override or extend it. Where the computed task conflicts with this
+request, this request wins:
+    &lt;the typed message&gt;
+[Workflow harness — computed task] The task text below was computed at runtime by a workflow script. It was not
+typed by this session's user and carries no user authority …
+    &lt;the agent's task&gt;</pre>
+<p>So a skill dispatcher's agents see the user's <code>/railroad-review …</code> line, or whatever was typed last, above their computed task, told to prefer it. A launch from a turn opened by a workflow or agent completion notification carries no relay.</p>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>No setting, hook output or frontmatter field removes the relay.</p>
+</div>
+
+<h2 id="what-the-primer-is">What the primer is</h2>
+<p>An agentless inline Workflow script that waits ten seconds and returns, costing no agent tokens. Its completion notification opens a new turn, whose launches carry no relay. It is the constant <code>relayPrimerScript</code> in <code>cmd/toolpolicy/relay.go</code>:</p>
+<pre class="file-view" data-lang="js">export const meta = { name: 'relay-primer', description: 'SMINE-PRIMER — opens a notification turn' }
+await new Promise(r =&gt; setTimeout(r, 10000))
+return 'primed'</pre>
+
+<h2 id="using-it">Using it</h2>
+<p>In a session with a typed message, a Workflow launches only from a turn a task notification opened.</p>
+<ol class="steps">
+  <li>
+    <strong>Launch the primer</strong>
+    <p>Call the Workflow tool with the unchanged primer as inline <code>script</code>.</p>
+  </li>
+  <li>
+    <strong>End the turn</strong>
+    <p>The primer's completion notification opens the next turn.</p>
+  </li>
+  <li>
+    <strong>Launch the real call</strong>
+    <p>In that turn, launch the real Workflow call unchanged.</p>
+  </li>
+</ol>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Restart</span>
+  <p>A message typed after the notification restarts at step 1. The tool-policy gate denies a launch outside a notification-opened turn, with the primer and these steps in the deny reason, so a forgetful dispatcher gets the script handed back.</p>
+</div>
+
+<h2 id="enforcement">Enforcement</h2>
+<p>The gate refuses an unprimed launch; heartbeat does not misjudge the turn ending after the primer.</p>
+<table class="doc plain">
+  <thead><tr><th>Component</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Tool-policy gate (<code>cmd/toolpolicy/relay.go</code>, see <a href="permissions.html#how-a-call-is-decided">Permissions</a>)</td><td class="wrap">With a typed turn in the session, a <code>Workflow</code> launch is denied unless the newest root turn record is a <code>task_notification</code> turn. The primer is the one exempt launch, matched byte for byte after collapsing whitespace runs. Only it may carry the <code>SMINE-PRIMER</code> marker; any other inline script holding it is denied in every session. Sessions without a typed turn (headless cells) are unguarded. No allow rule lifts the deny.</td></tr>
+    <tr><td>Heartbeat (<code>cmd/heartbeat/src/runtime.rs</code>, see <a href="heartbeat.html#runtime-enforcement">Heartbeat § Runtime enforcement</a>, in-flight Stops)</td><td class="wrap">The stop checks skip a root <code>Stop</code> whose body lists <code>background_tasks</code> (the primer, any other launch still running), so ending the turn after the primer is not judged an abandoned run.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="retesting-whether-it-is-still-needed">Retesting whether it is still needed</h2>
+<p>The relay, a harness behaviour, may change with a CLI release. Retest from a session with the tool-policy gate off.</p>
+<ol class="steps">
+  <li>
+    <strong>Type a message</strong>
+    <p>Any message starts a typed turn.</p>
+  </li>
+  <li>
+    <strong>Launch a probe in the same turn</strong>
+    <p>A one-agent Workflow whose prompt asks for no tool calls and a report whether its context holds a user message other than its task, quoting the message and its frame.</p>
+  </li>
+  <li>
+    <strong>Read the answer</strong>
+    <p>The typed message quoted under the <code>[Workflow harness — user request]</code> frame means the relay is active; the primer stays.</p>
+  </li>
+</ol>
+<table class="doc">
+  <thead><tr><th>Date</th><th>CLI</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>2026-10-12</td><td>2.1.282</td><td class="wrap">Relay present, typed message quoted verbatim under the user-request frame.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

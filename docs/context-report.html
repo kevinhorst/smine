@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context report · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Context report</h1>
+<p class="lede">The session context report shows what the hooks injected into one session, per mechanism and per agent (root and every subagent), in chars and tokens.</p>
+<p>Open it from the config server's <code>Sessions → context</code> list: the peek sessions of every registered repo, or the picked one, by week and local day. Only each week's newest day is open, a day's label toggles it, and each day shows three rows until "show all".</p>
+<p>A row's title opens the report at <code>/sessions-report/&lt;id&gt;</code>; the row also links its peek view when a peek dashboard is configured, and its mined record when one exists. <code>Download .md</code> gives the report as markdown. Injecting hooks: <a href="context-system.html">Context system</a>.</p>
+
+<h2 class="first" id="what-is-measured">What is measured</h2>
+<p>Every injection, as the transcript recorded it reaching the model.</p>
+<table class="doc plain">
+  <thead><tr><th>Source</th><th>Counted</th></tr></thead>
+  <tbody>
+    <tr><td>Hook text</td><td class="wrap">Inline global and skill context, plan-mode context, sessiontitle and tool-policy lines, ACDSL read-hook rules, harness AGENTS.md loads.</td></tr>
+    <tr><td>Reads</td><td class="wrap">Successful Read results of injected context-required files and language guides.</td></tr>
+    <tr><td>Projection blocks</td><td class="wrap">ACDSL projection blocks in transcripts recorded while the hook still wrote them.</td></tr>
+    <tr><td>Other</td><td class="wrap">Context-pack reads and Agent prompts.</td></tr>
+    <tr><td>Codex sessions</td><td class="wrap">Their AGENTS.md instructions turn, environment context and plugin list.</td></tr>
+    <tr><td>Not counted</td><td class="wrap">Allow-only hook output (a JSON decision without <code>additionalContext</code>): it never reaches the model.</td></tr>
+  </tbody>
+</table>
+<p>A projection block counts only where <code>acdsl project -file</code> writes it: the file's first line, after a <code>#!</code> line or closed front matter, in that file's Read result. Claude sessions since the read-context change carry none; their rules show under Hook injections as <code>acdsl-context</code>. A marker anywhere else is a quote, not an injection: a file or transcript mentioning one, Grep, Bash or MCP output, or a Read starting below the file's head.</p>
+
+<h3>Sections</h3>
+<p>Each section but Plan-time rules is one table, one row per subject: a file, a skill, a projected file, a prompt, a hook and its subject. A row sums over the selected agents and shows the agents (the name for one, <code>N agents</code> for several), the injection or read count, and one size figure. Rows sort by tokens, then chars, heaviest first; a table wider than its section scrolls sideways inside it.</p>
+<table class="doc plain">
+  <thead><tr><th>Section</th><th>Injector in its header</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>SessionStart</td><td><code>global-context</code></td><td></td></tr>
+    <tr><td>Skill context</td><td><code>skill-context</code></td><td class="wrap">The header carries the skill version, <code>/&lt;skill&gt; v&lt;version&gt;</code>: the version the session invoked.</td></tr>
+    <tr><td>ACDSL projections</td><td><code>acdsl</code></td><td></td></tr>
+    <tr><td>Plan-time rules</td><td><code>acdsl project -plan</code></td><td class="wrap">A grid of id families, not a table.</td></tr>
+    <tr><td>Context files read</td><td class="wrap"><code>Read</code> and <code>read-gate</code></td><td></td></tr>
+    <tr><td>Subagent prompts</td><td><code>Agent</code></td><td class="wrap">No count column.</td></tr>
+    <tr><td>Hook injections</td><td class="wrap">Its three largest hooks by tokens</td><td></td></tr>
+  </tbody>
+</table>
+
+<h3>Rows and figures</h3>
+<table class="doc plain">
+  <thead><tr><th>Feature</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Tokens / chars switch</td><td class="wrap">Beside Expand all: off for tokens (default), on for chars. Picks the figure of the Ingested context block (agent table, section headers, rows); the peek tiles and the Invoked skills table keep theirs. The browser remembers the choice.</td></tr>
+    <tr><td>Row detail</td><td class="wrap">A click opens it underneath: the per-agent split, id families and paths; SessionStart, prompt and hook rows add the injected text (first 4 000 characters).</td></tr>
+    <tr><td>Repeated reads</td><td class="wrap">One row per file, with its read count and the union of the lines returned (<code>lines 1–450, 901–1327</code>).</td></tr>
+    <tr><td>Hook subject</td><td class="wrap">The AGENTS.md path for <code>harness</code>; the governed file for <code>acdsl-context</code> (the text after <code>ACDSL rules governing</code>); the first line, cut at 40 characters, for the rest: <code>sessiontitle</code>, <code>tool-policy</code>, <code>worktree</code>, <code>heartbeat</code>, else the hook event. <code>planmode-context</code> and <code>codex</code> rows show the item label.</td></tr>
+  </tbody>
+</table>
+
+<h3>Guides read in full</h3>
+<p>A guide counts as read in full when an agent's Reads cover line 1 to the guide's end as the session saw it: the highest line any agent's Read of that path returned. The read gate makes every agent read a governed guide to its end, so no file on disk is consulted and closed sessions are judged like live ones.</p>
+<p>A row reads <code>read in full</code>, <code>lines a–b of N</code> for a single partial reader, or <code>k of n agents in full</code>.</p>
+
+<h3>Selecting agents</h3>
+<p>The <code>agent</code> query parameter selects whose context the page shows; the chips and agent-table rows link to its values.</p>
+<table class="doc">
+  <thead><tr><th>Value</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>(absent)</td><td>Every agent.</td></tr>
+    <tr><td>root</td><td>The root agent.</td></tr>
+    <tr><td>type:&lt;agent type&gt;</td><td>Every agent of that type.</td></tr>
+    <tr><td>id:&lt;agent id&gt;</td><td>One agent.</td></tr>
+  </tbody>
+</table>
+<p>The server computes every section, count, size badge, the total row, pending notice, touched files and markdown download for the selection only. The agent table still lists every agent, dimming those outside it. Filter-bar links keep the selection, and the selection keeps the filter. Peek's tiles (runtime, cost, tokens, cache) stay session-wide.</p>
+<p>Invoked skills belong to the root and show only when it is selected: one row per peek <code>skill_invoked</code> event, with start and end from peek's per-skill runs. An open run shows no end; a session peek no longer serves shows none.</p>
+
+<h2 id="session-features">Session features</h2>
+<p>Above Invoked skills, one row per switchable feature, from the gate's record <code>~/.claude/tool-policy/state/&lt;id&gt;.json</code>; switched with <code>#disable</code> and <code>#enable</code> (<a href="permissions.html#approvals">Permissions § Approvals</a>).</p>
+<table class="doc plain">
+  <thead><tr><th>Column</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>Feature</td><td class="wrap">The catalog in help order, then every language-guide member the record names. Clicking the name opens its history: each disable and enable, in the server's time zone.</td></tr>
+    <tr><td>Hook</td><td class="wrap">The hook behind it.</td></tr>
+    <tr><td>Tags</td><td class="wrap">The injection tags it feeds.</td></tr>
+    <tr><td>State</td><td class="wrap"><code>on</code>, <code>off</code> or <code>was off</code>.</td></tr>
+    <tr><td>Changes</td><td class="wrap">Number of changes.</td></tr>
+  </tbody>
+</table>
+<p>A feature that is off, or was ever disabled, puts ⚠ beside every tag it feeds, in section headers and hook rows, with a hint naming the feature and its disable times; re-enabling keeps the mark. <code>skill:*</code> and <code>hb</code> feed no section.</p>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>The gate appends these events from 2026-10-13 on; older records carry only the off set.</p>
+</div>
+
+<h2 id="token-counting">Token counting</h2>
+<p>Codex text is counted offline with OpenAI's <code>o200k_base</code> tokenizer: exact for the gpt-5 and o-series families, <code>≈</code> for others. Claude text goes to Anthropic's count-tokens endpoint, which needs an API key, so counting is off by default.</p>
+<p>Enable it (macOS only):</p>
+<ol class="steps">
+  <li>
+    <strong>Create a scoped key</strong>
+    <p>In the Anthropic Console, create a dedicated workspace with the lowest monthly spend limit and an API key scoped to it. count_tokens is free; the limit caps a leaked key.</p>
+  </li>
+  <li>
+    <strong>Store it in the OS credential store</strong>
+    <p>macOS: the login keychain; the value is prompted, never typed on the command line.</p>
+    <pre class="file-view" data-lang="bash">security add-generic-password -s com.smine.configserver -a anthropic-api-key -w</pre>
+    <p>Windows: a generic Credential Manager entry.</p>
+    <pre class="file-view" data-lang="powershell">cmdkey /generic:com.smine.configserver/anthropic-api-key /user:anthropic-api-key /pass:&lt;key&gt;</pre>
+  </li>
+  <li>
+    <strong>Turn counting on</strong>
+    <p>A dev server reads the same setting from its dev home's install record.</p>
+    <pre class="file-view" data-lang="bash">smine-rules settings set routines.count_tokens keychain</pre>
+  </li>
+</ol>
+
+<h3>Safeguards</h3>
+<table class="doc plain">
+  <thead><tr><th>Safeguard</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Endpoint</td><td class="wrap">One, pinned.</td></tr>
+    <tr><td>Rate</td><td class="wrap">30 calls per minute.</td></tr>
+    <tr><td>Per report</td><td class="wrap">At most 200 uncached items.</td></tr>
+    <tr><td>Item size</td><td class="wrap">Items over 200 000 characters are skipped.</td></tr>
+    <tr><td>Breaker</td><td class="wrap">Three consecutive auth, rate or server errors pause counting until restart.</td></tr>
+    <tr><td>Cache</td><td class="wrap">Content-addressed, at <code>~/.claude/context-report/token-cache.json</code>.</td></tr>
+    <tr><td>Key</td><td class="wrap">Never in a log, error or page.</td></tr>
+    <tr><td>Unavailable</td><td class="wrap">A missing keychain item or Credential Manager entry, a locked keychain or another platform: one notice on the report, token column empty.</td></tr>
+  </tbody>
+</table>
+
+<h3>Background counting</h3>
+<p>The page never waits for the API: it renders with the cached counts and shows the rest as pending. One background run per session counts them: identical texts once, 30 API calls per minute, 200 injections per run, two minutes at most.</p>
+<p>The page polls <code>/sessions-report/{id}/counting</code> and reloads once when the run has finished; anything still pending is counted on the next manual reload. Texts over the size limit show as skipped.</p>
+
+<h3>Skill body tokens</h3>
+<p><code>make skill-render</code> counts each skill's deployed body (SKILL.md without frontmatter) into the <code>tokens</code> field of the newest changelog row in <code>&lt;leaf&gt;.cue</code> when the keychain item is readable; otherwise it prints one warning line and leaves the row untouched. The invoked-skills table looks the count up by version: the one the skill-context header recorded, else the one deployed now, marked <code>≈</code>.</p>
+
+<h2 id="cli">CLI</h2>
+<p>Prints a session's record as JSON (smine-batch's <code>sessions[].context</code>), tokens uncounted.</p>
+<pre class="file-view" data-lang="bash">make context-record ARGS="~/.claude/projects/&lt;munged-cwd&gt;/&lt;session&gt;.jsonl [ctx-dir]"</pre>
+</body>
+</html>

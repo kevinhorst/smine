@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compaction · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Compaction</h1>
+<p class="lede">What <code>/compact</code> costs, and why a design hands over to implementation through the plan file, not a compacted session.</p>
+<p>Decision record, 2026-10-01: after a design session on Fable, should <code>/compact</code> or a fresh session on the persisted plan carry the design into implementation? Sources: Claude Code docs on context window, prompt caching and costs; the repo's cache facts (<code>context/facts/claude.md</code>, <a href="cache-token.html">Prompt caching</a>); the <a href="index.html">README</a>'s read-gate section; the hook integration probe (git history: <code>docs/hook-integration-investigation.md</code>); the peek event stream of session <code>be7c0d25</code> (fdesign on Fable, <code>/compact</code>, <code>/model</code> to Opus, <code>/fimplement</code>).</p>
+<div class="callout">
+  <span class="badge badge-ok">Decision</span>
+  <p>A fresh session on the plan. Compaction is for one long task that outgrows its window, never for a phase handoff.</p>
+</div>
+
+<h2 class="first" id="use-cases">Use cases</h2>
+<table class="doc plain">
+  <thead><tr><th>Situation</th><th>Do this</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Design approved, implementation next</td><td class="wrap">Persist and commit the plan, end the session. Start a new one on the implementation model with <code>/fimplement &lt;plan file&gt;</code>.</td><td class="wrap">The plan is the contract; anything a summary adds is non-binding by construction.</td></tr>
+    <tr><td>One task, context near the window</td><td><code>/compact</code></td><td class="wrap">The only case where the summary carries state that lives nowhere else: the in-flight unit.</td></tr>
+    <tr><td>Unattended routine resumed nightly</td><td class="wrap"><code>/compact</code> in the prompt, as <a href="routines.html">Routines</a> does.</td><td class="wrap">Context grows per run; nobody is there to split sessions.</td></tr>
+    <tr><td>Model switch planned</td><td class="wrap">Switch at the session boundary, not after compaction.</td><td class="wrap">The summary bills on the compacting model; the switch alone already costs a partial cache rebuild.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="what-compaction-does">What compaction does</h2>
+<table class="doc plain">
+  <thead><tr><th>Effect</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>One large request on the session model</td><td class="wrap">Same system prompt, tools and full history, plus a summarization instruction as the final user message; billed like any call over that context. Since CLI 2.1.198 it inherits the session's extended-thinking setting.</td></tr>
+    <tr><td>Full cache rebuild</td><td class="wrap">The message list is rewritten, so the next call re-writes the whole remaining context at the cache-write rate. Compaction's own request uses a 5-minute cache TTL unless <code>subagentPromptCacheTtl</code> is set.</td></tr>
+    <tr><td>Harness re-reads after the summary</td><td class="wrap">Up to five recently read or edited files, newest first; one over 5,000 tokens returns as a path reference. Invoked skill bodies are re-injected, capped at 5,000 tokens per skill and 25,000 total; fdesign (~8,000 tokens) loses its tail.</td></tr>
+    <tr><td>Intermediate reasoning is gone</td><td class="wrap">Prior thinking is not preserved. Conclusions survive only where written down: the plan, its AGENT-ONLY columns, ledgers (<a href="thinking.html">Thinking</a>).</td></tr>
+    <tr><td>Hooks</td><td class="wrap">PreCompact can block. PostCompact receives the summary, can neither block nor inject. A SessionStart after compaction drops the root agent's read-gate records, so every required file is owed again; recorded skill invocations stay.</td></tr>
+    <tr><td>Invisible to peek</td><td class="wrap">No usage row in the event stream (the <code>compact</code> skill entry shows 0 in, 0 out); the cost shows only in Anthropic usage.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="why-it-fails-as-a-phase-handoff">Why it fails as a phase handoff</h2>
+<p>Measured on session <code>be7c0d25</code>: design on Fable, implementation on Opus.</p>
+<table class="doc plain">
+  <thead><tr><th>Step</th><th>Time</th><th>What happened</th></tr></thead>
+  <tbody>
+    <tr><td><code>/compact</code></td><td>22:08:54 → 22:10:08</td><td class="wrap">Summary written on Fable over the full design context.</td></tr>
+    <tr><td>Harness re-reads</td><td>22:10:17 → 22:10:32</td><td class="wrap">Four automatic Reads rejected: three by the path fence, one by the read-gate.</td></tr>
+    <tr><td><code>/model</code>, <code>/fimplement</code></td><td>22:17:42, 22:17:46</td><td class="wrap">The implementation model takes over.</td></tr>
+    <tr><td>Read-gate re-reads</td><td>22:17:57 → 22:19:02</td><td class="wrap">global.md, fimplement.md, fdesign.md (614 lines, ~32k tokens), go.md (1,327 lines, ~30k tokens).</td></tr>
+    <tr><td>Denied commands</td><td>22:18:02, 22:18:58</td><td class="wrap"><code>git status</code> and <code>git diff</code> refused until fdesign.md was re-read.</td></tr>
+    <tr><td>Plan read</td><td>22:18:24</td><td class="wrap">The whole plan file, 3,327 lines, ~26k tokens.</td></tr>
+    <tr><td>First edit</td><td>22:19:51</td><td class="wrap">Two minutes after the skill started.</td></tr>
+  </tbody>
+</table>
+<p>Three costs a fresh session never pays:</p>
+<table class="doc plain">
+  <thead><tr><th>Cost</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>The summary is paid twice</td><td class="wrap">Once to produce it on the design model, then as context on every later call. A fresh session carries the plan instead, which the implementation skill reads in full anyway (fimplement's intake rule).</td></tr>
+    <tr><td>The gate demands the wrong files</td><td class="wrap">After compaction the read-gate owes every injection file the session ever recorded, the design skill's included; a fresh session owes only what the implementation skill declares. The fdesign injection file alone: 32k tokens re-read for a skill the session no longer ran.</td></tr>
+    <tr><td>The harness re-reads hit the fence</td><td class="wrap">The automatic Reads target the most recently touched files: in a design session, the plan-mode file under <code>~/.claude/plans/</code> and the injection files under <code>~/.claude/context-required/</code>, both outside the session roots. Denied, they start the model from a rejected-Reads ledger.</td></tr>
+  </tbody>
+</table>
+<p>The summary did carry one thing that time: an unfinished persistence. The addendum and its Changes entries existed only in the plan-mode file at compaction; the post-compaction run spent four minutes writing them into the repo plan. A precondition of the plan-on-disk route, not an argument for compaction.</p>
+
+<h2 id="the-handoff-that-works">The handoff that works</h2>
+<ol class="steps">
+  <li><strong>Persist the plan</strong><p>fdesign ends with the plan persisted in the plan dir, <code>smine-rules plan-sections</code> green, and the plan committed.</p></li>
+  <li><strong>Start a new session</strong><p>Choose the implementation model at start and run <code>/fimplement &lt;plan file&gt;</code>. The tool-policy hook applies the plan's frozen rules on the invocation.</p></li>
+  <li><strong>Peek only for ambiguity</strong><p><code>/peek</code> on the design session is the fallback for one thing: a Decision or rejection reason that reads ambiguous. Needing it for more is a plan defect; fix the plan.</p></li>
+</ol>
+<p>Same-session chaining without compaction stays acceptable for a short design. Compaction costs the most and delivers the least.</p>
+
+<h2 id="open-measurements">Open measurements</h2>
+<ul>
+  <li>Which model writes the summary after a downward <code>/model</code> switch (from the hook integration probe).</li>
+  <li>Whether the harness re-reads after compaction are recorded in the transcript as tool_use lines; peek attributes the four denials to no assistant turn.</li>
+</ul>
+</body>
+</html>

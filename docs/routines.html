@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Routines · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Routines</h1>
+<p class="lede">Routines are local scheduled jobs running headless <code>claude -p</code> through the Go runner <code>bin/routine</code>, under launchd on macOS and Task Scheduler on Windows.</p>
+<p>The runner is <code>cmd/routine</code> and <code>internal/routinerun</code>. Generic <code>claude -p</code> mechanics (flags, auth options, stream-json): <a href="#claude-p-mechanics">claude -p mechanics</a>. Author a new routine with <code>/skillroutine-create</code> (routine route).</p>
+
+<h2 class="first" id="what-runs">What runs</h2>
+<p>Schedules are local time.</p>
+<table class="doc">
+  <thead><tr><th>Routine</th><th>Schedule</th><th>Group → branch</th><th>Prompt and output</th><th>Budget</th></tr></thead>
+  <tbody>
+    <tr><td>smine-nightly</td><td>03:00</td><td class="wrap"><code>smine-nightly</code> → <code>claude-routines/smine-nightly-&lt;date&gt;-proposals</code> and <code>-batch</code>, from <code>main</code></td><td class="wrap">One dispatcher session: <code>/smine --nightly --stages [style],batch,memory,context,permissions,acdsl,problems,implement,consolidate,[judge]</code> (<a href="#smine-nightly">smine-nightly</a>).</td><td class="wrap">$300 per run (<code>ROUTINE_MAX_BUDGET_USD</code>, workflow agents included)</td></tr>
+    <tr><td>skill-eval-railroad-review</td><td class="wrap">none (Run Now)</td><td class="wrap"><code>skill-eval-railroad-review</code> → <code>claude-routines/skill-eval-railroad-review-&lt;date&gt;</code></td><td class="wrap">One dispatcher session: <code>/skillroutine-ab railroad-review variant: model:sonnet</code>. Baseline: railroad-review's <code>eval/definition.json</code> (opus, high; repo <code>smine</code> via the registry <code>~/.claude/smine/repos.json</code>; <code>armUsd</code> per side); variant: the same with sonnet. Both sides run as <code>claude -p</code> roots via <code>go run ./cmd/skilleval arm</code>. The A/B dir <code>evals/railroad-review/ab-&lt;date&gt;-&lt;hash6&gt;/</code> is committed on the dated branch.</td><td class="wrap">No dispatcher cap; each side's arms at the preset <code>armUsd</code></td></tr>
+    <tr><td>backlog-fdesign</td><td class="wrap">dispatch-only</td><td class="wrap">own group → <code>claude-routines/backlog-fdesign-&lt;date&gt;</code></td><td class="wrap"><code>/fdesign --nightly</code> + the dispatched item: plan persisted to its plan dir, no approval, no /fimplement</td><td>$25</td></tr>
+    <tr><td>backlog-idea</td><td class="wrap">dispatch-only</td><td>own group</td><td class="wrap"><code>/idea --nightly</code> + item: <code>idea/idea.md</code> record</td><td>$10</td></tr>
+    <tr><td>backlog-concept</td><td class="wrap">dispatch-only</td><td>own group</td><td class="wrap"><code>/concept --nightly</code> + item: <code>concept/concept.md</code>, escalations held OPEN</td><td>$15</td></tr>
+    <tr><td>backlog-fexplore</td><td class="wrap">dispatch-only</td><td>own group</td><td class="wrap"><code>/fexplore --nightly</code> + item: <code>design/exploration.md</code></td><td>$20</td></tr>
+    <tr><td>backlog-skillroutine-create</td><td class="wrap">dispatch-only</td><td>own group</td><td class="wrap"><code>/skillroutine-create --nightly</code> + item: plan in its plan dir, skill or routine files built, bootstrap after merge</td><td>$25</td></tr>
+    <tr><td>spec-drift</td><td>Sun 04:00</td><td>own group</td><td class="wrap"><code>/spec-drift --nightly cap: 40</code>: <code>reports/spec-drift/&lt;date&gt;.md</code></td><td>$20</td></tr>
+    <tr><td>smine-budget</td><td class="wrap">hourly at :07</td><td class="wrap">none: no worktree, branch or group lock</td><td class="wrap">None (kind <code>budget</code>, no claude cell). Archives transcripts and captures peek, ccusage and context into the usage store <code>~/.claude/smine/usage</code>; writes a result row only when it took a session or a source failed.</td><td class="wrap">No claude spend; 30-minute deadline (<code>ROUTINE_TIMEOUT_S</code> 1800)</td></tr>
+  </tbody>
+</table>
+
+<h3>routine.json and the Backlog board</h3>
+<p>Each routine dir carries <code>routine.json</code>.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>kind</td><td class="wrap"><code>single</code>, <code>smine-nightly</code> or <code>budget</code>: the runner flow.</td></tr>
+    <tr><td>group</td><td class="wrap">Optional; lowercase letters, digits, <code>-</code>. Collapses the routine with its siblings on the Routines page (smine, backlog, skill-eval); without one it stands alone.</td></tr>
+    <tr><td>prompt</td><td class="wrap">Its leading <code>/skill</code> is the skill the routine declares; a <code>budget</code> routine has none and declares no skill.</td></tr>
+  </tbody>
+</table>
+<p>The config server's Backlog board dispatches an item as Run Now of the routine declaring the item's route skill. The route args, <code>B-NNN: &lt;title&gt;</code>, the board's extra prompt and the item description are appended to the routine's prompt, <code>ROUTINE_EXTRA_PROMPT</code> between them. An item whose skill no routine declares shows ROUTINE MISSING until one is authored with <code>/skillroutine-create routine</code>; a <code>single</code> routine is <code>routine.json</code> plus plist, no code.</p>
+
+<h3>Groups and dated branches</h3>
+<p>Each group owns one worktree, <code>~/.cache/claude-routine/worktrees/&lt;group&gt;</code>, and one lineage of dated branches <code>claude-routines/&lt;group&gt;-&lt;date&gt;</code>; <code>-2</code>, <code>-3</code>, … tell same-day runs apart. smine-nightly differs (<a href="#smine-nightly">below</a>).</p>
+<ol class="steps">
+  <li>
+    <strong>Pick the base</strong>
+    <p>Every run mints a fresh branch, never reusing one: on the newest un-merged dated branch (the chain tip), so runs stack linearly, or on <code>main</code> when none survives.</p>
+  </li>
+  <li>
+    <strong>Sync with main</strong>
+    <p>A chain-based run first syncs: a clean <code>git merge main</code>, or on conflicts an unattended <code>/merge-resolve</code> claude run in the worktree, gated by a clean tree and a conflict-free <code>git merge-tree --write-tree main HEAD</code>. A sync that cannot reach a mergeable state fails the run, chain untouched.</p>
+  </li>
+  <li>
+    <strong>Run under the group lock</strong>
+    <p>Chain members (routines sharing a <code>ROUTINE_GROUP</code>) serialize on it; different groups run concurrently, never touching each other's worktrees or branches.</p>
+  </li>
+  <li>
+    <strong>Commit locally</strong>
+    <p>Output is committed on the dated branch: no push, no PR. Every result is mergeable into main as of run start; a conflict at accept time only means main moved since.</p>
+  </li>
+</ol>
+<table class="doc plain">
+  <thead><tr><th>Outcome</th><th>Commit subject</th></tr></thead>
+  <tbody>
+    <tr><td>Non-zero exit</td><td class="wrap">Still committed, prefixed <code>[failed]</code>.</td></tr>
+    <tr><td>smine-nightly run whose summary reports failed stages</td><td class="wrap">The pipeline finished, so the subject names those stages instead: <code>[stage-failed: style, implement]</code>. Exit 70 all the same.</td></tr>
+    <tr><td>Salvaged leftover worktree</td><td class="wrap"><code>[salvaged]</code>, on its own branch (below).</td></tr>
+  </tbody>
+</table>
+<p>Publish, the nightly publish, the fleet worker's land and leftover-worktree salvage strip ACDSL projection blocks before staging, so a tree projected with <code>acdsl project -file</code> still passes the pre-commit guard.</p>
+<table class="doc plain">
+  <thead><tr><th>You want</th><th>Do</th></tr></thead>
+  <tbody>
+    <tr><td>Accept the whole chain</td><td class="wrap">Merge the newest branch locally.</td></tr>
+    <tr><td>Discard a run</td><td class="wrap">Delete its branch.</td></tr>
+    <tr><td>Accept part of the chain</td><td class="wrap">Merge a middle branch. Branches at or below it prune next run; the tip chain, still containing their work, carries on.</td></tr>
+  </tbody>
+</table>
+
+<h3>What the runner deletes</h3>
+<p>Never with force, never produced work unarchived.</p>
+<table class="doc plain">
+  <thead><tr><th>What</th><th>Handling</th></tr></thead>
+  <tbody>
+    <tr><td>Nightly branches</td><td class="wrap"><code>git branch -D</code>: a <code>-proposals</code> branch (never an ancestor of <code>main</code>) once every change on it is picked, rejected or dropped; a <code>-batch</code> branch once its records are on <code>main</code>; the <code>-landing</code> scratch branch. Before each <code>-D</code> the branch's diff against <code>main</code> goes into the trash plus a journal line with its sha; a failed archive keeps the branch.</td></tr>
+    <tr><td><code>discard</code></td><td class="wrap">Deletes a ref only while it still names its base's commit (<code>update-ref -d &lt;ref&gt; &lt;sha&gt;</code>).</td></tr>
+    <tr><td>Foreign dir under the group path</td><td class="wrap">A directory git does not list as a worktree: moved to <code>&lt;worktree root&gt;/.stale-archive/&lt;stamp&gt;-&lt;group&gt;</code>; the run goes on.</td></tr>
+    <tr><td>Worktrees</td><td class="wrap">Plain <code>git worktree remove</code>.</td></tr>
+    <tr><td>Worktree left by a refused publish</td><td class="wrap">Committed as <code>[salvaged]</code> on its own branch at the next create, only then removed. If salvage or removal fails, the run exits 70 and the worktree stays.</td></tr>
+    <tr><td>Dated branches merged into main</td><td class="wrap">Pruned with <code>git branch -d</code>.</td></tr>
+    <tr><td>Chain whose newest branches hold only <code>[failed]</code> or <code>[salvaged]</code> commits</td><td class="wrap">Skipped, not deleted: the next run stacks on the newest branch with reviewable output (or main); the skipped ones stay for you to review, merge or delete. A <code>[stage-failed: …]</code> commit is reviewable output, not skipped.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Cap</span>
+  <p><code>ROUTINE_MAX_OPEN_BRANCHES</code> (unset by default) caps a group's open un-merged dated branches. At the cap a run creates no branch, logs to stderr and exits 0: merge one first.</p>
+</div>
+
+<h3 id="smine-nightly">smine-nightly</h3>
+<p>The exception to the chain: every night cuts its own branches from <code>main</code>; the open-branch cap never applies.</p>
+<ol class="steps">
+  <li>
+    <strong>Cut the proposals branch</strong>
+    <p><code>claude-routines/smine-nightly-&lt;date&gt;-proposals</code> from <code>main</code>. A run finding no unmined session in peek's window ends before cutting and drops nothing.</p>
+  </li>
+  <li>
+    <strong>Run the pipeline</strong>
+    <p>One <code>/smine</code> dispatcher session. Style runs only if a plan or backlog-store change landed since the last style run; judge runs unless <code>ROUTINE_ORCHESTRATE=0</code>. Miners write change tasks; <code>implement</code> runs <code>/fimplement</code> per task, one commit per change; <code>consolidate</code> makes every change commit pick cleanly onto <code>main</code> alone.</p>
+  </li>
+  <li>
+    <strong>End on the marker</strong>
+    <p>When <code>/smine</code> writes <code>run-complete.json</code> in the group's steer dir: per-stage rows, the judge's verdict per change commit, the run verdict.</p>
+  </li>
+  <li>
+    <strong>Land the session records</strong>
+    <p>At publish the runner commits them on <code>claude-routines/smine-nightly-&lt;date&gt;-batch</code> and lands them on <code>main</code> at once with <code>smine-agentwt pick</code>; a refused pick retries at the next night's start. So the Sessions page shows yesterday's records every morning. The next night restores <code>sessions/</code> from the newest open batch into its files, never the index.</p>
+  </li>
+  <li>
+    <strong>Land the changes</strong>
+    <p>On a judge-accepted run with auto-merge on, the runner picks every ready change onto a scratch branch, moves <code>main</code> only if all applied, then deploys. Nothing is pushed; no agent touches the main checkout.</p>
+  </li>
+</ol>
+<table class="doc plain">
+  <thead><tr><th>Change commit</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Trailers</td><td class="wrap"><code>Smine-Change: &lt;kind&gt;/&lt;slug&gt;</code> and <code>Smine-Sessions: &lt;ids&gt;</code>; a judge fix carries the fixed change's session ids.</td></tr>
+    <tr><td>Task file</td><td class="wrap">The change's problem, evidence and fix: problem one sentence ≤ 160 runes, fix ≤ 240, at most 3 quotes ≤ 160 characters, each naming its record finding. <code>smine-rules task-check</code> checks it on write and before the dispatcher spawns its implementer. The runner validates it against the same schema and copies it into the run report's <code>tasks</code>; the page reads it there, falling back to the commit body only for a change without a record.</td></tr>
+    <tr><td>Proposal cap</td><td class="wrap">Over 7 files or 420 changed lines: no proposal. Before publish the runner files it as an Icebox backlog row (<code>commit &lt;sha&gt;</code> as first evidence) and writes its rejected ref; the report row reads <code>rejected — over the proposal cap: &lt;n&gt; files, &lt;m&gt; lines → B-NNN</code>.</td></tr>
+    <tr><td>Card</td><td class="wrap">Every file's added and deleted lines and the commit's totals.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Proposal event</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>You pick it onto <code>main</code></td><td class="wrap">Accepted; the Proposals page's button runs <code>smine-agentwt pick --onto main &lt;sha&gt;</code>.</td></tr>
+    <tr><td>You Reject it on the Proposals page</td><td class="wrap"><code>refs/smine/rejected/&lt;sha&gt;</code>.</td></tr>
+    <tr><td>Older than <code>SMINE_PROPOSAL_WINDOW_NIGHTS</code> mined nights (default 2), or its dry-run pick onto <code>main</code> fails</td><td class="wrap">Dropped at the next run: <code>refs/smine/dropped/&lt;sha&gt;</code>, under the Proposals page's History tab; the emptied branch is deleted.</td></tr>
+    <tr><td>Proposals branch fully settled</td><td class="wrap">Deleted at run end.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="container-routines">Container routines</h2>
+<p>A routine whose agent must not reach the rest of the machine runs in Docker. Keys are per routine, set in the config server's Configure form, which writes the plist's <code>EnvironmentVariables</code>; a budget routine starts no cell, so they mean nothing there.</p>
+<table class="doc">
+  <thead><tr><th>Key</th><th>Form field</th><th>Default</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>ROUTINE_CONTAINER</td><td class="wrap">Docker container (off / on)</td><td>off</td><td class="wrap"><code>1</code> runs every chat cell of the run in a container; anything but empty, <code>0</code> or <code>1</code> stops the run, exit 78.</td></tr>
+    <tr><td>ROUTINE_CONTAINER_MOUNTS</td><td class="wrap">Container mounts (one row per registered repo: none / read / read-write)</td><td>none</td><td class="wrap"><code>&lt;repo&gt;:ro</code> or <code>&lt;repo&gt;:rw</code>, comma-separated, repo names from <code>~/.claude/smine/repos.json</code></td></tr>
+    <tr><td>ROUTINE_CONTAINER_CPUS</td><td>Container CPUs</td><td><code>4</code></td><td><code>docker run --cpus</code></td></tr>
+    <tr><td>ROUTINE_CONTAINER_MEMORY</td><td>Container memory</td><td><code>5g</code></td><td><code>docker run --memory</code></td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Topic</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>What moves inside</td><td class="wrap">Every chat cell, the <code>/merge-resolve</code> sync cell included, runs as <code>docker run</code> of the image <code>smine-routine-cell</code>. The runner stays on the host: locks, worktree create and sync, publish, <code>results.jsonl</code>, the store commit and landing never enter a container. The cell runs as your uid at your home path, so bind mounts keep their absolute path and owner; unmounted <code>$HOME</code> paths and <code>/tmp</code> are container-local. macOS and Linux only; on Windows the run exits 78.</td></tr>
+    <tr><td>Prerequisites</td><td class="wrap">A running Docker daemon and the <code>docker</code> CLI. The runner adds <code>/usr/local/bin</code> (Docker Desktop's CLI links, missing from launchd's PATH) to its PATH and probes the daemon before the first cell, never starting it. No CLI or an unreachable daemon: exit 69.</td></tr>
+    <tr><td>The image</td><td class="wrap">Built once per run, just before its first container cell (after the started row, so the routine shows running), from <code>cmd/routine/container/Dockerfile</code> in the main checkout. Holds the claude CLI pinned to the host's <code>claude --version</code>, peek-mcp at <code>PEEK_MCP_VERSION</code>, the deployed hook binaries plus <code>smine-rules</code>, <code>smine-routine</code> and <code>smine-agentwt</code> built for Linux, and the Go/Rust toolchain the make targets need. Docker's layer cache is the freshness check: an unchanged checkout costs one cached build, the first build takes minutes. Build log: <code>image-build.log</code> in the group's steer dir; a failed build exits 69.</td></tr>
+    <tr><td>Fixed limits</td><td class="wrap"><code>--pids-limit 4096</code> per cell. At most four container cells machine-wide: each takes one of four slot lock files under <code>~/.cache/claude-routine/container/slots/</code>, waiting up to 2 h, then exits 75 <code>container slot timeout</code>. <code>ROUTINE_CONTAINER_ROOT</code> overrides <code>~/.cache/claude-routine/container</code>, which holds the slot locks and is never mounted.</td></tr>
+    <tr><td>Repo mounts</td><td class="wrap">A container sees its own repo's <code>.git</code>, worktree pool and run worktree, its repo's backlog store <code>&lt;store&gt;/backlog</code> (always, read-write), and the repos its mounts name, each at its host path. A skill writing the proposal store or running <code>/plan-archive</code> needs the plans-archive repo mounted read-write, registered like any repo; skills with <code>@repos</code> grants need the sibling repos they read. A mount only makes the path exist; the tool-policy gate still decides access.</td></tr>
+    <tr><td>Mount validation</td><td class="wrap">Names resolve against the registry before the worktree exists; an unregistered name, the run's own repo or a missing path stops the run, exit 78. The form rejects the first two on save and shows a stored name the registry lost as "(not mountable)".</td></tr>
+    <tr><td>What is absent inside</td><td class="wrap"><code>gh</code>, push credentials (no gitconfig; the runner passes your git identity as <code>GIT_AUTHOR_*</code>/<code>GIT_COMMITTER_*</code>), <code>smine-heartbeat</code>, IDE MCP servers, every macOS command. MCP is the registered peek-mcp entry, passed by flag.</td></tr>
+    <tr><td>Network</td><td class="wrap">A cell reaches only heartbeat's and peek-control's host ports (<code>heartbeat.port</code>, <code>peek.control_port</code> of the install record), through a second container per cell, <code>smine-cell-&lt;group&gt;-firewall</code>, whose network the cell joins without any capability. Its firewall rejects every other host-gateway port; two <code>socat</code> relays forward <code>127.0.0.1:&lt;port&gt;</code> to the host. The cell mounts the deployed <code>settings.json</code> unchanged: Claude Code refuses HTTP hooks to private addresses, so hooks post to loopback and the relay carries them out.</td></tr>
+    <tr><td>Isolation worktrees</td><td class="wrap">The main checkout's <code>.git</code> and <code>.claude/worktrees</code> are mounted read-write at their host paths, so a cell creates isolation worktrees in the main checkout's pool as on the host, the tool-policy gate confining each agent to its own. Heartbeat and agentwt see a container session through <code>~/.claude/smine/container-sessions/&lt;pid&gt;.json</code>, written by the runner under the docker client's pid.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-stop">
+  <span class="badge badge-error">Never</span>
+  <p>Remove a running cell's <code>-firewall</code> container: the cell loses its network with it.</p>
+</div>
+
+<h2 id="what-you-can-adjust-and-where">What you can adjust, and where</h2>
+<p>Most knobs are plist <code>EnvironmentVariables</code> keys, editable in the Configure form.</p>
+<table class="doc plain">
+  <thead><tr><th>Knob</th><th>Where</th><th>Takes effect</th></tr></thead>
+  <tbody>
+    <tr><td>Schedule</td><td class="wrap"><code>StartCalendarInterval</code> in <code>&lt;routine&gt;/com.smine.routine.&lt;name&gt;.plist</code></td><td class="wrap">After re-bootstrap (below)</td></tr>
+    <tr><td>Model, budget, permission mode</td><td class="wrap"><code>ROUTINE_MODEL</code>, <code>ROUTINE_MAX_BUDGET_USD</code>, <code>ROUTINE_PERMISSION_MODE</code>; optional: empty means the settings.json model and defaultMode, no cap (invocation parity, <code>context/routines.md</code>).</td><td>Next run</td></tr>
+    <tr><td>Per-stage prompts, efforts, timeouts</td><td class="wrap">Code in <code>internal/routinerun</code> (<code>nightly.go</code>, <code>single.go</code>)</td><td class="wrap">After <code>make build</code></td></tr>
+    <tr><td>Prompt / wrapped skill</td><td class="wrap"><code>prompt</code> in <code>routine.json</code>; the smine-nightly stages build theirs in <code>nightly.go</code>; kind <code>budget</code> has none.</td><td>Next run</td></tr>
+    <tr><td>Run backstop</td><td class="wrap"><code>ROUTINE_TIMEOUT_S</code> (default 46800 s); on expiry the runner TERMs every cell and writes a 124 row.</td><td>Next run</td></tr>
+    <tr><td>Group membership</td><td class="wrap"><code>ROUTINE_GROUP=&lt;group&gt;</code>, default the routine's own name.</td><td class="wrap">Next run; starts a new <code>claude-routines/&lt;group&gt;-&lt;date&gt;</code> lineage</td></tr>
+    <tr><td>Worktree root / branch prefix</td><td class="wrap"><code>ROUTINE_WT_ROOT</code> / <code>ROUTINE_BRANCH_PREFIX</code> env overrides; the dated suffix is always appended.</td><td>Next run</td></tr>
+    <tr><td>Max open branches</td><td class="wrap"><code>ROUTINE_MAX_OPEN_BRANCHES</code> for a <code>single</code> routine's group; empty means unlimited. The nightly ignores it: its proposals age out after <code>SMINE_PROPOSAL_WINDOW_NIGHTS</code> mined nights.</td><td>Next run</td></tr>
+    <tr><td>Per-routine params</td><td class="wrap">Plist <code>EnvironmentVariables</code>; the Routines page's Configure form (one input per plist-declared key) rewrites the plist and re-bootstraps.</td><td class="wrap">After the form's re-bootstrap</td></tr>
+    <tr><td>Docker container, its mounts and limits</td><td class="wrap"><code>ROUTINE_CONTAINER</code>, <code>ROUTINE_CONTAINER_MOUNTS</code>, <code>ROUTINE_CONTAINER_CPUS</code>, <code>ROUTINE_CONTAINER_MEMORY</code> (<a href="#container-routines">Container routines</a>)</td><td>Next run</td></tr>
+    <tr><td>Run every N days</td><td class="wrap"><code>ROUTINE_CADENCE_DAYS</code>: launchd keeps its daily schedule; the runner gates on a <code>&lt;routine&gt;/.cadence-stamp</code> file, skipping until N days passed. Unset or <code>1</code>: every scheduled run.</td><td>Next run</td></tr>
+  </tbody>
+</table>
+<p>Plist changes reload from the main checkout, never a worktree:</p>
+<pre class="file-view" data-lang="bash">launchctl bootout gui/$(id -u)/com.smine.routine.&lt;name&gt;
+launchctl bootstrap gui/$(id -u) &lt;repo-root&gt;/routines/&lt;name&gt;/com.smine.routine.&lt;name&gt;.plist</pre>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Nothing runs without these three.</p>
+<ol class="steps">
+  <li>
+    <strong>Token</strong>
+    <p><code>~/.config/claude-routine/token</code>, non-empty, from <code>claude setup-token</code> (1-year OAuth; strip whitespace when pasting). Missing or empty: exit 78 before anything runs. Never cat it; check with <code>[[ -s ]]</code>.</p>
+    <p>Multiple accounts: labeled tokens on the Profile page (Account tokens, stored 0600 under <code>~/.config/claude-routine/tokens/&lt;label&gt;</code>, stripped server-side, never displayed), picked per routine by the Token (account) setting, <code>ROUTINE_TOKEN</code>; unset means the legacy file. A selected but missing token exits 78 naming <code>tokens/&lt;label&gt;</code>, never falling back to another account. Delete a token by removing its file.</p>
+  </li>
+  <li>
+    <strong>Tools</strong>
+    <p><code>bin/routine</code> built in the main checkout (<code>make build</code>; routine code changes need a rebuild), <code>claude</code> on PATH (the runner prepends <code>/opt/homebrew/bin</code> if missing), and <code>git</code>. The Routines component (<code>bin/configserver -apply</code>) copies the runner into the smine bin dir: <code>~/go/bin/smine-routine</code>, on Windows <code>%LOCALAPPDATA%\smine\bin\smine-routine.exe</code>.</p>
+    <p>claude-code ≥ 2.1.217 for <code>CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS</code>; older builds implement only <code>CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY</code>. The runner probes the installed binary at run start and logs a <code>WARNING:</code> to <code>.err.log</code> per configured knob it does not implement.</p>
+  </li>
+  <li>
+    <strong>Bootstrap</strong>
+    <p>The configserver bootstraps at startup every routine not degraded, already loaded or stopped via the UI. Stop persists through <code>launchctl disable</code>; Start re-enables. The configserver runs as a LaunchAgent, so a fresh login re-loads all enabled routines. Manual <code>launchctl bootstrap</code> (above) is only for ad-hoc tests without the server.</p>
+    <p>Verify by exit code, not output: 0 loaded, 113 not loaded.</p>
+    <pre class="file-view" data-lang="bash">launchctl print gui/$(id -u)/&lt;label&gt;</pre>
+  </li>
+</ol>
+
+<h2 id="observing-a-run">Observing a run</h2>
+<p>Start at <code>results.jsonl</code>, then stderr, then the branch.</p>
+<table class="doc">
+  <thead><tr><th>Where</th><th>What it shows</th></tr></thead>
+  <tbody>
+    <tr><td>&lt;routine&gt;/results.jsonl</td><td class="wrap">One line per run: timestamp, exit_status, session_id, num_turns, total_cost_usd, the first 300 chars of the agent's result, <code>branch</code> (the dated branch) and, for a Backlog dispatch, <code>item</code> (<code>B-NNN</code>). A <code>started</code> row lands once the worktree exists; the run's next row supersedes it. First stop for "did last night work".</td></tr>
+    <tr><td>~/GolandProjects/agent-plans/&lt;repo&gt;/backlog/backlog.json</td><td class="wrap">The live backlog store (<code>&lt;repo&gt;</code> = the main checkout's directory name). A dispatched run writes the item's <code>link</code> (its dated branch) and the dispatch stage once its claude stage ends, before publish; the started row carries item and branch from the start, no merge applies them. After each publish the runner commits the store dirs in the plans-archive repo. The Backlog board and item page read the <code>item</code> rows and poll while a run is live.</td></tr>
+    <tr><td>~/Library/Logs/claude-routine-&lt;name&gt;.out.log, .err.log</td><td class="wrap">Wrapper stdout and stderr; read stderr first.</td></tr>
+    <tr><td>launchctl print gui/$(id -u)/&lt;label&gt;</td><td class="wrap">launchd state. Classify by the <code>runs</code> and <code>last exit code</code> counters, never the <code>state</code> string: a finished job always reports <code>state = not running</code>.</td></tr>
+    <tr><td>git log main..claude-routines/&lt;group&gt;-&lt;date&gt;</td><td class="wrap">The work, in the group's repo; list the lineage with <code>git branch --list 'claude-routines/&lt;group&gt;-*'</code>.</td></tr>
+    <tr><td>peek-mcp</td><td class="wrap">The full transcript, by the session_id from results.jsonl.</td></tr>
+    <tr><td>~/.cache/claude-routine/worktrees/&lt;group&gt;/</td><td class="wrap">Run-scoped scratch: the <code>.cell-pids</code> registry lives in the group worktree, never the routine dir, and goes with the worktree. The runner's own log goes to launchd's <code>StandardOutPath</code>/<code>StandardErrorPath</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>Steering</h3>
+<table class="doc plain">
+  <thead><tr><th>Topic</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Steer dir</td><td class="wrap">Durable, per group: <code>~/.cache/claude-routine/steer/&lt;group&gt;/</code> (root override <code>ROUTINE_STEER_ROOT</code>), surviving worktree teardown. Holds <code>steer-prompt</code>, the <code>steer-delivered</code> receipt, <code>steer-log.jsonl</code>, the completion markers <code>run-complete</code> (single routines) and <code>run-complete.json</code> (smine-nightly), and the chat pump's <code>stream.jsonl</code> and <code>pump.log</code>.</td></tr>
+    <tr><td>Gate access</td><td class="wrap">The steer root is a settings <code>additionalDirectories</code> entry, so the tool-policy gate allows the model's marker Write; an override root outside <code>~/.cache/claude-routine/steer</code> must be added too. Registered repositories are never additional directories.</td></tr>
+    <tr><td>Deploys from a run</td><td class="wrap"><code>routine bootstrap</code> deploys context packs after its stages; the runner publishes the style profile after a successful style stage.</td></tr>
+    <tr><td>Chat session</td><td class="wrap">Every claude stage is a stream-json chat session (<code>internal/routinerun/chat.go</code>); the runner holds stdin open, so the run's lifetime never depends on the model's tool use.</td></tr>
+    <tr><td>Steer delivery</td><td class="wrap">Only at a turn boundary, as a real user message, never an interrupt (which would abort in-flight subagents); only to the top-level dispatcher session, never a subagent. A run start clears an undelivered steer; the panel then shows it <code>dropped</code>.</td></tr>
+    <tr><td>Marker cells</td><td class="wrap">End on the model-written marker. A turn ending without it, no background task running, gets one reminder to write the marker with the content the cell's own instructions specify; the next marker-less turn end closes the cell. The last background task's end is no turn end: the harness opens a task-notification turn for it.</td></tr>
+    <tr><td>Result cells</td><td class="wrap">merge-resolve: end at their first turn end with no pending steer.</td></tr>
+    <tr><td>Stage deadline</td><td class="wrap">The pump enforces it on active time; paused (SIGSTOPped) periods no longer exhaust it.</td></tr>
+  </tbody>
+</table>
+
+<h3>Kill, Pause and Resume (Routines UI)</h3>
+<table class="doc plain">
+  <thead><tr><th>Action</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>Kill</td><td class="wrap">Terminates the active run: the scheduler root's process tree (launchd on macOS, the task's <code>routine.exe</code> on Windows) plus the detached cell trees from <code>.cell-pids</code>; the server appends the 143 row to results.jsonl itself. No live run: <code>no active run</code>, nothing appended. The schedule stays loaded; a pending config reload applies once the run is dead. The runner exits 143 on the signal and TERMs every registered group.</td></tr>
+    <tr><td>Pause, Resume (container routine)</td><td class="wrap">Pause also freezes the run's containers (<code>docker pause</code> on those labelled <code>smine.routine=&lt;name&gt;</code>); Resume unfreezes them.</td></tr>
+    <tr><td>Kill (container routine)</td><td class="wrap">Unpauses the containers first; the runner then removes the cell and its <code>-firewall</code> container (<code>docker rm --force</code>) on its way out. Containers a hard-killed runner leaves are removed at the group's next cell start.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="debugging">Debugging</h2>
+<p>Reproduce the run by hand, then read its exit code and the knobs that shaped it.</p>
+<h3>Run one by hand</h3>
+<p>From the main checkout, <code>bin/routine run</code> takes launchd's code path, the plist's <code>EnvironmentVariables</code> filling every key the shell leaves unset; <code>launchctl kickstart</code> runs it with launchd's environment instead.</p>
+<pre class="file-view" data-lang="bash">bin/routine run routines/&lt;name&gt;
+launchctl kickstart gui/$(id -u)/&lt;label&gt;</pre>
+
+<h3>Exit codes</h3>
+<table class="doc">
+  <thead><tr><th>Code</th><th>Meaning</th><th>Logged as</th></tr></thead>
+  <tbody>
+    <tr><td>78</td><td class="wrap">Precondition: token, manifest, plist.</td><td class="wrap">Token failure: a stage-less <code>error</code> row. Invalid manifest, plist or <code>ROUTINE_MODEL</code>: stderr only.</td></tr>
+    <tr><td>75</td><td class="wrap">Group lock timeout (2 h); for a container routine also <code>container slot timeout</code> (no free slot in 2 h).</td><td class="wrap">Stage-less <code>error</code> row</td></tr>
+    <tr><td>69</td><td class="wrap">Docker unavailable, or the cell boundary failed: daemon unreachable, image build, <code>-firewall</code> container, firewall or relays. Row reason <code>container: …</code>.</td><td class="wrap">Stage-less <code>error</code> row</td></tr>
+    <tr><td>70</td><td class="wrap">Worktree create failed, including a registered leftover worktree that could not be salvaged or removed; the row reason carries the cause. A foreign dir at the group path is archived and the run goes on (What the runner deletes, above). A worktree vanishing mid-run fails only the publish; the run keeps its cell's status.</td><td class="wrap">Stage-less <code>error</code> row</td></tr>
+    <tr><td>124</td><td class="wrap">Run backstop (<code>ROUTINE_TIMEOUT_S</code>).</td><td class="wrap">Stage-less <code>error</code> row</td></tr>
+    <tr><td>143</td><td class="wrap">Killed (signal).</td><td class="wrap">Row appended by the server on Kill</td></tr>
+    <tr><td>0, <code>is_error: true</code></td><td class="wrap">The agent itself reported failure.</td><td>results.jsonl</td></tr>
+    <tr><td>0, no results line</td><td class="wrap"><code>ROUTINE_MAX_OPEN_BRANCHES</code> reached, like the cadence skip.</td><td class="wrap"><code>open-instance limit reached</code> in <code>.err.log</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Locks and leftovers</h3>
+<table class="doc plain">
+  <thead><tr><th>Symptom</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td>"already running"</td><td class="wrap">The routine's own <code>.lock</code>: self-overlap.</td></tr>
+    <tr><td>Group lock timeout</td><td class="wrap">A chain sibling held <code>claude-routines/&lt;group&gt;</code> too long.</td></tr>
+    <tr><td>Leftover worktree under <code>~/.cache/claude-routine/worktrees/&lt;group&gt;</code></td><td class="wrap">Intentional after a refused publish: kept for inspection, commit body included; the group's next create commits it as <code>[salvaged]</code> and removes it unforced. Only that group's own path is ever swept, never a sibling group's.</td></tr>
+  </tbody>
+</table>
+
+<h3>smine-nightly knobs</h3>
+<p>The run fails when the claude JSON envelope reports <code>is_error</code> or non-<code>success</code>, not only on a non-zero exit.</p>
+<table class="doc">
+  <thead><tr><th>Knob</th><th>Default</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>SMINE_MAX_PROPOSALS_MINED</td><td>5</td><td class="wrap">Caps the change tasks each mining stage (memory, context, permissions, acdsl, problems) writes per run; passed as <code>--cap</code>.</td></tr>
+    <tr><td>SMINE_MAX_SESSIONS_MINED</td><td>30</td><td class="wrap">Caps the sessions smine-batch mines per run, oldest first within peek's 13-day window, one miner agent each; passed as <code>--limit</code>.</td></tr>
+    <tr><td>ROUTINE_ORCHESTRATE</td><td><code>1</code></td><td class="wrap">Adds the judge stage and gates landing.</td></tr>
+    <tr><td>ROUTINE_AUTO_MERGE</td><td>profile</td><td class="wrap">Overrides the profile's auto-merge; <code>0</code> is off.</td></tr>
+    <tr><td>SMINE_DEV_MODE</td><td>profile</td><td class="wrap">Overrides the profile's dev mode.</td></tr>
+    <tr><td>SMINE_AGENTS</td><td><code>claude,codex</code></td><td class="wrap">Whose sessions smine-batch mines; passed as <code>--agents</code>.</td></tr>
+    <tr><td>SMINE_SUBAGENTS</td><td><code>0</code></td><td class="wrap"><code>1</code> also mines each session's per-subagent transcripts (peek-mcp <code>subagent</code> parameter); passed as <code>--subagents</code>. On/off, not a count: the configure widget rejects other values and the runner logs them as ignored.</td></tr>
+  </tbody>
+</table>
+<p>In <code>results.jsonl</code> the stage is <code>pipeline</code>, the one <code>/smine</code> dispatcher session. The run report lists the dispatcher row (cost and turns), one row per pipeline stage from the run summary, and <code>changes</code>: the judge's verdict per change commit (<code>ready</code>, or <code>rejected</code> with a reason).</p>
+<p>A missing or invalid run summary fails the run with a rejected verdict. The branch commit and the store commit (backlog dir only) happen whatever the verdict; it gates only the fast-forward of <code>main</code>. The style stamp <code>routines/smine-nightly/.style-stamp</code> (epoch, gitignored) records the last style run whose summary row is <code>ok</code>.</p>
+
+<h3>Regression tests</h3>
+<p>They cover the worktree chain, the two-night smine lineage and ledger seeding, the chat pump (steer, deadline, cancel), cells, knob mapping, and end-to-end single, nightly and landing runs against a fake claude.</p>
+<pre class="file-view" data-lang="bash">go test ./internal/routinerun/...</pre>
+
+<h2 id="claude-p-mechanics">claude -p mechanics</h2>
+<p>Upstream docs: <a href="https://code.claude.com/docs/en/headless.md">headless</a>, <a href="https://code.claude.com/docs/en/cli-reference.md">cli-reference</a>, <a href="https://code.claude.com/docs/en/sessions.md">sessions</a>, <a href="https://code.claude.com/docs/en/authentication.md">auth</a>, <a href="https://code.claude.com/docs/en/settings.md">settings</a>.</p>
+
+<h3>Scheduling options (decision)</h3>
+<table class="doc">
+  <thead><tr><th>Mechanism</th><th>Runs where</th><th>Survives sleep / app close</th><th>Min interval</th><th>Local files</th><th>Nightly fit</th></tr></thead>
+  <tbody>
+    <tr><td>/loop (in-session)</td><td class="wrap">open CLI session</td><td class="wrap">no (unless backgrounded)</td><td class="wrap">1m, 7-day expiry, ≤30m jitter</td><td>yes</td><td class="wrap">No: intra-session polling only</td></tr>
+    <tr><td>Desktop scheduled tasks</td><td class="wrap">local, Desktop app</td><td class="wrap">restart yes; needs app open and awake; 1 catch-up after wake</td><td>1m</td><td>yes</td><td class="wrap">Yes, if Desktop is reliably open</td></tr>
+    <tr><td>launchd + claude -p (chosen)</td><td class="wrap">local, no app</td><td>yes</td><td>any</td><td>yes</td><td class="wrap">Yes: true unattended</td></tr>
+    <tr><td>Cloud routines (/schedule)</td><td class="wrap">Anthropic cloud</td><td class="wrap">machine-independent</td><td>1h</td><td>no</td><td class="wrap">No for local maintenance</td></tr>
+  </tbody>
+</table>
+
+<h3>-p run lifecycle</h3>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Stage</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap">Start</td><td class="wrap"><code>claude -p 'prompt'</code> or <code>claude -p '/skill args'</code>.</td></tr>
+    <tr><td>2</td><td class="wrap">Not <code>--bare</code></td><td class="wrap">Loads the settings chain, CLAUDE.md hierarchy, auto-memory, skills, plugins, MCP and hooks.</td></tr>
+    <tr><td>2</td><td class="wrap"><code>--bare</code></td><td class="wrap">Flags only: no hooks, skills, CLAUDE.md or <code>.mcp.json</code>; project <code>.claude/skills/</code> stay available. Auth: <code>ANTHROPIC_API_KEY</code> or <code>apiKeyHelper</code> only.</td></tr>
+    <tr><td>3</td><td class="wrap">Agentic loop</td><td class="wrap">Hooks fire when not bare: SessionStart, UserPromptSubmit, Pre/PostToolUse, Stop, Pre/PostCompact, SessionEnd. PermissionRequest does not fire; use PreToolUse.</td></tr>
+    <tr><td>4</td><td class="wrap">Session file</td><td class="wrap">JSONL at <code>~/.claude/projects/&lt;proj&gt;/&lt;id&gt;.jsonl</code>; suppress with <code>--no-session-persistence</code>.</td></tr>
+    <tr><td>4</td><td class="wrap">Output</td><td class="wrap">stdout: text, json or stream-json; exit 0 or non-zero.</td></tr>
+    <tr><td>5</td><td class="wrap">Next night</td><td class="wrap"><code>--resume &lt;id&gt;</code> or <code>--continue</code> restores the full context, which grows each run; compact via <code>/compact</code> in the prompt.</td></tr>
+  </tbody>
+</table>
+
+<h3>Auth for headless</h3>
+<table class="doc">
+  <thead><tr><th>Credential</th><th>Non-bare -p</th><th>--bare</th><th>launchd</th></tr></thead>
+  <tbody>
+    <tr><td>Keychain OAuth (from /login)</td><td class="wrap">works interactively</td><td>ignored</td><td class="wrap">No: no keychain in launchd</td></tr>
+    <tr><td>CLAUDE_CODE_OAUTH_TOKEN (claude setup-token, 1-year)</td><td>works</td><td>ignored</td><td class="wrap">Yes, best for subscription. Multi-account via <code>~/.config/claude-routine/tokens/&lt;label&gt;</code> plus per-routine <code>ROUTINE_TOKEN</code>.</td></tr>
+    <tr><td>ANTHROPIC_API_KEY</td><td>works</td><td>required</td><td class="wrap">Yes (API billing)</td></tr>
+    <tr><td>apiKeyHelper script (+ CLAUDE_CODE_API_KEY_HELPER_TTL_MS)</td><td>works</td><td>works</td><td class="wrap">Yes: vault-backed rotation</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Consequence</span>
+  <p>Subscription-billed nightly jobs must run non-bare, which also gives them skills, hooks and MCP.</p>
+</div>
+
+<h3>Key flags</h3>
+<table class="doc">
+  <thead><tr><th>Flag</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr><td>--output-format json</td><td class="wrap">Result envelope: <code>session_id</code>, <code>total_cost_usd</code>, <code>usage</code>, <code>num_turns</code>, <code>structured_output</code>.</td></tr>
+    <tr><td>--json-schema &lt;schema&gt;</td><td class="wrap">Enforced structured output.</td></tr>
+    <tr><td>--allowedTools / --disallowedTools</td><td class="wrap">Claude Code's tool allowlist (above settings rules, below managed); the tool-policy gate decides first (below).</td></tr>
+    <tr><td>--permission-mode acceptEdits|dontAsk|bypassPermissions</td><td class="wrap">Prompt-free baseline. This repo's template disables bypass mode (<code>disableBypassPermissionsMode</code>), and container cells mount that <code>settings.json</code> read-only.</td></tr>
+    <tr><td>--permission-prompt-tool &lt;mcp-tool&gt;</td><td class="wrap">Programmatic permission handler (v2.1.199+): the headless answer to "ask" prompts.</td></tr>
+    <tr><td>--max-turns / --max-budget-usd</td><td class="wrap">Depth cap / spend cap; both exit non-zero on hit.</td></tr>
+    <tr><td>--fallback-model a,b</td><td class="wrap">Ordered fallback on overload.</td></tr>
+    <tr><td>--resume &lt;id&gt; / --continue</td><td class="wrap">Stateful jobs. Also reopens a finished, failed or limit-stopped <code>-p</code> session, headless to continue it or from a terminal to salvage, compact or steer it.</td></tr>
+    <tr><td>--input-format stream-json + --output-format stream-json</td><td class="wrap">Multi-turn NDJSON protocol (below).</td></tr>
+    <tr><td>--append-system-prompt-file</td><td class="wrap">Injects routine instructions without touching CLAUDE.md.</td></tr>
+    <tr><td>--settings &lt;file&gt; / --mcp-config &lt;file&gt;</td><td class="wrap">Per-routine config.</td></tr>
+  </tbody>
+</table>
+<p>Permission precedence inside Claude Code: managed settings &gt; <code>--disallowedTools</code>/<code>--allowedTools</code> &gt; <code>--permission-mode</code> &gt; settings allow/deny/ask &gt; default. A blocked tool feeds an error back to Claude; the run continues.</p>
+<p>Here the tool-policy gate answers every gated call first, from the settings layers and the active skill's <code>allowed-tools</code>; a call it denies never runs, whatever the flags (<a href="permissions.html#headless-cells">Permissions § Headless cells</a>).</p>
+<p>Skills: <code>claude -p "/skill args"</code> expands (v2.1.205+; the skill needs <code>enable-model-invocation: true</code>).</p>
+
+<h3>stream-json: local orchestration without the SDK</h3>
+<p>A driving script talks NDJSON, one message per line, to <code>claude -p --input-format stream-json --output-format stream-json</code>.</p>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Direction</th><th>Message</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="wrap">script → claude</td><td class="wrap"><code>{"type":"user","content":"task 1"}</code> plus newline</td></tr>
+    <tr><td>2</td><td class="wrap">claude → script</td><td class="wrap"><code>{"type":"system","subtype":"init","session_id":...}</code></td></tr>
+    <tr><td>3</td><td class="wrap">claude → script</td><td class="wrap"><code>{"type":"assistant",...}</code> and tool events</td></tr>
+    <tr><td>4</td><td class="wrap">claude → script</td><td class="wrap"><code>{"type":"result","total_cost_usd":...,"num_turns":...}</code></td></tr>
+    <tr><td>5</td><td class="wrap">script → claude</td><td class="wrap"><code>{"type":"user","content":"follow-up"}</code> plus newline</td></tr>
+    <tr><td>6</td><td class="wrap">claude → script</td><td class="wrap">The next turn's events and result.</td></tr>
+    <tr><td>7</td><td class="wrap">script → claude</td><td class="wrap">EOF: the process exits.</td></tr>
+  </tbody>
+</table>
+<p>Envelope types: <code>system</code> (init, api_retry), <code>user</code>, <code>assistant</code>, <code>result</code>, <code>stream_event</code> (with <code>--include-partial-messages</code>, v2.1.205+).</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Warning</span>
+  <p>The full schema is not officially documented (<a href="https://github.com/anthropics/claude-code/issues/24612">#24612</a> open). Pin the CLI version if you build on it.</p>
+</div>
+
+<h3>Robustness for launchd/cron</h3>
+<table class="doc plain">
+  <thead><tr><th>Concern</th><th>Handling</th></tr></thead>
+  <tbody>
+    <tr><td>Transient API errors (429/529/5xx)</td><td class="wrap">Auto-retried with backoff internally.</td></tr>
+    <tr><td>Auth expiry</td><td class="wrap">Not retried: exits non-zero; the 1-year <code>setup-token</code> minimizes it.</td></tr>
+    <tr><td>Exit codes</td><td class="wrap">0 or non-zero only, no per-error map; parse stderr and the result subtype (<code>error_during_execution</code>, <code>error_max_turns</code>).</td></tr>
+    <tr><td>Run timeout</td><td class="wrap">None built in; the runner enforces per-stage active-time deadlines and the <code>ROUTINE_TIMEOUT_S</code> backstop. Background-task grace: <code>CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS</code> (default 10m, v2.1.182+).</td></tr>
+    <tr><td>Overlap</td><td class="wrap">The runner's self and group locks: flock on macOS, LockFileEx on Windows.</td></tr>
+    <tr><td>Cost</td><td class="wrap"><code>--max-budget-usd</code> when <code>ROUTINE_MAX_BUDGET_USD</code> is set, plus <code>total_cost_usd</code> per stage in <code>results.jsonl</code>.</td></tr>
+    <tr><td>launchd env</td><td class="wrap">Explicit PATH (<code>/opt/homebrew/bin</code>), HOME, no <code>~</code> expansion, StandardOut/ErrorPath logs, StartCalendarInterval.</td></tr>
+    <tr><td>Stability</td><td class="wrap"><code>DISABLE_AUTOUPDATER=1</code>.</td></tr>
+    <tr><td>Isolation</td><td class="wrap">Host routines: none; they share <code>~/.claude</code> and subscription auth via <code>CLAUDE_CODE_OAUTH_TOKEN</code> (never <code>CLAUDE_CONFIG_DIR</code>), and <code>ROUTINE_PROTECTED_PATHS</code> refuses writes into the main checkout. Container routines: every cell in a bounded, fenced container (<a href="#container-routines">Container routines</a>).</td></tr>
+  </tbody>
+</table>
+<p>Non-bare is deliberate: skills and the subscription token need it. New routines start from <code>routines/_templates/routine.json</code> and <code>routine.plist</code> (<code>/skillroutine-create routine</code>).</p>
+
+<h2 id="windows">Windows</h2>
+<p>The same runner and manifests run under Task Scheduler.</p>
+<table class="doc plain">
+  <thead><tr><th>Topic</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Scheduler</td><td class="wrap">Task Scheduler tasks under <code>\smine\</code> (task name = plist label). The plist stays the manifest; the config server translates <code>StartCalendarInterval</code> to task XML at registration. Stop disables the task, never deletes it; Start re-registers with <code>-Force</code> and enables. Startup reconcile (<code>SyncAll</code>) registers new routines and refreshes enabled ones, leaving disabled ones alone.</td></tr>
+    <tr><td>Launcher</td><td class="wrap">Task action <code>bin\routine.exe run "&lt;routine-dir&gt;"</code>. The runner fills the plist env, holds the self and group locks (LockFileEx), keeps the machine awake, puts itself in a kill-on-close job and arms the <code>ROUTINE_TIMEOUT_S</code> backstop (default 46800s).</td></tr>
+    <tr><td>Install</td><td class="wrap"><code>smine-setup.exe</code> (prebuilt payload; the wizard lays down the source tree, never a clone), or from source <code>install.bat</code> (the Go installer); both delegate to <code>configserver.exe -install</code> for the shared logic, the logon tasks and routines. Port overrides: <code>-addr</code>, <code>-peek-port</code>, <code>-peek-control-port</code>.</td></tr>
+    <tr><td>Token</td><td class="wrap"><code>%USERPROFILE%\.config\claude-routine\token</code> (or <code>tokens\&lt;label&gt;</code>).</td></tr>
+    <tr><td>Logs</td><td class="wrap"><code>%LOCALAPPDATA%\claude-routine\logs\&lt;label&gt;.{out,err}.log</code>; Task Scheduler captures nothing, the runner redirects.</td></tr>
+    <tr><td>Pause, Resume</td><td class="wrap">Pause finds the run as the task's <code>routine.exe</code> process and suspends its whole process tree (<code>NtSuspendProcess</code>); Resume resumes it. A run that ended while paused resumes as a no-op.</td></tr>
+    <tr><td>Kill</td><td class="wrap">Ends the <code>routine.exe</code> tree, then every <code>.cell-pids</code> tree (<code>TerminateProcess</code>, exit 143); the count reported is the processes ended. The task stays registered and enabled.</td></tr>
+    <tr><td>Container routines</td><td class="wrap">Refused: a cell needs identical host and container paths and the host uid, which a Windows host cannot give. The Configure form hides the Docker rows, a posted <code>ROUTINE_CONTAINER=1</code> is refused, and a run with it set exits 78.</td></tr>
+    <tr><td>Fleet messaging</td><td class="wrap">Refused: heartbeat's messaging sockets are unix-only, so fleet subscriptions fail on Windows (<a href="heartbeat.html#fleets">Heartbeat § Fleets</a>).</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

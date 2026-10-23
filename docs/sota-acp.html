@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACP · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>ACP</h1>
+<p class="lede">State of the art of the Agent Client Protocol (ACP), and whether it can serve as heartbeat's sensor and actuator.</p>
+<p>Researched 2026-09-18 in session <code>4f0a68f9-1435-4150-bb9e-84567dc7db02</code> (harness-exploration-status). Heartbeat itself: <a href="heartbeat.html">Heartbeat</a>.</p>
+
+<h2 class="first" id="protocol">Protocol</h2>
+<p>JSON-RPC 2.0 over stdio; the client (editor or supervisor) spawns and owns the agent subprocess. Protocol v1, by Zed; spec at <a href="https://agentclientprotocol.com">agentclientprotocol.com</a>.</p>
+<table class="doc plain">
+  <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Lifecycle</td><td class="wrap"><code>initialize</code> (capability negotiation) → <code>session/new {cwd, mcpServers}</code> → <code>session/prompt</code> per turn. The response carries <code>stopReason</code> (<code>end_turn | max_tokens | max_turn_requests | refusal | cancelled</code>). <code>session/load</code> replays history; <code>session/resume</code>/<code>close</code>/<code>delete</code> are newer and capability-gated.</td></tr>
+    <tr><td>Event stream</td><td class="wrap"><code>session/update</code> notifications during a turn: <code>tool_call</code> (<code>toolCallId</code>, <code>kind: read|edit|delete|move|search|execute|think|fetch|switch_mode|other</code>, <code>status: pending|in_progress|completed|failed</code>, <code>rawInput</code>, <code>rawOutput</code>, <code>locations</code>, diff content), <code>tool_call_update</code>, <code>agent_thought_chunk</code> (thinking first-class), <code>plan</code> (TodoWrite-like, full replacement), <code>available_commands_update</code>, <code>current_mode_update</code>, <code>usage_update</code> (tokens, cost).</td></tr>
+    <tr><td>Control surface</td><td class="wrap">Client-side authority. <code>session/request_permission</code>: the agent asks, the client picks an option (<code>allow_once/always</code>, <code>reject_once/always</code>). <code>session/cancel</code>: the agent MUST end the turn <code>cancelled</code>; subprocess kill is the deterministic backstop. With <code>fs</code> and <code>terminal</code> capabilities advertised, file writes and shell commands route physically through the client.</td></tr>
+    <tr><td>Adoption</td><td class="wrap">~50 agents; JetBrains, Google, GitHub; the ACP Registry (Jan 2026, Zed + JetBrains). Anthropic has NOT adopted it natively: Claude Code participates via <code>agentclientprotocol/claude-agent-acp</code>, built on the Agent SDK.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="gaps">Gaps</h2>
+<p>Measured against a supervision engine's needs.</p>
+<table class="doc plain">
+  <thead><tr><th>Need</th><th>ACP</th></tr></thead>
+  <tbody>
+    <tr><td>Pre-execution veto</td><td class="wrap">Only when the agent volunteers a permission request (mode-dependent); <code>tool_call</code> notifications are fire-and-forget.</td></tr>
+    <tr><td>Input rewriting</td><td class="wrap">None on the wire: option selection only, no <code>updatedInput</code> equivalent.</td></tr>
+    <tr><td>Mid-turn redirect</td><td class="wrap">Undefined; portably, cancel plus a new prompt.</td></tr>
+    <tr><td>Subagents, hook events, skill invocations, compaction</td><td class="wrap">Not in core; only via adapter-specific <code>_meta</code> extensions.</td></tr>
+    <tr><td>Claude hook events</td><td class="wrap">The claude-agent-acp adapter consumes them internally, never forwarding them. Skill invocations map to <code>kind: "other"</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="verdict-for-heartbeat">Verdict for heartbeat</h2>
+<div class="callout">
+  <span class="badge badge-ok">Decision</span>
+  <p>A hybrid: heartbeat's internal event model is a superset with two frontends. ACP validates the heartbeat shape (external supervisor process, typed event stream, client-side permission authority) but falls short as the Claude Code sensor and actuator.</p>
+</div>
+<table class="doc plain">
+  <thead><tr><th>Frontend</th><th>For</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>Native</td><td>Claude Code</td><td class="wrap">Hooks, transcript JSONL and telemetry: a strictly better sensor and actuator (guaranteed PreToolUse veto, input rewriting, hook identity, lossless transcript).</td></tr>
+    <tr><td>ACP</td><td class="wrap">Other agents: Gemini CLI, Goose, Codex-over-ACP</td><td class="wrap">Advertise <code>fs</code> + <code>terminal</code>, decide every permission request, cancel plus kill for hard stops. Per-capability fidelity flags tell the Z3 layer which preconditions are enforceable and which only observable, per agent.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Pin versions</span>
+  <p>The spec moves fast (usage_update, session/resume and elicitation are all post-v1). Pin adapter versions like peek versions.</p>
+</div>
+</body>
+</html>

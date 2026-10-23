@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aliases · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Aliases</h1>
+<p class="lede">A short name for a frequently used skill: <code>/pk</code> runs peek exactly as <code>/peek</code> does.</p>
+<p>How to add an alias, how the deploy builds it, and why it is a plain copy of its skill. Model file and frontmatter: <a href="skillcue.html">Skill model</a>.</p>
+
+<h2 class="first" id="use">Adding an alias</h2>
+<ol class="steps">
+  <li>
+    <strong>Declare the alias</strong>
+    <p>Add an <code>aliases</code> line to the skill's frontmatter in <code>&lt;leaf&gt;.cue</code>; comma-separate several.</p>
+    <pre class="file-view" data-lang="text">aliases: pk</pre>
+  </li>
+  <li>
+    <strong>Bump, render, sync</strong>
+    <p>Bump the version, render and sync as usual. Each alias becomes a full skill under <code>~/.claude/skills/&lt;alias&gt;/</code> and <code>~/.codex/skills/&lt;alias&gt;/</code>.</p>
+  </li>
+  <li>
+    <strong>Grant the alias to agents (optional)</strong>
+    <p>If the allow list of <code>settings/claude_code/components/gate.json</code> has a <code>Skill(&lt;name&gt;)</code> line for the skill, add <code>Skill(&lt;alias&gt;)</code> beside it by hand. A typed <code>/&lt;alias&gt;</code> works without it; the line lets an agent call the alias.</p>
+  </li>
+</ol>
+
+<h2 id="how-it-works">How it works</h2>
+<p>The skills sync writes each alias as a copy of its skill's deployed dir. The repo keeps one source, the canonical <code>&lt;leaf&gt;.cue</code>; alias copies exist only in the deployed homes.</p>
+<table class="doc plain">
+  <thead><tr><th>Aspect</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>The copy</td><td class="wrap">Only <code>SKILL.md</code> differs: <code>name</code> is the alias, and a skill without <code>title-code</code> gets its own name as <code>title-code</code>, so session titles match under both names. The body is unchanged and still names the skill.</td></tr>
+    <tr><td>Model check</td><td class="wrap">Rejects an alias that is not kebab-case, repeats the skill's name, or appears twice.</td></tr>
+    <tr><td>Pruning</td><td class="wrap">Alias dirs count as repo skills: pruning keeps them, the casual-profile skill overrides list them. An alias removed from <code>&lt;leaf&gt;.cue</code> goes to the trash at the next pruning sync: the install engine's, the config server's, and <code>configserver -sync-skills</code> only with <code>-sync-prune</code>.</td></tr>
+    <tr><td>Config server</td><td class="wrap">Treats an alias as its skill: no own card, a badge on the skill's row and detail page, invocations counted with the skill's. Its session-report rows show the skill's version and tokens.</td></tr>
+    <tr><td>Usage store</td><td class="wrap">Keeps the name as typed.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Not covered</span>
+  <p>Two skills claiming the same alias, or an alias shadowing another skill's name: the later deploy overwrites the earlier dir.</p>
+</div>
+
+<h2 id="why-copies">Why copies</h2>
+<p>Each alias costs one extra description in the skill listing; every alternative was more fragile.</p>
+<table class="doc plain">
+  <thead><tr><th>Alternative</th><th>Why not</th></tr></thead>
+  <tbody>
+    <tr><td>A native alias or a hook redirect</td><td class="wrap">Claude Code has no alias feature. Hooks can block a prompt or add context, not rewrite what runs.</td></tr>
+    <tr><td>Renaming the deployed directory</td><td class="wrap">A directory name also invokes the skill, but allows only one alias and breaks the canonical name: every hook finds a skill by the name typed (tool grants, context injection, <code>--help</code>, session titles).</td></tr>
+    <tr><td>A symlink per alias</td><td class="wrap">Undocumented behaviour: Claude Code loads a symlinked skill only once, and which name survives is unspecified. The prune skips a symlinked skill dir. A deploy under its name that finds it unmarked or modified trashes the link itself, never its target, and writes a plain dir.</td></tr>
+    <tr><td>A stub skill that forwards</td><td class="wrap">A tool round-trip per call and a second skill run for hooks to track.</td></tr>
+  </tbody>
+</table>
+<p>A plain copy is a real skill at a real path: every hook that finds a skill by the name typed works unchanged. The global <code>Skill(&lt;name&gt;)</code> grant is the one list that needs the alias added.</p>
+</body>
+</html>

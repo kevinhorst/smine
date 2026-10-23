@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentwt · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Agentwt</h1>
+<p class="lede">One Rust binary that judges every worktree's integration state and merge order and writes one JSON document per repo.</p>
+<p>It replaces <code>cmd/worktrees/print_agent_worktrees_status.sh</code>, <code>cmd/worktrees/_lib/verdict.sh</code>, the merge, cherry-pick, sync and remove scripts, and smine's Go status parser; the smine config server renders its output. Evidence for each choice: the fleet research notes in git history (<code>docs/fleet-research.md</code>).</p>
+
+<h2 class="first" id="rust-terms-once">Rust terms, once</h2>
+<table class="doc plain">
+  <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Crate</td><td class="wrap">A package: a library crate is imported with <code>use</code>, a binary crate run. worktrunk ships both from one repo; we use only its binary.</td></tr>
+    <tr><td>Cargo features</td><td class="wrap">Compile-time switches; gix's tree merge sits behind <code>features = ["merge"]</code>.</td></tr>
+    <tr><td>serde</td><td class="wrap">Derives JSON (de)serialization on our structs.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="dependencies-and-why">Dependencies and why</h2>
+<table class="doc">
+  <thead><tr><th>Crate</th><th>Role</th><th>Decision</th></tr></thead>
+  <tbody>
+    <tr><td>gix ≥ 0.87 (<code>merge</code> feature)</td><td class="wrap">In-process merge engine: merge_base, merge_commits, merge_trees, virtual merge bases, rename tracking, typed conflicts, <code>TreatAsUnresolved::git()</code>.</td><td class="wrap">The engine; jj-lib chose it too.</td></tr>
+    <tr><td>serde, serde_json</td><td class="wrap">JSON in (worktrunk, registries, rollouts) and out.</td><td class="wrap">Standard.</td></tr>
+    <tr><td>worktrunk</td><td class="wrap">None as a crate.</td><td class="wrap">Library API breaks most releases, all git via subprocess, no gix. Run <code>wt</code> as a pinned binary, parse its JSON.</td></tr>
+    <tr><td>git2 / libgit2</td><td class="wrap">Not used.</td><td class="wrap">Recursive strategy, index-based output, openssl baggage; gix covers it.</td></tr>
+    <tr><td>go-git</td><td class="wrap">n/a</td><td class="wrap">No merge-tree, cherry, patch-id or worktree list.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="modules">Modules</h2>
+<p>inventory reads worktrunk, gitstate judges each branch with gix, sessions joins the session registries, order computes the conflict matrix and train, ops replaces the scripts.</p>
+
+<h3>inventory: worktrunk JSON</h3>
+<pre class="file-view" data-lang="bash">wt -C &lt;repo&gt; list --format=json --branches</pre>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Parse</td><td class="wrap">Owned structs; assert <code>schema == 2</code>; a test validates against worktrunk.dev/schema/list-v2.json. Pin the <code>wt</code> version.</td></tr>
+    <tr><td>Absent vs null</td><td class="wrap">Absent <code>integration</code> = determined not integrated; null = undetermined or timeout. Model as <code>Option&lt;Option&lt;T&gt;&gt;</code> or a three-state enum; never collapse.</td></tr>
+    <tr><td>Kept fields</td><td class="wrap">path, head, changes booleans (dirty = any of staged/modified/renamed/deleted/conflicted), locked/prunable/detached/operation, <code>default_branch.{ahead, behind, integration, merge_conflicts}</code>, upstream. Ignored: <code>branch_mismatch</code>, <code>marker</code>.</td></tr>
+    <tr><td>Prefix filter</td><td class="wrap">On branch (claude/, claude-routines/), applied here; detached rows (the Codex pool) kept on purpose.</td></tr>
+    <tr><td>Per-candidate re-targeting</td><td class="wrap">Per non-agent candidate branch, <code>wt list</code> with env <code>GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=worktrunk.default-branch GIT_CONFIG_VALUE_0=&lt;candidate&gt;</code> (verified: no config write). Yields contained-in and squashed-into across candidates without a cherry loop.</td></tr>
+    <tr><td>Accepted side effects</td><td class="wrap">The first run writes <code>worktrunk.default-branch</code> into the repo config and creates <code>.git/wt/cache/</code>.</td></tr>
+    <tr><td>Retry</td><td class="wrap">Once on a non-zero exit: <code>git worktree list</code> can fail while the Desktop pool is mid-removal.</td></tr>
+  </tbody>
+</table>
+
+<h3>gitstate: gix</h3>
+<p>Opens the main repo once; bare access suffices, no working copy.</p>
+<table class="doc plain">
+  <thead><tr><th>Answer</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>FROM</td><td class="wrap">The branch reflog. A bare SHA origin resolves to the candidate branches containing it (an ancestor check per candidate); a routine chain resolves through the previous routine to its root. <code>unknown</code> only when nothing contains the SHA.</td></tr>
+    <tr><td>Ahead/behind vs FROM</td><td class="wrap">Two rev-walks; worktrunk's numbers (vs the default branch) stay separate.</td></tr>
+    <tr><td>Unpicked</td><td class="wrap">Patch-id per commit = hash of its diff against its first parent (gix diff, whitespace-normalized); unpicked when it appears in no candidate's <code>merge-base..candidate</code> range. Replaces <code>git cherry</code>.</td></tr>
+    <tr><td>Applied verdict</td><td class="wrap">Cherry-pick simulation: <code>merge_trees(base = commit^, ours = FROM tip, theirs = commit)</code>; clean and result tree == FROM tree → applied. No probe worktree.</td></tr>
+    <tr><td>Merged-into</td><td class="wrap">Each candidate's first-parent history searched for a merge commit whose non-first parent is the branch tip. Cheap; kept.</td></tr>
+    <tr><td>Dropped</td><td class="wrap">Resolved and picked-resolved (range-diff interdiff, subject twins): no library equivalent; the order module answers the same question forward-looking.</td></tr>
+    <tr><td>Untracked filter</td><td class="wrap">gix status as the <code>git status</code> equivalent, excluding <code>.idea/</code>, <code>.claude/</code>, <code>.claude-worktree</code>, <code>.DS_Store</code>; the remove gate uses the same list.</td></tr>
+  </tbody>
+</table>
+
+<h3>sessions: registries</h3>
+<table class="doc plain">
+  <thead><tr><th>Source</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Claude</td><td class="wrap"><code>~/.claude/sessions/*.json</code>, liveness by pid. Joined to a worktree on <code>cwd</code> by longest prefix (the file holds no branch). Carries status, waitingFor, name, sessionId, entrypoint, hostSessionId.</td></tr>
+    <tr><td>Codex</td><td class="wrap">Rollout <code>session_meta</code>: cwd, originator, git.commit_hash; joined on path or head sha to the detached pool rows. The <code>chat_processes.json</code> schema is unconfirmed: optional.</td></tr>
+    <tr><td>Multi-profile</td><td class="wrap">Every CLAUDE_CONFIG_DIR sibling; the account from <code>oauthAccount.accountUuid</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>order: matrix and train</h3>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Stage</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Inputs</td><td class="wrap">Default tip M, agent tips B1..Bn, plus a dirty snapshot per worktree (the working tree written as a tree object into a throwaway object store), so live edits count: the gap in clash.</td></tr>
+    <tr><td>2</td><td>Prefilter</td><td class="wrap">Touched-path sets from <code>merge_base(M, Bi)..Bi</code>; disjoint pairs commute.</td></tr>
+    <tr><td>3</td><td>Pairwise</td><td class="wrap"><code>merge_commits(Bi, Bj)</code> with <code>TreatAsUnresolved::git()</code>, <code>fail_on_conflict</code> for the cheap probe, rename tracking on; store clean or the unresolved paths. Filter with <code>is_unresolved</code>; never count every entry (clash's defect).</td></tr>
+    <tr><td>4</td><td>Train</td><td class="wrap">T0 = M; per candidate order, <code>merge_commits(T(k-1), Bk)</code>. Clean: write the merged tree and a synthetic commit into the throwaway store, continue. Conflict: record (k, paths), continue from T(k-1). Objects go to a temp object dir with the repo objects as alternate; nothing lands in <code>.git/objects</code>.</td></tr>
+    <tr><td>5</td><td>Ordering</td><td class="wrap">Conflict-graph components merge independently. Within one: greedy fewest-conflicts-with-remaining, brute force for components ≤ 6, verified with the train. Per branch: <code>conflicts_with</code>, train position, first blocking pair, residual conflicts.</td></tr>
+    <tr><td>6</td><td>Cost</td><td class="wrap">N=12 → ≤ 66 pair merges, in-process, sub-second.</td></tr>
+  </tbody>
+</table>
+
+<h3>ops: replacing the scripts</h3>
+<table class="doc">
+  <thead><tr><th>Op</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>merge</td><td class="wrap"><code>git merge --no-edit &lt;branch&gt;</code> semantics into the main checkout's HEAD: refuse dirty, abort on conflict. gix has no porcelain merge with working-copy update: shell to <code>git</code> for this one command, or implement merge_commits + checkout. Never <code>wt merge</code>.</td></tr>
+    <tr><td>cherry-pick</td><td class="wrap">Same rule.</td></tr>
+    <tr><td>sync</td><td class="wrap">Merge base into the branch, never rebase.</td></tr>
+    <tr><td>remove</td><td class="wrap">Own safety predicate (contained somewhere, clean tree under the untracked filter), then <code>git worktree remove</code>. Not <code>wt remove</code>: it refuses locked worktrees and uses default-target containment.</td></tr>
+  </tbody>
+</table>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Destructive flags</span>
+  <p><code>--force</code> and <code>--delete-branch</code> destroy work as named, so the Go callers archive first: the Repos page salvages a checked-out worktree before a forced removal and writes the branch diff before a deletion, both into one <a href="trash.html">trash</a> stamp, and refuses the removal if the archive fails.</p>
+</div>
+
+<h2 id="output-contract">Output contract</h2>
+<p>One JSON document per repo, rendered by the config server; nothing else parses git.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>repo</td><td class="wrap">The repository.</td></tr>
+    <tr><td>checkout</td><td class="wrap">branch, dirty</td></tr>
+    <tr><td>rows[]</td><td class="wrap">worktree, branch, from, counts (vs FROM and vs default), verdicts, merged_into, contained_in[] (with a reason per candidate), unsafe_reasons[], session{}, order{conflicts_with[], train_position, blocking}</td></tr>
+  </tbody>
+</table>
+<p>Three-state fields serialize as absent / null / value, mirroring worktrunk, so the UI keeps one rule.</p>
+
+<h2 id="open-items">Open items</h2>
+<ul>
+  <li>The Codex <code>chat_processes.json</code> schema; whether Codex hooks fire in Codex Desktop.</li>
+  <li>gix parity is the maintainers' own baseline claim. Run the discrimination plan (git history: <code>docs/investigation-baseline.md</code> §8) once: current table vs the new binary on claude-configs, then train order vs a real merge in a scratch clone.</li>
+  <li>Whether to keep FROM once the default-branch numbers and the train exist; today FROM is unknown for 13 of 17 rows.</li>
+</ul>
+</body>
+</html>

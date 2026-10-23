@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Settings</h1>
+<p class="lede">Every configurable value of the hooks and the heartbeat daemon, one table per component.</p>
+<p>Set a value on the config server's Smine tab (<a href="configserver.html#config-page">Config page</a>) or with <code>smine-rules settings set &lt;component&gt;.&lt;key&gt; &lt;value&gt;</code>. The install record stores only overrides; every other value is the default listed here (<a href="install.html#the-install-record">Install § The install record</a>).</p>
+<table class="doc">
+  <thead><tr><th>Applies</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>restart</td><td class="wrap">A change restarts the setting's consumer. The Smine tab's apply report names every changed <code>restart</code> row.</td></tr>
+    <tr><td>live</td><td class="wrap">A change needs no restart.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>A list kind (<code>strings</code>, <code>globs</code>, <code>paths</code>, <code>models</code>) takes the whole JSON array on the command line; the Smine tab edits it one item per line. Rows the catalog marks hidden stay off the Smine tab and are set with the command: the gate's <code>cause_*</code>, <code>reason_*</code> and <code>steer_*</code> texts and every hook group's <code>matcher</code> and <code>async</code>.</p>
+</div>
+
+<h2 class="first" id="config-server">Config server</h2>
+<p>Component <code>config-server</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>port</td><td>int</td><td><code>6001</code></td><td>restart</td><td>Port the config server listens on; the LaunchAgent restarts it on a change.</td></tr>
+    <tr><td>init_welcome</td><td>bool</td><td><code>false</code></td><td>live</td><td>Open the Welcome page on the next config server start.</td></tr>
+    <tr><td>server_path</td><td>string</td><td><code>""</code></td><td>restart</td><td>PATH the config server runs its tools with; empty takes the $PATH of the process applying the install.</td></tr>
+    <tr><td>trash_retention_days</td><td>int</td><td><code>0</code></td><td>live</td><td>Days a stashed file stays under ~/.claude/smine/trash before the sweep removes it; 0 keeps every stash forever.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="skill-environment">Skill environment</h2>
+<p>Component <code>skill-environment</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>groups.skill-environment-cwdchanged-skillenv.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.skill-environment-cwdchanged-skillenv.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.skill-environment-cwdchanged-skillenv.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.skill-environment-pretooluse-skillenv.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.skill-environment-pretooluse-skillenv.matcher</td><td>regex</td><td><code>Skill</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.skill-environment-pretooluse-skillenv.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.skill-environment-sessionstart-skillenv.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.skill-environment-sessionstart-skillenv.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.skill-environment-sessionstart-skillenv.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.skill-environment-userpromptexpansion-skillenv.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.skill-environment-userpromptexpansion-skillenv.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.skill-environment-userpromptexpansion-skillenv.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="context-system">Context system</h2>
+<p>Component <code>context</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>context_dir</td><td>string</td><td><code>""</code></td><td>live</td><td>Repo-relative directory holding the context docs the hooks inject; empty injects nothing and names this setting once per session start.</td></tr>
+    <tr><td>global_inline_cap</td><td>int</td><td><code>9000</code></td><td>live</td><td>Bytes of global context delivered inline; above it the hook writes an injection file and a pointer.</td></tr>
+    <tr><td>global_read_budget</td><td>int</td><td><code>55000</code></td><td>live</td><td>Bytes one required-reading chunk may hold before the pointer splits it.</td></tr>
+    <tr><td>global_banner</td><td>string</td><td><code>===== GLOBAL CONTEXT (injected by hook) =====</code></td><td>live</td><td>First line of the injected global context.</td></tr>
+    <tr><td>global_pointer_format</td><td>string</td><td><code>%s\nWritten to %s (%d chars, %d lines). Read it in full before any other tool call — the read-gate hook enforces this.</code></td><td>live</td><td>Pointer text when the context went to a file: banner, path, size, lines.</td></tr>
+    <tr><td>readgate_ledger_retention</td><td>duration</td><td><code>168h0m0s</code></td><td>live</td><td>How long the read gate's ledger remembers a read; the skill-context prune uses the same age.</td></tr>
+    <tr><td>readgate_default_slice_suffix</td><td>string</td><td><code>topic-default</code></td><td>live</td><td>Suffix of the default-slice injection file name.</td></tr>
+    <tr><td>readgate_deny_format</td><td>string</td><td><code>Required reading first (read-gate). Read the files below in full with the offset/limit pairs listed, then retry this %s.%s</code></td><td>live</td><td>Deny text of the read gate; the first placeholder is the owed file list.</td></tr>
+    <tr><td>readgate_bash_addendum</td><td>string</td><td><code>\nBash reads do not count as coverage — use Read.</code></td><td>live</td><td>Line appended to a deny of a Bash call naming a governed file.</td></tr>
+    <tr><td>readgate_manifest_write_reason</td><td>string</td><td><code>read-gate: lane manifests are written by smine-rules lanes only</code></td><td>live</td><td>Deny text of a write to a lane manifest.</td></tr>
+    <tr><td>readgate_head_mismatch_text</td><td>string</td><td><code>read-gate: lane worktree is at %s, the lane manifest pins %s — review the pinned head</code></td><td>live</td><td>Deny text of a lane manifest whose head differs from the worktree.</td></tr>
+    <tr><td>readgate_gate_subagents</td><td>bool</td><td><code>true</code></td><td>live</td><td>Gate subagents too; off gates the root agent alone.</td></tr>
+    <tr><td>readgate_disabled_guides</td><td>strings</td><td><code>[]</code></td><td>live</td><td>Guide file names the gate never owes, such as go_test.md; every other guide stays gated.</td></tr>
+    <tr><td>skill_inline_cap</td><td>int</td><td><code>9000</code></td><td>live</td><td>Runes of skill context delivered inline; above it the hook writes an injection file.</td></tr>
+    <tr><td>skill_default_slice</td><td>string</td><td><code>default</code></td><td>live</td><td>The slice a smartskill injects without a topic token.</td></tr>
+    <tr><td>skill_help_pattern</td><td>regex</td><td><code>(?m)^\s*(?:/\S+\s+)?(?:-{1,2}|—|–)(?:help|h)\s*$</code></td><td>live</td><td>Prompt pattern that marks a --help invocation.</td></tr>
+    <tr><td>skill_no_context_pattern</td><td>regex</td><td><code>(?:^|\s)(?:-{1,2}|—|–)no-context(?:\s|$)</code></td><td>live</td><td>Invocation token that suppresses the injection.</td></tr>
+    <tr><td>skill_banner_format</td><td>string</td><td><code>===== SKILL CONTEXT /%s%s v%s (injected by hook) =====</code></td><td>live</td><td>First line of an injected skill context: skill and version.</td></tr>
+    <tr><td>skill_repeat_format</td><td>string</td><td><code>Injected earlier this session (%d): %s</code></td><td>live</td><td>Line of a repeated invocation: the ids already delivered.</td></tr>
+    <tr><td>skill_pointer_format</td><td>string</td><td><code>Written to %s lines %d-%d (%d chars). Read those lines before any other tool call — the read-gate hook enforces this.</code></td><td>live</td><td>Pointer text when the skill context went to a file.</td></tr>
+    <tr><td>planmode_entry_id_prefix</td><td>string</td><td><code>RULE-PLAN-</code></td><td>live</td><td>Id prefix of the entries the plan-mode hook injects.</td></tr>
+    <tr><td>planmode_banner</td><td>string</td><td><code>===== PLAN CONTEXT (injected on plan-mode entry) =====</code></td><td>live</td><td>First line of the injected plan context.</td></tr>
+    <tr><td>planmode_heading</td><td>string</td><td><code>Plan-format rules (rules/plan.md, gate: plan-format on persisted plans):</code></td><td>live</td><td>Heading above the injected plan entries.</td></tr>
+    <tr><td>planmode_entry_format</td><td>string</td><td><code>- **%s** — %s\n</code></td><td>live</td><td>Line format of one injected plan entry: id, statement.</td></tr>
+    <tr><td>planmode_pack_format</td><td>string</td><td><code>%s\n%s\n%s\n%s\n</code></td><td>live</td><td>Wrapper of the injected plan pack.</td></tr>
+    <tr><td>planmode_pointer_format</td><td>string</td><td><code>%s\nWritten to %s (%d chars, %d lines). Read it in full before any other tool call — the read-gate hook enforces this.</code></td><td>live</td><td>Pointer text when the plan pack went to a file.</td></tr>
+    <tr><td>planmode_trailer</td><td>string</td><td><code>Planned files: run 'make acdsl ARGS="project -plan &lt;path&gt;"' per created/modified file to see its governing gates; the Read hook delivers a governed file's rules as context, never into the file.</code></td><td>live</td><td>Last line of the injected plan context.</td></tr>
+    <tr><td>planmode_root_only</td><td>bool</td><td><code>true</code></td><td>live</td><td>Inject plan context into the root agent only, never into a subagent.</td></tr>
+    <tr><td>acdsl_timeout</td><td>duration</td><td><code>14s</code></td><td>live</td><td>Deadline of one acdsl child run; the hook gives up and answers nothing after it.</td></tr>
+    <tr><td>acdsl_binaries</td><td>strings</td><td><code>["acdsl",<wbr>"acdsl.exe"]</code></td><td>live</td><td>Binary names tried under bin/ in order.</td></tr>
+    <tr><td>acdsl_go_run_fallback</td><td>bool</td><td><code>true</code></td><td>live</td><td>Run go run ./cmd/acdsl when no built binary exists.</td></tr>
+    <tr><td>acdsl_context_text</td><td>string</td><td><code>ACDSL rules governing %s:\n%s</code></td><td>live</td><td>Lead line of the rules context a Read of a governed file receives.</td></tr>
+    <tr><td>groups.context-posttooluse-readgate.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-posttooluse-readgate.matcher</td><td>regex</td><td><code>Read|Skill</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-posttooluse-readgate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-posttooluse-skillcontext.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-posttooluse-skillcontext.matcher</td><td>regex</td><td><code>Skill</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-posttooluse-skillcontext.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-posttooluse-acdslhook.timeout</td><td>int</td><td><code>15</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-posttooluse-acdslhook.matcher</td><td>regex</td><td><code>Read</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-posttooluse-acdslhook.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-posttooluse-planmodecontext.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-posttooluse-planmodecontext.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-posttooluse-planmodecontext.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-pretooluse-readgate.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-pretooluse-readgate.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-pretooluse-readgate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-sessionstart-globalcontext.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-sessionstart-globalcontext.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-sessionstart-globalcontext.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-sessionstart-readgate.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-sessionstart-readgate.matcher</td><td>regex</td><td><code>compact|clear</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-sessionstart-readgate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-subagentstart-globalcontext.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-subagentstart-globalcontext.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-subagentstart-globalcontext.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-skillcontext.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-skillcontext.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-skillcontext.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-readgate.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-readgate.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-readgate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-planmodecontext.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-planmodecontext.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.context-userpromptsubmit-planmodecontext.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="permission-gate">Permission gate</h2>
+<p>Component <code>gate</code>. How the gate uses these values is in <a href="permissions.html">Permissions</a>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>read_only_commands</td><td>strings</td><td><code>["[",<wbr>"basename",<wbr>"cat",<wbr>"cd",<wbr>"cmp",<wbr>"cut",<wbr>"date",<wbr>"df",<wbr>"diff",<wbr>"dirname",<wbr>"du",<wbr>"echo",<wbr>"egrep",<wbr>"false",<wbr>"fgrep",<wbr>"file",<wbr>"find",<wbr>"git blame",<wbr>"git branch",<wbr>"git cherry",<wbr>"git config --get",<wbr>"git describe",<wbr>"git diff",<wbr>"git grep",<wbr>"git log",<wbr>"git ls-files",<wbr>"git ls-tree",<wbr>"git merge-base",<wbr>"git remote -v",<wbr>"git rev-list",<wbr>"git rev-parse",<wbr>"git shortlog",<wbr>"git show",<wbr>"git stash list",<wbr>"git status",<wbr>"git tag -l",<wbr>"git worktree list",<wbr>"go env",<wbr>"go list",<wbr>"go version",<wbr>"grep",<wbr>"head",<wbr>"jq",<wbr>"ls",<wbr>"od",<wbr>"printf",<wbr>"pwd",<wbr>"readlink",<wbr>"realpath",<wbr>"rg",<wbr>"sed",<wbr>"smine-rules --help",<wbr>"smine-rules -h",<wbr>"smine-rules base",<wbr>"smine-rules entries",<wbr>"smine-rules help",<wbr>"smine-rules intake",<wbr>"smine-rules pairs",<wbr>"smine-rules task-check",<wbr>"smine-rules walk",<wbr>"smine-rules settings list",<wbr>"smine-rules settings get",<wbr>"smine-rules settings-defaults --check",<wbr>"sort",<wbr>"stat",<wbr>"strings",<wbr>"sw_vers",<wbr>"tail",<wbr>"test",<wbr>"tr",<wbr>"true",<wbr>"type",<wbr>"uname",<wbr>"uniq",<wbr>"wait",<wbr>"wc",<wbr>"which",<wbr>"xxd"]</code></td><td>live</td><td>Commands the gate admits as read-only; a two-word entry lists one subcommand of its head.</td></tr>
+    <tr><td>ungated_tools</td><td>strings</td><td><code>["Agent",<wbr>"CronCreate",<wbr>"CronDelete",<wbr>"CronList",<wbr>"EndConversation",<wbr>"ExitPlanMode",<wbr>"ExitWorktree",<wbr>"LSP",<wbr>"ListAgents",<wbr>"ListMcpResourcesTool",<wbr>"PushNotification",<wbr>"ReadMcpResourceTool",<wbr>"RemoteTrigger",<wbr>"ReportFindings",<wbr>"ScheduleWakeup",<wbr>"SendFeedback",<wbr>"SendMessage",<wbr>"SendUserFile",<wbr>"StructuredOutput",<wbr>"SubagentHandback",<wbr>"TaskCreate",<wbr>"TaskGet",<wbr>"TaskList",<wbr>"TaskOutput",<wbr>"TaskUpdate",<wbr>"TodoWrite",<wbr>"ToolSearch",<wbr>"WaitForMcpServers"]</code></td><td>live</td><td>Tools the gate never judges.</td></tr>
+    <tr><td>tool_classes_bash</td><td>strings</td><td><code>["Bash",<wbr>"PowerShell"]</code></td><td>live</td><td>Tools the gate judges as shell commands.</td></tr>
+    <tr><td>tool_classes_read</td><td>strings</td><td><code>["Read",<wbr>"Glob",<wbr>"Grep"]</code></td><td>live</td><td>Tools the gate judges as file reads.</td></tr>
+    <tr><td>tool_classes_write</td><td>strings</td><td><code>["Edit",<wbr>"Write",<wbr>"NotebookEdit"]</code></td><td>live</td><td>Tools the gate judges as file writes.</td></tr>
+    <tr><td>tool_classes_rule_bearing</td><td>strings</td><td><code>["WebFetch",<wbr>"WebSearch",<wbr>"Skill",<wbr>"Agent",<wbr>"Workflow",<wbr>"Monitor",<wbr>"Artifact",<wbr>"EnterWorktree",<wbr>"mcp__*"]</code></td><td>live</td><td>Tools the gate admits only through an allow rule naming them.</td></tr>
+    <tr><td>denied_tools</td><td>strings</td><td><code>["AskUserQuestion",<wbr>"EnterPlanMode",<wbr>"TaskStop"]</code></td><td>live</td><td>Tools the gate always denies.</td></tr>
+    <tr><td>protected_paths</td><td>paths</td><td><code>["~/.claude/agents",<wbr>"~/.claude/hooks",<wbr>"~/.claude/skills",<wbr>"~/.claude/tool-policy"]</code></td><td>live</td><td>Paths no session writes, whatever its rules say.</td></tr>
+    <tr><td>operator_paths</td><td>paths</td><td><code>["install.sh",<wbr>"cmd/sync",<wbr>"bin/configserver"]</code></td><td>live</td><td>Repo paths only the operator runs; a linked worktree of the gate's own repo is refused them.</td></tr>
+    <tr><td>extra_read_dirs</td><td>paths</td><td><code>["~/.cargo/registry",<wbr>"~/.claude",<wbr>"~/.local/share/uv",<wbr>"~/.rustup",<wbr>"~/Library/Application Support/Claude",<wbr>"~/Library/Caches",<wbr>"~/go/bin",<wbr>"~/go/pkg/mod"]</code></td><td>live</td><td>Directories every session may read beside its roots.</td></tr>
+    <tr><td>extra_write_dirs</td><td>paths</td><td><code>["~/.claude/plans",<wbr>"~/.claude/projects/*/memory"]</code></td><td>live</td><td>Directories every session may write beside its roots.</td></tr>
+    <tr><td>managed_settings_path</td><td>string</td><td><code>/Library/Application Support/ClaudeCode/managed-settings.json</code></td><td>live</td><td>The managed settings file whose allow rules the gate reads first.</td></tr>
+    <tr><td>max_loop_items</td><td>int</td><td><code>16</code></td><td>live</td><td>Items a shell for loop may list before the fence refuses it.</td></tr>
+    <tr><td>tmp_dirs</td><td>paths</td><td><code>["/private/tmp",<wbr>"/tmp"]</code></td><td>live</td><td>Temp directories the fence treats as a session's scratch roots.</td></tr>
+    <tr><td>engine_protected_dirs</td><td>paths</td><td><code>[".cargo",<wbr>".devcontainer",<wbr>".git",<wbr>".husky",<wbr>".idea",<wbr>".mvn",<wbr>".vscode",<wbr>".yarn"]</code></td><td>live</td><td>Repo directories no write reaches, like Claude Code's own protected dirs.</td></tr>
+    <tr><td>engine_protected_file_patterns</td><td>globs</td><td><code>[".bazelrc*",<wbr>".bazeliskrc",<wbr>".bazelversion",<wbr>".pnp.*",<wbr>".yarnrc*",<wbr>"lefthook*.yaml",<wbr>"lefthook*.yml"]</code></td><td>live</td><td>File-name patterns no write reaches.</td></tr>
+    <tr><td>engine_protected_files</td><td>paths</td><td><code>[".bash_aliases",<wbr>".bash_login",<wbr>".bash_logout",<wbr>".bash_profile",<wbr>".bashrc",<wbr>".claude.json",<wbr>".devcontainer.json",<wbr>".envrc",<wbr>".gitconfig",<wbr>".gitmodules",<wbr>".mcp.json",<wbr>".npmrc",<wbr>".pnpmfile.cjs",<wbr>".pre-commit-config.yaml",<wbr>".profile",<wbr>".ripgreprc",<wbr>".zlogin",<wbr>".zlogout",<wbr>".zprofile",<wbr>".zshenv",<wbr>".zshrc",<wbr>"bunfig.toml",<wbr>"gradle-wrapper.properties",<wbr>"maven-wrapper.properties",<wbr>"pyrightconfig.json"]</code></td><td>live</td><td>File names no write reaches, like Claude Code's own protected files.</td></tr>
+    <tr><td>file_commands</td><td>strings</td><td><code>["cp",<wbr>"mkdir",<wbr>"mv",<wbr>"rm",<wbr>"rmdir",<wbr>"touch"]</code></td><td>live</td><td>File commands whose path arguments the fence checks.</td></tr>
+    <tr><td>wrapper_commands</td><td>strings</td><td><code>["command",<wbr>"env",<wbr>"nice",<wbr>"time",<wbr>"timeout",<wbr>"xargs"]</code></td><td>live</td><td>Commands that run the next word as the command the gate judges.</td></tr>
+    <tr><td>git_admitted_flags</td><td>strings</td><td><code>["--no-optional-locks",<wbr>"--no-pager",<wbr>"-P"]</code></td><td>live</td><td>Git global options the gate cuts before matching a rule.</td></tr>
+    <tr><td>makefile_names</td><td>strings</td><td><code>["GNUmakefile",<wbr>"makefile",<wbr>"Makefile"]</code></td><td>live</td><td>File names make reads as the Makefile.</td></tr>
+    <tr><td>fimplement_skill</td><td>string</td><td><code>fimplement</code></td><td>live</td><td>Skill whose invocation applies a plan's frozen rules.</td></tr>
+    <tr><td>design_skill</td><td>string</td><td><code>fdesign</code></td><td>live</td><td>Skill whose run may freeze a plan's rules.</td></tr>
+    <tr><td>cause_acdsl_rule_file</td><td>string</td><td><code>acdsl policy mode is strict: rule files are not editable in this repo (docs/acdsl.html, Modes)</code></td><td>live</td><td>Deny cause of a rule-file write under acdsl strict mode.</td></tr>
+    <tr><td>cause_acdsl_surface</td><td>string</td><td><code>acdsl policy mode is gated or strict: the self-management surface changes only on the base branch (docs/acdsl.html, Modes)</code></td><td>live</td><td>Deny cause of a self-management surface write under acdsl gated or strict mode.</td></tr>
+    <tr><td>cause_agent_models</td><td>string</td><td><code>Agent call while the model vocabulary (settings availableModels, heartbeat forbidden_subagent_models) is unreadable</code></td><td>live</td><td>Deny cause of an Agent call while the model vocabulary is unreadable.</td></tr>
+    <tr><td>cause_anchor_removed</td><td>string</td><td><code>the session's worktree no longer exists — end this session; nothing outside it is reachable</code></td><td>live</td><td>Deny cause of a call after the session's worktree was removed.</td></tr>
+    <tr><td>cause_awk_write</td><td>string</td><td><code>awk program that writes or runs commands (print &gt;, |, system, getline) — the path fence cannot check it</code></td><td>live</td><td>Deny cause of an awk program that writes or runs commands.</td></tr>
+    <tr><td>cause_cd_git</td><td>string</td><td><code>cd combined with git in one command — run git -C &lt;dir&gt; &lt;subcommand&gt; as its own call</code></td><td>live</td><td>Deny cause of cd combined with git in one command.</td></tr>
+    <tr><td>cause_cd_protected</td><td>string</td><td><code>cd into a protected root — the shell cwd persists, so every later bare word would resolve under it; stay in the working directory and pass the path as an argument</code></td><td>live</td><td>Deny cause of cd into a protected root.</td></tr>
+    <tr><td>cause_cd_redirect</td><td>string</td><td><code>cd combined with a redirect the gate cannot resolve — redirect to an absolute path inside the working roots</code></td><td>live</td><td>Deny cause of cd combined with a redirect the gate cannot resolve.</td></tr>
+    <tr><td>cause_compound</td><td>string</td><td><code>compound command with state-changing or unrecognized parts</code></td><td>live</td><td>Deny cause of a compound command with state-changing or unrecognized parts.</td></tr>
+    <tr><td>cause_critical_remove</td><td>string</td><td><code>rm/rmdir on a critical path (/, a top-level directory, $HOME, the working directory or one of its parents)</code></td><td>live</td><td>Deny cause of rm or rmdir on a critical path.</td></tr>
+    <tr><td>cause_denied_tool</td><td>string</td><td><code>tool is denied by policy</code></td><td>live</td><td>Deny cause of a tool listed in denied_tools.</td></tr>
+    <tr><td>cause_engine_protected</td><td>string</td><td><code>engine-protected path (VCS, editor, shell, package-manager or agent config) — Claude Code never auto-approves writes there; edit it by hand</code></td><td>live</td><td>Deny cause of a write to an engine-protected path.</td></tr>
+    <tr><td>cause_fence_construct</td><td>string</td><td><code>shell construct the path fence cannot follow (function, eval, coprocess, popd, cd -, assigning HOME/PWD/OLDPWD/CDPATH)</code></td><td>live</td><td>Deny cause of a shell construct the path fence cannot follow.</td></tr>
+    <tr><td>cause_fence_unparseable</td><td>string</td><td><code>command does not parse — the path fence cannot check it</code></td><td>live</td><td>Deny cause of a command the path fence cannot parse.</td></tr>
+    <tr><td>cause_fenced</td><td>string</td><td><code>path is outside this session's scope</code></td><td>live</td><td>Deny cause of a path inside the read fence.</td></tr>
+    <tr><td>cause_find_exec</td><td>string</td><td><code>find with an exec or write flag (-exec/-execdir/-ok/-okdir/-delete/-fprint*) runs or deletes past every check</code></td><td>live</td><td>Deny cause of find with an exec or write flag.</td></tr>
+    <tr><td>cause_freeze_budget</td><td>string</td><td><code>no freeze left in this session — a session freezes one plan per /fdesign prompt the user typed, an unattended design run one plan</code></td><td>live</td><td>Deny cause of a freeze beyond the session's design prompts.</td></tr>
+    <tr><td>cause_freeze_reopen</td><td>string</td><td><code>this plan's rules are frozen — they change only in a design run the user starts by typing /fdesign with the plan's file name</code></td><td>live</td><td>Deny cause of a refreeze of a frozen plan outside its design run.</td></tr>
+    <tr><td>cause_freeze_target</td><td>string</td><td><code>toolpolicy freeze takes one wip plan dir of this worktree: plans/&lt;feature folder&gt;/&lt;plan dir&gt;</code></td><td>live</td><td>Deny cause of a freeze target that is no wip plan dir.</td></tr>
+    <tr><td>cause_git_dir</td><td>string</td><td><code>git dir: hooks and config under .git run code on the next git command — change them through git itself, never by writing the files</code></td><td>live</td><td>Deny cause of a write under a .git dir.</td></tr>
+    <tr><td>cause_git_environment</td><td>string</td><td><code>GIT_* environment on a git call (GIT_INDEX_FILE excepted) — git reads config, pager, diff driver, git dir and exec path from it: drop the assignment</code></td><td>live</td><td>Deny cause of a GIT_* assignment on a git call.</td></tr>
+    <tr><td>cause_git_exec</td><td>string</td><td><code>git subcommand or option that runs a command named on the command line or plants hooks and config (clone -u/--template/-c, fetch/pull/ls-remote --upload-pack, push --receive-pack, archive --exec, grep -O, rebase -x, difftool, mergetool, bisect run, submodule foreach, filter-branch) — no allow rule lifts this</code></td><td>live</td><td>Deny cause of a git subcommand or option that runs a command.</td></tr>
+    <tr><td>cause_git_global_option</td><td>string</td><td><code>git global option before the subcommand — only -C &lt;dir&gt;, --no-pager, -P and --no-optional-locks are admitted: -c, --config-env, --exec-path, --git-dir, --work-tree and --bare redirect config or executables</code></td><td>live</td><td>Deny cause of a git global option outside git_admitted_flags.</td></tr>
+    <tr><td>cause_git_same_repo</td><td>string</td><td><code>git -C onto another checkout of this repository — refs and objects are shared across its worktrees: drop -C and run git in the session's own worktree</code></td><td>live</td><td>Deny cause of git -C onto another checkout of the session's repository.</td></tr>
+    <tr><td>cause_go_program_flag</td><td>string</td><td><code>go flag that runs another program (-exec, -toolexec, -vettool), or a word the gate cannot resolve statically — run the plain go command</code></td><td>live</td><td>Deny cause of a go flag that runs another program.</td></tr>
+    <tr><td>cause_make_args</td><td>string</td><td><code>make call loads code (-f/--eval/-I/-e), sets a variable the target's "## &lt;target&gt;:" help line does not declare (NAME=), or carries a value with shell metacharacters — declare the parameter in the Makefile's help line</code></td><td>live</td><td>Deny cause of a make call that loads code or sets an undeclared variable.</td></tr>
+    <tr><td>cause_no_allow_rule</td><td>string</td><td><code>no allow rule matches</code></td><td>live</td><td>Deny cause of a call no allow rule matches; toolpolicy check names a candidate rule only for it.</td></tr>
+    <tr><td>cause_operator_command</td><td>string</td><td><code>operator entry point — it deploys from the checkout it runs in, so it runs only from the main checkout: the user runs it</code></td><td>live</td><td>Deny cause of an operator entry point run from a linked worktree.</td></tr>
+    <tr><td>cause_pane_login</td><td>string</td><td><code>URL carries sign-in credentials — the Browser pane asks the user before submitting them and no hook answers that card; open the URL without them (a dev config server needs none)</code></td><td>live</td><td>Deny cause of a Browser pane URL carrying sign-in credentials.</td></tr>
+    <tr><td>cause_proc_subst</td><td>string</td><td><code>process substitution &lt;(…) or &gt;(…) — write a file under the scratchpad instead</code></td><td>live</td><td>Deny cause of a process substitution.</td></tr>
+    <tr><td>cause_protected_path</td><td>string</td><td><code>protected path: a settings layer, a gate input (hooks, skills, agents, tool-policy state) or the session transcript</code></td><td>live</td><td>Deny cause of a write to a protected path.</td></tr>
+    <tr><td>cause_read_outside</td><td>string</td><td><code>read outside the working directories</code></td><td>live</td><td>Deny cause of a read outside the session's read roots.</td></tr>
+    <tr><td>cause_rules_file</td><td>string</td><td><code>permissions.json is written only by a design run that may still freeze its plan</code></td><td>live</td><td>Deny cause of a write to a plan's rules file outside a freezable design run; the freeze cause follows it.</td></tr>
+    <tr><td>cause_sed_script_write</td><td>string</td><td><code>sed script with a w command — write files with the Edit tool or a redirect</code></td><td>live</td><td>Deny cause of a sed script with a w command.</td></tr>
+    <tr><td>cause_settings_interactive</td><td>string</td><td><code>settings.local.json self-service runs only in a session a human prompted — headless and scheduled sessions never change the permission layer</code></td><td>live</td><td>Deny cause of toolpolicy allow in a session no human prompted.</td></tr>
+    <tr><td>cause_settings_revoked</td><td>string</td><td><code>settings.local.json self-service revoked — the user's last message for it is #deny settings.local.json</code></td><td>live</td><td>Deny cause of toolpolicy allow after the user's #deny settings.local.json.</td></tr>
+    <tr><td>cause_settings_uncovered</td><td>string</td><td><code>settings.local.json rules not covered by a human act — a plan's rules come from its frozen record, never from toolpolicy allow; any other rule needs the user's message #allow settings.local.json (short: #allow -s); uncovered: </code></td><td>live</td><td>Deny cause of toolpolicy allow rules no human act covers; the uncovered rules follow it.</td></tr>
+    <tr><td>cause_settings_usage</td><td>string</td><td><code>usage: toolpolicy allow '&lt;rule&gt;' ['&lt;rule&gt;' …] | toolpolicy check [--skill &lt;leaf&gt;]… '&lt;command|url|tool&gt;' … | toolpolicy freeze plans/&lt;feature folder&gt;/&lt;plan dir&gt; | toolpolicy revert — one literal command, no pipes or redirects</code></td><td>live</td><td>Usage text of a malformed toolpolicy command.</td></tr>
+    <tr><td>cause_settings_via_command</td><td>string</td><td><code>settings.local.json is written only by the gate — add rules with: toolpolicy allow '&lt;rule&gt;' …</code></td><td>live</td><td>Deny cause of a direct write to settings.local.json.</td></tr>
+    <tr><td>cause_state_unavailable</td><td>string</td><td><code>tool-policy state unavailable: </code></td><td>live</td><td>Lead of the deny cause when the session state cannot be read; the error follows it.</td></tr>
+    <tr><td>cause_tilde_user</td><td>string</td><td><code>~user path — name the absolute path instead</code></td><td>live</td><td>Deny cause of a ~user path.</td></tr>
+    <tr><td>cause_tmp_write</td><td>string</td><td><code>write under /tmp outside the session scratchpad — write under the scratchpad directory instead</code></td><td>live</td><td>Deny cause of a write under a temp dir outside the session scratchpad.</td></tr>
+    <tr><td>cause_unknown_tool</td><td>string</td><td><code>unknown tool</code></td><td>live</td><td>Deny cause of a tool in no tool class.</td></tr>
+    <tr><td>cause_unparseable_compound</td><td>string</td><td><code>unparseable compound command</code></td><td>live</td><td>Deny cause of a command that does not parse and carries a separator.</td></tr>
+    <tr><td>cause_unresolvable_head</td><td>string</td><td><code>command name the gate cannot resolve statically</code></td><td>live</td><td>Deny cause of a command name the gate cannot resolve.</td></tr>
+    <tr><td>cause_unresolvable_path</td><td>string</td><td><code>path argument the gate cannot resolve statically ($VAR from the environment, $(…) output, or a relative path after an uncertain cd)</code></td><td>live</td><td>Deny cause of a path argument the gate cannot resolve.</td></tr>
+    <tr><td>cause_workflow_marker</td><td>string</td><td><code>inline script carries the SMINE-PRIMER marker but is not the primer — only the primer may carry it</code></td><td>live</td><td>Deny cause of an inline Workflow script carrying the primer marker without being the primer.</td></tr>
+    <tr><td>cause_workflow_relay</td><td>string</td><td><code>launch outside a turn a task notification opened — the harness hands the newest typed message to every agent of the launch</code></td><td>live</td><td>Deny cause of a Workflow launch outside a turn a task notification opened.</td></tr>
+    <tr><td>cause_worktree_outside</td><td>string</td><td><code>EnterWorktree path outside this repository's .claude/worktrees — enter a worktree of the session's own repository</code></td><td>live</td><td>Deny cause of an EnterWorktree path outside the repository's worktrees dir.</td></tr>
+    <tr><td>cause_write_outside</td><td>string</td><td><code>write outside the working directories</code></td><td>live</td><td>Deny cause of a write outside the session's write roots.</td></tr>
+    <tr><td>cause_xargs_write</td><td>string</td><td><code>xargs feeding a command that is not read-only — its arguments come from stdin and cannot be path-checked</code></td><td>live</td><td>Deny cause of xargs feeding a command that is not read-only.</td></tr>
+    <tr><td>reason_accept_edits</td><td>string</td><td><code>acceptEdits file command, paths checked by the fence (bash-policy)</code></td><td>live</td><td>Allow reason of a file command in acceptEdits or auto mode.</td></tr>
+    <tr><td>reason_active_skill</td><td>string</td><td><code>active skill </code></td><td>live</td><td>Lead of the allow reason of a Skill call to an active skill; the skill follows it.</td></tr>
+    <tr><td>reason_path_flag</td><td>string</td><td><code>flagged file command with safe flags inside the write roots (bash-policy)</code></td><td>live</td><td>Allow reason of a file command with safe flags inside the write roots.</td></tr>
+    <tr><td>reason_pipeline</td><td>string</td><td><code>two-segment pipeline of allowed commands (bash-policy)</code></td><td>live</td><td>Allow reason of a pipe whose two sides are allowed.</td></tr>
+    <tr><td>reason_prompt_skill</td><td>string</td><td><code>skill the user's newest message names: /</code></td><td>live</td><td>Lead of the allow reason of a Skill call the user's newest message names; the skill follows it.</td></tr>
+    <tr><td>reason_read_only</td><td>string</td><td><code>read-only command batch (bash-policy)</code></td><td>live</td><td>Allow reason of a read-only command batch.</td></tr>
+    <tr><td>reason_roots</td><td>string</td><td><code>inside the session's working roots</code></td><td>live</td><td>Allow reason of a path inside the session's roots.</td></tr>
+    <tr><td>reason_sed_write</td><td>string</td><td><code>in-place sed, files checked by the fence (bash-policy)</code></td><td>live</td><td>Allow reason of an in-place sed whose files the fence checked.</td></tr>
+    <tr><td>reason_settings_rule</td><td>string</td><td><code>settings rule </code></td><td>live</td><td>Lead of the allow reason of a settings allow rule; the rule follows it.</td></tr>
+    <tr><td>reason_skill_grant</td><td>string</td><td><code>skill grant </code></td><td>live</td><td>Lead of the allow reason of a skill's allowed-tools rule; the rule follows it.</td></tr>
+    <tr><td>reason_system_read</td><td>string</td><td><code>system path, read-only</code></td><td>live</td><td>Allow reason of a read under a system path.</td></tr>
+    <tr><td>reason_ungated</td><td>string</td><td><code>ungated tool</code></td><td>live</td><td>Allow reason of a tool listed in ungated_tools.</td></tr>
+    <tr><td>steer_bash</td><td>string</td><td><code>Compound Bash commands are auto-denied in this environment; they never prompt. Issue ONE command per Bash call. Allowlisted prefixes (git/go/make/jq/gh/curl/...) run without prompting; fully read-only batches (jq/grep/ls/find/echo/...) are auto-allowed even when chained; ONE pipe (a | b) is allowed when both sides are allowlisted or read-only. Do not retry the same compound - split it or use Read/Grep/Glob tools.</code></td><td>live</td><td>Steering text every Bash deny appends.</td></tr>
+    <tr><td>steer_deny</td><td>string</td><td><code>Nothing prompts in this environment; a denied capability stays denied until a rule is added. Use an allowlisted form or a read-only alternative; do not retry the same call.</code></td><td>live</td><td>Steering text every deny appends after the candidate rule.</td></tr>
+    <tr><td>steer_find</td><td>string</td><td><code>Bash(find *) does not cover these forms and nothing prompts. Never use them: pipe instead - find &lt;dirs&gt; &lt;tests&gt; | xargs &lt;cmd&gt; - with both sides read-only or allowlisted.</code></td><td>live</td><td>Steering text of a find exec or write deny.</td></tr>
+    <tr><td>steer_relay</td><td>string</td><td><code>No allow rule lifts this. In a session with a typed message, a Workflow launches only from a turn a task notification opened: 1. launch the primer below with the Workflow tool as an inline script, unchanged; 2. end the turn; 3. in the turn its completion notification opens, relaunch the original Workflow call unchanged. A message typed after the notification restarts at step 1. Primer:\n</code></td><td>live</td><td>Relay steps of a Workflow relay deny; the primer script follows them.</td></tr>
+    <tr><td>invoke_entry_chapters</td><td>strings</td><td><code>["actions",<wbr>"facts",<wbr>"rules"]</code></td><td>live</td><td>Context chapters whose entries reach a session only through a skill invocation.</td></tr>
+    <tr><td>invoke_shell_meta_chars</td><td>string</td><td><code>;|&amp;&lt;&gt;$`'"()</code></td><td>live</td><td>Characters that make a Bash read of an entry non-literal.</td></tr>
+    <tr><td>invoke_deny_texts</td><td>strings</td><td><code>["skill-invoke-gate: context entries are injected via your skill invocation — do not read %s directly (language guides and, via Read, the files your lane manifest lists are the only exceptions).",<wbr>"skill-invoke-gate: invoke the Skill tool with skill=%q before any other tool call — your review context arrives via that invocation."]</code></td><td>live</td><td>The two deny texts of the skill-invoke gate: a direct entry read, a call before the required invocation.</td></tr>
+    <tr><td>groups.gate-directoryadded-toolpolicy.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.gate-directoryadded-toolpolicy.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.gate-directoryadded-toolpolicy.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.gate-permissionrequest-toolpolicy.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.gate-permissionrequest-toolpolicy.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.gate-permissionrequest-toolpolicy.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.gate-posttooluse-toolpolicy.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.gate-posttooluse-toolpolicy.matcher</td><td>regex</td><td><code>Skill</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.gate-posttooluse-toolpolicy.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.gate-pretooluse-toolpolicy.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.gate-pretooluse-toolpolicy.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.gate-pretooluse-toolpolicy.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.gate-pretooluse-skillinvokegate.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.gate-pretooluse-skillinvokegate.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.gate-pretooluse-skillinvokegate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.gate-userpromptsubmit-toolpolicy.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.gate-userpromptsubmit-toolpolicy.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.gate-userpromptsubmit-toolpolicy.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="session-worktrees">Session worktrees</h2>
+<p>Component <code>worktrees</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>branch_prefix</td><td>string</td><td><code>claude/</code></td><td>live</td><td>Prefix of every session branch the worktree hook creates.</td></tr>
+    <tr><td>worktrees_dir</td><td>string</td><td><code>.claude/worktrees</code></td><td>live</td><td>Repo-relative directory the session worktrees live in.</td></tr>
+    <tr><td>reset_attempts</td><td>int</td><td><code>5</code></td><td>live</td><td>Attempts of the branch reset when git reports index.lock.</td></tr>
+    <tr><td>reset_retry_delay</td><td>duration</td><td><code>200ms</code></td><td>live</td><td>Base delay between reset attempts; attempt n waits n times this.</td></tr>
+    <tr><td>acdsl_build_timeout</td><td>duration</td><td><code>12s</code></td><td>live</td><td>Deadline of the acdsl build after a base move; it stays under the hook's own timeout.</td></tr>
+    <tr><td>short_sha_length</td><td>int</td><td><code>7</code></td><td>live</td><td>Hex digits of the short sha a worktree name ends in.</td></tr>
+    <tr><td>default_branch_fallback</td><td>strings</td><td><code>["main",<wbr>"master"]</code></td><td>live</td><td>Default-branch names tried when origin/HEAD is unset.</td></tr>
+    <tr><td>name_pattern</td><td>regex</td><td><code>^[A-Za-z0-9][A-Za-z0-9._-]*$</code></td><td>live</td><td>Pattern a requested worktree name must match.</td></tr>
+    <tr><td>pool_segment</td><td>string</td><td><code>/.claude/worktrees/</code></td><td>live</td><td>Path segment that marks a session worktree for the write guard and the protected-root check.</td></tr>
+    <tr><td>guard_deny_texts</td><td>strings</td><td><code>["session is worktree-anchored: writes go under %s — refusing write into the main checkout or a sibling worktree: %s",<wbr>"path contains ../ segments — write with a normalized absolute path (session worktree: %s)",<wbr>"path is inside a protected checkout (%s) — routine cells write only inside their own worktree"]</code></td><td>live</td><td>The three deny texts of the write guard: outside the worktree, a parent segment, a protected checkout.</td></tr>
+    <tr><td>groups.worktrees-pretooluse-worktreewriteguard.timeout</td><td>int</td><td><code>10</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.worktrees-pretooluse-worktreewriteguard.matcher</td><td>regex</td><td><code>Write|Edit|NotebookEdit</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.worktrees-pretooluse-worktreewriteguard.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.worktrees-sessionstart-worktreecreate.timeout</td><td>int</td><td><code>15</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.worktrees-sessionstart-worktreecreate.matcher</td><td>regex</td><td><code>startup</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.worktrees-sessionstart-worktreecreate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.worktrees-worktreecreate-worktreecreate.timeout</td><td>int</td><td><code>60</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.worktrees-worktreecreate-worktreecreate.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.worktrees-worktreecreate-worktreecreate.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="session-helpers">Session helpers</h2>
+<p>Component <code>session-helpers</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>max_title_runes</td><td>int</td><td><code>62</code></td><td>live</td><td>Runes a session title may hold.</td></tr>
+    <tr><td>max_states</td><td>int</td><td><code>8</code></td><td>live</td><td>Title states one skill may declare.</td></tr>
+    <tr><td>max_token_runes</td><td>int</td><td><code>16</code></td><td>live</td><td>Runes one title state token may hold.</td></tr>
+    <tr><td>title_instruction_plan_mode</td><td>string</td><td><code> This call is allowed in plan mode: it changes only this session's sidebar title, nothing in the repository or the system.</code></td><td>live</td><td>Sentence the rename instruction adds in plan mode.</td></tr>
+    <tr><td>title_instruction_tail</td><td>string</td><td><code> Do it as your next action, then continue with what you were doing; if nothing is pending, end your turn without further output. Do not mention it.</code></td><td>live</td><td>Closing sentences of the rename instruction.</td></tr>
+    <tr><td>title_rename_allow_reason</td><td>string</td><td><code>sessiontitle: hook-instructed rename of this session</code></td><td>live</td><td>Allow reason of the hook-instructed rename call.</td></tr>
+    <tr><td>title_trigger_patterns</td><td>strings</td><td><code>["(^|[;\u0026|\\s])(\\S*/)?smine-agentwt\\s+remove\\s+--dry-run(\\s|$)",<wbr>"(^|[;\u0026|\\s])(\\S*/)?smine-heartbeat\\s+done(\\s|$)",<wbr>"(^|[;\u0026|\\s])(\\S*/)?smine-heartbeat\\s+join(\\s|$)",<wbr>"(^|[;\u0026|\\s])(\\S*/)?smine-heartbeat\\s+subscribe(\\s|$)",<wbr>"--fleet[= ]([A-Za-z0-9-]+)",<wbr>"^[A-Za-z0-9-]+-M[A-Z]+$",<wbr>"(^|[;\u0026|\\s])(\\S+)\\s+title\\s+set\\s+([A-Z][A-Z-]*)(\\s|$)"]</code></td><td>live</td><td>Command patterns the title hook watches for: close check, done, join, subscribe, the fleet flag, the member token, title set.</td></tr>
+    <tr><td>help_pattern</td><td>regex</td><td><code>^\s*/([A-Za-z0-9_-]+)[ \t]+(?:-{1,2}|—|–)(?:help|h)[ \t]*(?:\r?\n|$)</code></td><td>live</td><td>Prompt pattern that marks a /&lt;skill&gt; --help prompt.</td></tr>
+    <tr><td>help_features_lead</td><td>string</td><td><code>What each switch keeps on. `#disable &lt;group&gt;` turns every member of a group off, `&lt;group&gt;:a,b` names members, `all` names everything; `heartbeat` spells `hb`.</code></td><td>live</td><td>Lead line above the feature catalog of a help answer.</td></tr>
+    <tr><td>notification_sound</td><td>string</td><td><code>/System/Library/Sounds/Funk.aiff</code>; Windows <code>C:/Windows/Media/notify.wav</code>; Linux empty</td><td>live</td><td>Sound file played on a notification (afplay on macOS, PlaySound on Windows; forward slashes, the path lands in a bash hook command).</td></tr>
+    <tr><td>stop_sound</td><td>string</td><td><code>/System/Library/Sounds/Hero.aiff</code>; Windows <code>C:/Windows/Media/ding.wav</code>; Linux empty</td><td>live</td><td>Sound file played when a turn ends (afplay on macOS, PlaySound on Windows; forward slashes, the path lands in a bash hook command).</td></tr>
+    <tr><td>groups.session-helpers-notification-play-sound.timeout</td><td>int</td><td><code>0</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-notification-play-sound.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-notification-play-sound.async</td><td>bool</td><td><code>true</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.session-helpers-posttooluse-sessiontitle.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-posttooluse-sessiontitle.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-posttooluse-sessiontitle.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.session-helpers-pretooluse-sessiontitle.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-pretooluse-sessiontitle.matcher</td><td>regex</td><td><code>mcp__ccd_session_mgmt__set_session_title</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-pretooluse-sessiontitle.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.session-helpers-sessionstart-sessiontitle.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-sessionstart-sessiontitle.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-sessionstart-sessiontitle.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.session-helpers-stop-play-sound.timeout</td><td>int</td><td><code>0</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-stop-play-sound.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-stop-play-sound.async</td><td>bool</td><td><code>true</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.session-helpers-stop-sessiontitle.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-stop-sessiontitle.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-stop-sessiontitle.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.session-helpers-userpromptsubmit-skillhelp.timeout</td><td>int</td><td><code>5</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.session-helpers-userpromptsubmit-skillhelp.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.session-helpers-userpromptsubmit-skillhelp.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="peek">peek</h2>
+<p>Component <code>peek</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>port</td><td>int</td><td><code>4242</code></td><td>restart</td><td>Port of the central peek MCP server; heartbeat's peek address follows it.</td></tr>
+    <tr><td>control_port</td><td>int</td><td><code>42442</code></td><td>restart</td><td>Port of peek's control endpoint.</td></tr>
+    <tr><td>claude_home</td><td>string</td><td><code>""</code></td><td>restart</td><td>Claude home peek reads sessions from; empty takes ~/.claude.</td></tr>
+    <tr><td>codex_home</td><td>string</td><td><code>""</code></td><td>restart</td><td>Codex home peek reads sessions from; empty takes ~/.codex.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="heartbeat">heartbeat</h2>
+<p>Component <code>heartbeat</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>port</td><td>int</td><td><code>6101</code></td><td>restart</td><td>Port the heartbeat daemon listens on; its hook URLs and the plist follow it.</td></tr>
+    <tr><td>peek_retry</td><td>duration</td><td><code>30s</code></td><td>restart</td><td>Wait before a degraded peek round is repeated.</td></tr>
+    <tr><td>staging_target</td><td>string</td><td><code>""</code></td><td>restart</td><td>Landing target the done skill catches up; empty means no staging target, and /done branch: refuses naming this setting.</td></tr>
+    <tr><td>workers</td><td>int</td><td><code>2</code></td><td>restart</td><td>Worker threads of the daemon.</td></tr>
+    <tr><td>shutdown_timeout</td><td>duration</td><td><code>500ms</code></td><td>restart</td><td>Grace the daemon gives its threads at shutdown.</td></tr>
+    <tr><td>inbox_capacity</td><td>int</td><td><code>16384</code></td><td>restart</td><td>Events the engine inbox holds before senders wait.</td></tr>
+    <tr><td>exempt_paths</td><td>globs</td><td><code>[]</code></td><td>live</td><td>Path patterns two fleet members may both change without a collision.</td></tr>
+    <tr><td>version_keys</td><td>strings</td><td><code>["version"]</code></td><td>live</td><td>JSON keys whose change alone is no collision.</td></tr>
+    <tr><td>forbidden_subagent_models</td><td>models</td><td><code>[]</code></td><td>live</td><td>Model patterns a subagent may not run on; the heart attack stops one that does.</td></tr>
+    <tr><td>collision_prefixes</td><td>strings</td><td><code>["claude/"]</code></td><td>live</td><td>Branch prefixes whose branches the collision check compares.</td></tr>
+    <tr><td>runtime_stop_reason</td><td>string</td><td><code>heartbeat runtime stop ({finding}): {skill} {check} — {reason}. Stopped by the runtime agent.</code></td><td>live</td><td>Stop text of a runtime finding: {finding}, {skill}, {version}, {check}, {reason}, {evidence}.</td></tr>
+    <tr><td>kill_at</td><td>int</td><td><code>8</code></td><td>live</td><td>Failures of one check after which the run is killed.</td></tr>
+    <tr><td>kill_reason</td><td>string</td><td><code>heartbeat enforce: run {id} of {skill} killed — {check} failed {kill_at} times: {reason}. Stopped until the next prompt.</code></td><td>live</td><td>Stop text of a killed run: {id}, {skill}, {check}, {kill_at}, {reason}.</td></tr>
+    <tr><td>max_ended_runs</td><td>int</td><td><code>64</code></td><td>live</td><td>Ended runs the runtime keeps listed.</td></tr>
+    <tr><td>runtime_digest_lines</td><td>int</td><td><code>50</code></td><td>live</td><td>Lines of a runtime digest.</td></tr>
+    <tr><td>guarded_tools</td><td>strings</td><td><code>["SendMessage",<wbr>"mcp__ccd_session_mgmt__send_message",<wbr>"mcp__ccd_session_mgmt__stop_session"]</code></td><td>live</td><td>Tools a runtime subscriber may not call.</td></tr>
+    <tr><td>subscriber_deny_reason</td><td>string</td><td><code>heartbeat runtime: the runtime subscriber acts only through `smine-heartbeat runtime send|stop`; {tool} is denied while subscribed.</code></td><td>live</td><td>Deny text of a guarded tool while subscribed: {tool}.</td></tr>
+    <tr><td>max_field</td><td>int</td><td><code>256</code></td><td>restart</td><td>Characters a free-text field keeps.</td></tr>
+    <tr><td>digest_lines</td><td>int</td><td><code>50</code></td><td>live</td><td>Lines of a fleet digest.</td></tr>
+    <tr><td>digest_line_paths</td><td>int</td><td><code>8</code></td><td>live</td><td>Paths one digest line names.</td></tr>
+    <tr><td>max_terminal</td><td>int</td><td><code>1000</code></td><td>live</td><td>Terminal sessions the fleet keeps listed.</td></tr>
+    <tr><td>merge_branch_prefix</td><td>string</td><td><code>claude-orch/</code></td><td>live</td><td>Prefix of the orchestrator's merge branches.</td></tr>
+    <tr><td>worker_branch_prefix</td><td>string</td><td><code>claude/</code></td><td>restart</td><td>Prefix of the worker branches the hook edge maps to their sessions.</td></tr>
+    <tr><td>waiting_tools</td><td>strings</td><td><code>["AskUserQuestion",<wbr>"ExitPlanMode"]</code></td><td>live</td><td>Tools whose call marks a session as waiting on its human.</td></tr>
+    <tr><td>waiting_notifications</td><td>strings</td><td><code>["permission_prompt",<wbr>"elicitation_dialog",<wbr>"elicitation_url_dialog",<wbr>"agent_needs_input"]</code></td><td>live</td><td>Notification types that mark a session as waiting on its human.</td></tr>
+    <tr><td>ledger_second</td><td>duration</td><td><code>1s</code></td><td>live</td><td>Window within which a denial ledger line matches a hook event.</td></tr>
+    <tr><td>max_refused_unknown</td><td>int</td><td><code>32</code></td><td>live</td><td>Unknown sessions whose refusal the engine remembers.</td></tr>
+    <tr><td>attack_deny_reason</td><td>string</td><td><code>heartbeat: {model} is a forbidden subagent model; spawn the subagent with an allowed model.</code></td><td>live</td><td>Deny text of a spawn on a forbidden model: {model}.</td></tr>
+    <tr><td>attack_stop_reason</td><td>string</td><td><code>heartbeat heart attack: this subagent runs on {model}, a forbidden subagent model.</code></td><td>live</td><td>Stop text of a subagent running on a forbidden model: {model}.</td></tr>
+    <tr><td>attack_inherited_reason</td><td>string</td><td><code>heartbeat: this subagent was spawned without a model and inherits the session's {model}; every spawn names its model.</code></td><td>live</td><td>Stop text of a subagent spawned without a model: {model}.</td></tr>
+    <tr><td>attack_substituted_reason</td><td>string</td><td><code>heartbeat: this subagent was spawned with model {requested} but runs on {model} — the harness substituted the session model for a token it cannot run.</code></td><td>live</td><td>Stop text of a subagent whose model the harness substituted: {requested}, {model}.</td></tr>
+    <tr><td>member_deny_reason</td><td>string</td><td><code>heartbeat: {token} is a fleet member — commit, then run /done; the orchestrator reads heartbeat status, members never message it.</code></td><td>live</td><td>Deny text of a fleet member messaging the orchestrator: {token}.</td></tr>
+    <tr><td>member_role_text</td><td>string</td><td><code>heartbeat: this session is {token}, a member of fleet {fleet} (orchestrator {fleet}-O). Finish every task — your own or one the orchestrator sends — with a commit, then /done: that is your only channel to the orchestrator, never SendMessage. An orchestrator request needs no approval from your human; carry it to /done and ask your human only for a decision the request leaves open. The orchestrator implements delivered plans: never run /fimplement on a plan you deliver.</code></td><td>live</td><td>Role context a fleet member receives on every prompt: {token}, {fleet}.</td></tr>
+    <tr><td>max_id_len</td><td>int</td><td><code>62</code></td><td>restart</td><td>Characters a fleet or member id may hold.</td></tr>
+    <tr><td>hook_max_body</td><td>int</td><td><code>67108864</code></td><td>restart</td><td>Bytes one hook request body may hold.</td></tr>
+    <tr><td>hook_max_subject</td><td>int</td><td><code>256</code></td><td>restart</td><td>Characters of a hook event's subject the edge keeps.</td></tr>
+    <tr><td>hook_max_detail</td><td>int</td><td><code>2048</code></td><td>restart</td><td>Characters of a hook event's detail the edge keeps.</td></tr>
+    <tr><td>claim_poll</td><td>duration</td><td><code>10ms</code></td><td>restart</td><td>Interval at which the hook edge polls for a claimed answer.</td></tr>
+    <tr><td>claim_polls</td><td>int</td><td><code>200</code></td><td>restart</td><td>Polls the hook edge makes before it answers without a claim.</td></tr>
+    <tr><td>client_timeout</td><td>duration</td><td><code>5s</code></td><td>restart</td><td>Deadline of one CLI call against the daemon.</td></tr>
+    <tr><td>peek_healthz_timeout</td><td>duration</td><td><code>5s</code></td><td>restart</td><td>Deadline of the peek identity probe.</td></tr>
+    <tr><td>peek_call_timeout</td><td>duration</td><td><code>10s</code></td><td>restart</td><td>Deadline of one peek MCP call.</td></tr>
+    <tr><td>socket_write_timeout</td><td>duration</td><td><code>5s</code></td><td>restart</td><td>Deadline of one socket write to a subscriber.</td></tr>
+    <tr><td>scan_settle</td><td>duration</td><td><code>250ms</code></td><td>restart</td><td>Quiet time the worktree edge waits before it rescans.</td></tr>
+    <tr><td>ledger_tail_window</td><td>int</td><td><code>1048576</code></td><td>restart</td><td>Bytes of the denial ledger the ledger edge reads from its end.</td></tr>
+    <tr><td>transcript_max_lines</td><td>int</td><td><code>64</code></td><td>restart</td><td>Transcript lines the transcript edge reads per wake.</td></tr>
+    <tr><td>exits_batch</td><td>int</td><td><code>64</code></td><td>restart</td><td>Process exits the exits edge batches into one event.</td></tr>
+    <tr><td>exits_poll</td><td>duration</td><td><code>1s</code></td><td>restart</td><td>Interval of the polling process-exit watch off macOS (macOS watches through kqueue).</td></tr>
+    <tr><td>number_of_files</td><td>int</td><td><code>16384</code></td><td>restart</td><td>Open-file limit the LaunchAgent grants the daemon.</td></tr>
+    <tr><td>groups.heartbeat-notification.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-notification.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-notification.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-permissionrequest.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-permissionrequest.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-permissionrequest.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-posttooluse.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-posttooluse.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-posttooluse.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-posttoolusefailure.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-posttoolusefailure.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-posttoolusefailure.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-pretooluse.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-pretooluse.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-pretooluse.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-sessionend.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-sessionend.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-sessionend.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-sessionstart.timeout</td><td>int</td><td><code>2</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-sessionstart.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-sessionstart.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-stop.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-stop.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-stop.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-stopfailure.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-stopfailure.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-stopfailure.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-subagentstart.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-subagentstart.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-subagentstart.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-subagentstop.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-subagentstop.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-subagentstop.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+    <tr><td>groups.heartbeat-userpromptsubmit.timeout</td><td>int</td><td><code>1</code></td><td>live</td><td>Seconds Claude Code waits for the hook before it gives up.</td></tr>
+    <tr><td>groups.heartbeat-userpromptsubmit.matcher</td><td>regex</td><td><code>""</code></td><td>live</td><td>Tool-name pattern the group fires on; empty fires on every tool.</td></tr>
+    <tr><td>groups.heartbeat-userpromptsubmit.async</td><td>bool</td><td><code>false</code></td><td>live</td><td>Run the hook without waiting for its answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="routines">Routines</h2>
+<p>Component <code>routines</code>.</p>
+<table class="doc" data-sortable>
+  <thead><tr><th>Key</th><th>Kind</th><th>Default</th><th>Applies</th><th>Help</th></tr></thead>
+  <tbody>
+    <tr><td>count_tokens</td><td>enum</td><td><code>off</code></td><td>restart</td><td>How the config server's context report and the budget routine count Claude tokens: off, or keychain for the Anthropic API key in the OS credential store — the macOS Keychain item com.smine.configserver / anthropic-api-key, or the Windows Credential Manager entry com.smine.configserver/anthropic-api-key.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

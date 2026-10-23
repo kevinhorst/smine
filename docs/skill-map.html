@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill map · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Skill map</h1>
+<p class="lede">Which skill hands off to which: raw idea to landed commit. The nightly mining pipeline has its own page, <a href="smining.html">Smining</a>.</p>
+<p>Hand-offs are the typed <code>pipeline</code> edges in each skill's <code>&lt;leaf&gt;.cue</code>; <code>make skills-check</code> checks both sides agree. These tables are the reader's view. Authoring: <a href="skills.html">Skills</a>, <a href="skillcue.html">skill model</a>.</p>
+<div class="callout">
+  <span class="badge badge-dim">Plan format</span>
+  <p>Plan-producing skills share <code>context/rules/plan.md</code>: section catalog and plan interface (template via <code>plan-template:</code>), stacked table cells, in-plan Q&amp;A (OPEN decision rows, never popups), changelog, mode-invariant code and visual evidence.</p>
+</div>
+
+<h2 class="first" id="planning-chain">Planning chain</h2>
+<p>This order is doctrine: violating it has invalidated approved plans.</p>
+<pre class="file-view" data-lang="text">backlog (optional) → idea (optional) → concept → fexplore → fdesign (+ master and derived routes) → (overlap, optional) → fimplement → its commit skill (commit-skill@1, package-commit by example)</pre>
+<table class="doc">
+  <thead><tr><th>Step</th><th>Skill</th><th>Does</th><th>Artifact out</th></tr></thead>
+  <tbody>
+    <tr><td>−1</td><td class="wrap"><code>backlog</code> (optional)</td><td class="wrap">Organizes and prioritizes a raw multi-idea brain-dump into the durable epic backlog; re-invocation merges.</td><td class="wrap"><code>&lt;dest&gt;/backlog.json</code></td></tr>
+    <tr><td>0</td><td class="wrap"><code>idea</code> (optional)</td><td class="wrap">Pre-concept stress-test or possibility mapping of a half-formed idea; a dead idea ends the chain.</td><td class="wrap">plan dir <code>idea/idea.md</code> on close (the plan-dir naming rule)</td></tr>
+    <tr><td>1</td><td class="wrap"><code>concept</code></td><td class="wrap">Drafts the concept with user stories, drains its open questions in the same run, deciding itself; asks only redirecting or nuanced ones (<code>[AGENT]</code> / <code>[USER]</code> / <code>[BUSINESS]</code> tags, source-requirements diff). Filters already: reject or partial reject.</td><td class="wrap">plan dir <code>concept/concept.md</code>, Open questions drained into Decisions</td></tr>
+    <tr><td>3</td><td class="wrap"><code>fexplore</code> (optional: solution space open or contested)</td><td class="wrap">Surveys all sensible solutions, constraint-first; exactly one enters <code>fdesign</code>, the rest stay documented, discarded.</td><td class="wrap">plan dir <code>design/exploration.md</code></td></tr>
+    <tr><td>4</td><td class="wrap"><code>fdesign</code></td><td class="wrap">Implementation plan for any request, new feature or change: anchored facts, decisions, diffs, tests, refuted claims, drivers checked against the request. Design-gate widget: TLDR, editable scope and decisions. Grounding corrects docs and context. Familiarity modes <code>unfamiliar | familiar | owned</code>.</td><td class="wrap">plan dir in the feature folder, <code>design/&lt;slug&gt;.md</code>: the one binding plan</td></tr>
+    <tr><td>4b</td><td class="wrap"><code>fdesign &lt;plan file&gt;</code></td><td class="wrap">Edits a not-yet-implemented plan: Changelog row, gates passed again. An implemented plan gets a sibling in its feature folder.</td><td class="wrap"><code>design/&lt;slug&gt;.md</code> edited in place, or a new plan dir</td></tr>
+    <tr><td>4e</td><td class="wrap"><code>fdesign master</code> (optional: one code gate would be unreviewable)</td><td class="wrap">Master plan: decisions, contracts between parts, end-to-end checks, no code gate. A coarse split table names the derived plans, each full-plan size.</td><td class="wrap"><code>design/&lt;slug&gt;.md</code> with <code>role: master</code>, plus the recipe for the derived runs</td></tr>
+    <tr><td>4f</td><td class="wrap"><code>fdesign derived</code></td><td class="wrap">A master split row as its own plan, both gates; restates nothing, corrects the master first. In a fleet, code-gate approval hands it to the orchestrator's worker; <code>/fleet playbook: design</code> runs rows as unattended cells.</td><td class="wrap">own plan dir in the master's feature folder, <code>design/&lt;master slug&gt;-&lt;part&gt;.md</code></td></tr>
+    <tr><td>5</td><td class="wrap"><code>fimplement</code></td><td class="wrap">Executes the approved plan as a binding contract.</td><td class="wrap">working, committed code</td></tr>
+    <tr><td>6</td><td class="wrap"><code>package-commit</code></td><td class="wrap">Commits per package (or per file), dot-notation messages.</td><td class="wrap">per-package commits</td></tr>
+  </tbody>
+</table>
+
+<h3>The chain, edge by edge</h3>
+<table class="doc plain">
+  <thead><tr><th>From</th><th>To</th><th>Kind</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>raw requirements (user stories, ideas)</td><td><code>concept</code></td><td>next</td><td class="wrap">plan dir <code>concept/concept.md</code>: questions → decisions</td></tr>
+    <tr><td><code>concept</code></td><td>raw requirements</td><td>reject</td><td class="wrap">reject or partial reject; clarified requirements flow back</td></tr>
+    <tr><td><code>concept</code></td><td><code>fexplore</code></td><td>next</td><td class="wrap"><code>exploration.md</code></td></tr>
+    <tr><td><code>fexplore</code></td><td>options A, B, C</td><td>next</td><td class="wrap">B and C discarded</td></tr>
+    <tr><td>option A</td><td><code>fdesign</code></td><td>next</td><td class="wrap">the implementation plan</td></tr>
+    <tr><td><code>fdesign</code></td><td><code>fdesign</code> on the plan file</td><td>revise</td><td class="wrap">ideas back: version bump + changelog, edited in place</td></tr>
+    <tr><td><code>fdesign</code> on the plan file</td><td>itself</td><td>revise</td><td class="wrap">another round: version bump + changelog</td></tr>
+    <tr><td><code>fdesign</code> on the plan file</td><td><code>fexplore</code></td><td>reject</td><td></td></tr>
+    <tr><td><code>fdesign</code> on the plan file</td><td><code>concept</code></td><td>reject</td><td></td></tr>
+    <tr><td>refactor rounds: <code>fdesign</code> round 1 · layer A, round 2 · layer B, a human refactor</td><td><code>fdesign</code> on the plan file</td><td>revise</td><td class="wrap">each round bumps version + changelog</td></tr>
+    <tr><td><code>fdesign</code> round N · final product</td><td><code>fimplement</code></td><td>next</td><td></td></tr>
+    <tr><td><code>fdesign</code> on the plan file</td><td><code>fimplement</code></td><td>approve</td><td></td></tr>
+    <tr><td><code>fimplement</code></td><td><code>fdesign</code>, a new plan in the feature folder</td><td>optional</td><td class="wrap">testing or usage surfaces feature changes</td></tr>
+    <tr><td>that new plan</td><td><code>fimplement</code></td><td>optional</td><td></td></tr>
+    <tr><td><code>fimplement</code></td><td><code>railroad-review</code></td><td>next</td><td class="wrap">n lanes per direction, station protocol</td></tr>
+    <tr><td><code>railroad-review</code></td><td>fix handoff to a separate agent or session</td><td>gate</td><td class="wrap">station review + human gate</td></tr>
+    <tr><td>fix handoff</td><td><code>railroad-review</code></td><td>back</td><td class="wrap">merge-back, clean-slate round + rejection ledger</td></tr>
+    <tr><td><code>railroad-review</code></td><td><code>package-commit</code></td><td>next</td><td class="wrap">two consecutive clean rounds</td></tr>
+    <tr><td><code>railroad-review</code></td><td><code>dod-report</code></td><td>optional</td><td class="wrap">handoff to the human reviewer: 4 questions + <code>[DoD]</code> walk</td></tr>
+  </tbody>
+</table>
+
+<h3>Changes to existing features</h3>
+<ul>
+  <li><code>fdesign</code> covers post-implementation tweaks through full restructurings, migrations and consolidations. The plan classifies impact (behavior-preserving | behavioral | contract-touching | no-change); the user never pre-classifies.</li>
+  <li>Post-implementation loop: implementation → verification → <code>fdesign</code> (new plan in the feature folder) → <code>fimplement</code> → its commit skill.</li>
+  <li><code>overlap</code> (optional, read-only, between steps 4 and 5) lists recent same-repo sessions (via peek-mcp) whose diffs or plans touch the plan's files: collisions show before implementation.</li>
+</ul>
+
+<h2 id="standalone-skills">Standalone skills</h2>
+<p>No fixed chain position; you invoke them on demand.</p>
+<table class="doc plain">
+  <thead><tr><th>Behaviour</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Smartskills</td><td class="wrap"><code>discuss</code>, <code>qq</code>, <code>research</code>: the hook injects the <code>default</code> slice of <code>context-map.json</code> unless a <code>topic:&lt;name&gt;</code> token widens it (smartskill rule, <code>context/rules/skills.md</code>). <code>lane:</code> stays railroad-review's direction token.</td></tr>
+    <tr><td><code>--help</code></td><td class="wrap">Every repo skill answers <code>/&lt;skill&gt; --help</code> (also <code>-help</code>, <code>-h</code>, <code>--h</code>, en and em dashes) with frontmatter, routing, args, title states, Tests lines and topics, running nothing, via the <code>skillhelp</code> hook (<code>cmd/skillhelp</code>, deployed to <code>~/.claude/hooks/bin/</code> with session-helpers). Without it <code>--help</code> reaches the skill and deploy renders no <code>help-test.md</code>.</td></tr>
+    <tr><td>Hook-answered skills</td><td class="wrap"><code>answeredBy: "hook"</code> (<code>smine-help</code>): answered that way on every invocation, with its payload text.</td></tr>
+  </tbody>
+</table>
+
+<h3>Per-session messages</h3>
+<table class="doc">
+  <thead><tr><th>Message</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>#allow Makefile / #deny Makefile</td><td class="wrap">Unlocks or re-locks every make source.</td></tr>
+    <tr><td>#allow settings.local.json</td><td class="wrap">Admits <code>toolpolicy allow</code> rules.</td></tr>
+    <tr><td>#add &lt;absolute dir&gt;</td><td class="wrap">Adds a root.</td></tr>
+    <tr><td>#set &lt;rule&gt;</td><td class="wrap">Adds a rule.</td></tr>
+    <tr><td>#disable &lt;word…&gt; / #enable &lt;word…&gt;</td><td class="wrap">Switches hook effects off or on (<code>rgate</code>, <code>skill</code>, <code>inject</code>, <code>session</code>, <code>hb</code> groups).</td></tr>
+    <tr><td>#reset</td><td class="wrap">Clears them all.</td></tr>
+  </tbody>
+</table>
+<p>A plan's design run freezes its rules: <a href="permissions.html#approvals">Permissions § Approvals</a>, <a href="permissions.html#plan-rules">Plan rules</a>.</p>
+
+<h3>Catalog</h3>
+<table class="doc" data-sortable>
+  <thead><tr><th>Skill</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>diagnose-debug</td><td class="wrap">Verified root-cause diagnosis before any fix.</td></tr>
+    <tr><td>spec-drift</td><td class="wrap">Read-only drift report: a doc set vs the code (doc mode), or every consumer of one changed contract classified, with a fix order (contract mode).</td></tr>
+    <tr><td>railroad-review</td><td class="wrap">Multi-agent station-protocol review of any scope (committed range or uncommitted snapshot).</td></tr>
+    <tr><td>dod-report</td><td class="wrap">Reviewer-handoff DoD (Definition of Done) report: why, validated, tested, plus a <code>[DoD]</code>-entry walk. After <code>railroad-review</code> or standalone.</td></tr>
+    <tr><td>code-verdict</td><td class="wrap">Problem-or-fine verdict on scoped existing code; alternatives only for a confirmed problem; feature-level escalates to <code>fexplore</code>.</td></tr>
+    <tr><td>support-decision</td><td class="wrap">Read-only adjudication of an external position against the actual code or spec.</td></tr>
+    <tr><td>fimpact</td><td class="wrap">Per-axis change evaluation (maintainability, security, business impact, …).</td></tr>
+    <tr><td>coverage-increase</td><td class="wrap">Coverage gaps → gated brief → tests; hands off to <code>package-commit</code>.</td></tr>
+    <tr><td>dev-stack</td><td class="wrap">Local e2e dev stacks (docker-compose + Makefile + seeded data).</td></tr>
+    <tr><td>merge-resolve</td><td class="wrap">Resolves all conflicts of diverged branches once, at final-tree level; any conflicted integration (failed cherry-pick chains, mid-rebase) normalizes into it.</td></tr>
+    <tr><td>restack</td><td class="wrap">Replays a branch's unlanded commits onto its target's tip on a work branch, adopted after a green audit, never a merge commit; stops before a retarget would copy the old base's commits. Landing's conflict operation (<a href="heartbeat.html#merge-strategy">Heartbeat § Merge strategy</a>).</td></tr>
+    <tr><td>overlap</td><td class="wrap">Read-only file-overlap check against recent sessions' diffs and plans (peek-mcp); optional between <code>fdesign</code> and <code>fimplement</code>.</td></tr>
+    <tr><td>plan-archive</td><td class="wrap">Copies a landing feature's plan dirs into the plans-archive repo (<code>~/GolandProjects/agent-plans</code>) renamed wip → done, commits, removes; <code>/done branch:</code> calls it before its fast-forward.</td></tr>
+    <tr><td>skillroutine-create</td><td class="wrap">Skill authoring and routine scaffolding, one arg-routed <code>skill|routine</code>.</td></tr>
+    <tr><td>skillroutine-eval</td><td class="wrap">Runs one declared configuration from a skill's <code>eval/definition.json</code> as headless replicas; reports time, tokens, cost, step misses, check and scorer or golden scores (<a href="skill-test-layers.html#eval-layer">Skill tests § Eval layer</a>).</td></tr>
+    <tr><td>skillroutine-ab</td><td class="wrap">Measures one change (model, effort, MCP server, overlay patch or skill version) as baseline vs variant smoke- or eval-layer run records, with spread and a blind compare judge.</td></tr>
+    <tr><td>skillroutine-estimate</td><td class="wrap">Predicts a skill or routine configuration's cost and usage before running: cells, dollars, tokens, wall-clock, window fit. Measured-telemetry pricing, analytic fallback.</td></tr>
+    <tr><td>context-create</td><td class="wrap">One ACDSL context entry from a stated rule, with or without gate (anchor + verifier + fixtures), authored in-session; <code>rules generate</code> + <code>make audit</code> close it.</td></tr>
+    <tr><td>context-bootstrap</td><td class="wrap">EXPERIMENTAL whole-repo context miner: dimensions × chunks Workflow fan-out (optional git-history dimension), verified candidate-entry report; <code>context-create</code> applies accepted candidates.</td></tr>
+    <tr><td>investigate</td><td class="wrap">N independent investigations of one question, primary-source re-verification, merged baseline + refuted-hypotheses register.</td></tr>
+    <tr><td>research</td><td class="wrap">Primary-source answer with citations and confidence, from one agent or <code>subagents: n[model-effort]</code> readers; contested sources escalate to <code>investigate</code>. Smartskill.</td></tr>
+    <tr><td>discuss</td><td class="wrap">Dialogue-only discussion with pushback, no artifact; hands off to <code>idea</code> or <code>concept</code>. Smartskill.</td></tr>
+    <tr><td>qq</td><td class="wrap">One quick question, ≤5-sentence answer, one lookup. Smartskill.</td></tr>
+    <tr><td>fleet</td><td class="wrap">Runs one heartbeat fleet: judges collisions, fast-forwards delivered members onto its merge branch (a member behind restacks first), syncs the human-named target once through <code>/done</code>, journals every act. Headless worker cells: one implementer (feature playbook) or one designer per master-plan split row (design playbook).</td></tr>
+    <tr><td>join</td><td class="wrap">Joins a heartbeat fleet; heartbeat assigns the member token (<code>T1-MA</code>), the session-title hook writes it into the title.</td></tr>
+    <tr><td>done</td><td class="wrap">Reports the work finished: a joined fleet member is marked delivered for its orchestrator; any other session lands its branch on its landing target (the branch it started from) inside that target's landing turn (restack, fast-forward). A <code>main</code>-based session lands nothing. <code>branch:</code> lands a feature branch on the staging target. Title: DONE.</td></tr>
+    <tr><td>close</td><td class="wrap">End-of-session cleanup: leaves its heartbeat fleet, removes the pool worktree and <code>claude/*</code> branch (safety-gated), sets the title CLOSED, archives the Desktop session. Outside a pool worktree, archive only.</td></tr>
+    <tr><td>runtime</td><td class="wrap">Watches exactly one other session's failed enforce checks and judgment points, with evidence, through heartbeat. <code>report</code> lists them; <code>act</code> answers each once with the skill's recovery or judgment template, or a stop: to a subagent as hook context on its next tool call, to the root as its Stop block reason or on its next prompt.</td></tr>
+    <tr><td>heartbeat-demo</td><td class="wrap">Versioned showcase and smoke test of the gate rules and runtime enforcement (needs the <code>gate</code> and <code>heartbeat</code> components): one short run per scenario, named for its expected answer and violation (<code>pass-clean-run</code>, <code>deny-laundered-workflow</code>, <code>deny-workflow-in-plan-mode</code>, <code>block-stop-before-close</code>, <code>kill-repeated-launder</code>, …).</td></tr>
+    <tr><td>smine-help</td><td class="wrap">Explains the typed session messages with examples; answered by the prompt hook.</td></tr>
+    <tr><td>peek</td><td class="wrap">Shows another session: conversation, plan, diff.</td></tr>
+    <tr><td>watch</td><td class="wrap">Cron-watches one pinned session: heartbeat liveness alerts (waiting, blocked), one delta line per tick incl. subagent tokens, new plan revisions only; stops itself once the session is idle or ended.</td></tr>
+    <tr><td>jq / xlsx</td><td class="wrap">Cheap JSON extraction and spreadsheet work, mainly for agents (the <code>agent-only</code> skill package, rarely human-invoked).</td></tr>
+    <tr><td>caveman</td><td class="wrap">Terse output style (<code>agent-only</code> package), the register skill prose is written in; no skill takes it as an arg. Minimal .md taken from <a href="https://github.com/juliusbrussee/caveman">caveman</a>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="composition">Composition</h2>
+<p>Skills and workflows pipe into each other through three harness-native primitives.</p>
+<table class="doc plain">
+  <thead><tr><th>Primitive</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>Skill fronts workflow</td><td class="wrap">SKILL.md resolves intake; the session then calls the Workflow tool on a script in the skill's directory (<code>investigate</code>, <code>smine</code>, <code>skillroutine-eval</code>).</td></tr>
+    <tr><td>Workflow nests workflow</td><td class="wrap"><code>workflow({scriptPath}, args)</code> runs another workflow inline, sharing budget and concurrency; one nesting level only. The pipe primitive.</td></tr>
+    <tr><td>Workflow runs skill</td><td class="wrap">An <code>agent()</code> stage whose prompt invokes the Skill tool and follows it unattended.</td></tr>
+  </tbody>
+</table>
+<h3>Pipe doctrine</h3>
+<ul>
+  <li>A pipe is a thin workflow script in the <strong>consumer</strong> skill's <code>workflows/</code> dir: it nests A's workflow via <code>workflow()</code>, adapts A's structured return to B's input contract in pure JS, runs B via an agent stage.</li>
+  <li>Paths a pipe needs travel in <code>args</code>: workflow scripts have no filesystem or env access.</li>
+  <li>One nesting level: pipes are never piped; a longer chain is one pipe script calling its children sequentially.</li>
+</ul>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>The nesting primitive is unoccupied: its first instance, <code>skillroutine-parallel-eval</code>, retired with the matrix eval framework. <code>/skillroutine-eval</code> and <code>/skillroutine-ab</code> run headless roots via <code>go run ./cmd/skilleval</code>.</p>
+</div>
+</body>
+</html>

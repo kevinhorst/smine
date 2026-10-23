@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skills directory · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Skills directory</h1>
+<p class="lede"><code>skills/</code> is the source of truth for every skill; the skills sync renders it one way into the home dirs.</p>
+<p>The Go skills sync (<code>internal/skills</code>, via <code>configserver -sync-skills</code>) deploys each skill flat to <code>~/.claude/skills/&lt;leaf&gt;</code> and <code>~/.codex/skills/</code>. Model file: <a href="skillcue.html">Skill model</a>.</p>
+
+<h2 class="first" id="skill-structure">Skill structure</h2>
+
+<h3 id="layout">Layout</h3>
+<p>The scanner <code>skillgraph.Discover</code> reads this tree; the leaf dir name is the skill's identity.</p>
+<pre class="file-view" data-lang="text">skills/
+├── vocabulary.cue      plain files at the root: ignored by sync (vocabulary.cue is the shared atom registry)
+├── &lt;leaf&gt;/             first-level dir holding &lt;leaf&gt;.cue: a skill
+│   └── &lt;leaf&gt;.cue
+└── &lt;group&gt;/            first-level dir without one: a group directory
+    └── &lt;leaf&gt;/         subdir holding &lt;leaf&gt;.cue: a skill
+        └── &lt;leaf&gt;.cue</pre>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Warning</span>
+  <p>A dir still holding <code>skill.cue</code> fails the scan.</p>
+</div>
+
+<h3 id="per-leaf-files">Per-leaf files</h3>
+<table class="doc">
+  <thead><tr><th>File</th><th>Holds</th><th>Deployed</th></tr></thead>
+  <tbody>
+    <tr><td>&lt;leaf&gt;.cue</td><td class="wrap">Source: canonical CUE, no comments, named after its dir. Frontmatter field list (<code>name</code>, <code>description</code>, <code>author</code>, <code>version</code>, optionally <code>allowed-tools</code>, <code>acdsl-context</code>, <code>plan-template</code>), sections with entries (typed <code>fields</code> on format 3), <code>changelog</code>, optional skill-local <code>atoms</code>. Edit as text; <code>make skill-render SKILL=&lt;name&gt;</code>.</td><td class="wrap">Never; rendered into SKILL.md</td></tr>
+    <tr><td>changelog (in &lt;leaf&gt;.cue)</td><td class="wrap">Only changelog, newest first; frontmatter <code>version</code> equals the newest row (ACDSL-SKILL-001).</td><td class="wrap">Never</td></tr>
+    <tr><td>payloads/&lt;entry-id&gt;.md</td><td class="wrap"><code>[payload]</code> entry fence bodies, exact bytes.</td><td class="wrap">Never</td></tr>
+    <tr><td>smoke/</td><td class="wrap">Optional. <code>smoke</code> block fixtures.</td><td class="wrap">Never</td></tr>
+    <tr><td>reference files</td><td class="wrap">Optional. Read at run time.</td><td class="wrap">Yes</td></tr>
+    <tr><td>workflows/*.js</td><td class="wrap">Optional. The fronting skill's orchestration scripts (<a href="#workflows">Workflows</a>).</td><td class="wrap">Yes</td></tr>
+    <tr><td>agents/*.md</td><td class="wrap">Optional. Skill-owned agent definitions.</td><td class="wrap">To <code>~/.claude/agents/</code> with the skill, not into its dir</td></tr>
+  </tbody>
+</table>
+
+<h3 id="body-format">Body format</h3>
+<p>Typed entries in <code>&lt;leaf&gt;.cue</code>, checked by the model on every load and by ACDSL-SKILL-005. Deploy renders each as a heading line, the statement as its own paragraph.</p>
+<pre class="file-view" data-lang="text">**SKILL-&lt;NAME&gt;-&lt;TOPIC&gt;-NNN[a-z]?** `[role]` **&lt;Title&gt;**
+
+&lt;statement&gt;</pre>
+<table class="doc plain">
+  <thead><tr><th>Topic</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Routing and Model</td><td class="wrap">Typed <code>routing</code>, <code>model</code> blocks; <code>make skills-check</code> checks their pipeline edges agree.</td></tr>
+    <tr><td>Inspecting the model</td><td class="wrap"><code>make skill-export SKILL=&lt;name&gt;</code> (JSON).</td></tr>
+    <tr><td>Authoring doctrine</td><td class="wrap"><code>AGENTS.md</code> § Skill authoring.</td></tr>
+    <tr><td>Skill registration and ordering</td><td class="wrap"><a href="skill-map.html">Skill map</a>.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="deployment">Deployment</h3>
+<p>One-way, repo → home dirs: each model renders in process and ships with the dir's other files.</p>
+<table class="doc">
+  <thead><tr><th>Deployed file</th><th>What</th></tr></thead>
+  <tbody>
+    <tr><td>SKILL.md</td><td class="wrap">Deploy render, formal clauses stripped.</td></tr>
+    <tr><td>help-test.md</td><td class="wrap">How to run the smoke and eval; read only by <code>--help</code>.</td></tr>
+    <tr><td>title.json, enforce.json</td><td class="wrap">Rendered from the model: <code>title.json</code> only with Session helpers installed and the skill's <code>title-set@1</code> variable set, <code>enforce.json</code> only with Permission gate and heartbeat installed.</td></tr>
+    <tr><td>other files of the dir</td><td class="wrap">Copied.</td></tr>
+    <tr><td>never shipped</td><td class="wrap"><code>&lt;leaf&gt;.cue</code>, <code>payloads/</code>, <code>eval/</code>, <code>smoke/</code>.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Case</th><th>Sync does</th></tr></thead>
+  <tbody>
+    <tr><td>selection</td><td class="wrap">Deploys chosen skills whose <code>requires</code> the installed component set meets, each rendered for that set. A skill with an unset required install-scoped variable is skipped <code>unconfigured</code>, the same on every platform.</td></tr>
+    <tr><td>aliases</td><td class="wrap">One copy per declared alias (<a href="aliases.html">Aliases</a>).</td></tr>
+    <tr><td>.smine-deployed</td><td class="wrap">Marks every written dir.</td></tr>
+    <tr><td>other installed dirs</td><td class="wrap">Kept, listed.</td></tr>
+    <tr><td>-sync-prune</td><td class="wrap">Moves only marked dirs to the trash, <code>~/.claude/smine/trash/</code> (<a href="trash.html">Trash</a>).</td></tr>
+    <tr><td>unmarked or locally modified dir</td><td class="wrap">Under a deployed name: trashed before the write.</td></tr>
+    <tr><td>-sync-variant</td><td class="wrap">Variant rendering.</td></tr>
+    <tr><td>make skill-bundle</td><td class="wrap">Standalone bundle for the empty component set.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="workflows">Workflows</h2>
+<p>Workflow scripts drive Claude Code's <code>Workflow</code> tool: deterministic multi-agent orchestration. Plain JavaScript, not run under Node: a sandboxed harness interpreter without filesystem, network or Node API access. Scripts are pure control flow; their subagents do all real work.</p>
+
+<h3 id="invoking-a-workflow">Invoking a workflow</h3>
+<p>Bundled with its fronting skill at <code>skills/&lt;group&gt;/&lt;leaf&gt;/workflows/&lt;name&gt;.js</code>, invoked by path, resolved against the skill's base dir (holding its SKILL.md, stated at skill load).</p>
+<pre class="file-view" data-lang="js">Workflow({scriptPath: '&lt;skill base dir&gt;/workflows/&lt;name&gt;.js', args: ...})</pre>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Why bundled</td><td class="wrap">Travels with the skill on sync; independent of the working directory.</td></tr>
+    <tr><td>No name mode</td><td class="wrap"><code>{name: ...}</code> deliberately unused: resolves only scripts under <code>.claude/workflows/</code>, which this repo does not maintain.</td></tr>
+    <tr><td>Background</td><td class="wrap">Run ID at once; progress in <code>/workflows</code>, result as a task notification.</td></tr>
+    <tr><td><code>args</code></td><td class="wrap">Verbatim as a global: real JSON values, not stringified.</td></tr>
+    <tr><td>Entry point</td><td class="wrap">The skill, not the workflow, unless debugging (smine-mine, investigate, railroad-review).</td></tr>
+  </tbody>
+</table>
+
+<h3 id="runtime-model">Runtime model</h3>
+<p>The only orchestration primitives inside a script:</p>
+<table class="doc">
+  <thead><tr><th>Primitive</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>agent(prompt, opts)</td><td class="wrap">Spawns a subagent, awaits its result. <code>opts.schema</code> (JSON Schema) forces structured output, validated and retried at the tool-call layer, returned parsed. <code>null</code> if skipped or terminally dead.</td></tr>
+    <tr><td>parallel(thunks)</td><td class="wrap">Concurrent behind a barrier (waits for all); failed thunks → <code>null</code>.</td></tr>
+    <tr><td>pipeline(items, ...stages)</td><td class="wrap">Per-item stage chains, no inter-stage barrier; default for multi-stage fan-out.</td></tr>
+    <tr><td>phase(title), log(msg)</td><td class="wrap">Progress grouping, UI narration.</td></tr>
+    <tr><td>workflow(nameOrRef, args)</td><td class="wrap">Another workflow inline as a sub-step (saved name or <code>{scriptPath}</code>), sharing the parent's concurrency cap, agent counter, token budget. One nesting level: a child cannot call <code>workflow()</code>.</td></tr>
+    <tr><td>budget</td><td class="wrap"><code>{total, spent(), remaining()}</code>: the turn's token target from a user "+500k"-style directive; hard ceiling, <code>agent()</code> throws once spent. Enables budget-scaled fleets, <code>while (budget.total &amp;&amp; budget.remaining() &gt; N)</code> loops. <code>budget.total</code> is <code>null</code> without a target: always guard on it, or the loop runs to the agent cap.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>agent() option</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>model, effort</td><td class="wrap">Per call; effort low–max.</td></tr>
+    <tr><td>isolation: 'worktree'</td><td class="wrap">Fresh git worktree; expensive, only for parallel file mutation.</td></tr>
+    <tr><td>agentType</td><td class="wrap">Custom subagent from the Agent-tool registry.</td></tr>
+    <tr><td>label, phase</td><td class="wrap">Progress UI.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Constraint</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Concurrency</td><td class="wrap">≤ min(16, cores−2) agents at once, excess queued; lifetime cap 1000 per workflow.</td></tr>
+    <tr><td>Determinism</td><td class="wrap"><code>Date.now()</code>, <code>Math.random()</code>, argless <code>new Date()</code> throw (would break resume).</td></tr>
+    <tr><td>No user input</td><td class="wrap">A workflow cannot pause for it, hence every workflow here is skill-fronted.</td></tr>
+    <tr><td>meta block</td><td class="wrap">Every script opens with a pure-literal <code>export const meta = {name, description, phases}</code>.</td></tr>
+    <tr><td>Resume</td><td class="wrap">Re-invoking with <code>resumeFromRunId</code> replays the unchanged <code>agent()</code> prefix from cache, re-running edited or new calls only. Same script and args: full cache hit.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="dynamic-shapes">Dynamic shapes</h3>
+<p>"Dynamic workflow" is Anthropic's product name for the whole feature; the official docs apply it to every script, static or not. Useful axis (investigation 2026-07-24, <code>sessions/investigations/baseline-dynamic-workflows.md</code>): dynamic in shape iff the <code>agent()</code> call set is not a pure function of script text plus args.</p>
+<table class="doc plain">
+  <thead><tr><th>Tier</th><th>Agent set</th><th>In this repo</th></tr></thead>
+  <tbody>
+    <tr><td>T0 static</td><td class="wrap">Fixed at parse time.</td><td class="wrap">Unoccupied; former <code>analyze</code> is now output-gated <code>smine-mine</code> (T2).</td></tr>
+    <tr><td>T1 arg-shaped</td><td class="wrap">From args, before the first agent runs.</td><td class="wrap"><code>railroad-review</code>.</td></tr>
+    <tr><td>T2 output-gated</td><td class="wrap">Spawning depends on agent outputs.</td><td class="wrap"><code>investigate</code> (Stage-B verifier shard count from the deduped claim count), <code>fdesign</code> refute (tie-break agent only on split verdicts). Skill evaluation: headless roots via <code>go run ./cmd/skilleval</code>, no workflow.</td></tr>
+    <tr><td>T3 iterative, convergent</td><td class="wrap">Loop predicate reads outputs or budget: loop-until-dry, budget loops, threshold-gated widening, adversarial multi-verifier voting.</td><td class="wrap">Supported by the tool contract, unoccupied. railroad-review's approve-loop is the dispatcher-driven station protocol, one invocation per round (human gates cannot live in a workflow); the workflow stays T1.</td></tr>
+  </tbody>
+</table>
+<p>Determinism is orthogonal: T3 too stays resume-replayable; dynamic means data-dependent, never nondeterministic. No repo script uses <code>budget</code> or a <code>while</code> loop yet; railroad-review uses <code>pipeline()</code> for its per-direction lane→dedup→refute chain.</p>
+<p>Authoritative sources, in order:</p>
+<ol>
+  <li>The live Workflow tool description in the harness: the only full API surface (budget, pipeline semantics, nesting cap, documented dynamic patterns).</li>
+  <li>These scripts, the git log.</li>
+  <li><a href="https://code.claude.com/docs/en/workflows">code.claude.com/docs/en/workflows</a>: caps, permission model, ultracode trigger, bundled <code>/deep-research</code>; its Agent SDK TypeScript reference covers tool-invocation params only.</li>
+  <li>The claude-code CHANGELOG, for behaviour changes: 2.1.219 <code>workflowSizeGuideline</code>, 2.1.186 <code>agent({schema})</code> validation-loop fix.</li>
+</ol>
+
+<h3 id="smine-mine">smine-mine</h3>
+<p>Analyze fan-out of <code>/smine-batch</code>, spawned from the root session (<code>/smine</code> dispatcher or direct <code>/smine-batch</code>) after Select planned the batches.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Contract</th></tr></thead>
+  <tbody>
+    <tr><td>Script</td><td class="wrap"><code>skills/smine/smine-batch/workflows/mine.js</code></td></tr>
+    <tr><td>args</td><td class="wrap"><code>{sessions, subagents?, skillDir}</code>: <code>sessions</code> = pending list of <code>make sessions ARGS="pending …"</code>; <code>skillDir</code> = smine-batch base dir with the deployed SKILL.md. Throws on non-object, empty <code>sessions</code>, missing <code>skillDir</code>.</td></tr>
+    <tr><td>Does</td><td class="wrap">One <code>smine-miner</code> per pending session (<code>parallel</code>, effort medium) reads <code>&lt;skillDir&gt;/SKILL.md</code>, follows its 2. Analyze substeps (plus the Subagent mining substeps under <code>subagents</code>); the skill is root-only, never loaded via the Skill tool. Each writes its session record <code>sessions/&lt;repo&gt;/&lt;YYYY-Www&gt;/&lt;id&gt;.json</code>, checked by <code>make sessions ARGS="check &lt;path&gt; --context &lt;transcript&gt;"</code>, which merges a Claude session transcript's used-context record. One fan-out level: miners spawn no agents.</td></tr>
+    <tr><td>Returns</td><td class="wrap"><code>{refs[]}</code>, per session <code>{id, path, failed, skipped?, dataGaps?, note?}</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="smine-plan">smine-plan</h3>
+<p>Planner fan-out of <code>/smine-problems</code>: one <code>smine-planner</code> (effort high) per direction and artifact kind runs that planner skill's <code>plan</code> route, returns <code>{kind, target, change, notes}</code>, writes nothing.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Contract</th></tr></thead>
+  <tbody>
+    <tr><td>Script</td><td class="wrap"><code>skills/smine/smine-problems/workflows/plan.js</code></td></tr>
+    <tr><td>args</td><td class="wrap"><code>{requests[]}</code>, each <code>{candidateId, directionIndex, planner, candidate}</code>; <code>planner</code> ∈ smine-skills, smine-context, smine-routines, smine-acdsl, smine-permissions, else throws.</td></tr>
+    <tr><td>Returns</td><td class="wrap"><code>{plans[]}</code>: request keys plus <code>plan</code> (<code>null</code> if the planner returned nothing).</td></tr>
+  </tbody>
+</table>
+
+<h3 id="investigate">investigate</h3>
+<p>Fans out N independent investigations of one open analysis or data question, re-verifies each load-bearing claim against its actual primary source, merges into one baseline with a refuted-hypotheses register. <code>/investigate</code> fronts it, resolving question, inputs, fan-out width. Script: <code>skills/verdict/investigate/workflows/investigate.js</code>.</p>
+<table class="doc">
+  <thead><tr><th>Arg</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>question</td><td>yes</td><td class="wrap">String.</td></tr>
+    <tr><td>inputs</td><td>yes</td><td class="wrap">String of fetchable sources: paths, live or archived URLs, prod-query targets.</td></tr>
+    <tr><td>artifactsDir</td><td>yes</td><td class="wrap">Absolute session-scratchpad path outside every worktree, for investigator artifacts; never the repo.</td></tr>
+    <tr><td>priorArtifact</td><td>no</td><td class="wrap">Existing analysis, as investigation #1.</td></tr>
+    <tr><td>investigators</td><td>no</td><td class="wrap">Default 3, cap 8.</td></tr>
+  </tbody>
+</table>
+<p>Throws on missing <code>question</code> or <code>inputs</code>, missing or non-absolute <code>artifactsDir</code>, <code>investigators</code> over the cap.</p>
+<table class="doc plain">
+  <thead><tr><th>Stage</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>A, Fan-out</td><td class="wrap"><code>investigators</code> <code>general-purpose</code> agents, one <code>parallel()</code> barrier. Each reads inputs first, ranks hypotheses, names the primary source of every load-bearing claim; never reads siblings (anti-anchoring).</td></tr>
+    <tr><td>B, Re-verify (v1.2)</td><td class="wrap">Dedups claims across runs, crediting every raising run; shards of ≤8, one medium-effort verifier each, in parallel. Each fetches every claim's actual primary artifact, never a prior run's summary; rules <code>holds | refuted | needs-measurement</code>, watching the full funnel. Shard verdicts union into one verification register.</td></tr>
+    <tr><td>C, Merge</td><td class="wrap">One high-effort agent writes the baseline: fact-vs-hypothesis labels, refuted-hypotheses register, credited net-new findings, discrimination plan.</td></tr>
+    <tr><td>Measurement gate</td><td class="wrap"><code>needs-measurement</code> claims return as <code>open_measurements</code> with concrete prod queries. Subagents cannot pause for you: the fronting skill surfaces them, re-invokes with <code>resumeFromRunId</code> once your results return as binding facts.</td></tr>
+  </tbody>
+</table>
+<p>Returns <code>{investigators, failed, verification, baseline}</code>: surviving investigator outputs, failed run ids, verification register, merged baseline, each per its agent's result schema. No survivor: <code>verification: null, baseline: null</code>.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Warning</span>
+  <p>Fixed artifact filenames, <code>&lt;artifactsDir&gt;/inv-N.md</code>: a second run on the same <code>artifactsDir</code> overwrites the previous reports. Move them before re-invoking.</p>
+</div>
+
+<h3 id="railroad-review">railroad-review</h3>
+<p>One station-protocol round, one stage file per spawn under <code>skills/quality/railroad-review/workflows/</code>: review fanned out to n lanes per direction in isolated worktrees; same-defect claims collapsed by lightweight groupers (per direction, then across); every claim second-confirmed by a capped pool of fresh refuters and verifiers; one station review, single <code>review.json</code> handoff; round worktrees and branches cleaned up.</p>
+<p><code>/railroad-review</code> fronts it; multi-agent only (solo removed in v7.0). The dispatcher (the session running the skill) owns everything around the per-round invocations:</p>
+<ul>
+  <li>Scope: committed range, or snapshot commit over uncommitted and untracked work; snapshotting.</li>
+  <li>Base: empty-diff guard, autonomous base derivation (never a prompt), diff-base confirmation.</li>
+  <li>Risk-map tiering, direction selection.</li>
+  <li>Station-protocol loop and every human gate: rejection ledger, fix loop (fix-apply with per-package commits via package-commit, applied ledger state, probe replay and fix check, fixed ledger state), two consecutive clean rounds.</li>
+</ul>
+<pre class="file-view" data-lang="js">{base, head, baseCommit, headCommit, commitsAhead, scope?, riskMap?, chunks?, refute?, ignore?, artifactsDir, diffFiles, round, directions?, lanes?, contextRefs?, focus?, laneModel?, laneEffort?, rejectedFindings?, testPairs, specPaths?}</pre>
+<table class="doc" data-sortable>
+  <thead><tr><th>Arg</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>base</td><td>yes</td><td class="wrap">Confirmed diff base (string).</td></tr>
+    <tr><td>head</td><td>yes</td><td class="wrap">Branch or commit under review.</td></tr>
+    <tr><td>baseCommit</td><td>yes</td><td class="wrap">Resolved merge-base fork point of base and head, never the base tip; each worktree verifies it as ancestor.</td></tr>
+    <tr><td>headCommit</td><td>yes</td><td class="wrap">Review head, pinned once per round; each worker checks it out before reviewing, or renames onto it when HEAD already equals it. Snapshot scopes (<code>wip</code>, <code>all</code>): the dispatcher's snapshot commit descending from the checkout HEAD, pinned alike.</td></tr>
+    <tr><td>commitsAhead</td><td>yes</td><td class="wrap">Positive integer; empty diff: stop and report, no fan-out.</td></tr>
+    <tr><td>artifactsDir</td><td>yes</td><td class="wrap">Absolute session-scratchpad path outside every worktree; artifacts under <code>round-{r}/</code>.</td></tr>
+    <tr><td>diffFiles</td><td>yes</td><td class="wrap">Changed files, <code>git diff --name-only &lt;baseCommit&gt; &lt;headCommit&gt;</code> narrowed by <code>paths</code>: the coverage baseline.</td></tr>
+    <tr><td>round</td><td>yes</td><td class="wrap">1-based; namespaces artifacts and branch names.</td></tr>
+    <tr><td>testPairs</td><td>yes</td><td class="wrap">The round's <code>rules pairs</code> output: test files, each changed file's counterparts.</td></tr>
+    <tr><td>scope</td><td>no</td><td class="wrap">Default <code>branch</code>; snapshot scopes <code>wip</code>, <code>all</code>.</td></tr>
+    <tr><td>riskMap</td><td>no</td><td class="wrap">Dispatcher's per-file risk tiering (SKILL PROC-007), injected into every lane's attention briefing.</td></tr>
+    <tr><td>chunks</td><td>no</td><td class="wrap">Experimental chunked fan-out (SKILL MODES-005): dispatcher-partitioned <code>{name, files[]}</code> array; lanes run per direction × chunk, reading only their chunk; <code>contracts</code> chunk-exempt. Absent: unchunked.</td></tr>
+    <tr><td>refute</td><td>no</td><td class="wrap">Loglevel-style severity threshold (SKILL ROUND-007): candidates at or above it get a fresh refuter. <code>blocker</code>, <code>major</code> (default), <code>minor</code>, <code>nit</code>, <code>info</code>, or <code>none</code>: no refuter stage, all claims through the batched verification pool.</td></tr>
+    <tr><td>ignore</td><td>no</td><td class="wrap">Ledger threshold (SKILL STATION-004c): claims at or below it ledgered <code>ignored</code> after the gate, hidden there, never fixed or blocking. <code>blocker</code>, <code>major</code>, <code>minor</code>, <code>nit</code>, <code>info</code>, or <code>none</code> (default): all ledgered <code>open</code>.</td></tr>
+    <tr><td>directions</td><td>no</td><td class="wrap">Default all but critical, diff-pruned by the dispatcher, from the eight known. Minimum 1; one direction is a valid round.</td></tr>
+    <tr><td>lanes</td><td>no</td><td class="wrap">Default 2.</td></tr>
+    <tr><td>focus</td><td class="wrap">with special-focus</td><td class="wrap">For the <code>special-focus</code> direction.</td></tr>
+    <tr><td>laneModel, laneEffort</td><td>no</td><td class="wrap">Override for judgment workers: lanes, groupers, refuters, verifiers.</td></tr>
+    <tr><td>stationModel, stationEffort</td><td>no</td><td class="wrap">Station's; else <code>opus</code>, high effort.</td></tr>
+    <tr><td>rejectedFindings</td><td>no</td><td class="wrap">Rejection ledger content, injected into every lane and the station merge so rejected findings never return.</td></tr>
+    <tr><td>specPaths</td><td>no</td><td class="wrap">Dispatcher's spec copies under <code>artifactsDir</code> (<code>round-{r}/spec-&lt;n&gt;-&lt;basename&gt;</code>); other paths throw in a stage. The checklist stage turns them into one correctness checklist grouped per spec.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Models</span>
+  <p>Every agent names its model: mechanical (provision, cleanup, build-test) <code>sonnet</code>, low effort; judgment the bracket model or <code>opus</code>.</p>
+</div>
+<table class="doc plain">
+  <thead><tr><th>#</th><th>Stage</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Fan-out</td><td class="wrap"><code>pipeline()</code> over directions. Per direction <code>lanes</code> <code>railroad-lane-&lt;direction&gt;</code> agents spawn freely; the Workflow runtime runs ≤16 at once, queuing the rest. Each lane: isolated worktree pinned at <code>headCommit</code>, branch <code>claude-review/&lt;runNs&gt;-{direction}-l{i}-r{round}-{hash6}</code> (<code>-a&lt;n&gt;</code> from a re-spawn's second attempt on); review-only (no edits, no plan mode); blind to sibling lanes; walks exactly its direction's checklist from the railroad-review SKILL.md; writes a JSON-only findings artifact under <code>round-{r}/</code>; returns structured findings.</td></tr>
+    <tr><td>2</td><td>Lane coverage</td><td class="wrap">Read-gate enforced. Before dispatch <code>smine-rules lanes</code> writes a per-lane manifest <code>&lt;artifact&gt;.lane-manifest.json</code> (<code>{artifact, direction, files, partners, root, walk}</code>). The hook denies the lane's artifact write until every manifest file is fully read; the allowed write emits <code>&lt;artifact&gt;.coverage.json</code>, the measured coverage record. <code>coverage_gaps</code>: unfinished lanes' assignments.</td></tr>
+    <tr><td>3</td><td>Dedup per direction</td><td class="wrap">Lightweight grouper (text-only, no worktree, lane model, low effort) groups same-defect claims; the script assembles survivors deterministically: best-argued, max group severity, <code>merged_from</code> provenance, unplaced claims kept. A finding id used by two lanes gets a lane suffix, no shadowing.</td></tr>
+    <tr><td>4</td><td>Refutation</td><td class="wrap">Pipelined per direction: each deduped claim at or above the threshold goes to a fresh refuter (worktree, branch <code>claude-review/refute-{finding-id}-r{round}-{hash6}</code>, lane model and effort) briefed to refute it per the skill's Probe protocol (probe or cheapest artifact, both-directions test rule); returns confirmed | debunked | unverified with artifacts. <code>CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS</code> caps only the nightly Agent-tool route, never workflow runs.</td></tr>
+    <tr><td>5</td><td>Cross-direction dedup</td><td class="wrap">One more grouper unions all directions' claims; the script assembles survivors, lists absorbed cross-direction pairs as <code>duplicates</code>, carries refuter verdicts to the survivor. Opposing member verdicts leave it verdict-less.</td></tr>
+    <tr><td>6</td><td>Verification</td><td class="wrap">Verdict-less claims, severity-descending, in batches of <code>VERIFY_BATCH</code> = 4 to verifiers: refuter prompt verbatim, branch <code>claude-review/verify-b{k}-r{round}-{hash6}</code>. A lost refuter's claim joins a verifier immediately.</td></tr>
+    <tr><td>7</td><td>Build and tests</td><td class="wrap"><code>smine-rules buildtest</code> at base and head, in the foreground before the round.</td></tr>
+    <tr><td>8</td><td>Station merge</td><td class="wrap">One barrier agent (<code>stationModel</code>, else the session model, high effort), own worktree forked after the fan-out from the dispatcher's checkout, branch <code>claude-review/station-r{round}-{hash6}</code>. Rules below.</td></tr>
+    <tr><td>9</td><td>Cleanup</td><td class="wrap"><code>smine-rules cleanup</code> by the dispatcher: worktrees on the run's branch prefix salvaged, removed unforced; each run branch deleted only after its diff is saved.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Station rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Pre-mapped merge</td><td class="wrap">Script drafts the mechanical merge: binding verdicts as draft dispositions, cross-direction duplicates as duplicate-of, probe→fixture→verdict index as <code>draft_probes</code>. The station echoes drafts, judging exceptions only: ledger or known matches, internally inconsistent verdicts, lost-verdict claims (re-read adversarially itself).</td></tr>
+    <tr><td>Dispositions</td><td class="wrap">Exactly one per claim and duplicate: confirmed | unverified | rejected-with-reason | duplicate-of | debunked.</td></tr>
+    <tr><td>Severities</td><td class="wrap">Spec-vs-code conflicts resolve against <code>decisions.md</code>. Severities arrive frozen: lane-assigned, raised at most once by dedup, never re-graded.</td></tr>
+    <tr><td>Outputs</td><td class="wrap">Fix route per confirmed finding (human | auto-fix); permanent checks naming durable guards for recurring finding classes; definition-of-done walk; undemonstrated high-risk suspicions in <code>escalations</code>.</td></tr>
+    <tr><td>Handoff</td><td class="wrap"><code>round-{r}/review.json</code>, the single handoff; no review.md. A session-model agent renders a human-readable version from it on demand.</td></tr>
+    <tr><td>Summary check</td><td class="wrap">Station input travels in the script-built prompt; the station returns a short summary only. The script checks dispositions, funnel, red-build cap, coverage-gap cap: a failed station pin fails the round, no retry; else a violation re-runs the station once to fix <code>review.json</code> in place.</td></tr>
+  </tbody>
+</table>
+<p><code>round.js</code> returns <code>{round, void, station, clean, conservation, corrections, abortedLanes, deadDirections, unsettled, branches}</code>.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>void</td><td class="wrap"><code>true</code>, no handoff: every planned lane aborted.</td></tr>
+    <tr><td>station</td><td class="wrap">Station stage's return: <code>handoff</code> names <code>round-{r}/review.json</code>; <code>blocking</code> counts NEW confirmed findings MINOR or worse above the ignore level (NIT, INFO never block).</td></tr>
+    <tr><td>clean</td><td class="wrap">Handoff exists, nothing blocks, no lane aborted, funnel lost no claim.</td></tr>
+    <tr><td>branches</td><td class="wrap">Every branch the round created, for cleanup.</td></tr>
+  </tbody>
+</table>
+<p>Fixes, fix check and ledgers are dispatcher steps after the round (SKILL Fixes section), not in this return.</p>
+
+<h3 id="context-bootstrap">context-bootstrap</h3>
+<p>Dimension-by-dimension fan-out of <code>/context-bootstrap</code>: one agent per dimension and chunk mines candidate context entries; a verifier pass re-checks them against the tree; the skill renders the report.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Contract</th></tr></thead>
+  <tbody>
+    <tr><td>Script</td><td class="wrap"><code>skills/context/context-bootstrap/workflows/context-bootstrap.js</code></td></tr>
+    <tr><td>args</td><td class="wrap"><code>{dimensions[], lanes?, laneModel?, laneEffort?, repo?, ide?}</code>; each dimension carries its chunk list with a ready-made <code>spec</code>. <code>lanes</code>: parallel miner cap (default 1); <code>repo</code>: read-only foreign checkout; <code>laneModel</code>: must be a generated subagent model.</td></tr>
+    <tr><td>Returns</td><td class="wrap"><code>{confirmed[], refuted[], unverified[]}</code>: candidates by verifier verdict; refuted ones carry a <code>refutation</code> note.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="fdesign-ground-and-refute">fdesign ground and refute</h3>
+<p><code>ground.js</code>: <code>/fdesign</code>'s one grounding round, at most <code>agents</code> agents, one per area, answering its questions with path:line facts and stale statements. <code>refute.js</code>: the refute round, two blind refuters over the claim ledger, one tie-break agent over split claims. Both in <code>skills/feature/fdesign/workflows/</code>.</p>
+<table class="doc">
+  <thead><tr><th>Script</th><th>args</th><th>Returns</th></tr></thead>
+  <tbody>
+    <tr><td>ground.js</td><td class="wrap"><code>{base, areas[{area, questions[]}], ide?, agents?, model?, effort?}</code>; more areas than <code>agents</code> throws.</td><td class="wrap"><code>{areas[], empty}</code></td></tr>
+    <tr><td>refute.js</td><td class="wrap"><code>{planPath, verdictDir, claims[], ide?}</code></td><td class="wrap"><code>{verdicts[], debunked[], unverified[]}</code>; <code>unverified</code> includes claims whose agents were lost.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="heartbeat-demo">heartbeat-demo</h3>
+<p><code>/heartbeat-demo</code>'s stage spawning the <code>heartbeat-demo-worker</code> agent, which writes the demo artifact from the producer value; the skill's enforce anchors fire on this launch.</p>
+<table class="doc plain">
+  <thead><tr><th>Part</th><th>Contract</th></tr></thead>
+  <tbody>
+    <tr><td>Script</td><td class="wrap"><code>skills/orchestration/heartbeat-demo/workflows/demo.js</code></td></tr>
+    <tr><td>args</td><td class="wrap"><code>{value, artifactsDir}</code>: producer's value, scratch dir; either missing throws.</td></tr>
+    <tr><td>Returns</td><td class="wrap"><code>{artifact}</code>: artifact path; <code>null</code> if the worker returned nothing.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="authoring-conventions">Authoring conventions</h3>
+<ul>
+  <li>One file per workflow stage, <code>meta.name</code> + <code>.js</code>, at <code>skills/&lt;group&gt;/&lt;leaf&gt;/workflows/</code>; several spawns, one file each (railroad-review).</li>
+  <li>Scripts stay pure orchestration; batch resolution, user-facing reporting, review gates belong in the fronting skill.</li>
+  <li>Structured results: a result schema per agent, never free-text parsing.</li>
+  <li>Document each new workflow here: args, what it does, returns.</li>
+</ul>
+</body>
+</html>

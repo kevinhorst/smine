@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill model · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Skill model</h1>
+<p class="lede">A skill is a program, not a markdown file: <code>&lt;leaf&gt;.cue</code> is a typed model with its own logic and validation, and SKILL.md is rendered from it.</p>
+<p>The model carries what prose cannot: typed routing and pipeline edges that must agree across skills, entry roles with their registers, a permission manifest, interface bindings for every program the skill calls, a smoke declaration, title states, the changelog. Every load validates all of it, so a wrong role, a route to nowhere, an undeclared tool or a version without its changelog row does not render. The file sits in the leaf dir, named after it (<code>skills/quality/railroad-review/railroad-review.cue</code>); <code>payloads/&lt;entry-id&gt;.md</code> holds template bodies. SKILL.md renders from both at deploy, never committed; only repo-scoped values wait for invocation (<a href="#interfaces-and-environment">Interfaces and environment</a>). Layout: <a href="skills.html">Skills directory</a>.</p>
+<div class="callout callout-stop">
+  <span class="badge badge-error">Never</span>
+  <p>A SKILL.md, <code>title.json</code>, <code>enforce.json</code>, <code>smoke.json</code>, <code>answer.md</code> or <code>env.json</code> in a skill dir fails <code>make skills-check</code>.</p>
+</div>
+
+<h2 class="first" id="everyday-use">Everyday use</h2>
+<table class="doc plain">
+  <thead><tr><th>Task</th><th>Do</th></tr></thead>
+  <tbody>
+    <tr><td>Change a skill</td><td class="wrap">Edit <code>&lt;leaf&gt;.cue</code> or a payload as text; <code>make skill-render SKILL=&lt;name&gt;</code>.</td></tr>
+    <tr><td>Bump a version</td><td class="wrap">Prepend a <code>changelog</code> row; set frontmatter <code>version</code> to match.</td></tr>
+    <tr><td>Inspect the model</td><td class="wrap"><code>make skill-export SKILL=&lt;name&gt;</code> (JSON).</td></tr>
+    <tr><td>List the atoms</td><td class="wrap"><code>make skill-atoms SKILL=&lt;name&gt;</code> (<code>skillmodel atoms [--json] &lt;dir&gt;</code>): per atom kind, source, readers by entry and role, query names.</td></tr>
+    <tr><td>Adopt a third-party skill</td><td class="wrap"><code>make skill-import DIR=&lt;dir&gt;</code> once; Routing and Model prose to typed blocks.</td></tr>
+    <tr><td>Check everything</td><td class="wrap"><code>make skills-check</code>, part of <code>make audit</code>.</td></tr>
+  </tbody>
+</table>
+<p><code>skill-render</code> loads, validates and checks the model; re-saves <code>&lt;leaf&gt;.cue</code> canonically (CUE formatter, fixed field order); writes payloads, deletes orphans; stores the deployed body's token count on the newest changelog row. A failed check writes nothing. Root passes follow per-dir saves.</p>
+<table class="doc plain">
+  <thead><tr><th>skills-check scope</th><th>Fails on</th></tr></thead>
+  <tbody>
+    <tr><td>Each skill dir</td><td class="wrap">Non-canonical <code>&lt;leaf&gt;.cue</code>; invalid model; orphaned payload; leftover <code>skill.cue</code> (former model file name; the line names the renaming <code>git mv</code>), <code>atoms.json</code>, <code>changelog.json</code> or generated file; SKILL.md without <code>&lt;leaf&gt;.cue</code>.</td></tr>
+    <tr><td>Across the root</td><td class="wrap">The <a href="#what-is-enforced-where">Across skills</a> layer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="file-shape">File shape</h2>
+<p>Top-level fields of <code>&lt;leaf&gt;.cue</code>. The schema (<code>internal/skillgraph/schema.cue</code>) refuses a model missing a required one.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>changelog</td><td>yes</td><td class="wrap"><code>[{version, date, text | changes, tokens?}]</code>, newest first, versions strictly descending (checked); <code>skillmodel renumber</code> repairs, <code>skillcue</code> merge driver merges two branches' bumps.</td></tr>
+    <tr><td>frontmatter</td><td>yes</td><td class="wrap"><code>[{key, value}]</code>, ordered; <code>value</code>: raw text after <code>key:</code>. <code>format</code> ratchet: 2 caps, role order; 3 typed fields, link tokens, model-checked links and titles.</td></tr>
+    <tr><td>preamble</td><td>no</td><td class="wrap">H1 and intro, verbatim markdown.</td></tr>
+    <tr><td>sections</td><td>no</td><td class="wrap"><code>[{title, kind?, pred?, replaces? | between?, blocks}]</code>; blocks: prose, heading, entry, args, routing, model.</td></tr>
+    <tr><td>note</td><td>no</td><td class="wrap">Model note.</td></tr>
+    <tr><td>tier</td><td>no</td><td class="wrap"><code>"annotations" | "strict"</code>; strict: typed atoms, z3 battery.</td></tr>
+    <tr><td>atoms</td><td>no</td><td class="wrap"><code>{&lt;id&gt;: {sort, kind?, members?, source?, aliases?}}</code>, skill-local (<a href="#formal-clauses">Formal clauses</a>).</td></tr>
+    <tr><td>exclusive</td><td>no</td><td class="wrap"><code>[[atom ids]]</code>, mutually exclusive.</td></tr>
+    <tr><td>enforce</td><td>no</td><td class="wrap"><code>{anchors, checks, gate, judgment}</code>: runtime enforcement → <code>enforce.json</code>.</td></tr>
+    <tr><td>requires</td><td>no</td><td class="wrap"><code>[&lt;component id&gt;]</code> the skill cannot run without.</td></tr>
+    <tr><td>env</td><td>no</td><td class="wrap"><code>{&lt;KEY&gt;: {interface, required?}}</code>: called capabilities, one catalog interface each.</td></tr>
+    <tr><td>smoke</td><td class="wrap">yes, by skills-check</td><td class="wrap"><code>{skip} | {invoke, expect, env?, fixture?, mode?, model?, effort?, limits?}</code> (<a href="#smoke-block">Smoke block</a>).</td></tr>
+    <tr><td>title</td><td>no</td><td class="wrap"><code>{states: {&lt;TOKEN&gt;: {meaning, entry}}}</code>: session-title states.</td></tr>
+    <tr><td>docker</td><td>no</td><td class="wrap"><code>"always" | "never"</code>: where it runs; absent: agnostic.</td></tr>
+    <tr><td>enableDelegation</td><td>no</td><td class="wrap"><code>"always"</code>: spawned only, never root; <code>"never"</code>: root only.</td></tr>
+    <tr><td>enforcePermissions</td><td>no</td><td class="wrap"><code>[acceptEdits | planMode]</code> or <code>["bypass"]</code>: owned modes.</td></tr>
+    <tr><td>answeredBy</td><td>no</td><td class="wrap"><code>"hook"</code>: the skillhelp hook answers (<a href="#deploy">Deploy</a>).</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Shared file</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>queries/*.json</td><td class="wrap"><code>{name?, assume, check? | reach?, bound?, expect}</code>: strict tier's test suite; a query read keeps an atom alive.</td></tr>
+    <tr><td>skills/vocabulary.cue</td><td class="wrap">Shared atoms, exclusive groups.</td></tr>
+    <tr><td>skills/interfaces.cue</td><td class="wrap">Interface catalog, providers.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="frontmatter-and-changelog">Frontmatter and changelog</h3>
+<p>From <code>skills/smart/qq/qq.cue</code>:</p>
+<pre class="file-view" data-lang="cue">changelog: [{
+  date:    "2026-10-02"
+  version: "1.0.4"
+  text:    "Dropped the help-only Eval section — --help shows the smoke and eval declared beside the skill."
+  tokens:  809
+}, {
+  date:    "2026-09-28"
+  version: "1.0.3"
+  text:    "Routing and Model are typed blocks in skill.cue; the Pipeline line renders from declared edges"
+  tokens:  809
+}]
+frontmatter: [{
+  key:   "name"
+  value: " qq"
+}, {
+  key:   "version"
+  value: " 1.0.4"
+}, {
+  key:   "format"
+  value: " 2"
+}, {
+  key:   "allowed-tools"
+  value: " Glob, Grep, Read"
+}]</pre>
+
+<h3 id="sections-and-entries">Sections and entries</h3>
+<p>Section <code>kind</code>: <code>context</code>, <code>phase</code> or <code>route</code>. A route section carries <code>pred</code> (when it applies) and exactly one anchor: <code>replaces: &lt;ids&gt;</code> (entries it substitutes) or <code>between: &lt;after&gt;..&lt;before&gt;</code> (splice point).</p>
+<table class="doc">
+  <thead><tr><th>Entry field</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>id</td><td>yes</td><td class="wrap"><code>SKILL-&lt;NAME&gt;-&lt;TOPIC&gt;-NNN[a-z]?</code></td></tr>
+    <tr><td>role</td><td>yes</td><td class="wrap"><code>def</code>, <code>rule</code>, <code>quality</code>, <code>step</code>, <code>spawn</code>, <code>substep</code>, <code>verify</code>, <code>stop</code> or <code>payload</code>.</td></tr>
+    <tr><td>title</td><td>yes</td><td class="wrap">1–3 words.</td></tr>
+    <tr><td>statement</td><td>no</td><td class="wrap">Prose, one line.</td></tr>
+    <tr><td>channel, custom</td><td>no</td><td class="wrap">Enforcement channel (<code>gate</code>, <code>hook</code>, <code>prose</code>, <code>schema</code>, <code>script</code>); custom tags (<code>hook:read-gate</code>).</td></tr>
+    <tr><td>fields</td><td>no</td><td class="wrap">Format 3 only: <code>{script?, schema?, ref?, flags?, forwards?, reads?, returns?, mints?, timeout?}</code> (<a href="#fields">Fields</a>).</td></tr>
+    <tr><td>items</td><td>no</td><td class="wrap">Bullets, fences under the statement.</td></tr>
+    <tr><td>needs, unless</td><td>no</td><td class="wrap">Component ids: entry drops when the render's set misses one / holds one.</td></tr>
+    <tr><td>pred, post</td><td>no</td><td class="wrap"><a href="#formal-clauses">Formal clauses</a>.</td></tr>
+    <tr><td>parentSpawn, payload, note</td><td>no</td><td class="wrap">Substep's spawn; <code>payload</code> entry's fence, body in <code>payloads/&lt;entry-id&gt;.md</code>; model note.</td></tr>
+  </tbody>
+</table>
+<p>Flow entry with clauses, <code>skills/verdict/investigate/investigate.cue</code>:</p>
+<pre class="file-view" data-lang="cue">sections: [{
+  title: "2. Run"
+  blocks: [{
+    entry: {
+      id: "SKILL-INVESTIGATE-RUN-004b"
+      post: ["claims_ruled"]
+      pred:      "claims_deduped"
+      role:      "substep"
+      statement: "RULE each claim `holds | refuted | needs-measurement` in Stage B, watching full funnel."
+      title:     "Stage B Rulings"
+    }
+  }]
+}]</pre>
+<p>Route section, <code>skills/feature/fdesign/fdesign.cue</code>, blocks elided:</p>
+<pre class="file-view" data-lang="cue">{
+  title: "Nightly route"
+  blocks: […]
+  kind:     "route"
+  pred:     "mode = nightly"
+  replaces: "GATE-001 + CODE-005 + CODE-009 + HANDOFF-001"
+}</pre>
+<p><code>args</code> block <code>{rows: [{name, form?, default?, effect}]}</code> → the <code>## Args</code> table:</p>
+<pre class="file-view" data-lang="cue">args: {
+  rows: [{
+    name:    "topic"
+    default: "default slice"
+    effect:  "context slice(s) injected; `--no-context` skips all — [Topic use](#skill-qq-context-001)"
+    form:    "`topic:&lt;name&gt;`, repeatable"
+  }]
+}</pre>
+
+<h3 id="routing-and-model-blocks">Routing and model blocks</h3>
+<table class="doc">
+  <thead><tr><th>Block</th><th>Sits in</th><th>Renders</th></tr></thead>
+  <tbody>
+    <tr><td>routing</td><td class="wrap">First block of <code>Routing</code> section.</td><td class="wrap">Purpose, Disambiguation table, Preconditions, Pipeline line. Fields <code>{purpose, routes: [{for, use, needs?}], preconditions: [...], pipeline}</code>, all but <code>needs</code> required.</td></tr>
+    <tr><td>model</td><td class="wrap">Only block of <code>Model</code> section.</td><td class="wrap"><code>- Suggested:</code> … <code>- Tested unviable:</code> bullets. Fields <code>{tier, effort, reason, unviable?, routes?, notes?}</code>; tier <code>small</code>, <code>mid-tier</code>, <code>frontier</code>; effort <code>low</code> … <code>max</code>.</td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="cue">routing: {
+  pipeline: {
+    standalone: true
+  }
+  preconditions: ["one question in the invocation"]
+  purpose: "answer a single question fast and cheaply."
+  routes: [{
+    for: "a subject to talk through"
+    use: "/discuss"
+  }, {
+    for: "an answer that needs sources and citations"
+    use: "/research"
+  }]
+}
+
+model: {
+  effort: "low"
+  reason: "single lookup, short answer"
+  tier:   "mid-tier"
+}</pre>
+
+<h3 id="title-block">Title block</h3>
+<p>Session-title states of the skill's approval gates. Deploy renders them to <code>title.json</code> beside SKILL.md, not into it.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Gate entry</td><td class="wrap">Each state names the step or stop presenting its gate. Its statement (below format 3 also a <code>param</code> bullet) runs <code>$SKILL_&lt;SKILL&gt;_TITLE_SET title set &lt;TOKEN&gt;</code> via an <code>env</code> variable bound to <code>title-set@1</code>; model-checked, literal program refused.</td></tr>
+    <tr><td>Resume</td><td class="wrap">A step resuming after the gate runs <code>… title set WIP</code>.</td></tr>
+    <tr><td>Proof</td><td class="wrap">Deployed copy carries the filled program. The title hook accepts any program word before <code>title set &lt;TOKEN&gt;</code>, takes the printed <code>title: set &lt;TOKEN&gt;</code> line as proof, infers nothing from other tool calls.</td></tr>
+    <tr><td>Rename</td><td class="wrap">At the turn's first confirmed set call; later sets: once at turn end, with the last.</td></tr>
+    <tr><td>No value</td><td class="wrap">No <code>title-set@1</code> value: no <code>title.json</code>, no states.</td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="cue">title: {
+  states: {
+    "CODE-READY": {
+      entry:   "SKILL-FDESIGN-CODE-005"
+      meaning: "code gate presented — approve the Changes or request a change"
+    }
+    "DESIGN-READY": {
+      entry:   "SKILL-FDESIGN-GATE-001"
+      meaning: "design gate presented — approve or revise the design"
+    }
+  }
+}</pre>
+
+<h3 id="smoke-block">Smoke block</h3>
+<p>The skill's smoke test, never rendered into any file or deployed. The smoke runner loads the model and resolves every default in memory.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>skip</td><td class="wrap">for a skip</td><td class="wrap"><code>{skip: "&lt;reason&gt;"}</code> replaces the run.</td></tr>
+    <tr><td>invoke</td><td>yes</td><td class="wrap">Text after <code>/&lt;leaf&gt;</code>.</td></tr>
+    <tr><td>expect</td><td>yes</td><td class="wrap"><code>{anchors: [...], minAnchors?, minChecks?}</code> naming the skill's own enforce anchors, or <code>{check?: [argv]}</code>.</td></tr>
+    <tr><td>env</td><td>no</td><td class="wrap">Repo-scoped values the run sets, every required one.</td></tr>
+    <tr><td>fixture</td><td>no</td><td class="wrap"><code>{tree?, patch?}</code> inside the skill's <code>smoke/</code>.</td></tr>
+    <tr><td>mode</td><td>no</td><td class="wrap"><code>nightly</code> (default); <code>interactive</code> needs anchors.</td></tr>
+    <tr><td>model, effort</td><td>no</td><td class="wrap">Defaults <code>sonnet</code>, <code>low</code>.</td></tr>
+    <tr><td>limits</td><td>no</td><td class="wrap"><code>{minutes?, usd?}</code>, defaults 15 and 3.</td></tr>
+  </tbody>
+</table>
+<p><code>skills/feature/fimplement/fimplement.cue</code>, check list shortened; fdesign expects <code>{anchors: [...], minChecks: 0.4}</code> instead:</p>
+<pre class="file-view" data-lang="cue">smoke: {
+  env: {
+    CHECK: "go test ./internal/smoke/..."
+  }
+  expect: {
+    check: ["go", "test", "internal/smoke/greeting.go", "internal/smoke/greeting_test.go", …]
+  }
+  fixture: {
+    tree: "tree"
+  }
+  invoke: "fimplement-smoke.md"
+  limits: {
+    minutes: 45
+    usd:     8.0
+  }
+}</pre>
+
+<h2 id="pipeline-edges">Pipeline edges</h2>
+<p><code>pipeline: {standalone?, edges?: [{kind, skill, route?, optional?, needs?}], note?}</code> places a skill among the others. <code>standalone</code>: also runs on demand outside the chain. <code>route</code>: a route of the edge's skill (<code>/fdesign master</code>).</p>
+<table class="doc">
+  <thead><tr><th>Kind</th><th>Meaning</th><th>Other end declares</th></tr></thead>
+  <tbody>
+    <tr><td>from / to</td><td class="wrap">runs after / hands off to</td><td class="wrap"><code>to</code> / <code>from</code></td></tr>
+    <tr><td>spawnedBy / spawns</td><td class="wrap">spawned as a subagent by / spawns</td><td class="wrap"><code>spawns</code> / <code>spawnedBy</code></td></tr>
+    <tr><td>escalates</td><td class="wrap">escalates to</td><td class="wrap">nothing</td></tr>
+  </tbody>
+</table>
+<p>Pipeline line: <code>standalone; &lt;from&gt; → **&lt;name&gt;** → &lt;to&gt;; spawned by …; spawns …; escalates to … — &lt;note&gt;</code>. <code>skillmodel render</code> checks every edge across the skills root: skill exists, other end agrees.</p>
+<pre class="file-view" data-lang="cue">pipeline: {
+  edges: [{
+    kind:  "from"
+    skill: "fdesign"
+  }, {
+    kind:     "from"
+    skill:    "overlap"
+    optional: true
+  }, {
+    kind:  "to"
+    skill: "package-commit"
+  }, {
+    kind:  "spawnedBy"
+    skill: "fleet"
+  }, {
+    kind:  "escalates"
+    skill: "restack"
+    needs: ["agentwt"]
+  }]
+}</pre>
+
+<h2 id="what-is-enforced-where">What is enforced where</h2>
+<p>Five layers: shape in the schema, cross-references in the check, agreement between skills in the root render.</p>
+<table class="doc plain">
+  <thead><tr><th>Layer</th><th>Enforces</th></tr></thead>
+  <tbody>
+    <tr><td>Schema, <code>internal/skillgraph/schema.cue</code></td><td class="wrap">Shape only: id and atom-id grammar, closed role and channel sets, 1–3 word titles, single-line fields. No <code>pred</code> on <code>def</code>, <code>payload</code>; <code>post</code> only on flow roles (<code>step</code>, <code>substep</code>, <code>spawn</code>, <code>verify</code>, <code>stop</code>); a payload only on <code>payload</code> entries, body in its file; <code>pred</code>/<code>replaces</code>/<code>between</code> only on <code>route</code> sections. Enum atoms need <code>members</code>.</td></tr>
+    <tr><td>Check, <code>internal/skillgraph/check.go</code></td><td class="wrap">Cross-references, next table.</td></tr>
+    <tr><td>Across skills, <code>skillmodel render</code> (part of <code>make skills-check</code>)</td><td class="wrap">Pipeline edges agree; each <code>Skill(&lt;name&gt;)</code> grant names a skill an edge reaches; each atom has its reader (<a href="#formal-clauses">Formal clauses</a>); each cross-skill link token names an entry of that skill; every skill declares a smoke block. The smineless bundle render (<code>skills.CheckBundle</code>) holds no smine program, unfilled <code>$SKILL_</code> reference or <code>make &lt;target&gt;</code> of this repo's Makefile.</td></tr>
+    <tr><td>Load</td><td class="wrap">No comments (notes are data: <code>note</code>). Frontmatter <code>name</code> equals dir name. Payload files, smoke fixtures present; <code>skills/interfaces.cue</code> valid; <code>queries/*.json</code> parse; smine literals (<a href="#checks">Checks</a>). Format 3: <code>fields</code> files and schema properties exist (<a href="#fields">Fields</a>); no model text links an entry in markdown.</td></tr>
+    <tr><td>Save</td><td class="wrap">Encoded bytes decode back to an equal model before any write.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Check area</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Frontmatter</td><td class="wrap"><code>name</code>, <code>version</code> present, non-empty; no key authored twice. Aliases strict kebab-case, not the skill's name, unrepeated. <code>version</code> equals <code>changelog[0].version</code>.</td></tr>
+    <tr><td>Entries</td><td class="wrap">Ids unique, naming this skill. Role order per section: def, rule, quality, flow, payload. Route anchors resolve, run forward. No skill atom shadows a shared one.</td></tr>
+    <tr><td>Routing and model</td><td class="wrap">At most one each, in their sections. Pipeline non-empty; no self edge, no edge twice.</td></tr>
+    <tr><td>Runtime placement</td><td class="wrap"><code>bypass</code> alone, only with <code>docker: "always"</code>; no mode twice; <code>Script:</code> pointer only with <code>enableDelegation: "never"</code>; rendered keys <code>docker</code>, <code>enable-delegation</code>, <code>enforce-permissions</code> never authored.</td></tr>
+    <tr><td>Enforce</td><td class="wrap">At most 16 anchors, each referenced; checks and judgments name known anchors; a provenance <code>from</code> anchor captures the named capture; patterns compile.</td></tr>
+    <tr><td>Title</td><td class="wrap">1–8 states. Tokens match <code>^[A-Z]+(-[A-Z]+)*$</code>, at most 16 runes, no built-in state. Entries known steps or stops (<a href="#title-block">Title block</a>). Signal regexes compile; tool matches Bash, Edit, Workflow or Write.</td></tr>
+    <tr><td>Requirements</td><td class="wrap">Catalog component ids on <code>requires</code>, entry <code>needs</code>/<code>unless</code>, route and edge <code>needs</code>; <code>needs</code> disjoint from <code>requires</code> everywhere, from <code>unless</code> on an entry.</td></tr>
+    <tr><td>Environment</td><td class="wrap">References, bindings (<a href="#checks">Checks</a>).</td></tr>
+    <tr><td>Format-2 caps</td><td class="wrap">Statements ≤200 runes, bullets ≤160 (a link token counts as its target's title), no <code>Why:</code> bullets, verbatim prose ≤ line width.</td></tr>
+    <tr><td>Format 3</td><td class="wrap">No labelled item; fields only on roles taking them, in shape (<a href="#fields">Fields</a>). Link tokens resolve under the ref discipline: any entry may link a def or payload; a def or payload links nothing; flow links stay in their section; a route may link its anchor entries. Titles unique, case-insensitive. Pred and post identifiers are atoms or enum members.</td></tr>
+    <tr><td>Every skill</td><td class="wrap">Atom sources in the closed grammar (<a href="#formal-clauses">Formal clauses</a>). Each anchor capture read by a provenance check, a judgment's evidence or an atom's <code>runtime</code> source.</td></tr>
+    <tr><td>Smoke</td><td class="wrap">Skip or run; anchors, mode, fixture per <a href="#smoke-block">Smoke block</a>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="formal-clauses">Formal clauses</h2>
+<p><code>pred</code>: boolean expression over atoms (<code>risk_map and dispatch_prepared</code>, <code>mode = nightly</code>). <code>post</code>: atoms the entry makes true when it fires. <code>internal/skillmodel.Derive</code> turns them into the semantic model without judgment.</p>
+<table class="doc">
+  <thead><tr><th>Entry role</th><th>Becomes</th></tr></thead>
+  <tbody>
+    <tr><td>rule with pred</td><td class="wrap">invariant</td></tr>
+    <tr><td>quality with pred</td><td class="wrap">soft constraint</td></tr>
+    <tr><td>flow role</td><td class="wrap">transition, guarded by <code>pred</code> (conjoined with its route's <code>pred</code>), firing <code>post</code></td></tr>
+  </tbody>
+</table>
+<p>An entry without clauses is uncovered, not an error. <code>make model-analyze SKILL=&lt;name&gt;</code> runs the solver on the derived model. Clauses must always parse; on the strict tier every atom must also resolve against the skill's <code>atoms</code> or <code>skills/vocabulary.cue</code> (ACDSL-SKILL-013).</p>
+<p>An atom's <code>source</code> marks an input the world sets: <code> | </code>-separated parts, each one of these.</p>
+<table class="doc">
+  <thead><tr><th>Part</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>arg: &lt;row&gt;[ =&gt; &lt;member&gt;]</td><td class="wrap">Args row, leading dashes stripped; <code>=&gt; &lt;member&gt;</code> forces an enum member.</td></tr>
+    <tr><td>session</td><td class="wrap">Fact of the invocation's session.</td></tr>
+    <tr><td>environment</td><td class="wrap">Fact of the machine or repo.</td></tr>
+    <tr><td>runtime: &lt;anchor&gt;</td><td class="wrap">Anchored call succeeded (bool atoms).</td></tr>
+    <tr><td>runtime: &lt;anchor&gt;.&lt;capture&gt;</td><td class="wrap">Bool atom: capture resolved. Int or enum atom: its value.</td></tr>
+    <tr><td>runtime: &lt;anchor&gt;.&lt;capture&gt; = &lt;literal&gt; / != &lt;literal&gt;</td><td class="wrap">Bool atom comparing the capture to a JSON literal.</td></tr>
+  </tbody>
+</table>
+<p>A <code>runtime</code> part names an anchor and capture of the skill's own <code>enforce</code> block, so heartbeat's check and the model read one value. Shared atoms (<code>skills/vocabulary.cue</code>) take none; anything else fails the load. Format-3 and shared atoms live only while a stop, rule or quality pred, a route section pred or a query reads them; a step's pred keeps nothing alive. Format-2 locals live with any pred.</p>
+<p><code>skills/quality/railroad-review/railroad-review.cue</code>, strict tier; fdesign's enum atom <code>role</code> reads Args via <code>source: "arg: master =&gt; master | arg: derived =&gt; derived"</code>.</p>
+<pre class="file-view" data-lang="cue">atoms: {
+  base_build_red: {
+    sort:   "state"
+    source: "runtime: base_health.base_build != ok"
+  }
+  plan_mode: {
+    sort:   "state"
+    source: "session"
+  }
+  recommendation: {
+    kind: "enum"
+    members: ["APPROVE", "CONDITIONAL", "REJECT"]
+    sort:   "state"
+    source: "runtime: review_json.recommendation"
+  }
+  void_rounds: {
+    kind:   "int"
+    sort:   "count"
+    source: "runtime: ledger.void_rounds"
+  }
+}</pre>
+
+<h2 id="fields">Fields</h2>
+<p>A format-3 entry carries no labelled bullet: its statement is prose plus at most one inline command; its mechanics are the <code>fields</code> record, rendered after it as <code>* &lt;key&gt;: &lt;value&gt;</code> bullets in this order.</p>
+<table class="doc">
+  <thead><tr><th>Key</th><th>Roles</th><th>Check</th></tr></thead>
+  <tbody>
+    <tr><td>script</td><td class="wrap">spawn, substep</td><td class="wrap">Existing stage file under <code>workflows/</code>; required on a <code>[script]</code> entry.</td></tr>
+    <tr><td>schema</td><td class="wrap">step, spawn, substep, verify</td><td class="wrap">Existing JSON schema under <code>schemas/</code> declaring <code>properties</code>; required on a <code>[schema]</code> entry.</td></tr>
+    <tr><td>ref</td><td class="wrap">every role but def and payload</td><td class="wrap">Entry ids resolving under the ref discipline; render as derived links.</td></tr>
+    <tr><td>flags</td><td class="wrap">step, spawn, substep, verify</td><td class="wrap">One line; each <code>&lt;name…&gt;</code> placeholder leads with an Args row, def title or defined code span, read, returned or minted name, or env key.</td></tr>
+    <tr><td>forwards</td><td class="wrap">step, spawn</td><td class="wrap"><code>{arg, flag?, stage?}</code>: <code>arg</code> an Args row, <code>stage</code> a property of the entry's schema.</td></tr>
+    <tr><td>reads</td><td class="wrap">step, spawn, substep, verify</td><td class="wrap">Entry-schema properties, dotted for nested.</td></tr>
+    <tr><td>returns</td><td class="wrap">spawn, substep</td><td class="wrap">Entry-schema properties.</td></tr>
+    <tr><td>mints</td><td class="wrap">flow roles</td><td class="wrap"><code>branch</code> starts with frontmatter <code>branch-prefix</code>; <code>file</code> relative; each <code>id</code> template holds a <code>{…}</code> or <code>&lt;…&gt;</code> placeholder.</td></tr>
+    <tr><td>timeout</td><td class="wrap">step, substep whose statement holds <code>RUN </code></td><td class="wrap">Bash tool milliseconds.</td></tr>
+  </tbody>
+</table>
+<p>Links are tokens: <code>[[SECTION-NNN]]</code> within the skill, <code>[[SKILL-X-SECTION-NNN]]</code> across; the render derives <code>[Title · SECTION-NNN](#skill-&lt;leaf&gt;-&lt;section&gt;-&lt;nnn&gt;)</code>. Legal in statements, item texts, <code>fields.ref</code>, Args <code>default</code>/<code>effect</code> cells, Routing <code>purpose</code>, preconditions and route <code>use</code>; never in payload bodies (exact bytes). Below format 3 the <code>param</code> label and <code>[Title](#anchor)</code> links stay legal.</p>
+<p>From <code>skills/quality/railroad-review/railroad-review.cue</code>: a script spawn; the Build and test step's <code>fields</code> (SKILL-RAILROADREVIEW-ROUND-016).</p>
+<pre class="file-view" data-lang="cue">entry: {
+  id:      "SKILL-RAILROADREVIEW-WALK-004"
+  channel: "script"
+  fields: {
+    ref: ["TPL-008"]
+    script: "workflows/checklist.js"
+  }
+  role:      "spawn"
+  statement: "INVOKE `workflows/checklist.js` — one `railroad-checklist` agent per direction lacking a checklist: contracts on a moved head, over the diff; correctness in round 1 without checklist, over the spec."
+  title:     "Checklist agents"
+}
+
+fields: {
+  flags: "--repo &lt;dispatcher toplevel&gt; --root &lt;artifactsDir parent&gt;/wt --branch claude-review/&lt;runNs&gt;-buildtest-r{r} --salvage &lt;artifactsDir&gt;/salvage"
+  forwards: [{
+    arg:  "expect-head-red"
+    flag: "--skip"
+  }]
+  mints: {
+    branch: "claude-review/&lt;runNs&gt;-buildtest-r{r}"
+  }
+  timeout: 600000
+}</pre>
+
+<h2 id="interfaces-and-environment">Interfaces and environment</h2>
+<p>A skill never names a smine program: every tool, command or path it calls is a variable bound to one catalog interface. One skill thus runs on a full install, a partial one, or a colleague's machine with their own tools.</p>
+<table class="doc plain">
+  <thead><tr><th>Scope</th><th>Values</th><th>Filled</th></tr></thead>
+  <tbody>
+    <tr><td><code>install</code></td><td class="wrap">Provider programs.</td><td class="wrap">At deploy.</td></tr>
+    <tr><td><code>repo</code></td><td class="wrap">Build, check, test, acdsl program, plans archive: per repository.</td><td class="wrap">At invocation, from the session's environment.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="the-catalog">The catalog</h3>
+<p><code>skills/interfaces.cue</code> holds <code>interfaces</code> and <code>providers</code>, loaded with every skill like <code>vocabulary.cue</code>. An interface is one capability a skill calls.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>id, version</td><td>yes</td><td class="wrap">Capability, contract version; a binding names <code>&lt;id&gt;@&lt;version&gt;</code> (<code>plan-sections@1</code>).</td></tr>
+    <tr><td>kind</td><td>yes</td><td class="wrap"><code>command</code> (whole command lines, run bare), <code>program</code> (binary the skill appends args to), <code>path</code> (location) or <code>skill</code> (a deployed leaf name the skill hands off to, read in a <code>Skill(…)</code> grant and the hand-off statement).</td></tr>
+    <tr><td>scope</td><td>yes</td><td class="wrap"><code>install</code> or <code>repo</code>; every <code>command</code> record is <code>repo</code>.</td></tr>
+    <tr><td>summary</td><td>yes</td><td class="wrap">One line, what it does; quoted in an unset repo-scoped variable's abort sentence.</td></tr>
+    <tr><td>example</td><td class="wrap">on a repo-scoped record</td><td class="wrap">Fitting value (<code>go build ./...</code>, <code>bin/acdsl</code>): skill-page placeholder, abort-sentence example.</td></tr>
+    <tr><td>invocation</td><td>yes</td><td class="wrap"><code>{cwd, args, stdin, timeout}</code>; a program's <code>args</code> open with its subcommand word (<code>plan-sections &lt;plan file&gt;</code>); timeout a Go duration or <code>none</code>.</td></tr>
+    <tr><td>result</td><td>yes</td><td class="wrap"><code>{exit, stdout}</code>; <code>exit</code> maps codes to meanings, with <code>"0"</code> and <code>"other"</code>.</td></tr>
+    <tr><td>validate</td><td>yes</td><td class="wrap"><code>{resolves: true}</code> for command and program, <code>{exists: "dir" | "file"}</code> for path, <code>{}</code> for skill (the value is one leaf name, nothing to locate).</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>A changed exit code, argument shape or output schema is a new version, never an edit in place.</p>
+</div>
+<p>A provider names a program and the versions it implements: <code>{id, program, binary?, component?, implements, probe: ["interfaces"]}</code>. <code>component</code>: install component shipping it, on PATH on every OS it installs on; <code>binary</code>: path the probe runs when it is off PATH (<code>toolpolicy</code>, a hook binary). Version and scope limits: <a href="#checks">Checks</a>.</p>
+<table class="doc">
+  <thead><tr><th>Provider (six)</th><th>Scope</th></tr></thead>
+  <tbody>
+    <tr><td>smine-rules, smine-agentwt, smine-heartbeat, smine-routine, toolpolicy</td><td class="wrap">install</td></tr>
+    <tr><td>acdsl</td><td class="wrap">repo: no component, no program. Every ACDSL repo vendors its own <code>bin/acdsl</code>, so its five capabilities are repo-scoped.</td></tr>
+    <tr><td>none</td><td class="wrap">repo: command, path and skill interfaces <code>build@1</code>, <code>test@1</code>, <code>check@1</code>, <code>plans-archive@1</code>, <code>commit-skill@1</code>.</td></tr>
+  </tbody>
+</table>
+<pre class="file-view" data-lang="cue">interfaces: [{
+  id:      "test"
+  version: 1
+  kind:    "command"
+  scope:   "repo"
+  summary: "Runs the repo's full test suite."
+  example: "go test ./..."
+  invocation: {cwd: "repo-root", args: "none", stdin: "none", timeout: "20m"}
+  result: {exit: {"0": "pass", other: "fail"}, stdout: "diagnostic"}
+  validate: {resolves: true}
+}]
+providers: [{
+  id:        "toolpolicy"
+  program:   "toolpolicy"
+  binary:    "~/.claude/hooks/bin/toolpolicy"
+  component: "gate"
+  implements: ["permission-check@1", "permission-freeze@1"]
+  probe: ["interfaces"]
+}]</pre>
+
+<h3 id="binding">Binding</h3>
+<pre class="file-view" data-lang="cue">env: {
+  PLAN_SECTIONS: {interface: "plan-sections@1", required: true}
+  CHECK: {interface: "check@1"}
+}</pre>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>key</td><td>yes</td><td class="wrap">Interface id uppercased, hyphens as underscores (<code>plan-sections</code> → <code>PLAN_SECTIONS</code>); renders as <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code>, <code>&lt;SKILL&gt;</code> the leaf uppercased without hyphens (<code>SKILL_FDESIGN_PLAN_SECTIONS</code>).</td></tr>
+    <tr><td>interface</td><td>yes</td><td class="wrap"><code>&lt;id&gt;@&lt;version&gt;</code> of a catalog record.</td></tr>
+    <tr><td>required</td><td>no</td><td class="wrap">Unset, skips the whole skill at deploy (install-scoped) or aborts the invocation (repo-scoped). Absent: optional.</td></tr>
+  </tbody>
+</table>
+<p>Text references <code>$SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code>; scope decides where.</p>
+<table class="doc plain">
+  <thead><tr><th>Text</th><th>May reference</th></tr></thead>
+  <tbody>
+    <tr><td>Entry statements, items, payload bodies</td><td class="wrap">Both scopes: a placeholder can stand there.</td></tr>
+    <tr><td><code>allowed-tools</code></td><td class="wrap">Both scopes: the gate fills them. A path rule may root at one (<code>Read($SKILL_PLANARCHIVE_PLANS_ARCHIVE/**)</code>).</td></tr>
+    <tr><td>Args cells, routing and model text, other frontmatter values, enforce patterns, check reasons and recoveries</td><td class="wrap">Install-scoped only.</td></tr>
+    <tr><td>Preamble, prose blocks</td><td class="wrap">No repo-scoped one.</td></tr>
+    <tr><td>Files under <code>agents/</code> and <code>workflows/</code> (scanned recursively)</td><td class="wrap">Install-scoped required only: filled at deploy, never trimmed.</td></tr>
+  </tbody>
+</table>
+<p>A reference fits its interface's kind:</p>
+<table class="doc">
+  <thead><tr><th>Kind</th><th>What may follow the reference</th></tr></thead>
+  <tbody>
+    <tr><td>program</td><td class="wrap">The args head word (<code>$SKILL_FDESIGN_PLAN_SECTIONS plan-sections …</code>), then a space, backtick, quote, <code>(</code>, <code>)</code> or line end, so <code>Bash($SKILL_X_TITLE_SET title *)</code> and <code>freeze( |$)</code> pass. Or, passing the program itself as a value, a closing backtick, quote or <code>)</code> right after (<code>--acdsl '$SKILL_RAILROADREVIEW_ACDSL_CHECK'</code>).</td></tr>
+    <tr><td>command</td><td class="wrap">Nothing: end, backtick, quote, <code>)</code>, <code>&gt;</code>, <code>2&gt;</code> or <code>|</code>; a command value takes no arguments.</td></tr>
+    <tr><td>path</td><td class="wrap">Anything (unchecked).</td></tr>
+  </tbody>
+</table>
+
+<h3 id="values">Values</h3>
+<p>Deploy fills each variable from the first set source:</p>
+<ol>
+  <li>The deploy process's <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code> environment variable.</li>
+  <li>The install record's <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code> row (<code>skills.variables</code>, config server skill page).</li>
+  <li>Repo-scoped interfaces: the global default (<code>skills.defaults</code>, keyed by interface id, Environment tab's global defaults card).</li>
+  <li>The provider of the bound version: its <code>PROVIDER_&lt;ID&gt;</code> environment variable, its <code>PROVIDER_&lt;ID&gt;</code> row, then its catalog <code>program</code> if its component is in the render's set. A nil set, the canonical deploy, counts every component installed.</li>
+  <li>Unset.</li>
+</ol>
+<p>A provider row moves all of a program's capabilities at once; a <code>SKILL_</code> row pins one.</p>
+<h3 id="repo-scoped-placeholders">Repo-scoped placeholders</h3>
+<p>For the Claude home a repo-scoped variable is never resolved, so never unset, at deploy (source <code>invocation</code>); it skips nothing there. Its reference renders as a harness placeholder reading <code>SKILL_&lt;SKILL&gt;_&lt;KEY&gt;</code> from the session's environment at invocation. The entry whose statement or payload reads it, else each reading item, becomes one fenced block the harness runs before sending the skill content:</p>
+<pre class="file-view" data-lang="text">```!
+awk 'BEGIN { if (ENVIRON["SKILL_FIMPLEMENT_CHECK"] == "") { print "SKILL_FIMPLEMENT_CHECK: not set - &lt;summary&gt;, e.g. go vet ./... - &lt;hint&gt;"; exit 2 }; printf "%s", "\052\052SKILL-FIMPLEMENT-COMMIT-002\052\052 after \140" ENVIRON["SKILL_FIMPLEMENT_CHECK"] "\140 is green \342\200\224 one Bash call per line" }'
+```</pre>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>No shell expansion</td><td class="wrap">The harness checks the line against permission rules first, refusing shell expansion (<code>$NAME</code>, <code>${…}</code>, <code>$(…)</code>, backtick). So awk reads values via <code>ENVIRON</code>; no <code>$</code> in the line.</td></tr>
+    <tr><td>Escaping</td><td class="wrap">One single-quoted program; every text byte outside letters, digits, space and <code>,.:/_=+@~-</code> is a three-digit octal escape awk decodes (backticks, quotes, braces, dollars, backslashes, brackets, line breaks, multi-byte runes). Abort message cut to the same characters.</td></tr>
+    <tr><td>Required unset</td><td class="wrap">Prints <code>SKILL_FIMPLEMENT_CHECK: not set - …</code> with the record's summary and example, exits 2: invocation aborted; the harness forgives only exit 1 of search commands. Required guards first.</td></tr>
+    <tr><td>Optional unset</td><td class="wrap">Exits 0 silently; its entry or item vanishes whole.</td></tr>
+    <tr><td>Hint</td><td class="wrap">"set it for this repo on the skill page, or export it" in a deploy; "export it in your shell" in the bundle.</td></tr>
+    <tr><td>Install-scoped in the block</td><td class="wrap">Filled value, escaped like text; no <code>$SKILL_</code> reference survives, so the bundle scan needs no allowance.</td></tr>
+    <tr><td><code>Bash(awk *)</code></td><td class="wrap">Appended to <code>allowed-tools</code> when the skill declares a deferred variable; also in the gate template. The gate's awk fence admits the program: no redirect, pipe, <code>system</code>, <code>getline</code>.</td></tr>
+    <tr><td><code>env.json</code></td><td class="wrap">Beside SKILL.md with the Skill environment component: schema 1, skill, version, one entry per repo-scoped variable a rendered block reads (name, interface id, required, scope, summary, example). The <code>skillenv</code> hook exports each value (repo value, else skill default, else global default); refuses a typed <code>/&lt;leaf&gt;</code> or Skill call with an unset required value before the body expands (<a href="install.html#per-repo-values">Install § Per-repo values</a>). The gate fills grants from the same sidecars.</td></tr>
+    <tr><td>Without the hook</td><td class="wrap">Shell exports reach the placeholder alike.</td></tr>
+  </tbody>
+</table>
+<h3 id="value-rules">Value rules</h3>
+<table class="doc">
+  <thead><tr><th>Kind</th><th>Value rule</th></tr></thead>
+  <tbody>
+    <tr><td>every value</td><td class="wrap">One line (a command may hold several); no carriage return, backtick, <code>$SKILL_</code> or parenthesis: grants splice values into <code>Bash(…)</code>, a command of several lines as one rule per line.</td></tr>
+    <tr><td>command</td><td class="wrap">One command per line, run in order, first red one stops. Lines split by <code>internal/cmdline</code>, as in <code>smine-rules</code>: spaces split words, double quotes group, no shell operators (<code>&amp;&amp;</code>, <code>|</code>, <code>;</code>, <code>$(</code>). Readers say "one Bash call per line".</td></tr>
+    <tr><td>program</td><td class="wrap">One word; a path with a slash allowed.</td></tr>
+    <tr><td>path</td><td class="wrap">Opens with <code>~/</code> or <code>/</code>.</td></tr>
+  </tbody>
+</table>
+<p>Deploy probes each provider it fills from, once per executable per run: <code>&lt;program&gt; interfaces</code> (or <code>binary</code>) prints <code>{"interfaces": [...]}</code>, the sorted versions it implements; all six binaries answer. A failed check leaves the variable unset, with a cause in the deploy log and on the skill page.</p>
+<table class="doc">
+  <thead><tr><th>Check</th><th>Cause</th></tr></thead>
+  <tbody>
+    <tr><td>value rules and kind form</td><td class="wrap"><code>value: holds a backtick</code>, <code>value: a program is one word, got 2</code>, …</td></tr>
+    <tr><td>resolves</td><td class="wrap"><code>&lt;word&gt; does not resolve to an executable</code>. Each command line's first word looked up on PATH; a relative word with a slash under the repo it serves (checkout at deploy; the repo's path for a skill-page repo value).</td></tr>
+    <tr><td>exists</td><td class="wrap"><code>&lt;path&gt; is not an existing dir</code></td></tr>
+    <tr><td>provider claim</td><td class="wrap"><code>smine-rules does not implement plan-sections@1 (answered: …)</code>, or the probe's own failure</td></tr>
+  </tbody>
+</table>
+<p><code>required</code> keeps its effect; the skip line carries the cause.</p>
+<table class="doc plain">
+  <thead><tr><th>Unset variable read by</th><th>Effect in the render</th></tr></thead>
+  <tbody>
+    <tr><td><code>required</code> declaration</td><td class="wrap">Skill skipped: <code>skip &lt;leaf&gt; unconfigured (SKILL_…: &lt;cause&gt;)</code>; <code>DeployLeaf</code> refuses it.</td></tr>
+    <tr><td>Item (param, bullet, fence)</td><td class="wrap">Item drops, entry stays.</td></tr>
+    <tr><td><code>flags</code> field</td><td class="wrap">Field bullet drops, entry stays.</td></tr>
+    <tr><td>Statement, payload body</td><td class="wrap">Entry drops.</td></tr>
+    <tr><td><code>allowed-tools</code> rule</td><td class="wrap">Rule drops.</td></tr>
+    <tr><td>Enforce anchor's tool, input or exclude pattern</td><td class="wrap">Anchor drops with every check and judgment naming it.</td></tr>
+    <tr><td>Enforce check's reason or recovery, judgment's question or send</td><td class="wrap">That check or judgment drops.</td></tr>
+  </tbody>
+</table>
+<p>A <code>Skill(&lt;leaf&gt;)</code> grant or pipeline edge to a skill the render cannot deploy (unmet <code>requires</code>, unset required variable) drops too. Set values fill as text in SKILL.md and copied sibling files, regex-quoted in enforce patterns, JSON-escaped elsewhere in <code>enforce.json</code> (reasons, recovery texts).</p>
+<p>An <code>allowed-tools</code> rule reading a repo-scoped variable stays as text only when the render's set holds <code>gate</code>. The gate fills it per session from the session repo's values (<code>skillenv.Resolve</code>, the hook's resolution) and drops what it cannot fill; without the gate (the bundle) the rule drops. Neither deploy nor gate derives a permission rule from a value.</p>
+
+<h3 id="checks">Checks</h3>
+<table class="doc plain">
+  <thead><tr><th>Layer</th><th>Refuses</th></tr></thead>
+  <tbody>
+    <tr><td>Model check</td><td class="wrap">Referenced undeclared variable; declared one no text reads; optional one read where nothing can drop it; binding outside the catalog; key other than the derived key; reference not fitting its kind; repo-scoped reference outside entries and <code>allowed-tools</code>.</td></tr>
+    <tr><td>Load</td><td class="wrap">Literals <code>smine-rules</code>, <code>smine-agentwt</code>, <code>smine-heartbeat</code>, <code>smine-routine</code> (word-bounded: skill name <code>smine-routines</code> passes) and <code>toolpolicy</code> in model text and every file under <code>agents/</code>, <code>workflows/</code>; repo-scoped or optional references in those files.</td></tr>
+    <tr><td>Catalog load</td><td class="wrap">Duplicate <code>&lt;id&gt;@&lt;version&gt;</code>; <code>validate</code> block not fitting the kind (a skill record takes <code>{}</code>); exit table without <code>"0"</code> and <code>"other"</code>; program interface without args head; <code>command</code> record outside scope <code>repo</code>; repo-scoped record without <code>example</code>; provider claim no record declares; two providers claiming one version; one provider claiming both scopes.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="deploy">Deploy</h2>
+<p>The skills sync (<code>internal/skills</code>, <code>configserver -sync-skills</code>) renders for one component set and value map: the install record's components and skill rows (<code>skills.variables</code>, <code>skills.providers</code>, <code>skills.defaults</code>), on every writer path. The config server reads the record per request, so the Overview Sync, an apply and a skill-page save all deploy with the rows on disk.</p>
+<table class="doc">
+  <thead><tr><th>Home</th><th>Repo-scoped variables</th></tr></thead>
+  <tbody>
+    <tr><td>~/.claude/skills</td><td class="wrap">Deferred to invocation as placeholders.</td></tr>
+    <tr><td>~/.codex/skills</td><td class="wrap">Static (a Codex agent runs no placeholder): deploy environment, record row, then global default (<a href="#values">Values</a>); else dropped or skill skipped like any other (<code>skip &lt;leaf&gt; unconfigured (…) in &lt;home&gt;</code>).</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Rendered in process</th><th>When</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>SKILL.md</td><td class="wrap">always</td><td class="wrap">Formal clauses stripped, variables filled or deferred.</td></tr>
+    <tr><td>help-test.md</td><td class="wrap">with <code>session-helpers</code>, whose skillhelp hook reads it</td><td class="wrap">Smoke line; <code>Eval:</code> line when <code>eval/definition.json</code> exists.</td></tr>
+    <tr><td>title.json</td><td class="wrap">with <code>session-helpers</code> and a set <code>title-set@1</code> variable</td><td class="wrap">Title states.</td></tr>
+    <tr><td>enforce.json</td><td class="wrap">with <code>gate</code> and <code>heartbeat</code></td><td class="wrap">Enforce block.</td></tr>
+    <tr><td>env.json</td><td class="wrap">with <code>skill-environment</code> and a rendered placeholder; <code>~/.claude/skills</code> only</td><td class="wrap">Repo-scoped variables the placeholders read.</td></tr>
+    <tr><td>answer.md</td><td class="wrap">a skill with <code>answeredBy: "hook"</code></td><td class="wrap">Payload bodies.</td></tr>
+    <tr><td>.smine-deployed</td><td class="wrap">always</td><td class="wrap">Marker holding the source hash the smoke checks.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Case</th><th>Deploy does</th></tr></thead>
+  <tbody>
+    <tr><td>Never shipped</td><td class="wrap"><code>&lt;leaf&gt;.cue</code>, <code>payloads/</code>, <code>eval/</code>, <code>smoke/</code>, <code>agents/</code> (deploys to <code>~/.claude/agents/</code>, filled).</td></tr>
+    <tr><td>Other sibling files</td><td class="wrap"><code>context-map.json</code>, <code>workflows/</code>, <code>schemas/</code> ship, text filled. A deployed copy holds no model: the config server's graph view shows a no-model card.</td></tr>
+    <tr><td><code>needs</code> missed</td><td class="wrap">Entries, routes, edges drop.</td></tr>
+    <tr><td><code>unless</code> held</td><td class="wrap">Entry drops.</td></tr>
+    <tr><td><code>requires</code> missed</td><td class="wrap">Skill skipped: <code>skip &lt;leaf&gt; unavailable (…)</code>.</td></tr>
+  </tbody>
+</table>
+<h3 id="the-bundle">The bundle</h3>
+<p><code>make skill-bundle</code> writes the standalone bundle to <code>dist/skills</code> for the empty component set: install-scoped values from the shell's exports, repo-scoped ones as placeholders with the shell hint. A skill ships unless it <code>requires</code> a component, carries a license key or lacks a required install-scoped value.</p>
+<p>Index <code>dist/skills/README.md</code>: per shipped skill, what the full install adds (summaries of its unset optional install-scoped variables); per skipped skill, what it needs.</p>
+<pre class="file-view" data-lang="text">- &lt;leaf&gt; (skipped): needs &lt;ref&gt; from the &lt;component&gt; component</pre>
+<h3 id="runtime-placement-lines">Runtime placement lines</h3>
+<p>Runtime placement fields render into the deployed frontmatter after the authored fields: <code>answered-by:</code>, <code>docker:</code>, <code>enable-delegation:</code>, <code>enforce-permissions:</code>. With <code>answeredBy: "hook"</code> the skillhelp hook answers every typed invocation with <code>answer.md</code> plus the feature catalog; the model check requires a payload entry and refuses flow entries.</p>
+
+<h2 id="z3-analysis">Z3 analysis</h2>
+<p>Because the model is typed, its rules can be questioned: a format-2 skill is a controlled-English rulebook (MUST, NEVER, If ⇒ STOP, VERIFY), and modeled, z3 answers whether rules contradict, whether an entry is unreachable, and "if a and b hold, can c?"</p>
+
+<h3 id="what-this-layer-is-and-is-not">What the analysis layer is</h3>
+<p>An optional per-skill analysis tier (one <code>&lt;leaf&gt;.cue</code> field): authoring contract plus compile-time test suite. No runtime effect: deploy strips clause lines; the executing agent never sees them.</p>
+<table class="doc plain">
+  <thead><tr><th>Tier</th><th>Opt-in</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td>Annotations</td><td>default</td><td class="wrap">Any skill's clause lines are parsed, syntax-checked, rendered (graph view, diagrams), never resolved against a vocabulary: intent documented like interface types, cheap, visible, unenforced.</td></tr>
+    <tr><td>Model</td><td><code>tier: "strict"</code></td><td class="wrap">Checked semantic model: atoms resolve, kinds pair legally, <code>skillmodel check</code> runs the z3 <a href="#the-battery">battery</a>, <code>queries/</code> is the test suite; <code>make audit-full</code> fails the release gate on an error finding or verdict mismatch. <code>solve</code>, <code>query</code> refuse annotation-only skills.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-ok">When to opt in</span>
+  <p>Interacting state: counters, modes, obligatory stops gating real actions, fan-out/join arithmetic, as in the railroad-review dispatcher. Linear prose protocols gain nothing.</p>
+</div>
+
+<h3 id="the-pieces-bottom-up">The pieces, bottom-up</h3>
+<p>Atoms build expressions, expressions clauses; clauses derive the model, queries question it.</p>
+<h4>Atom</h4>
+<p>One named, typed fact about a run.</p>
+<table class="doc">
+  <thead><tr><th>Kind</th><th>Declared</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>true/false</td><td class="wrap">default</td><td class="wrap"><code>asks_user</code>, <code>tools_loaded</code></td></tr>
+    <tr><td>whole number</td><td class="wrap"><code>kind: int</code></td><td class="wrap"><code>remaining_budget</code>, <code>lanes_spawned</code></td></tr>
+    <tr><td>choice</td><td class="wrap"><code>kind: enum</code>, fixed ordered members</td><td class="wrap"><code>mode</code>: <code>interactive</code>, <code>nightly</code>. Order ranks ("at least medium severity"); members exclusive by construction, no exclusivity axioms.</td></tr>
+  </tbody>
+</table>
+<p>Shared atoms: <code>skills/vocabulary.cue</code>, alias phrases mapping one wording to one atom. A skill's own: the <code>atoms</code> map of its <code>&lt;leaf&gt;.cue</code>, same shape:</p>
+<pre class="file-view" data-lang="cue">atoms: {&lt;id&gt;: {sort, kind?, members?, source?, aliases?}}</pre>
+<p><code>source</code> is a closed grammar; free text fails the load. <code>runtime</code> binds an enforce anchor's capture, so heartbeat's check and the model read one value.</p>
+<pre class="file-view" data-lang="text">arg: &lt;row&gt;[ =&gt; &lt;member&gt;]
+session
+environment
+runtime: &lt;anchor&gt;[.&lt;capture&gt;[ = &lt;literal&gt; | != &lt;literal&gt;]]</pre>
+<p>An unread atom fails <code>make skills-check</code>; delete it and its clauses.</p>
+<table class="doc plain">
+  <thead><tr><th>Atom</th><th>Kept alive by</th></tr></thead>
+  <tbody>
+    <tr><td>Local atom, format-3 skill</td><td class="wrap">Stop, rule, quality or route section preds; queries. Not step preds.</td></tr>
+    <tr><td>Shared atom</td><td class="wrap">Such a reader in some skill.</td></tr>
+    <tr><td>Local atom, format-2 skill</td><td class="wrap">Any pred.</td></tr>
+  </tbody>
+</table>
+<h4>Expression</h4>
+<p>An expression (expr) is a condition over atoms: <code>and</code>, <code>or</code>, <code>not</code>, <code>=&gt;</code> (implies), parentheses, comparisons; <code>+</code>/<code>-</code> and number literals on ints.</p>
+<pre class="file-view" data-lang="text">remaining_budget &lt; round_cost
+lanes_returned = lanes_spawned
+mode = nightly
+apply_level &gt;= medium
+base_provided and base_unresolvable</pre>
+<p>The last: "a base was given and could not be resolved."</p>
+<h4>Clauses</h4>
+<p>An entry's <code>pred</code>/<code>post</code> fields in <code>&lt;leaf&gt;.cue</code>, written once when authoring. SKILL.md renders them as code lines directly above the headline, no blanks between, each ending in the markdown hard break <code>\</code> so they stay separate lines, not one paragraph:</p>
+<pre class="file-view" data-lang="markdown">`{pred: &lt;expr&gt;}` \
+`{post: &lt;atoms&gt;}` \
+&lt;entry headline&gt;</pre>
+<table class="doc">
+  <thead><tr><th>Entry</th><th>pred:</th><th>post:</th></tr></thead>
+  <tbody>
+    <tr><td>rule</td><td class="wrap">Invariant. Never-prompt rule: <code>{pred: not asks_user}</code>.</td><td></td></tr>
+    <tr><td>step, spawn, substep, verify, stop</td><td class="wrap">Firing guard. Base-unresolvable stop: <code>{pred: base_provided and base_unresolvable}</code>.</td><td class="wrap">Conjunction of atoms made true: a verify's guarantee, a step's effect.</td></tr>
+    <tr><td>quality</td><td class="wrap">Soft: no effect on consistency verdicts; witnesses prefer runs satisfying it.</td><td></td></tr>
+    <tr><td>no clauses</td><td class="wrap">Uncovered. Coverage reported (<code>check</code> prints formalized/coverable counts), never enforced.</td><td></td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Grants stay</td><td class="wrap">Post-granted atoms start ungranted, then stay granted. Reachability is causal: a pred needing <code>tools_loaded</code> fires only after a post grants it.</td></tr>
+    <tr><td>Obligatory stops</td><td class="wrap">A stop whose pred holds blocks every non-stop firing there; a fired stop blocks everything after.</td></tr>
+    <tr><td>Deploy</td><td class="wrap">Strips entry clause lines from the agent copy (<code>KEEP_FORMAL=1</code> keeps them); route section lines stay.</td></tr>
+    <tr><td>Annotation tier</td><td class="wrap">Without <code>tier: "strict"</code>: clauses must parse (gate-checked in every skill); atoms unresolved, no model claims, typed comparisons are documentation, not checked arithmetic.</td></tr>
+  </tbody>
+</table>
+<h4>Model</h4>
+<p>In memory, never committed, derived 100% mechanically from the clauses.</p>
+<table class="doc plain">
+  <thead><tr><th>Clause source</th><th>Becomes</th></tr></thead>
+  <tbody>
+    <tr><td>A rule with <code>pred:</code></td><td class="wrap">An invariant.</td></tr>
+    <tr><td>A flow-role entry</td><td class="wrap">A transition.</td></tr>
+    <tr><td>Sections</td><td class="wrap">A chain in document order.</td></tr>
+  </tbody>
+</table>
+<p>No translation layer, review pass or committed semantic-model artifact: a pure function of <code>&lt;leaf&gt;.cue</code> plus <code>skills/vocabulary.cue</code>, structurally drift-free. Each invariant and transition keeps its entry id, so solver answers point at <code>&lt;leaf&gt;.cue</code> and SKILL.md entries.</p>
+<h4>Query</h4>
+<p>A JSON file in the skill's <code>queries/</code>: one question, frozen to re-ask forever.</p>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>assume</td><td class="wrap">Given ("suppose the run is nightly").</td></tr>
+    <tr><td>check</td><td class="wrap">Tested ("…can the gate pause?").</td></tr>
+    <tr><td>expect</td><td class="wrap">Passing answer: <code>sat</code> (a scenario where all holds together) or <code>unsat</code> (the rules forbid it).</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-ok">Tip</span>
+  <p>"If a and b, c cannot be" is exactly: assume a and b, check c, expect unsat.</p>
+</div>
+
+<h3 id="reading-the-answers">Reading the answers</h3>
+<table class="doc">
+  <thead><tr><th>Answer</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td>sat</td><td class="wrap">Possible. <code>solve</code> prints a witness a human can check (<code>scenario: asks_user=false, mode=nightly, lanes_returned=4, …</code>). Whole-model consistency wants sat: no contradiction.</td></tr>
+    <tr><td>unsat + core: …</td><td class="wrap">Impossible. The core, a proof sketch, lists clashing invariants and transitions by entry id, transitions first; premises (your assumptions, vocabulary exclusivity axioms) stay out.</td></tr>
+    <tr><td>unknown</td><td class="wrap">z3 hit its 10-second per-check timeout. No verdict; <code>solve</code> and <code>query</code> exit 2.</td></tr>
+  </tbody>
+</table>
+<p>Can the review ask the user?</p>
+<pre class="file-view" data-lang="bash">make model-query SKILL=railroad-review EXPR='not asks_user'</pre>
+<pre class="file-view" data-lang="text">verdict: unsat
+core: SKILL-RAILROADREVIEW-EXEC-002</pre>
+<p>EXEC-002 is the invariant <code>not asks_user</code>: no state with the review asking is reachable.</p>
+<div class="callout">
+  <span class="badge badge-dim">Note</span>
+  <p>Cores are minimal: of several rule chains forbidding one thing, the core shows one.</p>
+</div>
+
+<h3 id="the-battery">The battery</h3>
+<p><code>skillmodel check &lt;skill dir&gt;</code> (<code>make model-check SKILL=&lt;name&gt;</code>) runs it on the derived model, one line per finding, then a summary:</p>
+<pre class="file-view" data-lang="text">&lt;skill dir&gt;: &lt;severity&gt; &lt;check&gt;: &lt;message&gt;</pre>
+<table class="doc">
+  <thead><tr><th>Check (run order)</th><th>Severity</th><th>A finding means</th></tr></thead>
+  <tbody>
+    <tr><td>validate</td><td>error</td><td class="wrap">Unparsable clause, unresolved atom, illegal kind pairing, consumed bool atom without producer or source, or exclusivity member not a declared bool atom.</td></tr>
+    <tr><td>consistency</td><td>error</td><td class="wrap">Invariants and exclusivity axioms contradict; names the clashing invariants.</td></tr>
+    <tr><td>guard</td><td>warning</td><td class="wrap">Guard never holds under the invariants: entry dead.</td></tr>
+    <tr><td>redundant-guard</td><td>warning</td><td class="wrap">A pred conjunct follows from invariants and sibling conjuncts ("guard always holds" for a one-conjunct pred).</td></tr>
+    <tr><td>halt</td><td>warning</td><td class="wrap">A stop's guard holds in every allowed state: stops every run at its start.</td></tr>
+    <tr><td>preservation</td><td>warning</td><td class="wrap">Firing from a state satisfying invariants and guard can break an invariant once post atoms turn true.</td></tr>
+    <tr><td>reach</td><td>warning</td><td class="wrap">Entry or stop never fires within the complete bound. Or "unreachable under <code>atom = member</code>": reachable otherwise, guard feasible there.</td></tr>
+    <tr><td>completion</td><td>warning</td><td class="wrap">No transition of the last phase with transitions fires within the complete bound: every run halts or stalls early.</td></tr>
+  </tbody>
+</table>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Severity</td><td class="wrap">Only errors fail <code>check</code> (exit 1); warnings exit 0. A <code>validate</code> error, or an inconsistent model after <code>consistency</code>, stops the battery. Later checks skip entries <code>guard</code> found dead.</td></tr>
+    <tr><td>Tier</td><td class="wrap">Annotation: <code>validate</code> only, no z3. Model: all eight, z3 on PATH or <code>check</code> exits 2. <code>unknown</code> on consistency exits 2, on a warning check yields an "undecided" warning.</td></tr>
+    <tr><td>Budget</td><td class="wrap">One z3 process per check family (consistency; guard, redundant-guard, halt, preservation; reach, completion); each obligation a <code>check-sat-assuming</code> selector, 10-second timeout.</td></tr>
+  </tbody>
+</table>
+<h4 id="complete-bound">Complete bound</h4>
+<p>Posts grant only bool atoms; int and enum atoms never change in a run. So a run changes state at most min(P, G) times, plus one step to fire the target.</p>
+<pre class="file-view" data-lang="text">complete bound = min(P, G) + 1
+G = the number of granted bool atoms
+P = the number of transitions granting at least one</pre>
+<p>An <code>unsat</code> reach verdict at that bound is therefore a proof, not a sample. P and G count only the <strong>cone of influence</strong>: atoms an effective guard, effective invariant or the question (assumes, check) mentions, closed over exclusivity groups. Unread atoms, such as observation atoms, get no step copies and don't inflate it.</p>
+<p><code>smt</code> and <code>solve</code> default to it; an explicit lower <code>--bound</code> or query <code>bound</code> runs, warning its <code>unsat</code> is no proof.</p>
+<h4 id="route-anchors">Route anchors</h4>
+<p>Anchors are solver semantics, not just drawing.</p>
+<table class="doc">
+  <thead><tr><th>Anchor</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>replaces: &lt;items&gt;</td><td class="wrap">While the route pred holds, replaced entries can't fire (guard <code>pred and not &lt;route pred&gt;</code>) and replaced rules' invariants are suspended (<code>not &lt;route pred&gt; =&gt; &lt;invariant&gt;</code>); the route runs instead.</td></tr>
+    <tr><td>phase window</td><td class="wrap">Route transitions fire only in the anchor's phases. <code>replaces</code>: lowest to highest replaced-entry phase. <code>between: &lt;after&gt;..&lt;before&gt;</code>: <code>&lt;after&gt;</code>'s phase to <code>&lt;before&gt;</code>'s; <code>start</code>, <code>end</code> and context-section sides unbounded. Entries within a section stay unordered.</td></tr>
+  </tbody>
+</table>
+<h4 id="ad-hoc-queries">Ad hoc queries</h4>
+<p><code>skillmodel query --expr '&lt;expr&gt;' &lt;skill dir&gt;</code> (<code>make model-query SKILL=&lt;name&gt; EXPR='&lt;expr&gt;'</code>): does the model imply the expression? The solver asserts effective invariants, exclusivity axioms and <code>not &lt;expr&gt;</code>, no soft clauses.</p>
+<table class="doc">
+  <thead><tr><th>Verdict</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td>unsat</td><td class="wrap">Holds; the core names the proving invariants.</td></tr>
+    <tr><td>sat</td><td class="wrap">Counterexample: <code>scenario: atom=value, …</code>.</td></tr>
+  </tbody>
+</table>
+<p>Validity, unlike a committed static query file's satisfiability (assume + check, <code>sat</code> = possible). Exit 0 on either verdict, 2 on error or <code>unknown</code>.</p>
+<h4>Where it runs</h4>
+<p>The make targets in <a href="#the-z3-commands">The commands</a> (<code>make audit</code>: <code>validate</code> only) and the config server graph view, on page load. The read-only graph view shows atoms with grant and read counts, the <code>enforce</code> declaration, the tier in its toolbar (<code>tier: strict — &lt;n&gt; atoms, &lt;m&gt; queries</code> or <code>tier: annotations</code>) and an all-warnings button listing every battery finding and structural warning. Edit the model as <code>&lt;leaf&gt;.cue</code> text.</p>
+
+<h3 id="the-z3-commands">The commands</h3>
+<p>Start with <code>make model-analyze</code> ("run it, see it"); the rest answer narrower questions.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>make model-analyze</td><td class="wrap">Default <code>SKILL=railroad-review</code>. Clause checks, battery (consistency included), then every committed query; annotation tier: <code>check</code> only.</td></tr>
+    <tr><td>make model-queries</td><td class="wrap">Every opted-in skill's battery and committed queries, red on an error finding or verdict mismatch; the model test-suite step of <code>make audit-full</code>.</td></tr>
+    <tr><td>make model-check SKILL=&lt;name&gt;</td><td class="wrap">One skill: clause validation, model-tier battery, coverage report; prints the tier (<code>tier: model</code> / <code>tier: annotations</code>) and model-tier warning count.</td></tr>
+    <tr><td>make audit</td><td class="wrap">Solver-free: its skill-model gate (ACDSL-SKILL-013) runs <code>validate</code> only.</td></tr>
+    <tr><td>make model-query SKILL=&lt;name&gt; EXPR='&lt;expr&gt;'</td><td class="wrap">Does the model imply <code>&lt;expr&gt;</code>? <a href="#ad-hoc-queries">Ad hoc queries</a>.</td></tr>
+    <tr><td>go run ./cmd/skillmodel model &lt;skill dir&gt;</td><td class="wrap">Dumps the derived model as JSON.</td></tr>
+    <tr><td>make skill-export SKILL=&lt;name&gt;</td><td class="wrap">Prints the loaded skill model (entries, sections, merged atoms).</td></tr>
+    <tr><td>go run ./cmd/skillmodel diagram &lt;skill dir&gt;</td><td class="wrap">Or <code>make model-diagram SKILL=&lt;name&gt;</code>: whole-skill Mermaid, <a href="#the-diagram">below</a>.</td></tr>
+    <tr><td>go run ./cmd/skillmodel query --expr '&lt;expr&gt;' &lt;skill dir&gt;</td><td class="wrap">Ad hoc "does the model imply this?", uncommitted.</td></tr>
+    <tr><td>go run ./cmd/skillmodel solve --query my-question.json skills/quality/railroad-review</td><td class="wrap">Ad hoc assume/check satisfiability, uncommitted.</td></tr>
+    <tr><td>go run ./cmd/skillmodel solve --reach &lt;entry-id&gt; [--bound n] &lt;skill dir&gt;</td><td class="wrap"><a href="#dead-entry-check">Dead-entry check</a>.</td></tr>
+  </tbody>
+</table>
+<h4 id="dead-entry-check">Dead-entry check</h4>
+<p><code>solve --reach</code> unsat: no run ever fires the entry, because</p>
+<ul>
+  <li>its guard contradicts the rules;</li>
+  <li>nothing grants an atom its pred needs;</li>
+  <li>an obligatory stop blocks the way there;</li>
+  <li>a <code>replaces</code> route takes its place whenever it could fire.</li>
+</ul>
+<p>At the default complete bound that is a proof (<code>DEAD — unreachable within the complete bound</code>); a lower <code>--bound</code> warns and prints only <code>unreachable within bound &lt;n&gt;</code>. A query file commits such a question with <code>reach</code> (an entry id) and optional <code>bound</code> in place of <code>check</code>. The battery's <code>reach</code> check already covers every entry and stop.</p>
+<h4 id="the-diagram">The diagram</h4>
+<p><code>diagram</code> draws the whole skill as Mermaid; section kinds come from each heading's <code>{section: …}</code> line, kind-less skills render all-phase as before.</p>
+<table class="doc plain">
+  <thead><tr><th>Element</th><th>Drawn as</th></tr></thead>
+  <tbody>
+    <tr><td>The phase chain</td><td class="wrap">In order.</td></tr>
+    <tr><td><code>between</code> routes on phase boundaries</td><td class="wrap">Forks: a split junction, one branch per route sharing the anchors, chains via the previous route's last entry, an otherwise edge unless the branch preds cover every case, a reentry junction.</td></tr>
+    <tr><td>Other <code>between</code> routes, all <code>replaces</code> routes</td><td class="wrap">Replaces/between edges to their anchors' sections.</td></tr>
+    <tr><td>Context sections</td><td class="wrap">Detached states.</td></tr>
+    <tr><td>Entries</td><td class="wrap">Ordered kind-tagged lines in their state; flow entries numbered, clauses and enforcement channel shown.</td></tr>
+    <tr><td>Stops</td><td class="wrap">Edges into the halt sink; context-section stops are halt lines.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>Flag</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>--phases (PHASES=1)</td><td class="wrap">Trims to the execution chain.</td></tr>
+    <tr><td>--json (JSON=1)</td><td class="wrap">Same projection as stable JSON: the config server graph view's data contract. Server-side the blob adds <code>args</code>, <code>env</code>, <code>warnings</code> and notes outside the contract.</td></tr>
+  </tbody>
+</table>
+<h4>Authoring section kinds</h4>
+<table class="doc plain">
+  <thead><tr><th>Framing</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Routes are implicit</td><td class="wrap">Steps gated on an earlier-established pred already form a route; the <code>route</code> kind names and groups it. Its line declares exactly one anchor, never inferred from section order: <code>replaces: &lt;items&gt;</code> (substitution) or <code>between: &lt;after&gt;..&lt;before&gt;</code> (optional insertion).</td></tr>
+    <tr><td>Phase interfaces are derived</td><td class="wrap">Never authored: produces = atoms its posts grant, consumes = earlier-granted atoms its preds mention. Shown per phase card with the graph view's formal layer toggle on.</td></tr>
+  </tbody>
+</table>
+<p>Boundary principle: a section ends where its last granted output lands; prose on the next section's internals goes there.</p>
+<h4>Workflow stage files</h4>
+<p>Programmatic stages are workflow files under <code>workflows/</code>: one per spawn, or a composition nesting others (railroad-review's <code>round.js</code>: lanes, dedup, verify, station). The dispatcher invokes the file at its spawn entry; the <code>script</code> channel names it.</p>
+<table class="doc plain">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Prompts</td><td class="wrap">Spawns agents, builds prompts from the skill's payloads (<code>GEN:payload</code> blocks, never hand-copied), folds returns into its result.</td></tr>
+    <tr><td>Schemas and shared blocks</td><td class="wrap">Schemas in <code>schemas/*.json</code>, shared prompt blocks in <code>workflows/common/</code>, injected between GEN markers by <code>make workflow-gen</code> (rules binary over <code>internal/workflowgen</code>). The runtime allows no imports or file reads.</td></tr>
+    <tr><td>Computed args</td><td class="wrap">Every binary-computable dispatcher arg comes from an installed rules binary (<code>smine-rules</code>) subcommand; an enforce anchor captures its printed document, a provenance check pins it.</td></tr>
+    <tr><td>Known exception</td><td class="wrap">railroad-review stage files still carry severity, id, dedup, retry and validation policy, pending their own plan.</td></tr>
+  </tbody>
+</table>
+<h4>Inputs and refs</h4>
+<p>Closed producer/consumer system: an atom guarding flow is granted by a step's post or declared an input by its <code>source</code> (grammar under Atom). <code>skillmodel check</code> enforces producer-or-input on the model tier; the graph view shows inputs as invocation tiles in a column left of the structure.</p>
+<p>Refs point into vocabulary (defs, payloads) or own-section wiring, never cross-section control flow: sequencing belongs to the condition system. A route may ref the entries its anchor clause names.</p>
+<h4>Graph view</h4>
+<table class="doc plain">
+  <thead><tr><th>Element</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Route cards</td><td class="wrap">Set into the host phase card, cut at the anchor: a substitution before its first replaced entry, an insertion after its split entry; split line in, reentry line back to the chain. Lists the anchor's refs as a <code>replaces</code> or <code>between</code> line.</td></tr>
+    <tr><td>Invocation scenario</td><td class="wrap">Arg and session tiles on: inactive routes and rows an active route replaces gray out.</td></tr>
+    <tr><td>Ref violations</td><td class="wrap">⚠ analyses on their rows, listed in the all-warnings panel, which opens left outside the graph box; entry cards open right.</td></tr>
+    <tr><td>Links</td><td class="wrap"><code>↗n</code> outgoing, <code>↙n</code> incoming on the row; focusing it draws them (neon out, orange in).</td></tr>
+  </tbody>
+</table>
+
+<h3 id="current-state-and-edges">Current state and edges</h3>
+<table class="doc plain">
+  <thead><tr><th>Topic</th><th>State</th></tr></thead>
+  <tbody>
+    <tr><td>Adoption</td><td class="wrap">Every format-2 skill carries clause annotations (2026-09 fleet reformat). Only railroad-review is model-tier: its <code>atoms</code> (typed budget/lane arithmetic, shared <code>mode</code> enum), battery and three committed queries run in <code>audit-full</code>.</td></tr>
+    <tr><td>Opting in</td><td class="wrap">Set <code>tier: "strict"</code>, declare <code>atoms</code> for every clause atom, pin worthwhile queries. Sourced input atoms need no tier and feed the invocation tiles (fdesign).</td></tr>
+    <tr><td>Expressiveness</td><td class="wrap">Bools, whole-number arithmetic, ordered choices: contradiction, implication, counting, causal-ordering questions. No unbounded backend: the complete bound makes unrolling exhaustive.</td></tr>
+    <tr><td>Out of scope</td><td class="wrap">Real time, "eventually". Liveness and optimization: staged in the stage-2 doc <code>plans/2026-09-14-skill-structure-wip-ada2d65/design/smt-stage2.md</code>, with query-authoring conventions and the Stage-3 runtime-referee outlook.</td></tr>
+    <tr><td>Soundness</td><td class="wrap">Causally sound reachability: only posts change state (non-granted bools rigid, granted ones flip only via a granting firing); boundary firings assert posts; negative bool assumptions and negated stop preds block naturally; <a href="#route-anchors">Route anchors</a> constrain firings.</td></tr>
+    <tr><td>Anchoring</td><td class="wrap"><code>make audit</code>: every clause parses, every model-tier atom resolves. <code>make audit-full</code>: battery plus re-proven committed queries.</td></tr>
+    <tr><td>Meaning</td><td class="wrap">Whether a clause <em>means</em> the English is the author's judgment, made once, reviewed as the <code>&lt;leaf&gt;.cue</code> diff. <code>make skills-check</code> keeps it canonical, the skill dir free of generated files; nothing model-shaped can drift.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

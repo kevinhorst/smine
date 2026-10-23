@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thinking · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Thinking</h1>
+<p class="lede">How extended-thinking tokens relate to next-token prediction and to the output the user sees.</p>
+<p>Grounds harness decisions on effort levels, session splitting and fan-out. Not an Anthropic spec: the published API model plus what the client observes. Cache effect of a thinking change: <a href="cache-token.html#worked-example-cache-miss">Prompt caching</a>.</p>
+
+<h2 class="first" id="one-stream-no-second-mechanism">One stream, no second mechanism</h2>
+<p>Thinking and visible output come from one autoregressive loop: one forward pass per token, sample, append, repeat. A thinking block is a span between special tokens that post-training (RL against outcome rewards) teaches the model to use for pre-answer deliberation. The API splits spans into <code>thinking</code> and <code>text</code> blocks; the model sees one sequence.</p>
+<table class="doc plain">
+  <thead><tr><th>Consequence</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Thinking tokens are output tokens</td><td class="wrap">Billed as output, counted against <code>max_tokens</code>, capped by the effort or budget parameter. Slashing the budget only caps how long the pre-answer span runs.</td></tr>
+    <tr><td>The answer attends to the thinking</td><td class="wrap">Via ordinary attention, like any context; nothing summarizes or distills the scratchpad into the answer.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="why-more-thinking-tokens-buy-capability">Why more thinking tokens buy capability</h2>
+<p>A transformer spends fixed compute per token: one pass through the layers. Between steps only the KV cache carries state, holding only what was emitted or read. Tokens are the only medium for multi-step computation: step 3's result must exist as tokens before step 7 can use it.</p>
+<p>Serial computation scales linearly with tokens: a 10k-token span is ~10k extra forward passes with attendable intermediate products, a 123-token span 123. Long dependency chains (reconciling documents, eliminating hypotheses in order, tracking case splits) must be written out link by link.</p>
+<p>Effort levels do only this. A smaller budget removes serial steps, not per-token intelligence, so the model commits earlier.</p>
+<div class="callout callout-warn">
+  <span class="badge badge-warn">Failure mode</span>
+  <p>Greedy commitment: the first salient reading of an ambiguous instruction wins, because the arbitration steps that would reject it were never generated. It looks like anchoring and literal-minimal reading, not forgetting: distant context is attended but no longer weighed against alternatives.</p>
+</div>
+
+<h2 id="interleaved-thinking-in-agent-loops">Interleaved thinking in agent loops</h2>
+<p>An agent turn is many calls: think → tool call → tool result → think → tool call → … Choosing the next call rarely needs a long chain, so reasoning slices into short inter-tool blocks. The "Inference Gap" analysis measured this: a low per-call median over agent traffic is mostly slicing, not necessarily a cut.</p>
+<p>A chain interrupted by a tool call must survive the round trip as written context; harnesses manage thinking aggressively:</p>
+<ul>
+  <li>Prior-turn thinking may be stripped or pruned on later calls (cache management). Only visible text, files and tool results reliably persist.</li>
+  <li>Some model tiers redact or encrypt thinking client-side and never persist it in transcripts.</li>
+</ul>
+<div class="callout">
+  <span class="badge badge-ok">Rule</span>
+  <p>Externalize reasoning that must survive: plans, assumptions tables, ledgers, findings files. A conclusion on disk survives budget caps and pruning; one only in a thinking span is gone once pruned.</p>
+</div>
+
+<h2 id="serial-depth-vs-parallel-width">Serial depth vs parallel width</h2>
+<p>Thinking is serial compute; the two ways to buy computation are not interchangeable.</p>
+<table class="doc plain">
+  <thead><tr><th>Lever</th><th>Buys</th><th>Use when</th></tr></thead>
+  <tbody>
+    <tr><td>Serial: more thinking per attempt</td><td class="wrap">A longer dependency chain.</td><td class="wrap">The answer needs the chain: design decisions, root-cause elimination.</td></tr>
+    <tr><td>Parallel: more attempts</td><td class="wrap">n independent shallow chains.</td><td class="wrap">A cheap verifier selects among candidates (verification asymmetry: recognizing a correct finding is cheaper than producing one). Review fan-out with refuters works; n parallel shallow designs without a selection gate are n wrong answers.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="faithfulness-caveat">Faithfulness caveat</h2>
+<p>Thinking text is trained for outcome, not honest narration: the medium of the computation, not necessarily a faithful account of it. The model may reach an answer for reasons the scratchpad never states. Treat visible thinking as a capability mechanism, not an audit log.</p>
+
+<h2 id="summary-table">Summary table</h2>
+<table class="doc plain">
+  <thead><tr><th>Property</th><th>Implication</th></tr></thead>
+  <tbody>
+    <tr><td>Thinking tokens = output tokens, same loop</td><td class="wrap">Budget caps are token caps on the pre-answer span.</td></tr>
+    <tr><td>No inter-step state except emitted tokens</td><td class="wrap">Serial compute scales with tokens generated.</td></tr>
+    <tr><td>Answer attends to scratchpad via normal attention</td><td class="wrap">Nothing survives that isn't written down.</td></tr>
+    <tr><td>Agent loops slice thinking across tool calls</td><td class="wrap">Per-call thinking is naturally short; chains must survive as artifacts.</td></tr>
+    <tr><td>Harnesses prune prior thinking from context</td><td class="wrap">Externalize conclusions to files, not scratchpad.</td></tr>
+    <tr><td>Parallel attempts ≠ serial depth</td><td class="wrap">Fan out only what a verifier can select.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

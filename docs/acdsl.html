@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context Linting · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Context Linting</h1>
+<p class="lede">A lint gate for agent context: one rule line binds a file pattern to a registered checker, and the same line is what the agent reads when it opens the file.</p>
+<p>ACDSL (Agentic Context Domain Specific Linter) is a wrapper around deterministic checkers. A rule names the files it governs and the program that checks them; <code>acdsl check</code> runs the program, the Read hook delivers the rule's text to the agent, and a verdict log counts how often each rule went red while its text was in context. That log decides which prose stays and which rule becomes gate-only. The language itself is a dozen fields on one line. The full paper, with the experiments behind the design, is <a href="media/acdsl-spec.pdf">acdsl-spec.pdf</a>.</p>
+
+<h2 class="first" id="a-rule">A rule</h2>
+<p>One line per rule in <code>acdsl/rules.acdsl</code> (task contracts live in their plan directories). The marker is the file class's comment prefix plus <code>acdsl:</code>; a <code>.md</code> or <code>.html</code> file closes it with <code>--&gt;</code>.</p>
+<pre class="file-view" data-lang="acdsl">//acdsl:ACDSL-GOLANG-FMT-001 gofmt anchor="\.go$" anchor-not="(/testdata/|^vendor/)" why="Every Go file is gofmt-formatted — run gofmt -w before committing"</pre>
+<table class="doc">
+  <thead><tr><th>Field</th><th>Required</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>ID</td><td>yes</td><td class="wrap"><code>KIND-SCOPE[-TOPIC]-NNN</code>; scope and topic must be registered in <code>context/aspects.json</code> (gate-enforced by <code>ACDSL-SMINE-003</code>). Verdict statistics key on it, so renaming a rule restarts its statistics.</td></tr>
+    <tr><td>VERIFIER</td><td>yes</td><td class="wrap">A name in the registry. Only registered programs run: rules are data, verifiers are code.</td></tr>
+    <tr><td>anchor</td><td>yes</td><td class="wrap">RE2 over repo-relative paths; where the rule is declared carries no meaning. An anchor matching no file is a violation (the typo guard), except for task contracts, where the missing file is the finding.</td></tr>
+    <tr><td>anchor-not</td><td></td><td class="wrap">RE2 exclusion applied after <code>anchor</code>.</td></tr>
+    <tr><td>why</td><td>yes</td><td class="wrap">The sentence the agent reads and every failure cites. Cite the context entry it enforces in parentheses: that citation is the coverage metric on the Context tab.</td></tr>
+    <tr><td>lifetime</td><td></td><td class="wrap"><code>doctrine</code> (default, gated on every run) or <code>task</code>: a plan's promised artifact, red until it exists, gated with <code>-lifetime task</code>, retired by renaming the file away from <code>.acdsl</code>.</td></tr>
+    <tr><td>reach</td><td></td><td class="wrap"><code>smine</code> (default: this repo), <code>global</code>, <code>none</code> (disabled, fixtures still run), or a list of target repo names.</td></tr>
+    <tr><td>projected</td><td></td><td class="wrap"><code>false</code> makes the rule gate-only: the gate runs, the text reaches no prompt. See <a href="#the-ablation-loop">The ablation loop</a>.</td></tr>
+    <tr><td>empty, needs</td><td></td><td class="wrap"><code>empty="ok"</code> tolerates a zero-match anchor (archived plans); <code>needs="p1,p2"</code> skips the rule while a file the verifier reads is absent.</td></tr>
+    <tr><td>key="value"</td><td></td><td class="wrap">Anything else is passed to the verifier as a parameter.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <span class="badge badge-dim">Authoring errors</span>
+  <p>A malformed field, a missing anchor or why, a duplicate ID or an unregistered verifier is reported as a violation (exit 1), through the same channel as a rule breach.</p>
+</div>
+
+<h2 id="the-registry-and-the-verifier-contract">The registry and the verifier contract</h2>
+<p><code>acdsl/registry.json</code> maps a name to an invocation; a target repo overlays any name through <code>acdsl/registry.local.json</code> without touching the rules. <code>argv</code> must be non-empty, <code>timeout_s</code> within 1..300.</p>
+<pre class="file-view" data-lang="json">"gofmt": {
+  "argv": ["go", "run", "./cmd/acdsl/verifiers/gofmtwrap"],
+  "timeout_s": 30,
+  "description": "fails when an anchored file is not gofmt-formatted"
+}</pre>
+<p>Any executable that honors the contract can stand behind a name. The engine calls <code>&lt;argv...&gt; &lt;files-list-path&gt; [key=value ...]</code> under the entry's timeout; baseline verifiers shell out only through <code>internal/shell.Run</code> to allowlisted programs.</p>
+<table class="doc">
+  <thead><tr><th>Exit</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>Pass.</td></tr>
+    <tr><td>1</td><td class="wrap">Violations, one per stdout line as <code>file:line: message</code>. Exit 1 without such a line still surfaces as a diagnostic.</td></tr>
+    <tr><td>≥ 2</td><td class="wrap">Tool error; the whole check run aborts.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="check">Check</h2>
+<p><code>acdsl check</code> builds the git file universe once (<code>git ls-files --cached --others --exclude-standard</code>, so untracked files the agent just wrote are seen), resolves every anchor, runs each verifier, prints one line per violation (<code>message: [RULE-ID] verifier — why</code>, or JSON with <code>-json</code>) and appends a verdict record. It also refuses staged projection blocks and blocks committed at HEAD.</p>
+<table class="doc">
+  <thead><tr><th>Where it runs</th><th>How</th></tr></thead>
+  <tbody>
+    <tr><td>make audit</td><td class="wrap">Builds <code>bin/acdsl</code> and <code>bin/verifiers/*</code>, strips projection blocks, regenerates, then runs <code>check</code> (verdicts cached under <code>bin/acdsl-cache/</code>, scope per registry entry) and <code>fixtures</code> beside vet, the skill checks and the Go tests.</td></tr>
+    <tr><td>Agent read time</td><td class="wrap">The <code>acdslhook</code> PostToolUse hook: see <a href="#what-the-agent-sees">What the agent sees</a>. It never blocks a read.</td></tr>
+    <tr><td>Agent write time</td><td class="wrap">The tool-policy gate guards the rule surface per the <a href="#modes">mode</a>.</td></tr>
+    <tr><td>Commit</td><td class="wrap">The pre-commit hook runs <code>acdsl guard</code>, the staged-projection scan alone.</td></tr>
+    <tr><td>CI</td><td class="wrap">The <code>audit</code> job runs <code>make audit</code>; the <code>test</code> job's <code>make test-acdsl-smoke</code> (<code>cmd/acdsl/smoke_test.go</code>) asserts the rule and fixture counts with <code>ACDSL_VERDICTS_ENABLED=0</code>.</td></tr>
+  </tbody>
+</table>
+<p><strong>Fixtures.</strong> Every rule carries pass and fail sets under <code>acdsl/testdata/&lt;rule-id&gt;/</code>; <code>acdsl fixtures</code> proves the verifier against them. A rule without a failing fixture is unproven, and eviction needs green fixtures.</p>
+
+<h2 id="what-the-agent-sees">What the agent sees</h2>
+<p>In a Claude session the <code>acdslhook</code> PostToolUse(Read) hook injects the governing rules beside the Read result, as <code>- [ID] why</code> lines under <code>ACDSL rules governing &lt;path&gt;:</code>, on every read. The file on disk is never touched. It acts only when the session cwd holds <code>acdsl/registry.json</code>; park its hook group on the Hooks tab or type <code>#disable inject:acdsl</code> to switch it off.</p>
+<p>For consumers that read bytes, <code>acdsl project -file &lt;path&gt;</code> writes the same lines into the file as a comment block in the file class's own syntax (never into JSON, <code>.cue</code>, <code>.js</code>, <code>.bru</code>, <code>.acdsl</code> or binaries). Blocks are working-copy only: <code>make audit</code>, the routine runner and the pre-commit hook strip or refuse them, and <code>acdsl check</code> refuses a committed one. Rules whose own consumers would break on a block carry <code>projected="false"</code> (<code>ACDSL-SMINE-001</code>, <code>ACDSL-GOLANG-DOCS-001</code>, <code>ACDSL-SMINE-004</code> to <code>-010</code>).</p>
+<p><code>acdsl project -plan &lt;path&gt;</code> answers which rules would govern a path that does not exist yet; design plans record their planned files' rules through it.</p>
+
+<h2 id="the-ablation-loop">The ablation loop</h2>
+<p>Every check run appends one JSONL record to <code>$ACDSL_VERDICTS_PATH</code>, else <code>~/.claude/acdsl/verdicts.jsonl</code> (home-anchored, since worktrees die with their sessions). Zero-violation rows are the denominator; the branch is the session proxy. Logging is best-effort and never changes the exit code; <code>ACDSL_VERDICTS_ENABLED=0</code> disables it.</p>
+<pre class="file-view" data-lang="json">{"ts": "2026-08-07T12:00:00Z", "root": "/abs/worktree", "branch": "claude/slug", "outcome": "clean",
+ "rules": [{"id": "ACDSL-GOLANG-EXEC-001", "projected": true, "violations": 0}],
+ "diagnostics": [{"id": "ACDSL-GOLANG-EXEC-001", "message": "file.go:12: ..."}]}</pre>
+<p>Statistics are keyed on (rule, projected): a rule flipped mid-window shows two rows, and that pair is the A/B comparison. <code>check</code> and <code>fixtures</code> never read the flag; enforcement is the constant, delivery the variable, and the prompt side carries no "also enforced" hint that would contaminate the arm.</p>
+<pre class="file-view" data-lang="bash">acdsl verdicts -since 720h</pre>
+<table class="doc plain">
+  <thead><tr><th>Decision</th><th>Criterion</th></tr></thead>
+  <tbody>
+    <tr><td>Evict to gate-only</td><td class="wrap">Verifier and fixtures green, and ≥ 300 logged runs on the projected arm with zero reds. Any red keeps the projection: ten 1 % failures are ten failed features, so a low red rate is never an argument.</td></tr>
+    <tr><td>Re-project</td><td class="wrap">Any red on the gate-only arm flips the rule back.</td></tr>
+    <tr><td>Cadence</td><td class="wrap">A monthly <code>verdicts -since 720h</code> review. The Context tab flags both candidate classes and never flips; a flip is one field edit plus a commit.</td></tr>
+  </tbody>
+</table>
+<p>The bar is a calibration, not a constant; the rule set churns, so the arms are never stationary. What the loop reliably gives is visibility: a heavily violated rule is unmissable. The end state is context that shrinks toward judgment rules and facts while everything mechanical lives as a gate.</p>
+
+<h2 id="how-a-rule-gets-made">How a rule gets made</h2>
+<p>The nightly <code>smine-acdsl</code> stage mines rules sessions keep breaking into change tasks; <code>/fimplement</code> lands each as one commit. Every task declares its route, in priority order; the lower routes are last resorts.</p>
+<ol class="steps">
+  <li><strong>Established-tool config</strong><p>The check fits a tool the repo already gates with (golangci-lint via <code>.golangci.yml</code>, shellcheck, a JSON schema): a config edit, plus a <code>rules.acdsl</code> line on the existing wrapper verifier when the rule is new. The tool's config is the configuration surface, never a custom reimplementation.</p></li>
+  <li><strong>Existing registry verifier</strong><p>A registered verifier covers it with other params or anchors: one <code>rules.acdsl</code> line (next free ID in its family) plus fixtures. No new code.</p></li>
+  <li><strong>Generated verifier</strong><p>Only when the task says why routes 1 and 2 fail: the run generates the verifier, the registry entry, the rule and the fixtures, then proves them (<code>acdsl fixtures</code>, <code>check -rule &lt;id&gt;</code>, <code>make audit</code>). Bounds in <code>acdsl/evalgen.json</code>, enforced by <code>ACDSL-GOLANG-GEN-001</code>: Go only, a line cap, imports from the stdlib, this module or go.mod's require set (generation never adds a dependency), an exec allowlist, a timeout cap, bands F and A only, and <code>autoApply: false</code> so a nightly run never generates one unattended.</p></li>
+</ol>
+
+<h2 id="golangci-lint-beside-it">golangci-lint beside it</h2>
+<table class="doc plain">
+  <thead><tr><th>Gate</th><th>Job</th></tr></thead>
+  <tbody>
+    <tr><td>golangci-lint</td><td class="wrap">Generic Go hygiene (<code>errcheck</code>, <code>gosec</code>, <code>staticcheck</code>, …) and the <code>[lint]</code>-tagged slices of house rules. <code>make lint</code> is the differential CI gate: only lines the branch changed.</td></tr>
+    <tr><td>ACDSL</td><td class="wrap">House doctrine no ecosystem linter encodes: the <code>Component.Method:</code> error prefix, the test schema, <code>new(expr)</code> initialization, exec through <code>internal/shell</code>. Whole-file, per rule, logged.</td></tr>
+  </tbody>
+</table>
+<p>The seam is the tag doctrine of <code>context/rules/go.md</code>: a rule is <code>[lint]</code> with a <code>Covered by &lt;linter&gt;</code> bullet, or <code>[prose]</code>; a partly automatable rule is split in two. The gate <code>ACDSL-GOLANG-DOCS-001</code> (<code>linttags</code>) reads <code>.golangci.yml</code> as text and goes red when a <code>Covered by</code> claim names a linter the config does not enable, so the config needs an explicit enable list. Where golangci-lint stands behind an ACDSL rule (<code>ACDSL-GOLANG-LINT-001</code>, registry entry <code>golangci</code>), the wrapper groups files by directory, reads JSON from a file, lifts the issue caps, drops <code>(typecheck)</code> findings and keeps findings on anchored files. Several linters fight the house style and stay off: <code>ST1003</code> and revive's initialism check, <code>ST1005</code>, <code>fieldalignment</code>, <code>gochecknoinits</code>, <code>gocritic/elseif</code>.</p>
+
+<h2 id="modes">Modes</h2>
+<p><code>acdsl/policy.json</code> says who may change the rule system. <code>acdsl check</code> enforces it (compiled into <code>bin/acdsl</code>) by diffing the working tree against <code>merge-base(HEAD, base)</code>, the base found from <code>origin/HEAD</code> → <code>origin/main</code> → <code>main</code> → <code>master</code>; the tool-policy gate refuses the writes at once. An agent branch cannot self-escalate; an unresolvable base in strict or gated mode is a hard error.</p>
+<table class="doc">
+  <thead><tr><th>Mode</th><th>Editable</th></tr></thead>
+  <tbody>
+    <tr><td>strict</td><td class="wrap">Nothing: no rule, registry, evalgen or policy change, no unsanctioned overlay entry.</td></tr>
+    <tr><td>gated</td><td class="wrap">Rules in the scopes of <code>editable_scopes</code>, binding verifiers from <code>verifier_allowlist</code>; the policy, registry, evalgen, <code>bin/acdsl</code> and every verifier path stay frozen. The default shipped to targets.</td></tr>
+    <tr><td>free</td><td class="wrap">Everything (an absent file). What smine itself runs.</td></tr>
+  </tbody>
+</table>
+<p>Task contracts stay usable in every mode while <code>allow_task_contracts</code> is true. New verifier binaries never depend on the mode: they go through the evalgen flow. For client-level strictness a target can also deny <code>Edit(acdsl/**)</code>, <code>Write(acdsl/**)</code>, <code>Edit(**/*.acdsl)</code> and <code>Write(**/*.acdsl)</code> in its <code>.claude/settings.json</code>.</p>
+
+<h2 id="reach-and-distribution">Reach and distribution</h2>
+<p><code>acdsl dist -target &lt;name&gt; -dest &lt;dir&gt;</code> ships a target's slice: the reach-covered rules as verbatim lines under a synced-from-smine header, the registry subset they name with argv rewritten to <code>bin/verifiers/&lt;name&gt;</code>, the prebuilt binaries and <code>policy.json</code> (mode from the source's <code>dist_mode</code>). The Context page's sync calls it in process when "sync acdsl" is on. A rule ships only when the target has files its anchor matches; skipped rules are reported and picked up by a later sync. Targets own their own <code>*.acdsl</code> files and <code>registry.local.json</code>; in a strict or gated target only entries listed in the policy's <code>local_overrides</code> are accepted. The deployed read hook activates by itself and logs to the shared home verdict sink.</p>
+
+<h2 id="the-context-tab">The Context tab</h2>
+<p>The config server's Context tab shows the rule cards with their delivery badge and per-arm red rates, the eviction and re-projection candidates, the coverage derived from <code>why</code> citations, a run-fixtures button and the recent gate runs. <code>reach</code> is editable there; delivery is not. Scopes are the shared taxonomy of <code>context/aspects.json</code>: a rule's scope is its ID's second segment, an unregistered one shows amber, and a member cited by any rule cannot be deleted.</p>
+
+<h2 id="commands">Commands</h2>
+<p>Source <code>cmd/acdsl/main.go</code>. Exit codes: 0 clean, 1 violations, 2 tool error. Environment: <code>ACDSL_VERDICTS_PATH</code>, <code>ACDSL_VERDICTS_ENABLED=0</code>.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>acdsl check</td><td class="wrap">Resolve anchors, run verifiers, print violations, log verdicts. <code>-json</code>, <code>-lifetime doctrine|task|all</code>, <code>-rule &lt;id&gt;</code> (one rule, the dry run for a new verifier), <code>-registry &lt;file&gt;</code> (overlay by name), <code>-report &lt;file&gt;</code>, <code>-root &lt;dir&gt;</code>.</td></tr>
+    <tr><td>acdsl fixtures</td><td class="wrap">Prove each rule's verifier against its pass and fail sets.</td></tr>
+    <tr><td>acdsl guard</td><td class="wrap">The staged-projection scan alone (the pre-commit hook).</td></tr>
+    <tr><td>acdsl project -context &lt;path&gt;</td><td class="wrap">The delivered rules of a governed file (the read hook's data source).</td></tr>
+    <tr><td>acdsl project -file &lt;path&gt;</td><td class="wrap">Insert, refresh or remove the on-disk block for byte readers.</td></tr>
+    <tr><td>acdsl project -strip</td><td class="wrap">Remove every block (the pre-commit sweep).</td></tr>
+    <tr><td>acdsl project -plan &lt;path&gt;</td><td class="wrap">The rules that would govern a path that need not exist yet.</td></tr>
+    <tr><td>acdsl verdicts</td><td class="wrap">Aggregate the log per (rule, projected): runs, reds, violations, last red. <code>-path</code>, <code>-since &lt;duration&gt;</code>.</td></tr>
+    <tr><td>acdsl dist</td><td class="wrap">Ship a target's slice. <code>-target</code>, <code>-dest</code>, <code>-root</code>, <code>-task</code>.</td></tr>
+  </tbody>
+</table>
+<table class="doc">
+  <thead><tr><th>File</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>acdsl/rules.acdsl</td><td class="wrap">The doctrine rules, one line each; its header documents the local conventions.</td></tr>
+    <tr><td>acdsl/registry.json</td><td class="wrap">Verifier name → <code>{argv, timeout_s, description}</code>; <code>registry.local.json</code> overlays by name in a target.</td></tr>
+    <tr><td>acdsl/testdata/&lt;rule-id&gt;/</td><td class="wrap">Pass and fail fixtures.</td></tr>
+    <tr><td>acdsl/policy.json, acdsl/evalgen.json</td><td class="wrap">The mode; the generation bounds.</td></tr>
+    <tr><td>~/.claude/acdsl/verdicts.jsonl</td><td class="wrap">The verdict log.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

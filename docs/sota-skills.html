@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skills standard · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Skills standard</h1>
+<p class="lede">State of the art of the Agent Skills standard and adjacent agent standards, and where this repo's skill model stands against them.</p>
+<p>Researched 2026-09-18 in session <code>4f0a68f9-1435-4150-bb9e-84567dc7db02</code> (harness-exploration-status). The repo's own skill format: <a href="skillcue.html">the skill model</a>. Transport protocols: <a href="sota-mcp.html">MCP</a>, <a href="sota-acp.html">ACP</a>.</p>
+
+<h2 class="first" id="agent-skills-standard">Agent Skills standard</h2>
+<table class="doc plain">
+  <thead><tr><th>Aspect</th><th>Finding</th></tr></thead>
+  <tbody>
+    <tr><td>The standard</td><td class="wrap">Open, at agentskills.io (Anthropic, Dec 2025): a folder plus SKILL.md with two required YAML fields (name, description) and a prose body. Optional: license, compatibility, metadata; <code>allowed-tools</code> is experimental. Spec repo <a href="https://github.com/agentskills/agentskills">agentskills/agentskills</a>: ~40 open issues, no published roadmap.</td></tr>
+    <tr><td>Scope</td><td class="wrap">Packaging only: no versioning, dependencies, structured or compiled format, validation or semantics. No skill IR or formal-verification tooling exists anywhere in the ecosystem, so this repo's format-2 + typed <code>&lt;leaf&gt;.cue</code> model + Z3 model tier has no incumbent and no visible competition.</td></tr>
+    <tr><td>Adoption</td><td class="wrap">Real and cross-harness: SKILL.md is native in OpenAI Codex CLI, Gemini CLI, GitHub Copilot, VS Code, Cursor, ~40 products. A harness-neutral skill IR compiling down to SKILL.md rides this distribution instead of fighting it.</td></tr>
+    <tr><td>Skills Over MCP</td><td class="wrap">SEP-2640, AAIF working group: skills served as read-only MCP Resources under <code>skill://</code> URIs, with a <code>skill://index.json</code> catalog for progressive disclosure. Early prototypes, yet the only live standards work on skill packaging semantics. Watch it: it shapes what an IR must serialize to (<a href="https://aaif.io/blog/skills-over-mcp">aaif.io/blog/skills-over-mcp</a>).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="adjacent-standards">Adjacent standards</h2>
+<p>Status as of 2026-09.</p>
+<table class="doc plain">
+  <thead><tr><th>Standard</th><th>Status</th><th>For this stack</th></tr></thead>
+  <tbody>
+    <tr><td>AGENTS.md</td><td class="wrap">A deliberately spec-free markdown convention, AAIF-stewarded, 60k+ repos.</td><td class="wrap">Refuses structure; nothing to build on.</td></tr>
+    <tr><td>Evals</td><td class="wrap">No open standard exists or incubates (AAIF has none). The one convergent pattern is the OpenAI Codex recipe: prompt → captured JSONL trace (<code>codex exec --json</code>) → deterministic checks plus schema-constrained rubric grading.</td><td class="wrap">Structurally identical to this repo's skilleval. Aligning vocabulary is cheap insurance; there is no format to conform to.</td></tr>
+    <tr><td>Codex hooks</td><td class="wrap">Shipped, feature-flagged <code>hooks.json</code>: shell scripts at loop points, a direct analogue of Claude Code hooks. Its <code>exec --json</code> JSONL is a de-facto transcript format.</td><td class="wrap">No cross-harness hook or transcript standard, so supervision frontends stay per-harness.</td></tr>
+    <tr><td>A2A v1.0/v1.0.1</td><td class="wrap">Agent ↔ agent, Linux Foundation, 150+ orgs.</td><td class="wrap">A different layer; irrelevant until multiple cooperating agents are fronted.</td></tr>
+    <tr><td>Agent identity and auth</td><td class="wrap">Pre-standard: two individual IETF drafts (not WG-adopted), OpenID AuthZEN framing; multi-hop delegation unsolved.</td><td class="wrap">Build nothing on it.</td></tr>
+    <tr><td>WebMCP, K8s agent-sandbox, payments, OWASP ANS, Agntcy</td><td class="wrap">WebMCP is a W3C CG draft in a Chrome origin trial; payments are AP2/x402/Agentic Commerce.</td><td class="wrap">Noise.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="net">What it means for smine</h2>
+<div class="callout">
+  <span class="badge badge-ok">Decision</span>
+  <p>Standards cover transport (MCP, ACP) and packaging (SKILL.md). Execution semantics and evaluation have zero incumbent and zero incubation: exactly the layers built here (skill IR, Z3 semantics, skilleval). Build them, keep SKILL.md as the compile target, track SEP-2640.</p>
+</div>
+</body>
+</html>

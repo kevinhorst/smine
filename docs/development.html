@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Development · smine docs</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script src="assets/docs.js" defer></script>
+</head>
+<body class="docs">
+<h1>Development</h1>
+<p class="lede">Working on smine itself, from a checkout: every repo command is a make target.</p>
+<p>A development checkout has no <code>bin/PAYLOAD</code> marker, so the apply engine and every Sync build the binaries with <code>go build</code> (<a href="install.html">Install § From source</a>). Every make target is admitted by one gate rule, <code>Bash(make *)</code> (<a href="permissions.html#make-is-the-command-surface">Permission System</a>).</p>
+
+<h2 class="first" id="run">Run</h2>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>make serve</td><td class="wrap">Builds and runs the config server on <code>:6001</code> against <code>~/.claude/settings.json</code>.</td></tr>
+    <tr><td>make serve-dev</td><td class="wrap">Sandboxed, detached server for this checkout; returns once listening. Free port (printed), <code>bin/dev/home</code>, no credential. <code>DEV_CLAUDE_HOME=&lt;dir&gt;</code>: another Claude home, ACDSL ledger included.</td></tr>
+    <tr><td>make serve-dev-stop</td><td class="wrap">Stops this checkout's last <code>serve-dev</code> (pid in <code>bin/dev/serve-dev.pid</code>), then drops the Go module cache a sandboxed apply left under <code>bin/dev/home/go</code>: Go creates it read-only, and <code>git worktree remove</code> cannot delete it, so a worktree that saved a Smine setting would otherwise refuse to close. The next <code>serve-dev</code> downloads again.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="build-test-audit">Build, test, audit</h2>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>make build</td><td class="wrap">Go tools and Rust binaries to <code>./bin</code>.</td></tr>
+    <tr><td>make test</td><td class="wrap">Tests, race detector on.</td></tr>
+    <tr><td>make test-acdsl-smoke</td><td class="wrap">The acdsl smoke (<code>cmd/acdsl/smoke_test.go</code>) alone: it projects, stages and strips real tracked files.</td></tr>
+    <tr><td>make audit</td><td class="wrap">Fast gate. Serial: build-audit, projection strip, generate. Concurrent: mod verify, vet, cross-build, skills-check, golden-check, workflow-gen-check, fragment-check, acdsl check (verdicts cached per checkout), fixtures, Go tests (no race detector), changed Rust crates. <code>SCOPE=all</code>: both crates; <code>BASE=&lt;ref&gt;</code> overrides the derived branch base.</td></tr>
+    <tr><td>make audit-full</td><td class="wrap">Release gate. Same prefix; concurrent gates, race tests, changed Rust crates, model batteries and queries; then the acdsl smoke alone. <code>SCOPE=</code>, <code>BASE=</code> as for audit.</td></tr>
+    <tr><td>make cross-build</td><td class="wrap">Windows Go build, Linux Go vet: the forms CI proves. In audit.</td></tr>
+    <tr><td>make audit-linux</td><td class="wrap">CI's Linux audit and test jobs in a container (latest stable Rust, unprivileged user) on a checkout snapshot. Needs Docker; not in audit.</td></tr>
+    <tr><td>make golden-check</td><td class="wrap">Checks the eval goldens are current. In audit.</td></tr>
+    <tr><td>make workflow-gen</td><td class="wrap">Regenerates the skills' workflow stage files from their sources; <code>workflow-gen-check</code> is in audit.</td></tr>
+    <tr><td>make lint</td><td class="wrap">golangci-lint over the module.</td></tr>
+  </tbody>
+</table>
+<p>Each concurrent unit prints PASS or FAIL; full output in <code>bin/test-logs/&lt;unit&gt;.log</code>.</p>
+
+<h2 id="tools">Tools</h2>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>make acdsl ARGS=…</td><td class="wrap">acdsl runner: <code>check</code>, <code>fixtures</code>, <code>project -strip</code>, <code>project -plan &lt;path&gt;</code>.</td></tr>
+    <tr><td>make rules ARGS=…</td><td class="wrap">Rules tool: <code>generate</code>, <code>walk</code>, <code>render-skill &lt;skill dir&gt;</code> …</td></tr>
+    <tr><td>make generate</td><td class="wrap">Short for <code>make rules ARGS="generate"</code>: untracked <code>context/context.json</code> from the entry docs, plus <code>context/aspects.json</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="skills">Skills</h2>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>make skill-render SKILL=x</td><td class="wrap">Checks the model; re-saves <code>&lt;leaf&gt;.cue</code> and payloads canonically.</td></tr>
+    <tr><td>make skills-check</td><td class="wrap">In audit. Fails on: non-canonical <code>&lt;leaf&gt;.cue</code>; leftover <code>skill.cue</code>; invalid model; orphaned payload; generated or markdown-era file in a skill dir; SKILL.md without <code>&lt;leaf&gt;.cue</code>; pipeline edge the other skill does not mirror; <code>Skill(&lt;leaf&gt;)</code> grant without a reaching edge; atom no pred reads; no smoke block.</td></tr>
+    <tr><td>make skill-export SKILL=x</td><td class="wrap">Model with merged atoms as JSON.</td></tr>
+    <tr><td>make skill-import DIR=x</td><td class="wrap">Imports a markdown-only skill dir or <code>vocabulary.json</code> into the model.</td></tr>
+    <tr><td>make skill-smoke SKILL=x TOKEN=label</td><td class="wrap">Runs the declared smoke on its dummy input; prints the verdict.</td></tr>
+    <tr><td>make skill-smoke-verdict SKILL=x SESSION=id</td><td class="wrap">Judges an interactive smoke's session.</td></tr>
+    <tr><td>make skill-bundle</td><td class="wrap">Standalone bundle to <code>dist/skills</code>; fails on a smine reference.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="skill-model">Skill model</h2>
+<p>The z3 analysis behind these targets: <a href="skillcue.html#z3-analysis">Skill model § Z3 analysis</a>.</p>
+<table class="doc">
+  <thead><tr><th>Command</th><th>Does</th></tr></thead>
+  <tbody>
+    <tr><td>make model-check SKILL=x</td><td class="wrap">One skill's clause checks plus z3 battery (z3 on the model tier only).</td></tr>
+    <tr><td>make model-query SKILL=x EXPR='…'</td><td class="wrap">Does the model imply <code>EXPR</code>? <code>unsat</code>: holds, with the proving core. Example: <code>EXPR='not asks_user'</code>.</td></tr>
+    <tr><td>make model-diagram SKILL=x [PHASES=1] [JSON=1]</td><td class="wrap">Derived model as mermaid <code>stateDiagram-v2</code> on stdout.</td></tr>
+    <tr><td>make model-analyze SKILL=x</td><td class="wrap">model-check plus every committed query in the skill's <code>queries/</code>.</td></tr>
+    <tr><td>make model-queries SKILL=x</td><td class="wrap">Committed queries alone.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="docs-hosting">Docs hosting</h2>
+<p><code>docs/</code> is served at <a href="https://smine.info">smine.info</a> via Firebase Hosting (project <code>smine-f5938</code>, config <code>firebase.json</code> at the repo root). Every release tag redeploys it: the <code>docs</code> job in <code>.github/workflows/ci.yml</code> runs on <code>v*.*.*</code> tags with the <code>FIREBASE_SERVICE_ACCOUNT_SMINE</code> repository secret. <code>make docs-deploy</code> deploys by hand from a <code>firebase login</code>ed machine.</p>
+<p>One-time setup:</p>
+<ol>
+  <li>Create the Firebase project (<code>smine-f5938</code>) in the <a href="https://console.firebase.google.com">Firebase console</a> and enable Hosting.</li>
+  <li>Create the deploy credential: <code>firebase init hosting:github</code> writes the service account and the repository secret itself; or create a service account with the <em>Firebase Hosting Admin</em> role in the Google Cloud console and store its JSON key with <code>gh secret set FIREBASE_SERVICE_ACCOUNT_SMINE &lt; key.json</code> (discard any workflow files <code>hosting:github</code> generates — the <code>docs</code> job in <code>ci.yml</code> is the deploy).</li>
+  <li>Hosting → Add custom domain → <code>smine.info</code>, then copy the TXT verification record and the A records the console shows into the Ionos DNS panel for the domain (same flow as rollandrecord).</li>
+</ol>
+
+<h2 id="config-server-flags">Config server flags</h2>
+<p>Flags of <code>bin/configserver</code>; defaults are relative to the working directory. The installed server runs with the install record's values, so these matter when you run it by hand.</p>
+<table class="doc">
+  <thead><tr><th>Flag</th><th>Default</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>-repos</td><td>~/.claude/smine/repos.json</td><td class="wrap">Repo registry: machine state in the state dir, in no checkout.</td></tr>
+    <tr><td>-routines</td><td>routines</td><td class="wrap">One contract subdir per routine; <code>routines/_templates/</code> holds the packaging templates.</td></tr>
+    <tr><td>-evals</td><td>evals</td><td class="wrap">Eval results root, shown on each skill's Tests tab: <code>evals/&lt;skill&gt;/&lt;date&gt;-&lt;hash6&gt;[-&lt;n&gt;]/eval.json</code> or flat <code>evals/&lt;skill&gt;-&lt;date&gt;[-&lt;n&gt;]/</code>. A/B dirs <code>ab-…</code> never render.</td></tr>
+    <tr><td>-examples</td><td>examples</td><td class="wrap">Skill examples root.</td></tr>
+    <tr><td>-agentwt</td><td>bin/agentwt</td><td class="wrap">For worktree status and removal; made absolute at boot.</td></tr>
+    <tr><td>-context</td><td>context</td><td class="wrap">Context source root of the Context page.</td></tr>
+    <tr><td>-peek-port</td><td>4242</td><td class="wrap">peek-mcp HTTP port; <code>0</code> disables peek entirely.</td></tr>
+    <tr><td>-peek-control-port</td><td>42442</td><td class="wrap">peek-mcp control dashboard and OTLP receiver port (peek's canonical base); <code>0</code> disables the dashboard.</td></tr>
+    <tr><td>-peek-start</td><td>true</td><td class="wrap">Spawns peek-mcp when nothing serves the port. Reuses a listener only if its <code>/healthz</code> identity matches this profile's homes; else disables peek integration with a logged error.</td></tr>
+    <tr><td>-peek-bin</td><td>peek-mcp</td><td class="wrap">Resolved via PATH.</td></tr>
+    <tr><td>-claude-home</td><td>~/.claude</td><td class="wrap">Passed to the spawned peek-mcp.</td></tr>
+    <tr><td>-codex-home</td><td>~/.codex</td><td class="wrap">Passed to the spawned peek-mcp.</td></tr>
+  </tbody>
+</table>
+</body>
+</html>
