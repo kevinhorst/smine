@@ -1,0 +1,427 @@
+{
+  "anchors": {
+    "base": {
+      "capture": [
+        {
+          "name": "base_commit",
+          "pointer": "/commit"
+        }
+      ],
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "[|;&`]|\\$\\("
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules base "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "base_health": {
+      "capture": [
+        {
+          "name": "base_build",
+          "pointer": "/build"
+        },
+        {
+          "name": "base_tests",
+          "pointer": "/tests"
+        }
+      ],
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "[|;&`]|\\$\\("
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules buildtest .*--branch \\S+-basehealth(\\s|$)"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "cleanup": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules cleanup "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "fix_apply": {
+      "input": [
+        {
+          "field": "scriptPath",
+          "pattern": "/railroad-review/workflows/fix-apply\\.js$"
+        }
+      ],
+      "tool": "^Workflow$"
+    },
+    "fix_check": {
+      "input": [
+        {
+          "field": "scriptPath",
+          "pattern": "/railroad-review/workflows/fix-check\\.js$"
+        }
+      ],
+      "tool": "^Workflow$"
+    },
+    "fix_state_fixed": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules ledger (\\S+ )*--fix-state fixed(\\s|$)"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "head_buildtest": {
+      "capture": [
+        {
+          "name": "head_build",
+          "pointer": "/build"
+        },
+        {
+          "name": "head_tests",
+          "pointer": "/tests"
+        }
+      ],
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "[|;&`]|\\$\\("
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules buildtest .*--branch \\S+-buildtest-r[0-9]+(\\s|$)"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "hunk_read": {
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "--(numstat|name-only|name-status|stat)\\b"
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^git (-C \\S+ )?diff "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "lanes": {
+      "capture": [
+        {
+          "name": "lanes",
+          "pointer": "/lanes"
+        },
+        {
+          "name": "id_floor",
+          "pointer": "/idFloor"
+        },
+        {
+          "name": "known_path",
+          "pointer": "/knownPath"
+        }
+      ],
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "[|;&`]|\\$\\("
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules lanes "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "ledger": {
+      "capture": [
+        {
+          "name": "autofix",
+          "pointer": "/autofix"
+        },
+        {
+          "name": "oscillating",
+          "pointer": "/oscillating"
+        },
+        {
+          "name": "void_rounds",
+          "pointer": "/void_rounds"
+        }
+      ],
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "--reject "
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules ledger (\\S+ )*--round-dir "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "probe_replay": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules probe-replay "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "review_json": {
+      "capture": [
+        {
+          "name": "recommendation",
+          "pointer": "/recommendation"
+        }
+      ],
+      "exclude": [
+        {
+          "field": "command",
+          "pattern": "[;&`]|\\$\\("
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^jq .*round-[0-9]+/review\\.json(\\s|$)"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "round": {
+      "input": [
+        {
+          "field": "scriptPath",
+          "pattern": "/railroad-review/workflows/round\\.js$"
+        }
+      ],
+      "tool": "^Workflow$"
+    }
+  },
+  "checks": {
+    "cleanup_before_end": {
+      "after": "round",
+      "kind": "stop",
+      "reason": "railroad-review: run `smine-rules cleanup` for the round before ending the turn",
+      "recovery": "heartbeat runtime ({finding}): run the round's `smine-rules cleanup`, then end the turn",
+      "require": "cleanup"
+    },
+    "fix_after_ledger": {
+      "after": "ledger",
+      "kind": "requires",
+      "on": "fix_apply",
+      "reason": "railroad-review: run `smine-rules ledger --round-dir …` after the round, before the fix-apply stage — its `autofix` set is the fix set",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules ledger` for this round, then pass its `autofix` set to fix-apply.js",
+      "since": "round"
+    },
+    "fixed_after_fix_check": {
+      "after": "fix_check",
+      "kind": "requires",
+      "on": "fix_state_fixed",
+      "reason": "railroad-review: a row becomes fixed only after fix-check.js judged this round's fixes",
+      "recovery": "heartbeat runtime ({finding}): invoke workflows/fix-check.js over the fix commit, then pass its `fixed` ids",
+      "since": "fix_apply"
+    },
+    "fixed_after_replay": {
+      "after": "probe_replay",
+      "kind": "requires",
+      "on": "fix_state_fixed",
+      "reason": "railroad-review: a row becomes fixed only after `smine-rules probe-replay` ran against the post-fix head",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules probe-replay`, then leave its red finding ids out of `--ids`",
+      "since": "fix_apply"
+    },
+    "next_round_after_fix_check": {
+      "after": "fix_check",
+      "kind": "requires",
+      "on": "round",
+      "reason": "railroad-review: after fixes land, fix-check.js runs before the next round",
+      "recovery": "heartbeat runtime ({finding}): invoke workflows/fix-check.js over the fix commit, then start the next round",
+      "since": "fix_apply"
+    },
+    "next_round_after_ledger": {
+      "after": "ledger",
+      "kind": "requires",
+      "on": "round",
+      "reason": "railroad-review: a new round needs `smine-rules ledger --round-dir …` over the previous round first",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules ledger` for the previous round, then start the next",
+      "since": "round"
+    },
+    "next_round_after_replay": {
+      "after": "probe_replay",
+      "kind": "requires",
+      "on": "round",
+      "reason": "railroad-review: after fixes land, `smine-rules probe-replay` runs before the next round — a hit goes to the gate",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules probe-replay` against the post-fix head; hits go to the gate, then start the next round",
+      "since": "fix_apply"
+    },
+    "no_hunks": {
+      "deny": "hunk_read",
+      "from": "lanes",
+      "kind": "phase",
+      "reason": "railroad-review: the dispatcher never reads diff hunks — `git diff` content stays lane-side (`--numstat`, `--name-only` and `--stat` are fine)",
+      "recovery": "heartbeat runtime ({finding}): drop the hunk read; use `git diff --numstat` or read the lane artifacts",
+      "until": "cleanup"
+    },
+    "round_after_lanes": {
+      "after": "lanes",
+      "kind": "requires",
+      "on": "round",
+      "reason": "railroad-review: run `smine-rules lanes` before the round — its `lanes` array is the round's lanePlan",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules lanes`, then pass its `lanes` array as lanePlan",
+      "since": "cleanup"
+    },
+    "round_base_health_build": {
+      "arg": "/args/baseHealth/build",
+      "capture": "base_build",
+      "from": "base_health",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.baseHealth.build must be the `build` the base-health `smine-rules buildtest` printed",
+      "recovery": "heartbeat runtime ({finding}): pass the base-health buildtest result verbatim: {evidence}"
+    },
+    "round_base_health_tests": {
+      "arg": "/args/baseHealth/tests",
+      "capture": "base_tests",
+      "from": "base_health",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.baseHealth.tests must be the `tests` the base-health `smine-rules buildtest` printed",
+      "recovery": "heartbeat runtime ({finding}): pass the base-health buildtest result verbatim: {evidence}"
+    },
+    "round_buildtest_build": {
+      "arg": "/args/buildTest/build",
+      "capture": "head_build",
+      "from": "head_buildtest",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.buildTest.build must be the `build` the round's head `smine-rules buildtest` printed — never a re-run without `--overlay`",
+      "recovery": "heartbeat runtime ({finding}): pass the round's head buildtest result verbatim: {evidence}"
+    },
+    "round_buildtest_tests": {
+      "arg": "/args/buildTest/tests",
+      "capture": "head_tests",
+      "from": "head_buildtest",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.buildTest.tests must be the `tests` the round's head `smine-rules buildtest` printed — never a re-run without `--overlay`",
+      "recovery": "heartbeat runtime ({finding}): pass the round's head buildtest result verbatim: {evidence}"
+    },
+    "round_id_floor": {
+      "arg": "/args/idFloor",
+      "capture": "id_floor",
+      "from": "lanes",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.idFloor must be the `idFloor` the last `smine-rules lanes` printed, unedited",
+      "recovery": "heartbeat runtime ({finding}): pass the `idFloor` of the last `smine-rules lanes` verbatim"
+    },
+    "round_known_path": {
+      "arg": "/args/knownPath",
+      "capture": "known_path",
+      "from": "lanes",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.knownPath must be the `knownPath` the last `smine-rules lanes` printed",
+      "recovery": "heartbeat runtime ({finding}): pass the `knownPath` of the last `smine-rules lanes` verbatim"
+    },
+    "round_lane_plan": {
+      "arg": "/args/lanePlan",
+      "capture": "lanes",
+      "from": "lanes",
+      "kind": "provenance",
+      "on": "round",
+      "reason": "railroad-review: args.lanePlan must be the `lanes` array the last `smine-rules lanes` printed, unedited",
+      "recovery": "heartbeat runtime ({finding}): pass the `lanes` array of the last `smine-rules lanes` verbatim"
+    }
+  },
+  "gate": {
+    "planModeDenied": [
+      "Workflow"
+    ],
+    "rootDenied": [
+      "*/known.json",
+      "*/coverage.json",
+      "*/reviews/rejected.json"
+    ],
+    "workflowOnly": [
+      "railroad-lane-*",
+      "railroad-grouper",
+      "railroad-refuter",
+      "railroad-verifier",
+      "railroad-station",
+      "railroad-checklist",
+      "railroad-fixer",
+      "railroad-fix-checker"
+    ],
+    "writers": [
+      {
+        "agentTypes": [
+          "railroad-checklist"
+        ],
+        "glob": "*/round-*/checklist-*.json"
+      }
+    ]
+  },
+  "judgment": {
+    "base_plausible": {
+      "anchor": "base",
+      "evidence": [
+        "base_commit",
+        "arg:/command"
+      ],
+      "question": "Is the resolved base the branch's real fork point — not a stale upstream?",
+      "send": "heartbeat runtime ({finding}): the runtime agent questions the review base — re-check it before round 1: {evidence}"
+    },
+    "direction_selection": {
+      "anchor": "lanes",
+      "evidence": [
+        "arg:/command",
+        "lanes"
+      ],
+      "question": "Do the selected directions fit the diff's risk (security for auth or input handling, data-integrity for persisted state)?",
+      "send": "heartbeat runtime ({finding}): the runtime agent questions the direction selection for this diff: {evidence}"
+    },
+    "recommendation_fits": {
+      "anchor": "review_json",
+      "evidence": [
+        "recommendation",
+        "arg:/command"
+      ],
+      "question": "Does the recommendation fit the round's findings and health — no APPROVE over a red base, no CONDITIONAL over an empty plan?",
+      "send": "heartbeat runtime ({finding}): the runtime agent questions this round's recommendation: {evidence}"
+    },
+    "tiering": {
+      "anchor": "lanes",
+      "evidence": [
+        "arg:/command"
+      ],
+      "question": "Do the lane count and lane model fit the diff size and risk?",
+      "send": "heartbeat runtime ({finding}): the runtime agent questions the lane tiering for this diff: {evidence}"
+    }
+  },
+  "schema": 1,
+  "skill": "railroad-review",
+  "version": "0.0.0"
+}

@@ -1,0 +1,1364 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StatusDocument",
+  "description": "Root envelope.",
+  "type": "object",
+  "properties": {
+    "branches": {
+      "description": "Rows of the registered repos with their integration state, by repo then row.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/BranchRow"
+      }
+    },
+    "collisions": {
+      "description": "Collisions, one per branch pair and level.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/CollisionRow"
+      }
+    },
+    "fleets": {
+      "description": "Live fleet runs, plus names only a refused subscription carries (only the requested one under `?fleet=`),\nordered by id; a dissolved run lives in its archive file.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/FleetRow"
+      }
+    },
+    "heartbeat": {
+      "description": "The daemon that answered.",
+      "$ref": "#/$defs/HeartbeatInfo"
+    },
+    "landings": {
+      "description": "One landing per registered repo and target with a holder or a queue, plus each repo's staging row with the\nstaging target's release facts; by repo, then target.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/LandingRow"
+      }
+    },
+    "members": {
+      "description": "Members of those fleets, ordered by fleet, session, subagent; their state is in `sessions`.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/MemberRow"
+      }
+    },
+    "repos": {
+      "description": "Registered repos with their scan health, in path order.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/RepoRow"
+      }
+    },
+    "schema": {
+      "description": "Always [`STATUS_SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "sensors": {
+      "description": "Health of every edge that reported.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SensorRow"
+      }
+    },
+    "sessions": {
+      "description": "Sessions matching the query, in session-id order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SessionRow"
+      }
+    },
+    "staging_target": {
+      "description": "The staging target (`heartbeat.staging_target`): the landing target the done skill creates and catches up;\nabsent when the install sets none.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "trains": {
+      "description": "Merge trains per repo: the default branch's first, then each requested base.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TrainRow"
+      }
+    },
+    "work_items": {
+      "description": "Plan dirs in flight, by repo then worktree then dir.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/WorkItemRow"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "heartbeat",
+    "sensors",
+    "sessions",
+    "repos",
+    "branches",
+    "work_items",
+    "collisions",
+    "trains",
+    "landings",
+    "fleets",
+    "members"
+  ],
+  "$defs": {
+    "Blocked": {
+      "description": "An unresolved denial.",
+      "type": "object",
+      "properties": {
+        "candidate_rule": {
+          "description": "The allow rule that would admit the call.",
+          "type": "string"
+        },
+        "denied_at": {
+          "description": "The ledger timestamp.",
+          "type": "string"
+        },
+        "program": {
+          "description": "`Bash:<first word>` or the tool name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "program",
+        "candidate_rule",
+        "denied_at"
+      ]
+    },
+    "BranchAgentRow": {
+      "description": "A worker subagent running on this branch (attributed by construction, `claude/agent-<agent_id>`).",
+      "type": "object",
+      "properties": {
+        "agent_id": {
+          "description": "The subagent.",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "The session that spawned the subagent.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "agent_id"
+      ]
+    },
+    "BranchRow": {
+      "description": "One agentwt row of a registered repo.",
+      "type": "object",
+      "properties": {
+        "agents": {
+          "description": "Worker subagents on this branch, by construction (D20), in session then agent order.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/BranchAgentRow"
+          }
+        },
+        "branch": {
+          "description": "Branch name; absent for a detached worktree.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo": {
+          "description": "The repo's main-checkout path.",
+          "type": "string"
+        },
+        "sessions": {
+          "description": "Sessions whose cwd lies in the worktree, by id.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "since": {
+          "description": "When the state was entered (RFC 3339).",
+          "type": "string"
+        },
+        "state": {
+          "description": "Integration state.",
+          "$ref": "#/$defs/BranchStateWire"
+        },
+        "target": {
+          "description": "The landing target; absent for a branch that lands nowhere.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "train_position": {
+          "description": "1-based position in the train the state was judged against; absent when the branch has no step in it.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "work_items": {
+          "description": "Plan dirs of the worktree.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "worktree": {
+          "description": "Worktree path; absent for a branch without a checkout.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "repo",
+        "state",
+        "since",
+        "sessions",
+        "work_items",
+        "agents"
+      ]
+    },
+    "BranchStateWire": {
+      "description": "Branch states on the wire (concept D16).",
+      "oneOf": [
+        {
+          "description": "No own commits, clean worktree.",
+          "type": "string",
+          "const": "no_work"
+        },
+        {
+          "description": "Tracked changes or untracked files.",
+          "type": "string",
+          "const": "uncommitted"
+        },
+        {
+          "description": "Own commits, no train step.",
+          "type": "string",
+          "const": "unmerged"
+        },
+        {
+          "description": "Train step blocked.",
+          "type": "string",
+          "const": "conflicting"
+        },
+        {
+          "description": "Train step clean.",
+          "type": "string",
+          "const": "merge_ready"
+        },
+        {
+          "description": "Held by a non-agent branch.",
+          "type": "string",
+          "const": "merged"
+        },
+        {
+          "description": "Safe to remove.",
+          "type": "string",
+          "const": "removable"
+        }
+      ]
+    },
+    "CollisionLevelWire": {
+      "description": "Collision levels on the wire.",
+      "oneOf": [
+        {
+          "description": "Same planned file.",
+          "type": "string",
+          "const": "planned_file"
+        },
+        {
+          "description": "Same planned enclosing signature.",
+          "type": "string",
+          "const": "planned_symbol"
+        },
+        {
+          "description": "Same edited file.",
+          "type": "string",
+          "const": "touched"
+        },
+        {
+          "description": "Merge conflict.",
+          "type": "string",
+          "const": "confirmed"
+        }
+      ]
+    },
+    "CollisionRow": {
+      "description": "One collision.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "One side: branch name, or worktree path when detached.",
+          "type": "string"
+        },
+        "b": {
+          "description": "The other side.",
+          "type": "string"
+        },
+        "level": {
+          "description": "Level.",
+          "$ref": "#/$defs/CollisionLevelWire"
+        },
+        "paths": {
+          "description": "Shared paths.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "plans": {
+          "description": "Plan dirs involved (planned levels).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repo": {
+          "description": "The repo's main-checkout path.",
+          "type": "string"
+        },
+        "since": {
+          "description": "When the pair first collided at this level (RFC 3339).",
+          "type": "string"
+        },
+        "symbols": {
+          "description": "Shared `path::symbol` entries (planned-symbol).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "repo",
+        "level",
+        "a",
+        "b",
+        "paths",
+        "symbols",
+        "plans",
+        "since"
+      ]
+    },
+    "DigestOutcomeWire": {
+      "description": "Digest outcomes on the wire.",
+      "oneOf": [
+        {
+          "description": "Handed to the socket edge, not reported yet.",
+          "type": "string",
+          "const": "in_flight"
+        },
+        {
+          "description": "Written in full.",
+          "type": "string",
+          "const": "sent"
+        },
+        {
+          "description": "Nothing sent.",
+          "type": "string",
+          "const": "refused"
+        },
+        {
+          "description": "Claimed; the write failed or its outcome was lost.",
+          "type": "string",
+          "const": "unconfirmed"
+        },
+        {
+          "description": "The claim failed; nothing sent.",
+          "type": "string",
+          "const": "unclaimed"
+        }
+      ]
+    },
+    "DigestRow": {
+      "description": "One digest's fate.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When the outcome was reported (RFC 3339); absent while in flight.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "description": "Why, for refused, unconfirmed and unclaimed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "`d<n>`.",
+          "type": "string"
+        },
+        "outcome": {
+          "description": "What happened.",
+          "$ref": "#/$defs/DigestOutcomeWire"
+        }
+      },
+      "required": [
+        "id",
+        "outcome"
+      ]
+    },
+    "FleetRow": {
+      "description": "One fleet.",
+      "type": "object",
+      "properties": {
+        "foreign": {
+          "description": "Sessions joined to this fleet from another repository — never members.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "The `FleetId`.",
+          "type": "string"
+        },
+        "instance": {
+          "description": "The live run's UUID; absent for a name only a refused subscription carries.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "journal": {
+          "description": "The live run's journal, oldest first.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/JournalRow"
+          }
+        },
+        "members": {
+          "description": "Member count (see `members`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "merge_branch": {
+          "description": "The branch member merges land on: `claude-orch/<fleet>-<instance>`; absent while unbound.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo": {
+          "description": "The bound repository (main-checkout path), from the active subscription.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "started_at": {
+          "description": "When the live run started (RFC 3339); absent with `instance`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subscriptions": {
+          "description": "Subscriptions of the live run, any state, plus refused ones that bound no run, ordered by session.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SubscriptionRow"
+          }
+        },
+        "synced": {
+          "description": "The target holds the merge branch's work; absent without a merge branch.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "target": {
+          "description": "The integration branch: synced from the merge branch once the fleet is integrated.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_state": {
+          "description": "Integration state of the fleet's member work.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetStateWire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "members",
+        "foreign",
+        "subscriptions",
+        "journal"
+      ]
+    },
+    "HeartbeatInfo": {
+      "description": "The daemon that answered.",
+      "type": "object",
+      "properties": {
+        "addr": {
+          "description": "The bound address.",
+          "type": "string"
+        },
+        "claude_home": {
+          "description": "The claude home this daemon serves.",
+          "type": "string"
+        },
+        "events_applied": {
+          "description": "Events applied since start.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "scan_in_flight_high_water": {
+          "description": "Highest number of scans in flight for one repo (the load bound is 1).",
+          "type": "integer",
+          "format": "uint64",
+          "default": 0,
+          "minimum": 0
+        },
+        "scans_completed": {
+          "description": "agentwt scans reported back.",
+          "type": "integer",
+          "format": "uint64",
+          "default": 0,
+          "minimum": 0
+        },
+        "started_at": {
+          "description": "Daemon start.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Crate version.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "claude_home",
+        "addr",
+        "started_at",
+        "events_applied",
+        "scans_completed",
+        "scan_in_flight_high_water"
+      ]
+    },
+    "JournalRow": {
+      "description": "One journal entry an orchestrator recorded.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When (RFC 3339).",
+          "type": "string"
+        },
+        "by": {
+          "description": "The recording session.",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Why, or the evidence.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "`assigned`, `decided`, `merged`, `spawned` or `note`.",
+          "type": "string"
+        },
+        "members": {
+          "description": "Member letters it concerns.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subject": {
+          "description": "What.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "members",
+        "subject",
+        "by",
+        "at"
+      ]
+    },
+    "LandingRow": {
+      "description": "One landing of a registered repo: a repository and a landing target (merge strategy targets C7).",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "The landing target.",
+          "type": "string"
+        },
+        "holder": {
+          "description": "The turn holder; absent while the turn is free.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LandingTurnRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "queue": {
+          "description": "The waiters, oldest first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LandingTurnRow"
+          }
+        },
+        "release": {
+          "description": "The staging target's release facts; absent on every other target's row.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReleaseRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repo": {
+          "description": "The repo's main-checkout path.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repo",
+        "branch",
+        "queue"
+      ]
+    },
+    "LandingTurnRow": {
+      "description": "One session's place in a landing.",
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "description": "The session.",
+          "type": "string"
+        },
+        "since": {
+          "description": "Since when it holds the turn or waits (RFC 3339).",
+          "type": "string"
+        },
+        "title": {
+          "description": "The session's title (registry `name`); absent until the registry named it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "session_id",
+        "since"
+      ]
+    },
+    "LastEventRow": {
+      "description": "The last hook event.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When it arrived.",
+          "type": "string"
+        },
+        "name": {
+          "description": "`hook_event_name`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "at"
+      ]
+    },
+    "MemberRow": {
+      "description": "One fleet member.",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "The member's branch in the fleet's repo (`member_branch`), when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delivered": {
+          "description": "Joined and reported done, or a worker its subscriber marked delivered.",
+          "type": "boolean"
+        },
+        "fleet": {
+          "description": "The fleet.",
+          "type": "string"
+        },
+        "member": {
+          "description": "The member's letter; absent until assigned.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session_id": {
+          "description": "The member session; for a worker, the subscriber that registered it.",
+          "type": "string"
+        },
+        "token": {
+          "description": "The member's title token, `<fleet>-M<letter>`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "via": {
+          "description": "Why it is a member.",
+          "$ref": "#/$defs/ViaWire"
+        }
+      },
+      "required": [
+        "fleet",
+        "session_id",
+        "via",
+        "delivered"
+      ]
+    },
+    "ReleaseRow": {
+      "description": "The staging target against the default branch.",
+      "type": "object",
+      "properties": {
+        "exists": {
+          "description": "The staging target is a local branch.",
+          "type": "boolean"
+        },
+        "releasable": {
+          "description": "The default branch's tip is an ancestor of the staging target: a release is a fast-forward.",
+          "type": "boolean"
+        },
+        "unreleased": {
+          "description": "Commits the staging target holds and the default branch lacks.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "exists",
+        "releasable",
+        "unreleased"
+      ]
+    },
+    "RepoRow": {
+      "description": "One registered repo's scan health.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Registry name.",
+          "type": "string"
+        },
+        "repo": {
+          "description": "The repo's main-checkout path.",
+          "type": "string"
+        },
+        "scan_error": {
+          "description": "Why the last scan failed; absent after a good scan.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "warnings": {
+          "description": "agentwt and work-item discovery warnings of the last good scan.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "repo",
+        "name",
+        "warnings"
+      ]
+    },
+    "SensorRow": {
+      "description": "One sensor's health.",
+      "type": "object",
+      "properties": {
+        "detail": {
+          "description": "Why, when degraded.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The edge.",
+          "$ref": "#/$defs/SensorWire"
+        },
+        "since": {
+          "description": "When the state was entered.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Its state.",
+          "$ref": "#/$defs/SensorStateWire"
+        }
+      },
+      "required": [
+        "name",
+        "state",
+        "since"
+      ]
+    },
+    "SensorStateWire": {
+      "description": "Sensor states.",
+      "oneOf": [
+        {
+          "description": "Delivering events.",
+          "type": "string",
+          "const": "ok"
+        },
+        {
+          "description": "Not delivering, or suspect; see `detail`.",
+          "type": "string",
+          "const": "degraded"
+        }
+      ]
+    },
+    "SensorWire": {
+      "description": "Sensor names.",
+      "oneOf": [
+        {
+          "description": "HTTP edge.",
+          "type": "string",
+          "const": "hooks"
+        },
+        {
+          "description": "Registry watch.",
+          "type": "string",
+          "const": "registry"
+        },
+        {
+          "description": "Process-exit watch.",
+          "type": "string",
+          "const": "process_exit"
+        },
+        {
+          "description": "Denial ledger tail.",
+          "type": "string",
+          "const": "ledger"
+        },
+        {
+          "description": "Git ref watch.",
+          "type": "string",
+          "const": "git"
+        },
+        {
+          "description": "agentwt scans.",
+          "type": "string",
+          "const": "agentwt"
+        },
+        {
+          "description": "peek client.",
+          "type": "string",
+          "const": "peek"
+        },
+        {
+          "description": "Action-ledger writer.",
+          "type": "string",
+          "const": "action_ledger"
+        },
+        {
+          "description": "Config file watch.",
+          "type": "string",
+          "const": "config"
+        }
+      ]
+    },
+    "SessionRow": {
+      "description": "One session.",
+      "type": "object",
+      "properties": {
+        "active_skill": {
+          "description": "Last slash command or `Skill` call of the root agent.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "blocked": {
+          "description": "The denial a `blocked` session is blocked on.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Blocked"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cwd": {
+          "description": "Working directory.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_reason": {
+          "description": "Why an `ended` or `died` session ended.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_event": {
+          "description": "The last hook event.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LastEventRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pid": {
+          "description": "The process.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "session_id": {
+          "description": "Session id.",
+          "type": "string"
+        },
+        "since_restart": {
+          "description": "The daemon did not observe this session's start; earlier history is unknown.",
+          "type": "boolean"
+        },
+        "state": {
+          "description": "Lifecycle state.",
+          "$ref": "#/$defs/SessionStateWire"
+        },
+        "state_since": {
+          "description": "When `state` last changed.",
+          "type": "string"
+        },
+        "subagents": {
+          "description": "Subagents, in agent-id order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SubagentRow"
+          }
+        },
+        "title": {
+          "description": "Session title (registry `name`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "waiting_for": {
+          "description": "What a `waiting` session waits on.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "session_id",
+        "state",
+        "state_since",
+        "since_restart",
+        "subagents"
+      ]
+    },
+    "SessionStateWire": {
+      "description": "The session lifecycle states.",
+      "oneOf": [
+        {
+          "description": "Working on a turn.",
+          "type": "string",
+          "const": "running"
+        },
+        {
+          "description": "Waiting on a human.",
+          "type": "string",
+          "const": "waiting"
+        },
+        {
+          "description": "The turn ended on an unresolved denial.",
+          "type": "string",
+          "const": "blocked"
+        },
+        {
+          "description": "No turn in progress.",
+          "type": "string",
+          "const": "idle"
+        },
+        {
+          "description": "`SessionEnd` arrived.",
+          "type": "string",
+          "const": "ended"
+        },
+        {
+          "description": "The process exited without `SessionEnd`, or `StopFailure`.",
+          "type": "string",
+          "const": "died"
+        }
+      ]
+    },
+    "SubagentRow": {
+      "description": "One subagent.",
+      "type": "object",
+      "properties": {
+        "agent_id": {
+          "description": "`agent_id`.",
+          "type": "string"
+        },
+        "agent_type": {
+          "description": "`agent_type`.",
+          "type": "string"
+        },
+        "model": {
+          "description": "The model its transcript shows; absent until read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "started_at": {
+          "description": "`SubagentStart` time.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Running or stopped.",
+          "$ref": "#/$defs/SubagentStateWire"
+        }
+      },
+      "required": [
+        "agent_id",
+        "agent_type",
+        "state",
+        "started_at"
+      ]
+    },
+    "SubagentStateWire": {
+      "description": "Subagent states.",
+      "oneOf": [
+        {
+          "description": "No `SubagentStop` yet.",
+          "type": "string",
+          "const": "running"
+        },
+        {
+          "description": "`SubagentStop` arrived.",
+          "type": "string",
+          "const": "stopped"
+        }
+      ]
+    },
+    "SubscriptionRow": {
+      "description": "One subscription.",
+      "type": "object",
+      "properties": {
+        "detail": {
+          "description": "Why, when refused or ended.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fleet": {
+          "description": "The fleet.",
+          "type": "string"
+        },
+        "last_digest": {
+          "description": "The in-flight digest, else the last one.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DigestRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outside_collisions": {
+          "description": "The run hears collisions with branches outside the fleet too (`subscribe --outside-collisions`); archives\nwritten before the field read `false`.",
+          "type": "boolean",
+          "default": false
+        },
+        "pending": {
+          "description": "Items waiting for the next digest.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "repo": {
+          "description": "The bound repository; absent only on a refusal that resolved none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session_id": {
+          "description": "The subscriber session.",
+          "type": "string"
+        },
+        "since": {
+          "description": "When the state was entered (RFC 3339).",
+          "type": "string"
+        },
+        "socket_path": {
+          "description": "The subscriber's messaging socket.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Lifecycle.",
+          "$ref": "#/$defs/SubscriptionStateWire"
+        },
+        "target": {
+          "description": "The fleet's integration branch.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "fleet",
+        "target",
+        "state",
+        "since",
+        "socket_path",
+        "pending",
+        "outside_collisions"
+      ]
+    },
+    "SubscriptionStateWire": {
+      "description": "Subscription states on the wire.",
+      "oneOf": [
+        {
+          "description": "Receives digests.",
+          "type": "string",
+          "const": "active"
+        },
+        {
+          "description": "Never admitted.",
+          "type": "string",
+          "const": "refused"
+        },
+        {
+          "description": "Ended.",
+          "type": "string",
+          "const": "ended"
+        }
+      ]
+    },
+    "TargetStateWire": {
+      "description": "Fleet target states on the wire.",
+      "oneOf": [
+        {
+          "description": "Member work is still open, or the repo has no good scan yet that requested the target.",
+          "type": "string",
+          "const": "open"
+        },
+        {
+          "description": "At least one worker exists (the subscriber excluded), every worker is delivered, at least one worker branch was\nseen in a scan, and every worker branch that still has a row (the target branch excluded) is merged or removable;\na worker branch without a row counts as done.",
+          "type": "string",
+          "const": "integrated"
+        },
+        {
+          "description": "The repo's last good scan requested the target as a train base and has no train for it: not a local branch.",
+          "type": "string",
+          "const": "missing"
+        }
+      ]
+    },
+    "TrainRow": {
+      "description": "One merge train of one repo.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The branch the train starts from.",
+          "type": "string"
+        },
+        "repo": {
+          "description": "The repo's main-checkout path.",
+          "type": "string"
+        },
+        "steps": {
+          "description": "Steps in merge order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TrainStepRow"
+          }
+        }
+      },
+      "required": [
+        "repo",
+        "base",
+        "steps"
+      ]
+    },
+    "TrainStateWire": {
+      "description": "Train step outcomes on the wire.",
+      "oneOf": [
+        {
+          "description": "Merged cleanly.",
+          "type": "string",
+          "const": "clean"
+        },
+        {
+          "description": "Conflicted.",
+          "type": "string",
+          "const": "blocked"
+        },
+        {
+          "description": "Nothing to merge.",
+          "type": "string",
+          "const": "nothing"
+        }
+      ]
+    },
+    "TrainStepRow": {
+      "description": "One train step.",
+      "type": "object",
+      "properties": {
+        "blocked_by": {
+          "description": "Branches merged before a blocked step.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "branch": {
+          "description": "Branch name.",
+          "type": "string"
+        },
+        "paths": {
+          "description": "Unresolved paths of a blocked step.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "position": {
+          "description": "1-based position.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "state": {
+          "description": "Outcome.",
+          "$ref": "#/$defs/TrainStateWire"
+        }
+      },
+      "required": [
+        "branch",
+        "position",
+        "state",
+        "blocked_by",
+        "paths"
+      ]
+    },
+    "ViaWire": {
+      "description": "Membership reasons on the wire.",
+      "oneOf": [
+        {
+          "description": "Joined with `heartbeat join`.",
+          "type": "string",
+          "const": "joined"
+        },
+        {
+          "description": "Active subscriber.",
+          "type": "string",
+          "const": "subscriber"
+        },
+        {
+          "description": "Branch the subscriber registered with `heartbeat worker`.",
+          "type": "string",
+          "const": "worker"
+        }
+      ]
+    },
+    "WorkItemRow": {
+      "description": "One plan dir in flight.",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "The worktree's branch; absent before the worktree was scanned or when detached.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "plan_dir": {
+          "description": "Plan dir inside its feature folder.",
+          "type": "string"
+        },
+        "planned_files": {
+          "description": "Planned files and globs.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "planned_symbols": {
+          "description": "Planned `path::symbol` entries.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repo": {
+          "description": "The repo's main-checkout path.",
+          "type": "string"
+        },
+        "worktree": {
+          "description": "Worktree root.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repo",
+        "plan_dir",
+        "worktree",
+        "planned_files",
+        "planned_symbols"
+      ]
+    }
+  }
+}

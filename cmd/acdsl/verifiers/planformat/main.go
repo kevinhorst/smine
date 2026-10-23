@@ -1,21 +1,19 @@
-// Command planformat is a registered ACDSL verifier: the lintable subset
-// of rules/plan.md over design plans. Three checks: the first "## " section
-// is TLDR; a "## Changelog" section exists; sections named in the canonical
-// order (RULE-PLAN-002, one order for every route) appear in that relative
-// order. Unknown headings are ignored; no prose heuristics.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command planformat is an ACDSL verifier: a persisted plan meets the lintable subset of rules/plan.md.
 package main
 
 import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
+
+	"github.com/kevinhorst/smine/internal/plans"
 )
 
-var canon = []string{"TLDR", "Context", "Drivers", "Scope", "Assumptions", "Current state", "Target state", "Behavior contract", "Decisions", "Open questions", "Baseline (verified)", "Exemplar & reuse", "Changes", "Hot items", "Tests", "Test runbook", "Contracts & sweeps", "Verification", "Stop conditions", "Changelog"}
+var permissionsHeading = regexp.MustCompile(`^#{2,6} +Permissions\s*$`)
+
+var oldDepthPlan = regexp.MustCompile(`(^|/)plans/[^/]+-wip-[^/]+/design/[^/]+\.md$`)
 
 type heading struct {
 	text string
@@ -44,12 +42,21 @@ func run(args []string, out io.Writer) int {
 			return 2
 		}
 		var headings []heading
+		var permissions []heading
+		fence := ""
 		for i, line := range strings.Split(string(raw), "\n") {
+			fence = plans.NextFence(fence, line)
+			if fence != "" {
+				continue
+			}
 			if text, ok := strings.CutPrefix(line, "## "); ok {
 				headings = append(headings, heading{text: strings.TrimSpace(text), line: i + 1})
 			}
+			if permissionsHeading.MatchString(line) {
+				permissions = append(permissions, heading{text: strings.TrimSpace(line), line: i + 1})
+			}
 		}
-		violations += checkFile(file, headings, out)
+		violations += checkFile(file, headings, permissions, plans.ParseChanges(string(raw)), out)
 	}
 	if violations > 0 {
 		return 1
@@ -57,10 +64,15 @@ func run(args []string, out io.Writer) int {
 	return 0
 }
 
-func checkFile(file string, headings []heading, out io.Writer) int {
+func checkFile(file string, headings []heading, permissions []heading, unit *plans.Unit, out io.Writer) int {
 	violations := 0
-	if len(headings) == 0 || headings[0].text != "TLDR" {
-		fmt.Fprintf(out, "%s:1: first section must be ## TLDR (rules/plan.md RULE-PLAN-002)\n", file)
+	isOrderChecked := plans.IsOrderChecked(file)
+	if oldDepthPlan.MatchString(file) {
+		fmt.Fprintf(out, "%s:1: plan dir sits directly under plans/ — move it into its feature folder plans/<started_at>-<feature>-<id>/ (rules/plan.md RULE-PLAN-071)\n", file)
+		violations++
+	}
+	if len(headings) == 0 || headings[0].text != plans.Sections[0] {
+		fmt.Fprintf(out, "%s:1: first section must be ## %s (rules/plan.md RULE-PLAN-002)\n", file, plans.Sections[0])
 		violations++
 	}
 	hasChangelog := false
@@ -73,15 +85,60 @@ func checkFile(file string, headings []heading, out io.Writer) int {
 		fmt.Fprintf(out, "%s:1: ## Changelog section missing\n", file)
 		violations++
 	}
-	for _, problem := range orderProblems(headings, canon) {
-		fmt.Fprintf(out, "%s:%d: section %q out of canonical order (rules/plan.md)\n", file, problem.line, problem.text)
+	for _, problem := range markerProblems(headings) {
+		fmt.Fprintf(out, "%s:%d: %s\n", file, problem.line, problem.text)
+		violations++
+	}
+	if isOrderChecked {
+		for _, problem := range orderProblems(headings, plans.Sections) {
+			fmt.Fprintf(out, "%s:%d: section %q out of canonical order (rules/plan.md)\n", file, problem.line, problem.text)
+			violations++
+		}
+	}
+	for _, entry := range permissions {
+		fmt.Fprintf(out, "%s:%d: plan carries a Permissions section — its rules live in the plan dir's permissions.json (rules/plan.md RULE-PLAN-082)\n", file, entry.line)
+		violations++
+	}
+	if unit == nil {
+		return violations
+	}
+	for _, violation := range plans.CheckUnit(unit, false) {
+		fmt.Fprintf(out, "%s:%d: %s (rules/plan.md RULE-PLAN-088)\n", file, violation.Line, violation.Message)
+		violations++
+	}
+	if !isOrderChecked {
+		return violations
+	}
+	for _, violation := range plans.CheckOrder(unit) {
+		fmt.Fprintf(out, "%s:%d: %s (rules/plan.md RULE-PLAN-098)\n", file, violation.Line, violation.Message)
 		violations++
 	}
 	return violations
 }
 
-// orderProblems returns headings whose canon index precedes an already-seen
-// canon index — the out-of-order set relative to the given canon.
+func markerProblems(headings []heading) []heading {
+	index := plans.SectionIndex()
+	var problems []heading
+	for _, entry := range headings {
+		name, marked := plans.SplitHeading(entry.text)
+		_, isCatalog := index[name]
+		if !isCatalog {
+			continue
+		}
+
+		wantMarker := plans.IsAgentTier(name)
+		if marked == wantMarker {
+			continue
+		}
+		message := fmt.Sprintf("section %q must carry %s (rules/plan.md RULE-PLAN-090)", name, plans.AgentOnlyMarker)
+		if marked {
+			message = fmt.Sprintf("section %q must not carry %s (rules/plan.md RULE-PLAN-090)", name, plans.AgentOnlyMarker)
+		}
+		problems = append(problems, heading{text: message, line: entry.line})
+	}
+	return problems
+}
+
 func orderProblems(headings []heading, canon []string) []heading {
 	index := map[string]int{}
 	for i, name := range canon {
@@ -90,7 +147,8 @@ func orderProblems(headings []heading, canon []string) []heading {
 	var problems []heading
 	last := -1
 	for _, entry := range headings {
-		position, known := index[entry.text]
+		name, _ := plans.SplitHeading(entry.text)
+		position, known := index[name]
 		if !known {
 			continue
 		}

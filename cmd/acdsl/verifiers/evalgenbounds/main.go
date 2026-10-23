@@ -1,14 +1,4 @@
-// Command evalgenbounds is a registered ACDSL verifier: it fails (exit 1)
-// when a verifier main.go leaves the acdsl/evalgen.json bounds — line
-// count over maxLines, or an import outside the policy (Go stdlib, the
-// module's internal packages, or a module already in go.mod's require set).
-// Uniform over handwritten and agent-generated scripts: generation may never
-// add a dependency (Band D stays a user call), and the gate — not prompt
-// discipline — enforces it. Missing config is a tool error, never a silent
-// pass.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command evalgenbounds is an ACDSL verifier: a verifier main.go stays inside the acdsl/evalgen.json bounds.
 package main
 
 import (
@@ -91,9 +81,6 @@ func checkLines(file, content string, maxLines int, out io.Writer) int {
 	return 0
 }
 
-// checkImports flags every import outside the policy: stdlib (first path
-// segment carries no dot), <module>/internal/..., or a go.mod require
-// module. Everything else would be a new dependency.
 func checkImports(file string, raw []byte, module string, requires []string, out io.Writer) (int, error) {
 	parsed, err := parser.ParseFile(token.NewFileSet(), file, raw, parser.ImportsOnly)
 	if err != nil {
@@ -127,8 +114,6 @@ func allowedImport(path, module string, requires []string) bool {
 	return false
 }
 
-// goModAllowlist reads the module path and every require entry (single-line
-// and block form) line-wise — deliberately dep-free.
 func goModAllowlist(path string) (string, []string, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {

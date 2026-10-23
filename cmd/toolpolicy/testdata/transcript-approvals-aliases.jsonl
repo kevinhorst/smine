@@ -1,0 +1,6 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#allow --s"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#deny -s"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#allow -settings"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#deny --settings"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#allow -s"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#allow -S"}}

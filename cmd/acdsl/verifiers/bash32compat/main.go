@@ -1,10 +1,4 @@
-// Command bash32compat is a registered ACDSL verifier: it fails (exit 1)
-// when a shell script uses a bash-4+ construct — hooks and routines execute
-// under macOS system bash 3.2 (launchd), where these fail at parse or run
-// time. Pattern scan, deliberately tight to stay false-positive-free.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command bash32compat is an ACDSL verifier: a shell script uses no bash-4+ construct.
 package main
 
 import (

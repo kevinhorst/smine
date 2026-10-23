@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.smine.heartbeat</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__REPO_DIR__/bin/heartbeat</string>
+		<string>--addr</string>
+		<string>127.0.0.1:__HEARTBEAT_PORT__</string>
+		<string>--claude-home</string>
+		<string>__CLAUDE_HOME__</string>
+		<string>serve</string>
+		<string>--repos</string>
+		<string>__HOME__/.claude/smine/repos.json</string>
+		<string>--config</string>
+		<string>__CLAUDE_HOME__/heartbeat/config.json</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>__REPO_DIR__</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>SoftResourceLimits</key>
+	<dict>
+		<key>NumberOfFiles</key>
+		<integer>__NUMBER_OF_FILES__</integer>
+	</dict>
+	<key>HardResourceLimits</key>
+	<dict>
+		<key>NumberOfFiles</key>
+		<integer>__NUMBER_OF_FILES__</integer>
+	</dict>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/smine-heartbeat.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/smine-heartbeat.err.log</string>
+</dict>
+</plist>

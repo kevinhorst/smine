@@ -1,14 +1,4 @@
-// Command exhaustivewrap is a registered ACDSL verifier: it fails (exit 1)
-// when a switch over a typed-constant enum misses members (ACTION-IMPL-INTEG-005),
-// by running the exhaustive analyzer (go.mod tool dependency) over the
-// packages containing the anchored files — analyzers load packages, not loose
-// files, so the wrapper derives unique package dirs from the files list.
-// Exit-code normalization per the registry contract: contract-shaped output
-// lines mean violations (exit 1) regardless of the analyzer's own exit code;
-// a failure without contract lines is a tool error (exit 2).
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line:col: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command exhaustivewrap is an ACDSL verifier: a switch over a typed-constant enum names every member.
 package main
 
 import (
@@ -21,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/kevinhorst/smine/internal/acdsl"
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
@@ -45,7 +36,14 @@ func run(args []string, out io.Writer) int {
 	if len(dirs) == 0 {
 		return 0
 	}
-	output, err := shell.Run(context.Background(), ".", "go", append([]string{"tool", "exhaustive"}, dirs...)...)
+	exhaustiveArgs := append([]string{"tool", "exhaustive"}, dirs...)
+	output, err := shell.RunWithin(
+		context.Background(),
+		".",
+		"go",
+		acdsl.MaxVerifierTimeout,
+		exhaustiveArgs...,
+	)
 	if err == nil {
 		return 0
 	}
@@ -61,8 +59,6 @@ func run(args []string, out io.Writer) int {
 		return 1
 	}
 	if strings.Contains(output, `no such tool "exhaustive"`) {
-		// Distributed target without the tool dependency: an actionable
-		// violation, never tool breakage that aborts the whole gate.
 		fmt.Fprintf(out, "%s:1: go tool exhaustive unavailable — add the exhaustive tool dependency to go.mod or override exhaustive-switch in acdsl/registry.local.json\n", dirs[0])
 		return 1
 	}

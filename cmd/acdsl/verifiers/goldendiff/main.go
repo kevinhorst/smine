@@ -1,13 +1,4 @@
-// Command goldendiff runs an observation anchor: GET the recipe URL, apply
-// the normalization spec, materialize the observation at observed=, and diff
-// it line-wise against the golden file the rule anchors. The archived
-// observation is traceability made physical — the report shows observed vs
-// expected, not just FAIL.
-//
-// Contract: args = <files-list path> url=<url> observed=<path>
-// [normalize=<spec>]; the files list must hold exactly the golden file; one
-// violation per stdout line as file:line: message; exit 0 pass, 1
-// violations, 2 error.
+// Command goldendiff is an ACDSL verifier: the normalized observation of a URL matches the anchored golden file.
 package main
 
 import (
@@ -45,8 +36,6 @@ func run(args []string, out io.Writer) int {
 
 	body, err := fetch(url)
 	if err != nil {
-		// Unreachable target is a red contract, not tool breakage: exit 2
-		// would abort doctrine gating in the same -lifetime all run.
 		fmt.Fprintf(out, "%s:1: request failed: %v\n", golden, err)
 		return 1
 	}
@@ -73,8 +62,6 @@ func run(args []string, out io.Writer) int {
 	return diff(string(goldenRaw), body, golden, observedPath, out)
 }
 
-// diff compares line-wise and reports up to maxReported divergences anchored
-// to golden line numbers.
 func diff(golden, observed, goldenPath, observedPath string, out io.Writer) int {
 	goldenLines := strings.Split(golden, "\n")
 	observedLines := strings.Split(observed, "\n")
@@ -119,8 +106,6 @@ func fetch(url string) (string, error) {
 	return string(body), err
 }
 
-// applyNormalize applies each spec line s<delim>re2<delim>repl<delim> to the
-// whole body — timestamps, generated IDs, machine paths become stable tokens.
 func applyNormalize(specPath, body string) (string, error) {
 	raw, err := os.ReadFile(specPath)
 	if err != nil {

@@ -1,0 +1,48 @@
+#!/bin/bash
+# Blocks commits carrying ACDSL projection blocks. Installed by
+# configserver -install (setupGit) into the common gitdir's hooks/, so it
+# covers the main checkout and every worktree. Blocking-only by design:
+# it never mutates the tree — the committer strips and re-stages.
+# The scan is syntax-aware (acdsl guard): a file quoting another
+# syntax's marker in prose is a reference, not a leak.
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+# `acdsl guard` exits 0 clean, 1 on staged projection content, 2 on a tool
+# error; 126/127 mean the binary cannot run here — a container cell's make
+# audit leaves a Linux bin/acdsl in a worktree the host commits from. Only
+# 0 and 1 are verdicts; anything else falls through to the next guard.
+run_guard() {
+  local status=0
+  output="$(cd "$repo_root" && "$@" 2>&1)" || status=$?
+  case "$status" in
+    0) exit 0 ;;
+    1)
+      echo "commit blocked: staged ACDSL projection content:" >&2
+      echo "$output" >&2
+      echo "fix: go run ./cmd/acdsl project -strip && re-stage" >&2
+      exit 1
+      ;;
+  esac
+}
+
+if [ -x "$repo_root/bin/acdsl" ]; then
+  run_guard "$repo_root/bin/acdsl" guard -root "$repo_root"
+fi
+if [ -f "$repo_root/cmd/acdsl/main.go" ] && [ -f "$repo_root/go.mod" ]; then
+  run_guard go run ./cmd/acdsl guard -root "$repo_root"
+fi
+
+# No runnable acdsl tool in this repo (the hook is installed into arbitrary
+# repos): degrade to the self-contained marker scan. Marker split so this
+# file never trips the leak guards itself.
+marker="ACDSL-"
+marker="${marker}PROJECTION"
+if git grep --cached -I -n "\[${marker}\]" -- . >/dev/null 2>&1; then
+  echo "commit blocked: staged ACDSL projection content:" >&2
+  git grep --cached -I -n "\[${marker}\]" -- . >&2 || true
+  echo "fix: strip the projection block and re-stage" >&2
+  exit 1
+fi
+exit 0

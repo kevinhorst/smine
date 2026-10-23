@@ -1,11 +1,4 @@
-// Command symbolexists checks a task contract's planned symbol: the named
-// func/method/type/var/const exists in the anchored files, optionally with
-// the planned signature (whitespace-normalized text compare — plan-level
-// precision, no type resolution).
-//
-// Contract: args = <files-list path> symbol=<name|Recv.Method> [signature=<text>];
-// one violation per stdout line as file:line: message; exit 0 pass, 1
-// violations, 2 error.
+// Command symbolexists is an ACDSL verifier: the named symbol exists in the anchored files, optionally with the planned signature.
 package main
 
 import (
@@ -117,8 +110,6 @@ func receiverBase(d *ast.FuncDecl) string {
 	return ""
 }
 
-// renderSignature prints a func declaration without body or doc — the text a
-// plan declares. Non-funcs render empty.
 func renderSignature(fset *token.FileSet, decl ast.Decl) string {
 	fn, ok := decl.(*ast.FuncDecl)
 	if !ok {
@@ -134,9 +125,6 @@ func renderSignature(fset *token.FileSet, decl ast.Decl) string {
 	return builder.String()
 }
 
-// normalize collapses whitespace and the go/printer artifacts a multiline
-// declaration leaves behind (space inside parens, trailing comma), so the
-// on-disk layout never fails a matching planned signature.
 func normalize(signature string) string {
 	collapsed := strings.Join(strings.Fields(signature), " ")
 	collapsed = strings.ReplaceAll(collapsed, "( ", "(")

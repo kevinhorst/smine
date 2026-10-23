@@ -1,13 +1,4 @@
-// Command rulescheck is a registered ACDSL verifier wrapping cmd/rules —
-// mode=validate runs `go run ./cmd/rules validate`, mode=generate-check runs
-// `go run ./cmd/rules generate -check`. Both verbs already print one
-// violation per stdout line and exit 0/1; the wrapper normalizes tool
-// failures. The anchored files-list only decides WHEN the rule fires — the
-// wrapped command always checks the whole pack (its own contract).
-// Replaces the two raw Makefile audit lines (gofmt-fold precedent).
-//
-// Contract: args = <files-list path> mode=<validate|generate-check>; exit 0
-// pass, 1 violations, 2 error.
+// Command rulescheck is an ACDSL verifier: cmd/rules validate passes over the whole rules pack.
 package main
 
 import (
@@ -39,8 +30,6 @@ func run(args []string, out io.Writer) int {
 	switch mode {
 	case "validate":
 		verb = []string{"run", "./cmd/rules", "validate"}
-	case "generate-check":
-		verb = []string{"run", "./cmd/rules", "generate", "-check"}
 	default:
 		fmt.Fprintf(os.Stderr, "rulescheck: unknown mode %q\n", mode)
 		return 2

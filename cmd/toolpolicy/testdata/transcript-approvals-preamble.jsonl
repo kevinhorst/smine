@@ -1,0 +1,5 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<command-message>fdesign</command-message>\n<command-name>/fdesign</command-name>"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<system-reminder>\nYou are operating in a git worktree.\nWorktree path: /tmp/wt\n</system-reminder>\n\n#allow Makefile"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<system-reminder>\nunclosed notice\n\n#allow nonsense"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<system-reminder>\nnotice\n</system-reminder>\n\n#allow other\nqueued second message"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":[{"type":"text","text":"<system-reminder>\nYou are operating in an isolated workspace created by the user's WorktreeCreate hook.\n</system-reminder>"},{"type":"text","text":"#deny settings.local.json"}]}}

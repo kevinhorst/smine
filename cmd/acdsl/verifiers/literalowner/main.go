@@ -1,9 +1,4 @@
-// Command literalowner is a registered ACDSL verifier: it fails (exit 1)
-// when a file outside the allowed path regexp contains the literal.
-// Params: literal=<string>, allowed=<RE2 over repo-relative paths>.
-//
-// Contract: args = <files-list path> [key=value ...]; one violation per
-// stdout line as file:line: message; exit 0 pass, 1 violations, 2 error.
+// Command literalowner is an ACDSL verifier: only files on the allowed paths contain the literal.
 package main
 
 import (
@@ -14,15 +9,9 @@ import (
 	"strings"
 )
 
-// projectionMarker is the working-copy block opener (concatenated so the
-// committed source stays clear of the staged-leak-guard grep). Projection
-// blocks are meta-text, not file content: a text-class verifier cleans its
-// own input — in memory, never on disk — before scanning.
+// Concatenated so the committed source stays clear of the staged-leak-guard grep.
 const projectionMarker = "// [ACDSL-" + "PROJECTION]"
 
-// cleanProjection removes a top-of-file projection block and returns the
-// content lines plus the number of removed lines, so violation line numbers
-// keep referring to the file as it exists on disk.
 func cleanProjection(lines []string) ([]string, int) {
 	if len(lines) == 0 || !strings.HasPrefix(lines[0], projectionMarker) {
 		return lines, 0

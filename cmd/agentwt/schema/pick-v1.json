@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pick",
+  "description": "The `pick` document: what picking one commit onto one branch did.",
+  "type": "object",
+  "properties": {
+    "commit": {
+      "description": "The picked commit, full hex sha.",
+      "type": "string"
+    },
+    "new_commit": {
+      "description": "The new commit on the target, full hex sha; present only when `outcome` is `picked`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "onto": {
+      "description": "The target branch.",
+      "type": "string"
+    },
+    "outcome": {
+      "description": "What happened.",
+      "$ref": "#/$defs/PickOutcome"
+    },
+    "reason": {
+      "description": "Why; present only when `outcome` is `conflict` or `skipped`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema": {
+      "description": "Always [`PICK_SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema",
+    "commit",
+    "onto",
+    "outcome"
+  ],
+  "$defs": {
+    "PickOutcome": {
+      "description": "Outcome vocabulary of `pick`.",
+      "oneOf": [
+        {
+          "description": "The commit was picked onto the target.",
+          "type": "string",
+          "const": "picked"
+        },
+        {
+          "description": "The three-way merge conflicts; the target is unchanged.",
+          "type": "string",
+          "const": "conflict"
+        },
+        {
+          "description": "Refused before any change (root or merge commit, already on the target, dirty checkout).",
+          "type": "string",
+          "const": "skipped"
+        }
+      ]
+    }
+  }
+}

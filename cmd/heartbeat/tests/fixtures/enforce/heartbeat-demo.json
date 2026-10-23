@@ -1,0 +1,106 @@
+{
+  "anchors": {
+    "closed": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules demo-close --dir "
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "edit": {
+      "tool": "^(Edit|Write|NotebookEdit)$"
+    },
+    "produced": {
+      "capture": [
+        {
+          "name": "value",
+          "pointer": "/value"
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules demo-value --seed \\S+$"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "stage": {
+      "input": [
+        {
+          "field": "scriptPath",
+          "pattern": "/heartbeat-demo/workflows/demo\\.js$"
+        }
+      ],
+      "tool": "^Workflow$"
+    }
+  },
+  "checks": {
+    "close_before_stop": {
+      "after": "stage",
+      "kind": "stop",
+      "reason": "heartbeat-demo: run `smine-rules demo-close --dir \u003cartifactsDir\u003e` before ending",
+      "recovery": "heartbeat runtime ({finding}): run demo-close, then end the turn",
+      "require": "closed"
+    },
+    "no_edit_after_stage": {
+      "deny": "edit",
+      "from": "stage",
+      "kind": "phase",
+      "reason": "heartbeat-demo: no edits between the stage and demo-close",
+      "recovery": "heartbeat runtime ({finding}): do not edit; run `smine-rules demo-close` next",
+      "until": "closed"
+    },
+    "producer_first": {
+      "after": "produced",
+      "kind": "requires",
+      "on": "stage",
+      "reason": "heartbeat-demo: run `smine-rules demo-value` before the Workflow",
+      "recovery": "heartbeat runtime ({finding}): run the producer first, then the Workflow"
+    },
+    "value_provenance": {
+      "arg": "/args/value",
+      "capture": "value",
+      "from": "produced",
+      "kind": "provenance",
+      "on": "stage",
+      "reason": "heartbeat-demo: args.value must be the value the last unsalted `smine-rules demo-value --seed \u003csession\u003e` call printed; a `--salt` call is no producer",
+      "recovery": "heartbeat runtime ({finding}): pass exactly the value `smine-rules demo-value` printed: {evidence}"
+    }
+  },
+  "gate": {
+    "planModeDenied": [
+      "Workflow"
+    ],
+    "rootDenied": [
+      "*/heartbeat-demo/*/closed.json"
+    ],
+    "workflowOnly": [
+      "heartbeat-demo-worker"
+    ],
+    "writers": [
+      {
+        "agentTypes": [
+          "heartbeat-demo-worker"
+        ],
+        "glob": "*/heartbeat-demo/*/artifact.json"
+      }
+    ]
+  },
+  "judgment": {
+    "value_check": {
+      "anchor": "stage",
+      "evidence": [
+        "value",
+        "arg:/args/value"
+      ],
+      "question": "Is the value passed to the stage the producer's value?",
+      "send": "heartbeat runtime ({finding}): the runtime agent asks you to re-check the value you passed: {evidence}"
+    }
+  },
+  "schema": 1,
+  "skill": "heartbeat-demo",
+  "version": "0.0.0"
+}

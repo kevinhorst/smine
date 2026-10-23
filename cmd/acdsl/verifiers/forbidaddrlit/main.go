@@ -1,11 +1,4 @@
-// Command forbidaddrlit is a registered ACDSL verifier: it fails (exit 1)
-// when any file in the files list takes the address of a composite literal
-// (&T{...}) — the pre-Go-1.26 pointer-initialization idiom that new(expr)
-// replaces. Taking the address of a variable (&v) is out of scope: the rule
-// targets the literal idiom, not addressability in general.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command forbidaddrlit is an ACDSL verifier: a file never takes the address of a composite literal.
 package main
 
 import (

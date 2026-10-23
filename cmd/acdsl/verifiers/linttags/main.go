@@ -1,14 +1,4 @@
-// Command linttags is a registered ACDSL verifier: it fails (exit 1) when a
-// style guide's linter-coverage claims disagree with the repo's golangci
-// config. A "* Covered by `<linter>`" bullet claims CI proves that slice, and
-// a `[lint]` headline tag tells reviewers to skip the rule — so a claim
-// naming a linter that is not enabled means the rule is checked by nobody.
-//
-// Contract: args = <files-list path> [config=<filename>]; one violation per
-// stdout line as file:line: message; exit 0 pass, 1 violations, 2 error.
-// The config (default .golangci.yml) is resolved per guide file by walking up
-// from the guide's directory; a guide with no config above it passes — the
-// claims are only checkable where the named tooling runs.
+// Command linttags is an ACDSL verifier: a style guide's linter-coverage claims agree with the repo's golangci config.
 package main
 
 import (
@@ -27,8 +17,6 @@ var (
 	checkRe    = regexp.MustCompile(`^(ST|QF)[0-9]+$`)
 )
 
-// lintConfig is the slice of a golangci config the coverage claims are
-// checked against, extracted line-based to mirror the retired check-tags.sh.
 type lintConfig struct {
 	disabledChecks map[string][]string
 	enabled        map[string]bool
@@ -40,8 +28,6 @@ func main() {
 	os.Exit(run(os.Args[1:], os.Stdout))
 }
 
-// claimSegment cuts a coverage bullet to its claim sentence: everything up to
-// the first ". " or " — ", so trailing prose may name non-linter backticks.
 func claimSegment(text string) string {
 	segment := text
 	if idx := strings.Index(segment, ". "); idx >= 0 {

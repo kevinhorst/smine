@@ -1,12 +1,4 @@
-// Command shellcheckwrap is a registered ACDSL verifier: it fails (exit 1)
-// when shellcheck reports findings on an anchored script. Dep-gated (Band D,
-// accepted): shellcheck is a brew binary; a missing binary is a tool error
-// (exit 2), never a silent pass. -f gcc yields the contract line shape.
-// Exit-code normalization per the registry contract: contract-shaped output
-// lines mean violations regardless of shellcheck's own exit code.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line:col: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command shellcheckwrap is an ACDSL verifier: shellcheck reports no finding on an anchored script.
 package main
 
 import (

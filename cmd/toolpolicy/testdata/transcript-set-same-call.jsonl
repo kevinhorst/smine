@@ -1,0 +1,2 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"run the probe"}}
+{"type":"attachment","attachment":{"type":"queued_command","prompt":"#set Bash(probe-x *)","commandMode":"prompt","origin":{"kind":"human"},"humanTurn":true}}

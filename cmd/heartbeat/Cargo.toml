@@ -1,0 +1,98 @@
+[package]
+name = "heartbeat"
+version = "0.1.0"
+edition = "2024"
+# Mirrors cmd/agentwt: the floor, not the build channel (the toolchain file pins stable above it).
+rust-version = "1.88"
+description = "Fleet control plane: session lifecycle from hooks, the session registry, the denial ledger and process exits"
+license = "PolyForm-Noncommercial-1.0.0"
+publish = false
+default-run = "heartbeat"
+# The one integration test binary is declared below (RULE-RUST-TEST-001).
+autotests = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "heartbeat"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+
+[[bench]]
+name = "load"
+harness = false
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+# Daemon edges, the engine loop, the CLI client and terminal output; the core (event, fleet, apply, wire, status)
+# builds without them.
+cli = [
+    "dep:anstream",
+    "dep:anyhow",
+    "dep:axum",
+    "dep:clap",
+    "dep:dunce",
+    "dep:gix",
+    "dep:nix",
+    "dep:notify",
+    "dep:reqwest",
+    "dep:rmcp",
+    "dep:sysinfo",
+    "dep:tokio",
+    "dep:ureq",
+]
+
+[dependencies]
+agentwt = { path = "../agentwt", default-features = false }
+globset = "0.4"
+jiff = { version = "0.2", features = ["serde"] }
+regex = "1"
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+thiserror = "2"
+uuid = { version = "1", features = ["v7", "serde"] }
+anstream = { version = "0.6", optional = true }
+anyhow = { version = "1", optional = true }
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio"], optional = true }
+clap = { version = "4", features = ["derive", "wrap_help", "env"], optional = true }
+dunce = { version = "1", optional = true }
+# Same range as agentwt's own pin; the runner edge reads the default branch's tree for work-item discovery.
+gix = { version = ">=0.87.1, <0.88", default-features = false, features = ["sha1"], optional = true }
+notify = { version = "8", optional = true }
+# The reqwest major rmcp 3.4.1 depends on; plain http to loopback, so no TLS feature.
+reqwest = { version = "0.13", default-features = false, features = ["json"], optional = true }
+# The polling process-exit watch off darwin; agentwt pins the same version for session liveness.
+sysinfo = { version = "0.37", default-features = false, features = ["system"], optional = true }
+# Exploration D1 pins the peek client to rmcp 3.4.1 (Streamable HTTP client, protocol 2025-11-25); server, macros
+# and base64 defaults are unused.
+rmcp = { version = "=3.4.1", default-features = false, features = ["client", "transport-streamable-http-client-reqwest"], optional = true }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "sync", "signal", "macros", "time"], optional = true }
+ureq = { version = "3", default-features = false, optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+nix = { version = "0.31", default-features = false, features = ["event"], optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+# Failure modes are documented once on `error::Error`, not repeated per function.
+missing_errors_doc = "allow"
+
+# Copied from cmd/agentwt/Cargo.toml with its comment: a profile override applies only in the root package, and
+# heartbeat links agentwt's merge matrix in-process.
+[profile.dev.package.gix-merge]
+debug-assertions = false

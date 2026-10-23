@@ -91,7 +91,7 @@ func TestRunNormalizeSpecApplied(t *testing.T) {
 	golden := writeFile(t, dir, "resp.golden", "path <HOME>/x\n")
 	observed := filepath.Join(dir, "resp.observed")
 	spec := writeFile(t, dir, "normalize.spec", "# mask home\ns|/Users/[a-z]+|<HOME>|\n")
-	server := serve(t, "path /Users/kevin/x\n")
+	server := serve(t, "path /Users/devuser/x\n")
 
 	var out bytes.Buffer
 	code := run([]string{writeFilesList(t, golden), "url=" + server.URL, "observed=" + observed, "normalize=" + spec}, &out)

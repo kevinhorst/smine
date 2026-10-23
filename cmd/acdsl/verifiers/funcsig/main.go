@@ -1,12 +1,4 @@
-// Command funcsig is a registered ACDSL verifier: it fails (exit 1) when a
-// function declaration violates RULE-GOLANG-FUNC-001 — a context.Context parameter
-// must be the first parameter and be named ctx, an error result must be the
-// last result, and a signature has at most 3 results. Scope: FuncDecls only;
-// function literals and interface method sets are out of v1 scope. Unnamed
-// context parameters are not flagged for naming (lenient).
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command funcsig is an ACDSL verifier: a function declaration follows the house signature rule.
 package main
 
 import (
@@ -62,7 +54,7 @@ func run(args []string, out io.Writer) int {
 	return 0
 }
 
-// checkSignature returns the RULE-GOLANG-FUNC-001 findings for one declaration.
+// checkSignature returns the signature findings for one declaration.
 func checkSignature(decl *ast.FuncDecl, contextAlias string) []string {
 	var messages []string
 	for fieldIndex, field := range decl.Type.Params.List {
@@ -109,8 +101,6 @@ func isContextType(expr ast.Expr, contextAlias string) bool {
 	return ok && ident.Name == contextAlias && selector.Sel.Name == "Context"
 }
 
-// importAlias returns the identifier the file uses for pkgPath, or "" when
-// not imported; dot and blank imports are out of scope.
 func importAlias(file *ast.File, pkgPath string) string {
 	for _, imported := range file.Imports {
 		if strings.Trim(imported.Path.Value, `"`) != pkgPath {

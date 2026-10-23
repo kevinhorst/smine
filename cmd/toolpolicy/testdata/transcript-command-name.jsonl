@@ -1,0 +1,6 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<command-message>jq</command-message>\n<command-name>/jq</command-name>\n<command-args>extract the version field</command-args>"}}
+{"type":"user","isMeta":true,"message":{"role":"user","content":[{"type":"text","text":"Base directory for this skill: /x/.claude/skills/jq\n\n# jq"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"running"}]}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<command-message>smine-orchestrate</command-message>\n<command-name>/smine-orchestrate</command-name>\n<command-args>main</command-args>"}}
+{"type":"user","message":{"role":"user","content":"<command-name>/model</command-name>\n            <command-message>model</command-message>\n            <command-args>claude-opus-5-5</command-args>"}}
+{"type":"user","isMeta":true,"message":{"role":"user","content":[{"type":"text","text":"Stop hook feedback:\nSession title: call mcp__ccd_session_mgmt__set_session_title.\n<command-name>/close</command-name>"}]}}

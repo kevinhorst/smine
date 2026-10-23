@@ -4,11 +4,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -17,173 +20,75 @@ import (
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 
+	"github.com/kevinhorst/smine/internal/components"
 	"github.com/kevinhorst/smine/internal/fsx"
+	"github.com/kevinhorst/smine/internal/install"
 	"github.com/kevinhorst/smine/internal/routines"
+	"github.com/kevinhorst/smine/internal/server"
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
 const serverTaskName = "configserver"
 
-// serverTaskTemplate is the logon task for the config server — the
-// LaunchAgent analog: logon trigger, restart-on-crash (bounded; next logon is
-// the backstop), no execution time limit, single instance. Holes: command,
-// arguments.
-const serverTaskTemplate = `<?xml version="1.0"?>
-<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <Triggers>
-    <LogonTrigger><Enabled>true</Enabled></LogonTrigger>
-  </Triggers>
-  <Principals>
-    <Principal id="Author">
-      <LogonType>InteractiveToken</LogonType>
-      <RunLevel>LeastPrivilege</RunLevel>
-    </Principal>
-  </Principals>
-  <Settings>
-    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <StartWhenAvailable>true</StartWhenAvailable>
-    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-    <Enabled>true</Enabled>
-    <RestartOnFailure>
-      <Interval>PT1M</Interval>
-      <Count>3</Count>
-    </RestartOnFailure>
-  </Settings>
-  <Actions Context="Author">
-    <Exec>
-      <Command>%s</Command>
-      <Arguments>%s</Arguments>
-      <WorkingDirectory>%s</WorkingDirectory>
-    </Exec>
-  </Actions>
-</Task>
-`
-
-// runInstall is the Windows single-source install (addendum M3): bootstrap
-// (bash locate, claude/peek deploy, PATH, syncs) plus the scheduling half.
-// install.ps1 (from-source) and smine-setup.exe both delegate here.
-// Routine sync is NOT done here: the
-// server task started by registerServerTask runs SyncAll at boot (main.go),
-// and a second concurrent SyncAll from this process races it on
-// Register-ScheduledTask (observed: all three routines "sync failed" in the
-// server log while the installer's copies won).
-func runInstall(ctx context.Context, addr string, initWelcome bool, peekPort, peekControlPort int, presentationProfileId string) int {
-	repoDir, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "install: getwd: %v\n", err)
-		return 1
-	}
+func prepareInstall(ctx context.Context, repoDir string, record install.Record, request *installRequest) (int, bool) {
 	if code, done := relaunchElevated(); done { // A11 — Register-ScheduledTask needs an elevated token
-		return code
+		return code, true
 	}
+
 	bash := shell.BashPath()
 	if bash == "" {
 		fmt.Fprintln(os.Stderr, "install: Git Bash not found (set SMINE_BASH)")
-		return 1
-	}
-	if output, err := shell.RunSync(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", "ensure_git_repo.sh")); err != nil {
-		fmt.Fprintf(os.Stderr, "install: ensure_git_repo.sh: %v\n%s\n", err, output)
-		return 1
+		return 1, true
 	}
 	shimDir := filepath.Join(os.Getenv("LOCALAPPDATA"), "smine", "bin")
 	if err := ensureUserPath(shimDir); err != nil {
 		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
+		return 1, true
 	}
-	claudeFound := deployClaude(ctx, repoDir, shimDir, bash)
-	deployPeek(repoDir, shimDir)
-	if err := writeInstallEnv(repoDir, addr, peekPort, peekControlPort); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
+	request.isClaudeFound = deployClaude(ctx, repoDir, shimDir, bash)
+	if slices.Contains(record.Components, components.Peek) {
+		deployPeek(repoDir, shimDir)
 	}
-	if err := runSyncs(ctx, repoDir, bash); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
+	return 0, false
+}
+
+// Routine sync stays the server task's boot sync — a second concurrent SyncAll races it on Register-ScheduledTask.
+func finishInstall(ctx context.Context, env install.Env, record install.Record, request *installRequest, results []install.Result) error {
+	peekPort := request.peekPort
+	if !slices.Contains(record.Components, components.Peek) {
+		peekPort = 0
 	}
-	if err := installPresentationProfile(repoDir, presentationProfileId); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
+	if err := takeOverPort(ctx, request.addr); err != nil {
+		return err
+	}
+	if err := registerServerTask(ctx, env.RepoDir, request.addr, request.initWelcome, peekPort, request.peekControlPort); err != nil {
+		return err
+	}
+	if err := verifyServing(ctx, request.addr); err != nil {
+		return err
+	}
+	if slices.Contains(record.Components, components.Heartbeat) {
+		if err := install.RestartHeartbeatService(ctx, env); err != nil {
+			return err
+		}
 	}
 
-	if err := materializePlists(repoDir); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
-	}
-	if err := takeOverPort(ctx, addr); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
-	}
-	if err := registerServerTask(ctx, repoDir, addr, initWelcome, peekPort, peekControlPort); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
-	}
-
-	if err := verifyServing(ctx, addr); err != nil {
-		fmt.Fprintf(os.Stderr, "install: %v\n", err)
-		return 1
-	}
-	if claudeFound {
-		tokenCheck()
-	} else {
+	isTokenWanted := slices.Contains(record.Components, components.Routines) || slices.Contains(record.Components, components.Mining)
+	switch {
+	case !request.isClaudeFound:
 		fmt.Println("NOTE: no claude CLI found (PATH or Claude Desktop) - routines will not run until one is installed")
+	case isTokenWanted:
+		tokenCheck()
 	}
-	fmt.Printf("configserver logon task registered; serving on %s\n", addr)
-	return 0
-}
-
-// writeInstallEnv mirrors install.sh: the per-install ports land in the
-// gitignored install.env so sync_settings.sh and the config server expand
-// {{PEEK_CONTROL_PORT}} with this install's value.
-func writeInstallEnv(repoDir, addr string, peekPort, peekControlPort int) error {
-	_, configPort, err := net.SplitHostPort(addr)
-	if err != nil {
-		return fmt.Errorf("writeInstallEnv: Invalid addr %q: %w", addr, err)
-	}
-	content := fmt.Sprintf("CONFIGSERVER_PORT=%s\nPEEK_PORT=%d\nPEEK_CONTROL_PORT=%d\n", configPort, peekPort, peekControlPort)
-	if err := os.WriteFile(filepath.Join(repoDir, "install.env"), []byte(content), 0o644); err != nil {
-		return fmt.Errorf("writeInstallEnv: %w", err)
-	}
+	fmt.Printf("configserver logon task registered; serving on %s\n", request.addr)
 	return nil
 }
 
-// materializePlists mirrors install.sh: routines/*/*.plist.template ->
-// .plist, skip-if-exists (edited copies belong to the config server),
-// forward-slash paths so Duplicate's string rewrite stays separator-stable
-// (plan D1).
-func materializePlists(repoDir string) error {
-	templates, err := filepath.Glob(filepath.Join(repoDir, "routines", "*", "*.plist.template"))
-	if err != nil {
-		return fmt.Errorf("materializePlists: %w", err)
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("materializePlists: %w", err)
-	}
-	for _, template := range templates {
-		target := strings.TrimSuffix(template, ".template")
-		if _, err := os.Stat(target); err == nil {
-			fmt.Printf("skip: %s exists (edit via the config server)\n", filepath.Base(target))
-			continue
-		}
-		data, err := os.ReadFile(template)
-		if err != nil {
-			return fmt.Errorf("materializePlists: %w", err)
-		}
-		rendered := strings.ReplaceAll(string(data), "__REPO_DIR__", filepath.ToSlash(repoDir))
-		rendered = strings.ReplaceAll(rendered, "__HOME__", filepath.ToSlash(home))
-		if err := os.WriteFile(target, []byte(rendered), 0o644); err != nil {
-			return fmt.Errorf("materializePlists: %w", err)
-		}
-		fmt.Printf("   %s\n", filepath.Base(target))
-	}
+// The logon task owns the server on Windows.
+func restartServer(ctx context.Context, env install.Env, results []install.Result) error {
 	return nil
 }
 
-// takeOverPort mirrors install.sh's lsof takeover with a try-bind: a free
-// port passes; a held port gets one stop of the smine server task and a
-// retry; a still-held port is a foreign holder and fatal.
 func takeOverPort(ctx context.Context, addr string) error {
 	bindable := func() bool {
 		listener, err := net.Listen("tcp", addr)
@@ -197,8 +102,7 @@ func takeOverPort(ctx context.Context, addr string) error {
 		return nil
 	}
 	fmt.Printf("-> Stopping task holding %s ...\n", addr)
-	command := fmt.Sprintf(`Stop-ScheduledTask -TaskPath '\smine\' -TaskName '%s' -ErrorAction SilentlyContinue`, serverTaskName)
-	if _, err := shell.Run(ctx, "", "powershell", "-NoProfile", "-NonInteractive", "-Command", command); err != nil {
+	if _, err := routines.StopTask(ctx, serverTaskName); err != nil {
 		return fmt.Errorf("takeOverPort: %w", err)
 	}
 	for attempt := 0; attempt < 10; attempt++ {
@@ -210,47 +114,19 @@ func takeOverPort(ctx context.Context, addr string) error {
 	return fmt.Errorf("takeOverPort: %s is held by a foreign process — stop it and re-run", addr)
 }
 
-// registerServerTask registers \smine\configserver from serverTaskTemplate
-// with the port flags in the task arguments (plan D11), then fires the
-// immediate first run.
 func registerServerTask(ctx context.Context, repoDir, addr string, initWelcome bool, peekPort, peekControlPort int) error {
 	command := filepath.Join(repoDir, "bin", "configserver.exe")
 	logPath := filepath.Join(os.Getenv("LOCALAPPDATA"), "claude-routine", "logs", "configserver.log")
 	arguments := fmt.Sprintf(`-addr %s -init-welcome=%t -peek-port %d -peek-control-port %d -logfile "%s"`,
 		addr, initWelcome, peekPort, peekControlPort, logPath)
-	taskXML := fmt.Sprintf(serverTaskTemplate, xmlEscapeInstall(command), xmlEscapeInstall(arguments), xmlEscapeInstall(repoDir))
-
-	xmlFile, err := os.CreateTemp("", "smine-configserver-*.xml")
-	if err != nil {
-		return fmt.Errorf("registerServerTask: %w", err)
-	}
-	defer os.Remove(xmlFile.Name())
-	if _, err := xmlFile.WriteString(taskXML); err != nil {
-		xmlFile.Close()
-		return fmt.Errorf("registerServerTask: %w", err)
-	}
-	xmlFile.Close()
-
-	// -User binds the principal to the current user: the template's Principal
-	// has no <UserId>, and an unbound InteractiveToken principal is a
-	// machine-wide task whose registration needs admin (0x80070005 from a
-	// non-elevated shell). A self-bound task registers without elevation.
-	register := fmt.Sprintf(
-		`Register-ScheduledTask -TaskName '%s' -TaskPath '\smine\' -User $env:USERNAME -Xml (Get-Content -Raw '%s') -Force | Out-Null; Start-ScheduledTask -TaskPath '\smine\' -TaskName '%s'`,
-		serverTaskName, xmlFile.Name(), serverTaskName)
-	if output, err := shell.Run(ctx, "", "powershell", "-NoProfile", "-NonInteractive", "-Command", register); err != nil {
+	taskXML := routines.LogonTaskXML(arguments, command, repoDir)
+	if output, err := routines.RegisterLogonTask(ctx, serverTaskName, taskXML); err != nil {
 		return fmt.Errorf("registerServerTask: %s: %w (if access is still denied, re-run once from an elevated PowerShell)", output, err)
 	}
 	return nil
 }
 
-// verifyServing mirrors install.sh's served-by loop: the port must answer
-// HTTP within the window, else the install failed loudly. Generous budgets:
-// the freshly started server runs SyncAll before it listens, and the overview
-// render probes every routine's task state — each a powershell spawn, seconds
-// apiece on a cold Windows box. A 2s client timeout aborted every poll
-// mid-render (the "superfluous WriteHeader" log noise) and failed the install
-// against a healthy server.
+// A 2s client timeout aborted every poll mid-render and failed the install against a healthy server.
 func verifyServing(ctx context.Context, addr string) error {
 	url := "http://127.0.0.1" + addr
 	if !strings.HasPrefix(addr, ":") {
@@ -268,15 +144,14 @@ func verifyServing(ctx context.Context, addr string) error {
 			continue
 		}
 		response.Body.Close()
-		if response.StatusCode == http.StatusOK {
+		isChallenge := response.StatusCode == http.StatusUnauthorized
+		if isChallenge && strings.Contains(response.Header.Get("WWW-Authenticate"), server.CredentialRealm) {
 			return nil
 		}
 	}
 	return fmt.Errorf("verifyServing: %s did not answer — check %%LOCALAPPDATA%%\\claude-routine\\logs and Task Scheduler history", addr)
 }
 
-// tokenCheck prints the routine-token guidance when the file is missing —
-// routines exit 78 without it (plan D8; path shared with macOS).
 func tokenCheck() {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -290,20 +165,9 @@ func tokenCheck() {
 		return
 	}
 	fmt.Printf("NOTE: routine OAuth token missing: %s\n", tokenPath)
-	fmt.Println("      run `claude setup-token` and save the token there, or add a labeled token via the config server Configure widget — routines exit 78 without it")
+	fmt.Println("      run `claude setup-token` and save the token there, or add a labeled token on the config server's Profile page — routines exit 78 without it")
 }
 
-var installEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&quot;", "'", "&apos;")
-
-func xmlEscapeInstall(value string) string {
-	return installEscaper.Replace(value)
-}
-
-// deployClaude makes `claude` callable for routines: a CLI already visible
-// from Git Bash wins (native installer or npm); otherwise Claude Desktop's
-// bundled claude.exe gets the repo's bash shim deployed onto the shim dir.
-// Neither found is a warning, not an error (DR4): install completes, the
-// token prompt is skipped, routines exit 127 until a runtime appears.
 func deployClaude(ctx context.Context, repoDir, shimDir, bash string) bool {
 	if _, err := shell.Run(ctx, "", bash, "-lc", "command -v claude"); err == nil {
 		fmt.Println("-> claude: found on PATH")
@@ -316,8 +180,6 @@ func deployClaude(ctx context.Context, repoDir, shimDir, bash string) bool {
 		fmt.Println("-> claude: not found (PATH or Claude Desktop) - install the claude CLI or Claude Desktop for routines")
 		return false
 	}
-	// The shim re-resolves the newest Desktop version per call; deploying it
-	// is all that's needed (claude-shim.sh contract unchanged).
 	if err := fsx.CopyFile(filepath.Join(repoDir, "claude-shim.sh"), filepath.Join(shimDir, "claude")); err != nil {
 		fmt.Printf("-> claude: shim deploy failed: %v\n", err)
 		return false
@@ -326,10 +188,6 @@ func deployClaude(ctx context.Context, repoDir, shimDir, bash string) bool {
 	return true
 }
 
-// deployPeek refreshes shimDir\peek-mcp.exe: SMINE_PEEK_BIN override, then a
-// sibling peek-mcp checkout, then an already-present copy (installer-bundled).
-// Missing everywhere is a warning — the session column degrades. A locked
-// destination keeps the old exe (a running peek-mcp holds the file).
 func deployPeek(repoDir, shimDir string) {
 	dest := filepath.Join(shimDir, "peek-mcp.exe")
 	source := os.Getenv("SMINE_PEEK_BIN")
@@ -351,50 +209,38 @@ func deployPeek(repoDir, shimDir string) {
 	fmt.Printf("-> peek-mcp: %s\n", source)
 }
 
-// installPresentationProfile copies the selected repo template to the
-// per-install profile path; an empty id installs nothing (plan D11).
-func installPresentationProfile(repoDir, profileId string) error {
-	if profileId == "" {
+func ensureCredential(credentialPath string) error {
+	_, err := os.Stat(credentialPath)
+	if err == nil {
 		return nil
 	}
-	home, err := os.UserHomeDir()
+
+	if !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("ensureCredential: %w", err)
+	}
+
+	token, err := server.GenerateCredential(credentialPath)
 	if err != nil {
-		return fmt.Errorf("installPresentationProfile: %w", err)
+		return err
 	}
-	source := filepath.Join(repoDir, "settings", "claude_code", "presentation-profile."+profileId+".md")
-	content, err := os.ReadFile(source)
+
+	caption, err := windows.UTF16PtrFromString("smine config server token")
 	if err != nil {
-		return fmt.Errorf("installPresentationProfile: template %q: %w", profileId, err)
+		return fmt.Errorf("ensureCredential: %w", err)
 	}
-	targetDir := filepath.Join(home, ".claude", "context", "global")
-	if err := os.MkdirAll(targetDir, 0o755); err != nil {
-		return fmt.Errorf("installPresentationProfile: %w", err)
+
+	text, err := windows.UTF16PtrFromString("Token (shown once):\n\n" + token + "\n\nCtrl+C copies this box. Save the token in your password manager — the browser asks for it as the password; any user name works.")
+	if err != nil {
+		return fmt.Errorf("ensureCredential: %w", err)
 	}
-	target := filepath.Join(targetDir, "presentation-profile.md")
-	if err := os.WriteFile(target, content, 0o644); err != nil {
-		return fmt.Errorf("installPresentationProfile: %w", err)
+
+	if _, err := windows.MessageBox(0, text, caption, windows.MB_OK|windows.MB_ICONINFORMATION); err != nil {
+		return fmt.Errorf("ensureCredential: %w", err)
 	}
-	fmt.Printf("-> Presentation profile installed: %s (%s)\n", target, profileId)
+
 	return nil
 }
 
-// runSyncs applies settings/hooks/skills through Git Bash — shell.Run's .sh
-// rewrite resolves the same bash. ensureUserPath already prepended the shim
-// dir to this process's PATH, so the scripts' jq resolves the shipped jq.exe.
-func runSyncs(ctx context.Context, repoDir, bash string) error {
-	fmt.Printf("-> Syncing settings/hooks/skills (bash: %s) ...\n", bash)
-	for _, script := range []string{"sync_settings.sh", "sync_hooks.sh", "sync_skills.sh"} {
-		if output, err := shell.RunSync(ctx, repoDir, filepath.Join(repoDir, "cmd", "sync", script)); err != nil {
-			return fmt.Errorf("runSyncs: %s: %w\n%s", script, err, output)
-		}
-	}
-	return nil
-}
-
-// ensureUserPath appends dir to HKCU\Environment Path (expandsz) when absent
-// — case-insensitive segment match, never a substring check — and broadcasts
-// WM_SETTINGCHANGE so new shells see it. Also prepends dir to this process's
-// PATH for the steps that follow.
 func ensureUserPath(dir string) error {
 	key, err := registry.OpenKey(registry.CURRENT_USER, "Environment", registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
@@ -418,8 +264,7 @@ func ensureUserPath(dir string) error {
 		if current != "" {
 			updated = current + ";" + dir
 		}
-		// Preserve the value's type; a fresh value is expandsz like the
-		// system-provisioned Path.
+		// A fresh value is expandsz like the system-provisioned Path.
 		if valtype == registry.SZ {
 			err = key.SetStringValue("Path", updated)
 		} else {
@@ -441,8 +286,7 @@ var (
 	procShellExecuteExW     = modShell32.NewProc("ShellExecuteExW")
 )
 
-// broadcastEnvironmentChange tells running shells the user environment
-// changed (best-effort; x/sys exports no SendMessageTimeout wrapper).
+// Best-effort; x/sys exports no SendMessageTimeout wrapper.
 func broadcastEnvironmentChange() {
 	const hwndBroadcast = 0xffff
 	const wmSettingChange = 0x001a
@@ -455,8 +299,7 @@ func broadcastEnvironmentChange() {
 		uintptr(unsafe.Pointer(env)), smtoAbortIfHung, 5000, 0)
 }
 
-// shellExecuteInfo is SHELLEXECUTEINFOW — x/sys has plain ShellExecute only,
-// which returns no process handle to wait on.
+// SHELLEXECUTEINFOW: x/sys has plain ShellExecute only, which returns no process handle to wait on.
 type shellExecuteInfo struct {
 	cbSize         uint32
 	fMask          uint32
@@ -475,18 +318,16 @@ type shellExecuteInfo struct {
 	hProcess       windows.Handle
 }
 
-// relaunchElevated re-runs this binary elevated when the current token is
-// not (A11): ShellExecuteW verb "runas" with the original args plus
-// -logfile %TEMP%\smine-install.log, waits for exit, returns (exitCode,
-// true). An already-elevated process returns (0, false) and continues
-// inline. A declined UAC prompt is a fatal install error.
 func relaunchElevated() (int, bool) {
 	if windows.GetCurrentProcessToken().IsElevated() {
 		return 0, false
 	}
 
 	logPath := filepath.Join(os.Getenv("TEMP"), "smine-install.log")
-	os.Remove(logPath)
+	if err := os.Rename(logPath, logPath+".1"); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return 0, false
+	}
+
 	args := os.Args[1:]
 	hasLogfile := false
 	for _, arg := range args {
@@ -519,16 +360,12 @@ func relaunchElevated() (int, bool) {
 		fmt.Fprintf(os.Stderr, "install: elevation failed: %v\n", err)
 		return 1, true
 	}
-	// The elevated child logs to a file (windowsgui, no shared console);
-	// replay it so the console/dev path still shows the output.
 	if content, err := os.ReadFile(logPath); err == nil {
 		fmt.Print(string(content))
 	}
 	return code, true
 }
 
-// shellExecuteWait runs file via ShellExecuteExW with the given verb, waits
-// for the child to exit and returns its exit code.
 func shellExecuteWait(verb, file, params, cwd string) (int, error) {
 	const seeMaskNoCloseProcess = 0x00000040
 	verbPtr, err := windows.UTF16PtrFromString(verb)

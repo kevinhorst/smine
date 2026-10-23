@@ -1,0 +1,3 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<command-message>fdesign</command-message>\n<command-name>/fdesign</command-name>\n<command-args>refine probe.md</command-args>"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"running"}]}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<command-message>fdesign</command-message>\n<command-name>/fdesign</command-name>"}}

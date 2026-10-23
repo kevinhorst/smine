@@ -1,11 +1,4 @@
-// Command gofmtwrap is a registered ACDSL verifier: it fails (exit 1) when
-// any anchored file is not gofmt-formatted. It wraps `gofmt -l`, which exits 0
-// even when it finds unformatted files (findings are stdout filenames) — the
-// wrapper maps output to the registry contract: one file:line: violation per
-// finding, exit 1. Replaces the raw `gofmt -l cmd internal` audit line.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command gofmtwrap is an ACDSL verifier: every anchored file is gofmt-formatted.
 package main
 
 import (

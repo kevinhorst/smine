@@ -1,0 +1,69 @@
+[package]
+name = "agentwt"
+version = "0.1.0"
+edition = "2024"
+# gix 0.87 requires 1.88 (sha2 0.11 / hashbrown 0.17 are edition-2024 crates); the toolchain
+# file pins stable above it — this is the floor, not the build channel.
+rust-version = "1.88"
+description = "Integration state, merge order and operations for agent worktrees — one JSON document per repo"
+license = "PolyForm-Noncommercial-1.0.0"
+publish = false
+default-run = "agentwt"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "agentwt"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+# Everything only the binary needs; the library builds without it.
+cli = ["dep:clap", "dep:anyhow", "dep:anstream", "dep:signal-hook"]
+
+[dependencies]
+# >=0.87: Repository::with_object_memory + merge_commits with typed conflicts are the engine (D2, D7).
+gix = { version = ">=0.87.1, <0.88", default-features = false, features = [
+    "sha1",
+    "merge",
+    "status",
+    "revision",
+    "parallel",
+    "auto-chain-error",
+    "comfort",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = { version = "1", features = ["derive"] }
+thiserror = "2"
+blake3 = "1"
+dunce = "1"
+sysinfo = { version = "0.37", default-features = false, features = ["system"] }
+clap = { version = "4", features = ["derive", "wrap_help", "env"], optional = true }
+anyhow = { version = "1", optional = true }
+anstream = { version = "0.6", optional = true }
+signal-hook = { version = "0.3", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+# gix-merge 0.20.1 `perform_blob_merge` debug-asserts that equal blob ids never arrive with equal modes, yet a rename on
+# one side plus the identical content change on the other does exactly that (the pick_after_rename scenario); the code
+# right after the assertion returns the correct result. Tests run the binary in the dev profile, so the assertion is
+# switched off for this one dependency to test the same logic release builds ship.
+[profile.dev.package.gix-merge]
+debug-assertions = false
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+# Failure modes are documented once on `error::Error`, not repeated per function.
+missing_errors_doc = "allow"
+# The absent / null / value three-state of the wire contract is `Option<Option<T>>` by design (wire.rs).
+option_option = "allow"

@@ -1,0 +1,3 @@
+{"type":"user","turnOrigin":"human","cwd":"/work","message":{"role":"user","content":"Run the review"}}
+{"type":"attachment","cwd":"/work","attachment":{"type":"queued_command","prompt":"Also check the ledger","commandMode":"prompt","origin":{"kind":"human"},"humanTurn":true}}
+{"type":"user","turnOrigin":"task_notification","cwd":"/work","message":{"role":"user","content":"<task-notification>\n<task-id>wf_1</task-id>\n<status>completed</status>\n</task-notification>"}}

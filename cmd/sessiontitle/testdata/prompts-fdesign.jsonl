@@ -1,0 +1,5 @@
+{"type":"user","turnOrigin":"human","message":{"content":"<command-message>fdesign</command-message>\n<command-name>/fdesign</command-name>\n<command-args>SessionTitle as State</command-args>"}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_1","name":"Skill","input":{"skill":"package-commit"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_1","is_error":false,"content":"ok"}]}}
+{"type":"user","turnOrigin":"human","message":{"content":"/qq what is 2+2"}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"4"}]}}

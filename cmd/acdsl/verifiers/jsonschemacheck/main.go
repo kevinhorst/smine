@@ -1,10 +1,4 @@
-// Command jsonschemacheck is a registered ACDSL verifier: it fails (exit 1)
-// when an anchored JSON file does not conform to the schema named by the
-// schema= param (repo-relative path, draft-07). One generic entry serves
-// every schema-backed JSON rule.
-//
-// Contract: args = <files-list path> schema=<path>; one violation per stdout
-// line as file:line: message; exit 0 pass, 1 violations, 2 error.
+// Command jsonschemacheck is an ACDSL verifier: an anchored JSON file conforms to the schema= schema.
 package main
 
 import (
@@ -13,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/santhosh-tekuri/jsonschema/v6"
+	"github.com/kevinhorst/smine/internal/jsonschemacheck"
 )
 
 func main() {
@@ -35,8 +29,7 @@ func run(args []string, out io.Writer) int {
 		fmt.Fprintln(os.Stderr, "jsonschemacheck: schema= param required")
 		return 2
 	}
-	compiler := jsonschema.NewCompiler()
-	schema, err := compiler.Compile(schemaPath)
+	schema, err := jsonschemacheck.NewSchema(schemaPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "jsonschemacheck:", err)
 		return 2
@@ -48,26 +41,15 @@ func run(args []string, out io.Writer) int {
 	}
 	violations := 0
 	for _, file := range strings.Fields(string(listRaw)) {
-		handle, err := os.Open(file)
+		lines, err := schema.Violations(file)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "jsonschemacheck:", err)
 			return 2
 		}
-		instance, err := jsonschema.UnmarshalJSON(handle)
-		handle.Close()
-		if err != nil {
-			fmt.Fprintf(out, "%s:1: not valid JSON: %v\n", file, err)
-			violations++
-			continue
+		for _, line := range lines {
+			fmt.Fprintln(out, line)
 		}
-		if err := schema.Validate(instance); err != nil {
-			for _, line := range strings.Split(err.Error(), "\n") {
-				if line = strings.TrimSpace(line); line != "" {
-					fmt.Fprintf(out, "%s:1: %s\n", file, line)
-					violations++
-				}
-			}
-		}
+		violations += len(lines)
 	}
 	if violations > 0 {
 		return 1

@@ -1,0 +1,6 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<command-message>chain</command-message>\n<command-name>/chain</command-name>\n<command-args></command-args>"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_1","name":"Skill","input":{"skill":"jq","args":""}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","is_error":true,"content":"tool-policy: denied"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_2","name":"Skill","input":{"skill":"link","args":""}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_2","content":"Launching skill: link"}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"Base directory for this skill: /x/.claude/skills/link\n\n# link"}]}}

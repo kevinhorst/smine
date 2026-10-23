@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unplaced",
+  "description": "The `unplaced` document: what one branch still owes one target.",
+  "type": "object",
+  "properties": {
+    "branch": {
+      "description": "The branch asked about.",
+      "type": "string"
+    },
+    "commits": {
+      "description": "The branch's commits the target's history lacks and no per-commit layer places on it: no merges, parents\nbefore children.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CommitEntry"
+      }
+    },
+    "onto": {
+      "description": "The target it was judged against.",
+      "type": "string"
+    },
+    "onto_sha": {
+      "description": "The target's tip, full hex sha.",
+      "type": "string"
+    },
+    "onto_short_sha": {
+      "description": "Eight-character prefix of the target's tip — the short sha a restack names its branches after.",
+      "type": "string"
+    },
+    "schema": {
+      "description": "Always [`UNPLACED_SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema",
+    "branch",
+    "onto",
+    "onto_sha",
+    "onto_short_sha",
+    "commits"
+  ],
+  "$defs": {
+    "CommitEntry": {
+      "description": "One commit line.",
+      "type": "object",
+      "properties": {
+        "committed_at": {
+          "description": "Committer time, RFC 3339 UTC.",
+          "type": "string"
+        },
+        "is_merge": {
+          "description": "`true` for a merge commit (never counted as unpicked).",
+          "type": "boolean"
+        },
+        "sha": {
+          "description": "Full hex sha.",
+          "type": "string"
+        },
+        "short_sha": {
+          "description": "Eight-character prefix.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "Subject line.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha",
+        "short_sha",
+        "subject",
+        "committed_at",
+        "is_merge"
+      ]
+    }
+  }
+}

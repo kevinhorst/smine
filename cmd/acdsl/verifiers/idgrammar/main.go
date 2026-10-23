@@ -1,13 +1,4 @@
-// Command idgrammar is a registered ACDSL verifier: it fails (exit 1) when
-// a doctrine declaration's ID leaves the shared identity grammar —
-// KIND-SCOPE[-TOPIC]-NNN, with SCOPE and TOPIC registered in the taxonomy
-// (the generated context file's aspects carrying class "scope" / "topic"). Task-lifetime
-// entries are exempt: contracts are ephemeral and free-form. The naming
-// doctrine as a gate, not review vigilance.
-//
-// Contract: args = <files-list path> taxonomy=<generated context file path>; one
-// violation per stdout line as file:line: message; exit 0 pass, 1
-// violations, 2 error.
+// Command idgrammar is an ACDSL verifier: a doctrine declaration's id follows the KIND-SCOPE[-TOPIC]-NNN grammar.
 package main
 
 import (
@@ -19,12 +10,15 @@ import (
 	"strings"
 )
 
-var idShapeRe = regexp.MustCompile(`^(ACDSL|RULE|FACT|ACTION)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-(\d{3})$`)
+var (
+	idShapeRe = regexp.MustCompile(`^(ACDSL|RULE|FACT|ACTION)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-(\d{3})$`)
+	whyRe     = regexp.MustCompile(`why="((?:[^"\\]|\\.)*)"`)
+)
+
+const whyMaxRunes = 300
 
 var markerPrefix = "//" + "acdsl:"
 
-// taxonomyAspect is one aspect entry in the generated context file: a name and
-// its class ("scope" / "topic"), the vocabulary loadTaxonomy indexes.
 type taxonomyAspect struct {
 	Name  string `json:"name"`
 	Class string `json:"class"`
@@ -79,6 +73,7 @@ func run(args []string, out io.Writer) int {
 				continue
 			}
 			violations += checkId(file, i+1, fields[0], scopes, topics, out)
+			violations += checkWhy(file, i+1, fields[0], trimmed, out)
 		}
 	}
 	if violations > 0 {
@@ -105,9 +100,18 @@ func checkId(file string, lineNo int, id string, scopes, topics map[string]bool,
 	return violations
 }
 
-// loadTaxonomy reads the vocabulary: the generated context file's aspects carrying class
-// "scope" and "topic". Missing file or empty vocabularies are tool errors —
-// the gate never silently passes.
+func checkWhy(file string, lineNo int, id, line string, out io.Writer) int {
+	match := whyRe.FindStringSubmatch(line)
+	if match == nil {
+		return 0
+	}
+	if len([]rune(match[1])) <= whyMaxRunes {
+		return 0
+	}
+	fmt.Fprintf(out, "%s:%d: why= of %q exceeds %d runes — compress or split the rule\n", file, lineNo, id, whyMaxRunes)
+	return 1
+}
+
 func loadTaxonomy(path string) (map[string]bool, map[string]bool, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {

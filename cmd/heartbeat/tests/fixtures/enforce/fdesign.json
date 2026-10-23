@@ -1,0 +1,167 @@
+{
+  "anchors": {
+    "claims": {
+      "capture": [
+        {
+          "name": "claims",
+          "pointer": "/claims"
+        }
+      ],
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules plan-claims \\S+$"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "mode_switch": {
+      "input": [
+        {
+          "field": "mode",
+          "pattern": "^acceptEdits$"
+        }
+      ],
+      "tool": "^mcp__ccd_session_mgmt__set_session_permission_mode$"
+    },
+    "persisted_sections": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules plan-sections \"?(\\S*/)?plans/[^/]+/[^/]+-wip-[^/]+/design/[^/]+\\.md\"?( 2>&1)?$"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "persisted_write": {
+      "exclude": [
+        {
+          "field": "file_path",
+          "pattern": "/design/(exploration|handoff)\\.md$"
+        }
+      ],
+      "input": [
+        {
+          "field": "file_path",
+          "pattern": "/plans/[^/]+/[^/]+-wip-[^/]+/design/[^/]+\\.md$"
+        }
+      ],
+      "tool": "^(Edit|Write)$"
+    },
+    "plan_write": {
+      "exclude": [
+        {
+          "field": "file_path",
+          "pattern": "/design/(exploration|handoff)\\.md$"
+        }
+      ],
+      "input": [
+        {
+          "field": "file_path",
+          "pattern": "(/\\.claude/plans/[^/]+|/plans/[^/]+/[^/]+/design/[^/]+)\\.md$"
+        }
+      ],
+      "tool": "^(Edit|Write)$"
+    },
+    "refute": {
+      "input": [
+        {
+          "field": "scriptPath",
+          "pattern": "/fdesign/workflows/refute\\.js$"
+        }
+      ],
+      "tool": "^Workflow$"
+    },
+    "sections": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules plan-sections \\S+( 2>&1)?$"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "title_set_code": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules title set CODE-READY( 2>&1)?$"
+        }
+      ],
+      "tool": "^Bash$"
+    },
+    "title_set_design": {
+      "input": [
+        {
+          "field": "command",
+          "pattern": "^smine-rules title set DESIGN-READY( 2>&1)?$"
+        }
+      ],
+      "tool": "^Bash$"
+    }
+  },
+  "checks": {
+    "code_ready_after_sections": {
+      "after": "persisted_sections",
+      "kind": "requires",
+      "on": "title_set_code",
+      "reason": "fdesign: run `smine-rules plan-sections <persisted plan path>` after the last edit of the persisted plan before setting CODE-READY",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules plan-sections plans/<feature folder>/<plan dir>/design/<plan>.md`, fix every violation, rerun to exit 0, then run `smine-rules title set CODE-READY`",
+      "since": "persisted_write"
+    },
+    "design_ready_after_sections": {
+      "after": "sections",
+      "kind": "requires",
+      "on": "title_set_design",
+      "reason": "fdesign: run `smine-rules plan-sections <plan file>` after the last plan edit before setting DESIGN-READY",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules plan-sections <plan file>`, fix every violation, rerun to exit 0, then run `smine-rules title set DESIGN-READY`",
+      "since": "plan_write"
+    },
+    "persisted_sections_before_stop": {
+      "after": "persisted_write",
+      "kind": "stop",
+      "reason": "fdesign: run `smine-rules plan-sections <persisted plan path>` after the last edit of the persisted plan before ending the turn — the session plan file does not count",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules plan-sections plans/<feature folder>/<plan dir>/design/<plan>.md`, fix every violation, rerun to exit 0, then end the turn",
+      "require": "persisted_sections"
+    },
+    "refute_after_claims": {
+      "after": "claims",
+      "kind": "requires",
+      "on": "refute",
+      "reason": "fdesign: run `smine-rules plan-claims <plan file>` before the refute round — its `claims` array is the ledger",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules plan-claims <plan file>`, then pass its `claims` array as args.claims"
+    },
+    "refute_claims": {
+      "arg": "/args/claims",
+      "capture": "claims",
+      "from": "claims",
+      "kind": "provenance",
+      "on": "refute",
+      "reason": "fdesign: args.claims must be the `claims` array the last `smine-rules plan-claims` printed, unedited",
+      "recovery": "heartbeat runtime ({finding}): pass the `claims` array of the last `smine-rules plan-claims` verbatim: {evidence}"
+    },
+    "sections_before_stop": {
+      "after": "plan_write",
+      "kind": "stop",
+      "reason": "fdesign: run `smine-rules plan-sections <plan file>` after the last plan edit before ending the turn",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules plan-sections <plan file>`, fix every violation, rerun to exit 0, then end the turn",
+      "require": "sections"
+    },
+    "sections_before_switch": {
+      "after": "sections",
+      "kind": "requires",
+      "on": "mode_switch",
+      "reason": "fdesign: run `smine-rules plan-sections <plan file>` after the last plan edit before leaving plan mode",
+      "recovery": "heartbeat runtime ({finding}): run `smine-rules plan-sections <plan file>`, fix every violation, rerun to exit 0, then switch the session to acceptEdits",
+      "since": "plan_write"
+    }
+  },
+  "gate": {
+    "planModeDenied": [
+      "Workflow"
+    ]
+  },
+  "schema": 1,
+  "skill": "fdesign",
+  "version": "0.0.0"
+}

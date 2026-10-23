@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Edit",
+      "Write",
+      "WebFetch(domain:code.claude.com)",
+      "mcp__ccd_session",
+      "mcp__serena__find_symbol"
+    ],
+    "deny": [
+      "Bash(git stash*)"
+    ],
+    "additionalDirectories": [
+      "~/extra"
+    ]
+  }
+}

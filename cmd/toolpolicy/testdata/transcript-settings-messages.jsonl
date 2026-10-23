@@ -1,0 +1,9 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#add /tmp"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#add relative/dir"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#add /tmp extra"}}
+{"type":"attachment","attachment":{"type":"queued_command","prompt":"#set Bash(cargo *)\nBash(git push *)","commandMode":"prompt","origin":{"kind":"human"},"humanTurn":true}}
+{"type":"attachment","attachment":{"type":"queued_command","prompt":"#set Bash(peer *)","commandMode":"prompt","origin":{"kind":"peer","from":"uds:/tmp/cc-socks-502/1.sock"},"isMeta":true}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"#set Bash(result *)"}]}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#reset"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"<pasted_content id=\"1\">\n#set Bash(pasted *)\n</pasted_content id=\"1\">\n#set Read(~/x/**)\nmcp__peek-mcp__session_list"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#reset now"}}

@@ -1,0 +1,2 @@
+{"type":"user","turnOrigin":"human","cwd":"/work","message":{"role":"user","content":"Run the review"}}
+{"type":"user","turnOrigin":"sdk","cwd":"/work","message":{"role":"user","content":"continue"}}

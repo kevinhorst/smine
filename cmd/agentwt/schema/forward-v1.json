@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Forward",
+  "description": "The `forward` document: what fast-forwarding one branch to one commit did.",
+  "type": "object",
+  "properties": {
+    "from": {
+      "description": "Its tip before the command, full hex sha.",
+      "type": "string"
+    },
+    "onto": {
+      "description": "The branch that was to move.",
+      "type": "string"
+    },
+    "outcome": {
+      "description": "What happened.",
+      "$ref": "#/$defs/ForwardOutcome"
+    },
+    "reason": {
+      "description": "Why; present only when `outcome` is `skipped`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema": {
+      "description": "Always [`FORWARD_SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "to": {
+      "description": "The commit it was to move to, full hex sha.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "onto",
+    "from",
+    "to",
+    "outcome"
+  ],
+  "$defs": {
+    "ForwardOutcome": {
+      "description": "Outcome vocabulary of `forward`.",
+      "oneOf": [
+        {
+          "description": "The branch now points at the commit; a checkout of it moved along.",
+          "type": "string",
+          "const": "forwarded"
+        },
+        {
+          "description": "The branch already pointed at the commit.",
+          "type": "string",
+          "const": "unchanged"
+        },
+        {
+          "description": "Refused before any change (not a fast-forward, dirty checkout, git refused the checkout's move).",
+          "type": "string",
+          "const": "skipped"
+        }
+      ]
+    }
+  }
+}

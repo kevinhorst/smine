@@ -1,0 +1,4 @@
+{"type":"user","turnOrigin":"human","message":{"content":"what is going on in this repo?"}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"a lot"}]}}
+{"type":"user","turnOrigin":"human","message":{"content":"/qq short answer please"}}
+{"type":"user","turnOrigin":"human","message":{"content":"<command-name>/fdesign</command-name>"}}

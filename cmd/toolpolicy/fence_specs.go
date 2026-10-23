@@ -1,0 +1,366 @@
+package main
+
+import "regexp"
+
+var (
+	awkWriteConstruct = regexp.MustCompile(`printf?[^;}]*(>|\|)|system\s*\(|\|\s*getline`)
+	// sedSubstituteWrite matches the w flag of an s command ("s/a/b/gw f").
+	sedSubstituteWrite = regexp.MustCompile(`/[0-9gpiIM]*[wW]\s`)
+
+	noPathSpec    = &headSpec{positional: roleNone}
+	readPathSpec  = &headSpec{positional: roleRead}
+	writePathSpec = &headSpec{positional: roleWrite}
+
+	copyValueFlags = map[string][]argRole{
+		"--suffix":           {roleNone},
+		"--target-directory": {roleWrite},
+		"-S":                 {roleNone},
+		"-t":                 {roleWrite},
+	}
+
+	awkSpec = &headSpec{
+		leading:     []argRole{roleNone},
+		positional:  roleRead,
+		scriptFlags: []string{"-f"},
+		valueFlags:  map[string][]argRole{"-F": {roleNone}, "-f": {roleRead}, "-v": {roleNone}},
+	}
+
+	findExpressionSpec = &headSpec{
+		positional: roleNone,
+		valueFlags: map[string][]argRole{
+			"-anewer":   {roleRead},
+			"-cnewer":   {roleRead},
+			"-fls":      {roleWrite},
+			"-fprint":   {roleWrite},
+			"-fprint0":  {roleWrite},
+			"-fprintf":  {roleWrite, roleNone},
+			"-newer":    {roleRead},
+			"-samefile": {roleRead},
+		},
+	}
+
+	genericSpec = &headSpec{
+		positional: roleGeneric,
+		valueFlags: map[string][]argRole{
+			"--cwd":        {roleRead},
+			"--dir":        {roleRead},
+			directoryFlag:  {roleRead},
+			"--out":        {roleWrite},
+			"--outdir":     {roleWrite},
+			outputFlag:     {roleWrite},
+			"--output-dir": {roleWrite},
+			"-C":           {roleRead},
+			"-o":           {roleWrite},
+			"-out":         {roleWrite},
+		},
+	}
+
+	gitDefaultSpec = &headSpec{
+		positional: roleGeneric,
+		valueFlags: map[string][]argRole{
+			fileFlag:    {roleRead},
+			"--message": {roleNone},
+			outputFlag:  {roleWrite},
+			"-F":        {roleRead},
+			"-b":        {roleNone},
+			"-m":        {roleNone},
+			"-o":        {roleWrite},
+		},
+	}
+
+	gitSubcommandSpecs = map[string]*headSpec{
+		"am":    readPathSpec,
+		"apply": readPathSpec,
+		"archive": {
+			positional: roleNone,
+			valueFlags: map[string][]argRole{"--format": {roleNone}, outputFlag: {roleWrite}, "--prefix": {roleNone}, "--remote": {roleNone}, "-o": {roleWrite}},
+		},
+		"clone": {
+			leading:    []argRole{roleNone},
+			positional: roleWrite,
+			valueFlags: map[string][]argRole{
+				"--branch":           {roleNone},
+				"--config":           {roleNone},
+				"--depth":            {roleNone},
+				"--origin":           {roleNone},
+				"--reference":        {roleRead},
+				"--separate-git-dir": {roleWrite},
+				"--template":         {roleRead},
+				"-b":                 {roleNone},
+				"-c":                 {roleNone},
+				"-o":                 {roleNone},
+			},
+		},
+		"format-patch": {
+			positional: roleNone,
+			valueFlags: map[string][]argRole{"--output-directory": {roleWrite}, "-o": {roleWrite}},
+		},
+		"init": {
+			positional: roleWrite,
+			valueFlags: map[string][]argRole{"--initial-branch": {roleNone}, "--separate-git-dir": {roleWrite}, "--template": {roleRead}, "-b": {roleNone}},
+		},
+		"worktree add": {
+			leading:    []argRole{roleWrite},
+			positional: roleNone,
+			valueFlags: map[string][]argRole{"--reason": {roleNone}, "-B": {roleNone}, "-b": {roleNone}},
+		},
+		"worktree move":   writePathSpec,
+		"worktree remove": writePathSpec,
+	}
+
+	sedReadSpec  = sedSpec(roleRead)
+	sedWriteSpec = sedSpec(roleWrite)
+
+	headSpecs = map[string]*headSpec{
+		".":        readPathSpec,
+		"[":        noPathSpec,
+		"base64":   {positional: roleRead, valueFlags: map[string][]argRole{"--input": {roleRead}, outputFlag: {roleWrite}, "-i": {roleRead}, "-o": {roleWrite}}},
+		"basename": noPathSpec,
+		"bat":      readPathSpec,
+		"bunzip2":  writePathSpec,
+		"bzip2":    writePathSpec,
+		"cat":      readPathSpec,
+		"chgrp":    {leading: []argRole{roleNone}, positional: roleWrite},
+		"chmod":    {leading: []argRole{roleNone}, positional: roleWrite},
+		"chown":    {leading: []argRole{roleNone}, positional: roleWrite},
+		"cksum":    readPathSpec,
+		"cmp":      readPathSpec,
+		"column":   readPathSpec,
+		"comm":     readPathSpec,
+		"cp":       {isDestinationLast: true, positional: roleRead, valueFlags: copyValueFlags},
+		"curl": {
+			positional: roleNone,
+			valueFlags: map[string][]argRole{
+				"--config":      {roleRead},
+				"--cookie-jar":  {roleWrite},
+				"--data":        {roleAtFile},
+				"--data-binary": {roleAtFile},
+				"--dump-header": {roleWrite},
+				"--header":      {roleNone},
+				outputFlag:      {roleWrite},
+				"--output-dir":  {roleWrite},
+				"--request":     {roleNone},
+				"--trace":       {roleWrite},
+				"--trace-ascii": {roleWrite},
+				"--upload-file": {roleRead},
+				"--user":        {roleNone},
+				"-D":            {roleWrite},
+				"-H":            {roleNone},
+				"-K":            {roleRead},
+				"-T":            {roleRead},
+				"-X":            {roleNone},
+				"-c":            {roleWrite},
+				"-d":            {roleAtFile},
+				"-o":            {roleWrite},
+				"-u":            {roleNone},
+				"-w":            {roleNone},
+			},
+		},
+		"cut":     {positional: roleRead, valueFlags: map[string][]argRole{"-b": {roleNone}, "-c": {roleNone}, "-d": {roleNone}, "-f": {roleNone}}},
+		"date":    noPathSpec,
+		"diff":    readPathSpec,
+		"dirname": noPathSpec,
+		"du":      readPathSpec,
+		"echo":    noPathSpec,
+		"egrep":   grepSpec(),
+		"exit":    noPathSpec,
+		"expr":    noPathSpec,
+		"false":   noPathSpec,
+		"fgrep":   grepSpec(),
+		"file":    readPathSpec,
+		"fmt":     readPathSpec,
+		"fold":    readPathSpec,
+		"go": {
+			positional: roleGeneric,
+			valueFlags: map[string][]argRole{
+				"-C":            {roleWrite},
+				"-bench":        {roleNone},
+				"-blockprofile": {roleWrite},
+				"-count":        {roleNone},
+				"-coverprofile": {roleWrite},
+				"-cpuprofile":   {roleWrite},
+				"-gcflags":      {roleNone},
+				"-ldflags":      {roleNone},
+				"-memprofile":   {roleWrite},
+				"-modfile":      {roleRead},
+				"-mutexprofile": {roleWrite},
+				"-o":            {roleWrite},
+				"-outputdir":    {roleWrite},
+				"-overlay":      {roleRead},
+				"-p":            {roleNone},
+				"-parallel":     {roleNone},
+				"-pgo":          {roleRead},
+				"-run":          {roleNone},
+				"-skip":         {roleNone},
+				"-tags":         {roleNone},
+				"-timeout":      {roleNone},
+				"-trace":        {roleWrite},
+			},
+		},
+		"grep":    grepSpec(),
+		"gunzip":  writePathSpec,
+		"gzip":    writePathSpec,
+		"head":    {positional: roleRead, valueFlags: map[string][]argRole{"--bytes": {roleNone}, "--lines": {roleNone}, "-c": {roleNone}, "-n": {roleNone}}},
+		"install": {isDestinationLast: true, positional: roleRead, valueFlags: map[string][]argRole{"-g": {roleNone}, "-m": {roleNone}, "-o": {roleNone}, "-t": {roleWrite}}},
+		"jq": {
+			leading:     []argRole{roleNone},
+			positional:  roleRead,
+			scriptFlags: []string{"--from-file", "-f"},
+			valueFlags: map[string][]argRole{
+				"--arg":       {roleNone, roleNone},
+				"--argjson":   {roleNone, roleNone},
+				"--from-file": {roleRead},
+				"--indent":    {roleNone},
+				"--rawfile":   {roleNone, roleRead},
+				"--slurpfile": {roleNone, roleRead},
+				"-L":          {roleRead},
+				"-f":          {roleRead},
+			},
+		},
+		"join": readPathSpec,
+		"less": readPathSpec,
+		"ln":   {isDestinationLast: true, positional: roleRead, valueFlags: map[string][]argRole{"-t": {roleWrite}}},
+		"ls":   readPathSpec,
+		"make": {
+			positional: roleNone,
+			valueFlags: map[string][]argRole{
+				directoryFlag:   {roleWrite},
+				fileFlag:        {roleRead},
+				"--include-dir": {roleRead},
+				"--jobs":        {roleNone},
+				"--makefile":    {roleRead},
+				"-C":            {roleWrite},
+				"-I":            {roleRead},
+				"-W":            {roleNone},
+				"-f":            {roleRead},
+				"-j":            {roleNone},
+				"-l":            {roleNone},
+				"-o":            {roleNone},
+			},
+		},
+		"md5":       readPathSpec,
+		"mkdir":     {positional: roleWrite, valueFlags: map[string][]argRole{"-m": {roleNone}}},
+		"mkfifo":    writePathSpec,
+		"mktemp":    {positional: roleWrite, valueFlags: map[string][]argRole{"--suffix": {roleNone}, "--tmpdir": {roleWrite}, "-p": {roleWrite}, "-t": {roleNone}}},
+		"more":      readPathSpec,
+		"mv":        {isDestinationLast: true, positional: roleWrite, valueFlags: copyValueFlags},
+		"nl":        readPathSpec,
+		"od":        readPathSpec,
+		"paste":     readPathSpec,
+		"patch":     {positional: roleWrite, valueFlags: map[string][]argRole{"--input": {roleRead}, "-d": {roleWrite}, "-i": {roleRead}, "-o": {roleWrite}, "-p": {roleNone}}},
+		"printf":    noPathSpec,
+		"pwd":       noPathSpec,
+		"readlink":  readPathSpec,
+		"realpath":  readPathSpec,
+		"rev":       readPathSpec,
+		"rg":        grepSpec(),
+		"rsync":     {isDestinationLast: true, positional: roleRead, valueFlags: map[string][]argRole{"--exclude": {roleNone}, "--exclude-from": {roleRead}, "--files-from": {roleRead}, "--include": {roleNone}, "--log-file": {roleWrite}, "--temp-dir": {roleWrite}, "-T": {roleWrite}, "-e": {roleNone}}},
+		"seq":       noPathSpec,
+		"sha256sum": readPathSpec,
+		"shasum":    readPathSpec,
+		"shred":     writePathSpec,
+		"sleep":     noPathSpec,
+		"sort": {
+			positional: roleRead,
+			valueFlags: map[string][]argRole{
+				"--buffer-size":         {roleNone},
+				"--field-separator":     {roleNone},
+				"--key":                 {roleNone},
+				outputFlag:              {roleWrite},
+				"--temporary-directory": {roleWrite},
+				"-S":                    {roleNone},
+				"-T":                    {roleWrite},
+				"-k":                    {roleNone},
+				"-o":                    {roleWrite},
+				"-t":                    {roleNone},
+			},
+		},
+		"source":   readPathSpec,
+		"stat":     readPathSpec,
+		"strings":  readPathSpec,
+		"sw_vers":  noPathSpec,
+		"tac":      readPathSpec,
+		"tail":     {positional: roleRead, valueFlags: map[string][]argRole{"--bytes": {roleNone}, "--lines": {roleNone}, "-c": {roleNone}, "-n": {roleNone}}},
+		"tee":      writePathSpec,
+		"test":     noPathSpec,
+		"touch":    {positional: roleWrite, valueFlags: map[string][]argRole{"-d": {roleNone}, "-r": {roleRead}, "-t": {roleNone}}},
+		"tr":       noPathSpec,
+		"tree":     {positional: roleRead, valueFlags: map[string][]argRole{"-I": {roleNone}, "-L": {roleNone}, "-P": {roleNone}, "-o": {roleWrite}}},
+		"true":     noPathSpec,
+		"truncate": {positional: roleWrite, valueFlags: map[string][]argRole{"--reference": {roleRead}, "--size": {roleNone}, "-r": {roleRead}, "-s": {roleNone}}},
+		"type":     noPathSpec,
+		"uname":    noPathSpec,
+		"uniq":     {isDestinationLast: true, positional: roleRead, valueFlags: map[string][]argRole{"-f": {roleNone}, "-s": {roleNone}}},
+		"unlink":   writePathSpec,
+		"unxz":     writePathSpec,
+		"unzip":    {leading: []argRole{roleRead}, positional: roleNone, valueFlags: map[string][]argRole{"-d": {roleWrite}}},
+		"wait":     noPathSpec,
+		"wc":       readPathSpec,
+		"wget": {
+			positional: roleNone,
+			valueFlags: map[string][]argRole{
+				"--append-output":    {roleWrite},
+				"--directory-prefix": {roleWrite},
+				"--input-file":       {roleRead},
+				"--output-document":  {roleWrite},
+				"--output-file":      {roleWrite},
+				"-O":                 {roleWrite},
+				"-P":                 {roleWrite},
+				"-a":                 {roleWrite},
+				"-i":                 {roleRead},
+				"-o":                 {roleWrite},
+			},
+		},
+		"which": noPathSpec,
+		"xxd":   readPathSpec,
+		"xz":    writePathSpec,
+		"yes":   noPathSpec,
+		"zip":   {leading: []argRole{roleWrite}, positional: roleRead, valueFlags: map[string][]argRole{"-i": {roleNone}, "-x": {roleNone}}},
+	}
+)
+
+func grepSpec() *headSpec {
+	spec := &headSpec{
+		leading:     []argRole{roleNone},
+		positional:  roleRead,
+		scriptFlags: []string{fileFlag, "--regexp", "-e", "-f"},
+		valueFlags: map[string][]argRole{
+			"--exclude":     {roleNone},
+			"--exclude-dir": {roleNone},
+			fileFlag:        {roleRead},
+			"--glob":        {roleNone},
+			"--include":     {roleNone},
+			"--max-count":   {roleNone},
+			"--pre":         {roleRead},
+			"--regexp":      {roleNone},
+			"--type":        {roleNone},
+			"--type-not":    {roleNone},
+			"-A":            {roleNone},
+			"-B":            {roleNone},
+			"-C":            {roleNone},
+			"-T":            {roleNone},
+			"-e":            {roleNone},
+			"-f":            {roleRead},
+			"-g":            {roleNone},
+			"-m":            {roleNone},
+			"-t":            {roleNone},
+		},
+	}
+	return spec
+}
+
+func sedSpec(files argRole) *headSpec {
+	spec := &headSpec{
+		leading:     []argRole{roleNone},
+		positional:  files,
+		scriptFlags: []string{"--expression", fileFlag, "-e", "-f"},
+		valueFlags: map[string][]argRole{
+			"--expression": {roleNone},
+			fileFlag:       {roleRead},
+			"-e":           {roleNone},
+			"-f":           {roleRead},
+			"-l":           {roleNone},
+		},
+	}
+	return spec
+}

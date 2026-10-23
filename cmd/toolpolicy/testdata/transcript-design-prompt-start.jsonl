@@ -1,0 +1,2 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":[{"type":"text","text":"/fdesign change probe.md"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"running"}]}}

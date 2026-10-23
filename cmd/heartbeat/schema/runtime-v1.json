@@ -1,0 +1,501 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RuntimeDocument",
+  "description": "The runtime document (`GET /runtime`, `heartbeat runtime status --format json`, schema\n`schema/runtime-v1.json`): its own document beside the status document (D15). Unlike the status document, every\nfield is always present: `subscriptions` is empty without a watcher, `last_digest` is `null` before the first\ndigest and `at` is `null` while that digest is in flight; unknown strings (`title`, `version`, `reason`) are empty.\nNo token field anywhere.",
+  "type": "object",
+  "properties": {
+    "findings": {
+      "description": "Findings of those runs, in id (time) order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FindingRow"
+      }
+    },
+    "heartbeat": {
+      "description": "The daemon that answered.",
+      "$ref": "#/$defs/Health"
+    },
+    "runs": {
+      "description": "Runs since the daemon started (ended ones capped), in id order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RunRow"
+      }
+    },
+    "schema": {
+      "description": "Always [`RUNTIME_SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "subscriptions": {
+      "description": "Active watchers, each bound to one observed session, in subscriber order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RuntimeSubscriptionRow"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "heartbeat",
+    "subscriptions",
+    "runs",
+    "findings"
+  ],
+  "$defs": {
+    "ActedWire": {
+      "description": "What became of a finding's unlock, on the wire.",
+      "oneOf": [
+        {
+          "description": "Not answered.",
+          "type": "string",
+          "const": "open"
+        },
+        {
+          "description": "A move was accepted; its claim is not on disk yet.",
+          "type": "string",
+          "const": "claiming"
+        },
+        {
+          "description": "A send is claimed and waits for its hand-over: the agent's next successful tool call, or a waiting root's Stop or next prompt.",
+          "type": "string",
+          "const": "send_pending"
+        },
+        {
+          "description": "A stop is claimed and armed.",
+          "type": "string",
+          "const": "stop_armed"
+        },
+        {
+          "description": "The send was handed over.",
+          "type": "string",
+          "const": "handed_over"
+        },
+        {
+          "description": "The armed stop was cleared by the next prompt or the subagent's stop.",
+          "type": "string",
+          "const": "stop_cleared"
+        },
+        {
+          "description": "The move never took effect.",
+          "type": "string",
+          "const": "void"
+        }
+      ]
+    },
+    "AnchorHitRow": {
+      "description": "One successful anchored call of a run.",
+      "type": "object",
+      "properties": {
+        "captures": {
+          "description": "The captures the call yielded, by name; a declared capture its response lacked is absent.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "id": {
+          "description": "The anchor id.",
+          "type": "string"
+        },
+        "seq": {
+          "description": "The apply sequence number of the call.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "seq",
+        "captures"
+      ]
+    },
+    "CheckFailureRow": {
+      "description": "One failed check of a run.",
+      "type": "object",
+      "properties": {
+        "check": {
+          "description": "The check id.",
+          "type": "string"
+        },
+        "count": {
+          "description": "How often it failed (8 kills the run).",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "check",
+        "count"
+      ]
+    },
+    "CheckPassRow": {
+      "description": "One check of a run that held at least once.",
+      "type": "object",
+      "properties": {
+        "check": {
+          "description": "The check id.",
+          "type": "string"
+        },
+        "count": {
+          "description": "How often it was judged with its guard matched and held.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "check",
+        "count"
+      ]
+    },
+    "DigestOutcomeWire": {
+      "description": "Digest outcomes on the wire.",
+      "oneOf": [
+        {
+          "description": "Handed to the socket edge, not reported yet.",
+          "type": "string",
+          "const": "in_flight"
+        },
+        {
+          "description": "Written in full.",
+          "type": "string",
+          "const": "sent"
+        },
+        {
+          "description": "Nothing sent.",
+          "type": "string",
+          "const": "refused"
+        },
+        {
+          "description": "Claimed; the write failed or its outcome was lost.",
+          "type": "string",
+          "const": "unconfirmed"
+        },
+        {
+          "description": "The claim failed; nothing sent.",
+          "type": "string",
+          "const": "unclaimed"
+        }
+      ]
+    },
+    "FindingKindWire": {
+      "description": "Finding kinds on the wire.",
+      "oneOf": [
+        {
+          "description": "A check failed without killing its run.",
+          "type": "string",
+          "const": "check_failed"
+        },
+        {
+          "description": "A judgment point's anchor succeeded.",
+          "type": "string",
+          "const": "judgment"
+        }
+      ]
+    },
+    "FindingRow": {
+      "description": "One finding, its moves and what became of it.",
+      "type": "object",
+      "properties": {
+        "acted": {
+          "description": "What became of its unlock.",
+          "$ref": "#/$defs/ActedWire"
+        },
+        "entry": {
+          "description": "The check or judgment id.",
+          "type": "string"
+        },
+        "evidence": {
+          "description": "What was compared or observed.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "The finding id (`<run>-<check or judgment>-<n>`).",
+          "type": "string"
+        },
+        "kind": {
+          "description": "The finding kind.",
+          "$ref": "#/$defs/FindingKindWire"
+        },
+        "moves": {
+          "description": "The moves it unlocks right now (empty once answered or once its run ended).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MoveWire"
+          }
+        },
+        "reason": {
+          "description": "The check's reason or the judgment's question.",
+          "type": "string"
+        },
+        "run": {
+          "description": "The run id.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "session": {
+          "description": "The observed session.",
+          "type": "string"
+        },
+        "skill": {
+          "description": "The skill leaf.",
+          "type": "string"
+        },
+        "title": {
+          "description": "The session title; empty when unknown.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The skill model version.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "acted",
+        "entry",
+        "evidence",
+        "kind",
+        "moves",
+        "reason",
+        "run",
+        "session",
+        "title",
+        "skill",
+        "version"
+      ]
+    },
+    "Health": {
+      "description": "`GET /healthz`: identity only.",
+      "type": "object",
+      "properties": {
+        "addr": {
+          "description": "The bound address.",
+          "type": "string"
+        },
+        "claude_home": {
+          "description": "The claude home this daemon serves.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Crate version.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "claude_home",
+        "addr"
+      ]
+    },
+    "ModeWire": {
+      "description": "Runtime subscription modes on the wire.",
+      "oneOf": [
+        {
+          "description": "Findings are reported only.",
+          "type": "string",
+          "const": "report"
+        },
+        {
+          "description": "Findings may be answered with a move.",
+          "type": "string",
+          "const": "act"
+        }
+      ]
+    },
+    "MoveWire": {
+      "description": "Moves on the wire.",
+      "oneOf": [
+        {
+          "description": "Heartbeat's template, handed over as hook context.",
+          "type": "string",
+          "const": "send"
+        },
+        {
+          "description": "The agent is stopped.",
+          "type": "string",
+          "const": "stop"
+        }
+      ]
+    },
+    "RunRow": {
+      "description": "One enforced skill run of an observed session.",
+      "type": "object",
+      "properties": {
+        "anchors": {
+          "description": "Successful anchored calls, in apply order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnchorHitRow"
+          }
+        },
+        "failures": {
+          "description": "Failed checks with their failure counts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CheckFailureRow"
+          }
+        },
+        "findings": {
+          "description": "Findings raised.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "description": "The run id.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "passes": {
+          "description": "Checks judged with their guard matched that held, with their pass counts, in check id order; empty when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CheckPassRow"
+          }
+        },
+        "reason": {
+          "description": "The failed checks with their counts (open, killed), or why the run ended.",
+          "type": "string"
+        },
+        "session": {
+          "description": "The observed session.",
+          "type": "string"
+        },
+        "skill": {
+          "description": "The skill leaf.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Open, ended or killed.",
+          "$ref": "#/$defs/RunStateWire"
+        },
+        "title": {
+          "description": "The session title; empty when unknown.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The deployed skill version the run started under.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "anchors",
+        "failures",
+        "findings",
+        "passes",
+        "reason",
+        "session",
+        "skill",
+        "state",
+        "title",
+        "version"
+      ]
+    },
+    "RunStateWire": {
+      "description": "Run states on the wire.",
+      "oneOf": [
+        {
+          "description": "Open and enforced.",
+          "type": "string",
+          "const": "open"
+        },
+        {
+          "description": "Ended; `reason` says why.",
+          "type": "string",
+          "const": "ended"
+        },
+        {
+          "description": "A check failed 8 times: the session's agents are stopped until the next prompt, which reopens the run.",
+          "type": "string",
+          "const": "killed"
+        }
+      ]
+    },
+    "RuntimeDigestRow": {
+      "description": "One runtime digest's fate.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When the outcome was reported (RFC 3339); `null` while in flight.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "`d<n>`.",
+          "type": "string"
+        },
+        "outcome": {
+          "description": "What happened.",
+          "$ref": "#/$defs/DigestOutcomeWire"
+        }
+      },
+      "required": [
+        "id",
+        "outcome",
+        "at"
+      ]
+    },
+    "RuntimeSubscriptionRow": {
+      "description": "One runtime watcher: a subscriber session bound to exactly one observed session.",
+      "type": "object",
+      "properties": {
+        "last_digest": {
+          "description": "The in-flight digest, else the last one; `null` before the first.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuntimeDigestRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "description": "Report or act.",
+          "$ref": "#/$defs/ModeWire"
+        },
+        "session": {
+          "description": "The subscriber session.",
+          "type": "string"
+        },
+        "since": {
+          "description": "When it subscribed (RFC 3339).",
+          "type": "string"
+        },
+        "target": {
+          "description": "The one session it watches.",
+          "type": "string"
+        },
+        "target_title": {
+          "description": "The watched session's title; empty when unknown.",
+          "type": "string"
+        },
+        "title": {
+          "description": "The subscriber's session title; empty when unknown.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "last_digest",
+        "mode",
+        "session",
+        "since",
+        "target",
+        "target_title",
+        "title"
+      ]
+    }
+  }
+}

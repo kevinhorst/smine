@@ -1,18 +1,4 @@
-// Command skillcontext is a registered ACDSL verifier over SKILL.md files.
-// It validates the optional frontmatter "acdsl-context:" declaration — the set
-// of context entries a skill wants injected at invocation:
-//
-//	token    — an entry ID (KIND-SCOPE[-TOPIC]-NNN) or a trailing-* glob
-//	           whose prefix ends in "-" (e.g. ACTION-CONCEPT-*)
-//	exact ID — must exist in the context index named by the index= param
-//	glob     — must match at least one index entry
-//
-// Skills without an acdsl-context: line pass — the declaration is opt-in.
-// A legacy "context:" key whose value looks like a declaration is a violation:
-// that key belongs to Claude Code's native frontmatter, and a stale declaration
-// under it would silently inject nothing.
-// Contract: args = <files-list path> index=<index path>; one violation per
-// stdout line as file:line: message; exit 0 pass, 1 violations, 2 error.
+// Command skillcontext is an ACDSL verifier: a skill's acdsl-context: declaration resolves against the context index.
 package main
 
 import (
@@ -23,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/kevinhorst/smine/internal/skillgraph"
 )
 
 func main() {
@@ -56,15 +44,18 @@ func run(args []string, out io.Writer) int {
 	}
 	violations := 0
 	for _, file := range strings.Fields(string(listRaw)) {
-		if filepath.Base(file) != "SKILL.md" {
+		base := filepath.Base(file)
+		if !skillgraph.IsModelFile(file) && base != skillgraph.FileManifest {
 			continue
 		}
-		raw, err := os.ReadFile(file)
+
+		raw, err := skillgraph.ReadManifest(file)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "skillcontext:", err)
-			return 2
+			fmt.Fprintf(out, "%s:1: SKILL.md text unavailable — the model does not load or render (violations: ACDSL-SKILL-005)\n", file)
+			violations++
+			continue
 		}
-		violations += checkDeclaration(file, strings.Split(string(raw), "\n"), ids, out)
+		violations += checkDeclaration(skillgraph.ManifestLabel(file), strings.Split(string(raw), "\n"), ids, out)
 	}
 	if violations > 0 {
 		return 1
@@ -98,9 +89,6 @@ var (
 	globTokenRe = regexp.MustCompile(`^(ACTION|RULE|FACT)-([A-Z0-9]+-)*\*$`)
 )
 
-// looksLikeDeclaration reports whether a frontmatter value reads as a context
-// declaration — at least one comma token matching the entry-ID or glob grammar.
-// Claude Code's own values ("fork") do not.
 func looksLikeDeclaration(value string) bool {
 	for _, token := range strings.Split(value, ",") {
 		token = strings.TrimSpace(token)
@@ -111,9 +99,6 @@ func looksLikeDeclaration(value string) bool {
 	return false
 }
 
-// frontmatter returns key → value and key → line number for the block
-// between the opening and closing "---" fences. Only same-line values are
-// captured: a block-scalar value maps to "".
 func frontmatter(lines []string) (map[string]string, map[string]int) {
 	values, lineNos := map[string]string{}, map[string]int{}
 	if len(lines) == 0 || strings.TrimSpace(lines[0]) != "---" {
@@ -136,9 +121,6 @@ func frontmatter(lines []string) (map[string]string, map[string]int) {
 func checkDeclaration(file string, lines []string, ids map[string]bool, out io.Writer) int {
 	values, lineNos := frontmatter(lines)
 	violations := 0
-	// Legacy key guard: "context:" is Claude Code's native frontmatter field.
-	// A declaration-shaped value under it means an unmigrated skill whose
-	// entries silently stopped injecting — exactly the failure this gate exists for.
 	if legacy, ok := values["context"]; ok && looksLikeDeclaration(legacy) {
 		fmt.Fprintf(out, "%s:%d: declaration under legacy key \"context:\" — renamed to \"acdsl-context:\", nothing injects from here\n", file, lineNos["context"])
 		violations++

@@ -1,9 +1,4 @@
-// Command forbidcall is a registered ACDSL verifier: it fails (exit 1)
-// when any file in the files list calls <pkg>.<func>, resolving import
-// aliases per file. Params: pkg=<import path>, func=<name>.
-//
-// Contract: args = <files-list path> [key=value ...]; one violation per
-// stdout line as file:line: message; exit 0 pass, 1 violations, 2 error.
+// Command forbidcall is an ACDSL verifier: a file never calls <pkg>.<func>.
 package main
 
 import (
@@ -83,9 +78,6 @@ func run(args []string, out io.Writer) int {
 	return 0
 }
 
-// importAlias returns the identifier the file uses for pkgPath, or "" when
-// the file does not import it. Dot and blank imports return "" — a dot
-// import cannot be matched syntactically and is out of v0 scope.
 func importAlias(file *ast.File, pkgPath string) string {
 	for _, imported := range file.Imports {
 		if strings.Trim(imported.Path.Value, `"`) != pkgPath {

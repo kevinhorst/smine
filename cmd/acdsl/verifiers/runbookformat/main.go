@@ -1,11 +1,4 @@
-// Command runbookformat is a registered ACDSL verifier: the lintable subset
-// of rules/runbooks.md over Bruno runbook collections. Checks per .bru file:
-// request files need a non-empty docs block and an assert block;
-// collection.bru needs a non-empty docs block; folder.bru and environment
-// files are skipped. No prose heuristics.
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command runbookformat is an ACDSL verifier: a Bruno runbook file meets the lintable subset of rules/runbooks.md.
 package main
 
 import (
@@ -62,8 +55,6 @@ func checkFile(file string, lines []string, out io.Writer) int {
 	return violations
 }
 
-// hasNonEmptyBlock reports whether a top-level "name {" block exists and
-// contains at least one non-blank line before its closing brace.
 func hasNonEmptyBlock(lines []string, name string) bool {
 	inBlock := false
 	for _, line := range lines {

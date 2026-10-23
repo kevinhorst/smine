@@ -1,11 +1,4 @@
-// Command testschema is a registered ACDSL verifier: it fails (exit 1)
-// when a test file executes table cases with anything other than the house
-// schema's t.Run(test._id, ...) — the sharpest deterministic discriminator
-// between the house table-test schema (RULE-GOLANG-TEST-001..005) and the common
-// tt.name/tc.name style. Files without t.Run calls pass (not table-driven).
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command testschema is an ACDSL verifier: a test file runs table cases with t.Run(test._id, ...).
 package main
 
 import (

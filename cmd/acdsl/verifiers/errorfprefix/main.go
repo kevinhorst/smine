@@ -1,12 +1,4 @@
-// Command errorfprefix is a registered ACDSL verifier: it fails (exit 1)
-// when a fmt.Errorf or errors.New message literal lacks the Component.Method:
-// prefix (RULE-GOLANG-ERR-001 shape) — the segment before the first ": " must be a
-// single identifier or dotted identifier, so "failed to read config: %w"
-// (spaces before the colon) and unprefixed messages are violations.
-// Non-literal first arguments are skipped (not statically checkable).
-//
-// Contract: args = <files-list path>; one violation per stdout line as
-// file:line: message; exit 0 pass, 1 violations, 2 error. No params.
+// Command errorfprefix is an ACDSL verifier: a fmt.Errorf or errors.New message literal carries the Component.Method: prefix.
 package main
 
 import (
@@ -86,8 +78,6 @@ func run(args []string, out io.Writer) int {
 	return 0
 }
 
-// importAlias returns the identifier the file uses for pkgPath, or "" when
-// not imported; dot and blank imports are out of scope.
 func importAlias(file *ast.File, pkgPath string) string {
 	for _, imported := range file.Imports {
 		if strings.Trim(imported.Path.Value, `"`) != pkgPath {

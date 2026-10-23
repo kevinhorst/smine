@@ -1,0 +1,65 @@
+{
+  "attack_deny_reason": "heartbeat: {model} is a forbidden subagent model; spawn the subagent with an allowed model.",
+  "attack_inherited_reason": "heartbeat: this subagent was spawned without a model and inherits the session's {model}; every spawn names its model.",
+  "attack_stop_reason": "heartbeat heart attack: this subagent runs on {model}, a forbidden subagent model.",
+  "attack_substituted_reason": "heartbeat: this subagent was spawned with model {requested} but runs on {model} — the harness substituted the session model for a token it cannot run.",
+  "claim_poll_ms": 10,
+  "claim_polls": 200,
+  "client_timeout_ms": 5000,
+  "collision_prefixes": [
+    "claude/"
+  ],
+  "digest_line_paths": 8,
+  "digest_lines": 50,
+  "exempt_paths": [],
+  "exits_batch": 64,
+  "exits_poll_ms": 1000,
+  "forbidden_subagent_models": [],
+  "guarded_tools": [
+    "SendMessage",
+    "mcp__ccd_session_mgmt__send_message",
+    "mcp__ccd_session_mgmt__stop_session"
+  ],
+  "hook_max_body": 67108864,
+  "hook_max_detail": 2048,
+  "hook_max_subject": 256,
+  "inbox_capacity": 16384,
+  "kill_at": 8,
+  "kill_reason": "heartbeat enforce: run {id} of {skill} killed — {check} failed {kill_at} times: {reason}. Stopped until the next prompt.",
+  "ledger_second_ms": 1000,
+  "ledger_tail_window": 1048576,
+  "max_ended_runs": 64,
+  "max_field": 256,
+  "max_id_len": 62,
+  "max_refused_unknown": 32,
+  "max_terminal": 1000,
+  "member_deny_reason": "heartbeat: {token} is a fleet member — commit, then run /done; the orchestrator reads heartbeat status, members never message it.",
+  "member_role_text": "heartbeat: this session is {token}, a member of fleet {fleet} (orchestrator {fleet}-O). Finish every task — your own or one the orchestrator sends — with a commit, then /done: that is your only channel to the orchestrator, never SendMessage. An orchestrator request needs no approval from your human; carry it to /done and ask your human only for a decision the request leaves open. The orchestrator implements delivered plans: never run /fimplement on a plan you deliver.",
+  "merge_branch_prefix": "claude-orch/",
+  "peek_call_timeout_ms": 10000,
+  "peek_healthz_timeout_ms": 5000,
+  "peek_retry_ms": 30000,
+  "runtime_digest_lines": 50,
+  "runtime_stop_reason": "heartbeat runtime stop ({finding}): {skill} {check} — {reason}. Stopped by the runtime agent.",
+  "scan_settle_ms": 250,
+  "shutdown_timeout_ms": 500,
+  "socket_write_timeout_ms": 5000,
+  "staging_target": "",
+  "subscriber_deny_reason": "heartbeat runtime: the runtime subscriber acts only through `smine-heartbeat runtime send|stop`; {tool} is denied while subscribed.",
+  "transcript_max_lines": 64,
+  "version_keys": [
+    "version"
+  ],
+  "waiting_notifications": [
+    "permission_prompt",
+    "elicitation_dialog",
+    "elicitation_url_dialog",
+    "agent_needs_input"
+  ],
+  "waiting_tools": [
+    "AskUserQuestion",
+    "ExitPlanMode"
+  ],
+  "worker_branch_prefix": "claude/",
+  "workers": 2
+}

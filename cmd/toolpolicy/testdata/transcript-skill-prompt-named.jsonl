@@ -1,0 +1,9 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"agreed\n\nnot worth a plan\n\n/jq adhoc\n"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_1","name":"Skill","input":{"skill":"jq","args":"adhoc"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","content":"Launching skill: jq"}]}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"\n\n<pasted_content id=\"1\">\n/chain run it\n</pasted_content id=\"1\">\n"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_2","name":"Skill","input":{"skill":"chain","args":"run it"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_2","content":"Launching skill: chain"}]}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"carry on with /link"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_3","name":"Skill","input":{"skill":"smine-orchestrate","args":""}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_3","is_error":true,"content":"tool-policy: denied"}]}}

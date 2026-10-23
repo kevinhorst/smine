@@ -1,0 +1,4 @@
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#disable rgate:global hb"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#disable gate"}}
+{"type":"user","turnOrigin":"human","message":{"role":"user","content":"#enable"}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"#enable hb"}]}}

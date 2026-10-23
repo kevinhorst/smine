@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Probe",
+  "description": "The `probe` document: whether each asked commit applies alone onto one branch's tip; nothing moves.",
+  "type": "object",
+  "properties": {
+    "commits": {
+      "description": "One entry per asked commit, in argument order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ProbeEntry"
+      }
+    },
+    "onto": {
+      "description": "The target branch.",
+      "type": "string"
+    },
+    "onto_sha": {
+      "description": "The target's tip every commit was probed against, full hex sha.",
+      "type": "string"
+    },
+    "schema": {
+      "description": "Always [`PROBE_SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema",
+    "onto",
+    "onto_sha",
+    "commits"
+  ],
+  "$defs": {
+    "ProbeEntry": {
+      "description": "One probed commit.",
+      "type": "object",
+      "properties": {
+        "commit": {
+          "description": "The probed commit, full hex sha.",
+          "type": "string"
+        },
+        "outcome": {
+          "description": "What a pick would do.",
+          "$ref": "#/$defs/ProbeOutcome"
+        },
+        "reason": {
+          "description": "Why; present only when `outcome` is `conflict` or `skipped`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "commit",
+        "outcome"
+      ]
+    },
+    "ProbeOutcome": {
+      "description": "Outcome vocabulary of `probe`.",
+      "oneOf": [
+        {
+          "description": "The commit applies cleanly onto the target's tip.",
+          "type": "string",
+          "const": "applies"
+        },
+        {
+          "description": "The three-way merge conflicts.",
+          "type": "string",
+          "const": "conflict"
+        },
+        {
+          "description": "A pick would refuse it (root or merge commit, already on the target).",
+          "type": "string",
+          "const": "skipped"
+        }
+      ]
+    }
+  }
+}

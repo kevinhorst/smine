@@ -1,0 +1,6 @@
+{"type":"user","turnOrigin":"human","cwd":"/work","message":{"role":"user","content":"Run the review"}}
+{"type":"assistant","cwd":"/work","message":{"role":"assistant","content":[{"type":"tool_use","id":"w1","name":"Workflow","input":{"script":"return 'primed'"}}]}}
+{"type":"user","cwd":"/work","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"w1","content":"started"}]}}
+{"type":"user","turnOrigin":"task_notification","cwd":"/work","message":{"role":"user","content":"<task-notification>\n<task-id>wf_0f7f2d73-f7b</task-id>\n<status>completed</status>\n</task-notification>"}}
+{"type":"attachment","cwd":"/work","attachment":{"type":"hook_success","hookName":"UserPromptSubmit","stdout":"ok"}}
+{"type":"user","cwd":"/work","isCompactSummary":true,"message":{"role":"user","content":"This session is being continued from a previous conversation."}}

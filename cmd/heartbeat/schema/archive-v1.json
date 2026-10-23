@@ -1,0 +1,357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FleetArchive",
+  "description": "One dissolved fleet run, the content of `heartbeat/archive/<instance>.json` (schema `archive-v1.json`).",
+  "type": "object",
+  "properties": {
+    "dissolved_at": {
+      "description": "Dissolve time (RFC 3339).",
+      "type": "string"
+    },
+    "fleet": {
+      "description": "The fleet name.",
+      "type": "string"
+    },
+    "instance": {
+      "description": "The run's UUID.",
+      "type": "string"
+    },
+    "journal": {
+      "description": "The whole journal, oldest first.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/JournalRow"
+      }
+    },
+    "members": {
+      "description": "Everyone who was a member, in roster order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ArchivedMember"
+      }
+    },
+    "merge_branch": {
+      "description": "The merge branch, last seen.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "repo": {
+      "description": "The bound repository, last seen.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "started_at": {
+      "description": "Run start (RFC 3339).",
+      "type": "string"
+    },
+    "subscriptions": {
+      "description": "The run's subscriptions, final state.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SubscriptionRow"
+      }
+    },
+    "synced": {
+      "description": "Whether the target held the merge branch, last seen.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "target": {
+      "description": "The target, last seen.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "v": {
+      "description": "Always 1.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "v",
+    "instance",
+    "fleet",
+    "started_at",
+    "dissolved_at",
+    "members",
+    "subscriptions",
+    "journal"
+  ],
+  "$defs": {
+    "ArchivedMember": {
+      "description": "One member of a dissolved run.",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "Its branch, last seen.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delivered": {
+          "description": "Delivered, last seen.",
+          "type": "boolean"
+        },
+        "joined_at": {
+          "description": "First seen as a member (RFC 3339).",
+          "type": "string"
+        },
+        "left_at": {
+          "description": "Left or dissolved (RFC 3339).",
+          "type": "string"
+        },
+        "session_id": {
+          "description": "The session.",
+          "type": "string"
+        },
+        "token": {
+          "description": "`T1-MA`, or `T1-O` for the operator.",
+          "type": "string"
+        },
+        "via": {
+          "description": "`joined`, `subscriber` or `worker`.",
+          "$ref": "#/$defs/ViaWire"
+        }
+      },
+      "required": [
+        "token",
+        "session_id",
+        "via",
+        "delivered",
+        "joined_at",
+        "left_at"
+      ]
+    },
+    "DigestOutcomeWire": {
+      "description": "Digest outcomes on the wire.",
+      "oneOf": [
+        {
+          "description": "Handed to the socket edge, not reported yet.",
+          "type": "string",
+          "const": "in_flight"
+        },
+        {
+          "description": "Written in full.",
+          "type": "string",
+          "const": "sent"
+        },
+        {
+          "description": "Nothing sent.",
+          "type": "string",
+          "const": "refused"
+        },
+        {
+          "description": "Claimed; the write failed or its outcome was lost.",
+          "type": "string",
+          "const": "unconfirmed"
+        },
+        {
+          "description": "The claim failed; nothing sent.",
+          "type": "string",
+          "const": "unclaimed"
+        }
+      ]
+    },
+    "DigestRow": {
+      "description": "One digest's fate.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When the outcome was reported (RFC 3339); absent while in flight.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "description": "Why, for refused, unconfirmed and unclaimed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "`d<n>`.",
+          "type": "string"
+        },
+        "outcome": {
+          "description": "What happened.",
+          "$ref": "#/$defs/DigestOutcomeWire"
+        }
+      },
+      "required": [
+        "id",
+        "outcome"
+      ]
+    },
+    "JournalRow": {
+      "description": "One journal entry an orchestrator recorded.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When (RFC 3339).",
+          "type": "string"
+        },
+        "by": {
+          "description": "The recording session.",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Why, or the evidence.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "`assigned`, `decided`, `merged`, `spawned` or `note`.",
+          "type": "string"
+        },
+        "members": {
+          "description": "Member letters it concerns.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subject": {
+          "description": "What.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "members",
+        "subject",
+        "by",
+        "at"
+      ]
+    },
+    "SubscriptionRow": {
+      "description": "One subscription.",
+      "type": "object",
+      "properties": {
+        "detail": {
+          "description": "Why, when refused or ended.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fleet": {
+          "description": "The fleet.",
+          "type": "string"
+        },
+        "last_digest": {
+          "description": "The in-flight digest, else the last one.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DigestRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outside_collisions": {
+          "description": "The run hears collisions with branches outside the fleet too (`subscribe --outside-collisions`); archives\nwritten before the field read `false`.",
+          "type": "boolean",
+          "default": false
+        },
+        "pending": {
+          "description": "Items waiting for the next digest.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "repo": {
+          "description": "The bound repository; absent only on a refusal that resolved none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session_id": {
+          "description": "The subscriber session.",
+          "type": "string"
+        },
+        "since": {
+          "description": "When the state was entered (RFC 3339).",
+          "type": "string"
+        },
+        "socket_path": {
+          "description": "The subscriber's messaging socket.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Lifecycle.",
+          "$ref": "#/$defs/SubscriptionStateWire"
+        },
+        "target": {
+          "description": "The fleet's integration branch.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "fleet",
+        "target",
+        "state",
+        "since",
+        "socket_path",
+        "pending",
+        "outside_collisions"
+      ]
+    },
+    "SubscriptionStateWire": {
+      "description": "Subscription states on the wire.",
+      "oneOf": [
+        {
+          "description": "Receives digests.",
+          "type": "string",
+          "const": "active"
+        },
+        {
+          "description": "Never admitted.",
+          "type": "string",
+          "const": "refused"
+        },
+        {
+          "description": "Ended.",
+          "type": "string",
+          "const": "ended"
+        }
+      ]
+    },
+    "ViaWire": {
+      "description": "Membership reasons on the wire.",
+      "oneOf": [
+        {
+          "description": "Joined with `heartbeat join`.",
+          "type": "string",
+          "const": "joined"
+        },
+        {
+          "description": "Active subscriber.",
+          "type": "string",
+          "const": "subscriber"
+        },
+        {
+          "description": "Branch the subscriber registered with `heartbeat worker`.",
+          "type": "string",
+          "const": "worker"
+        }
+      ]
+    }
+  }
+}

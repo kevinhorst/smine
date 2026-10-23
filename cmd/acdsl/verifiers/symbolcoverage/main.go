@@ -1,11 +1,4 @@
-// Command symbolcoverage checks a task contract's coverage primitive: the
-// named function's test coverage in the anchored package is at least min
-// percent. Runs go test -coverprofile on the single package the anchored
-// files live in, then parses go tool cover -func output.
-//
-// Contract: args = <files-list path> symbol=<func> min=<percent>; one
-// violation per stdout line as file:line: message; exit 0 pass, 1
-// violations, 2 error.
+// Command symbolcoverage is an ACDSL verifier: the named function's test coverage in the anchored package reaches min percent.
 package main
 
 import (
@@ -63,9 +56,7 @@ func run(args []string, out io.Writer) int {
 	return judge(funcReport, symbol, minPct, files[0], out)
 }
 
-// judge scans cover -func lines (path:line: name pct%) for the symbol and
-// compares the worst match against min. Split out so unit tests run on
-// canned reports instead of a nested go toolchain.
+// Split out so unit tests run on canned reports instead of a nested go toolchain.
 func judge(funcReport, symbol string, minPct float64, anchor string, out io.Writer) int {
 	worst, location := -1.0, ""
 	for _, line := range strings.Split(funcReport, "\n") {
@@ -92,8 +83,6 @@ func judge(funcReport, symbol string, minPct float64, anchor string, out io.Writ
 	return 0
 }
 
-// singleDir requires every anchored file in one directory — the package under
-// test; a multi-package anchor is an authoring error for this primitive.
 func singleDir(files []string) (string, error) {
 	dir := ""
 	for _, file := range files {

@@ -1,32 +1,4 @@
-// Command acdsl runs the agentic context DSL: one rule source, two
-// projections.
-//
-//	acdsl check [-json] [-lifetime doctrine|task|all] [-rule <id>] [-registry <file>] [-root <dir>]
-//	acdsl project (-file <path> | -strip | -plan <path> | -context <path>) [-root <dir>]
-//	acdsl fixtures [-lifetime doctrine|task|all] [-registry <file>] [-root <dir>]
-//	acdsl verdicts [-path <file>] [-since <duration>]
-//	acdsl dist -target <name> -dest <dir> [-root <dir>]
-//
-// check resolves every rule's anchor and executes its registered verifier;
-// violations print one line each (or JSON with -json) citing the rule ID. It
-// also refuses staged projection blocks (the working tree carries them, the
-// index never may), and enforces the acdsl/policy.json self-management mode
-// (strict/gated repos may not change rules or verifiers off the base branch).
-// -lifetime defaults to doctrine: the audit gates doctrine on every run,
-// while a task's contract (task-lifetime entries in a *.acdsl file anywhere
-// in the repo) is legitimately red mid-implementation and gated explicitly
-// via -lifetime task.
-// project -file syncs one file's on-disk projection: the governing rules as
-// a comment block directly above the content — what the agent reads IS the
-// projected file. project -strip removes every block before committing.
-// project -plan prints the rules that would govern a path that need not
-// exist yet — plan-time resolution.
-// project -context prints the delivered rules for an existing file as plain
-// lines without touching it — the read-time delivery channel for governed
-// files that carry no comment syntax (the acdsl-context hook's data source).
-// Output is empty for projectable files: those get the on-disk block.
-// fixtures proves each rule's verifier against its committed pass/fail
-// example sets under acdsl/testdata/<rule-id>/.
+// Command acdsl runs the agentic context DSL: one rule source, two projections.
 package main
 
 import (
@@ -53,12 +25,16 @@ func main() {
 
 func run() int {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: acdsl <check|project|fixtures> [flags]")
+		fmt.Fprintln(os.Stderr, "usage: acdsl <check|guard|project|fixtures|interfaces> [flags]")
 		return exitError
 	}
 	switch os.Args[1] {
 	case "check":
 		return runCheck(os.Args[2:])
+	case "interfaces":
+		return runInterfaces(os.Args[2:])
+	case "guard":
+		return runGuard(os.Args[2:])
 	case "project":
 		return runProject(os.Args[2:])
 	case "fixtures":
@@ -78,7 +54,8 @@ func runCheck(args []string) int {
 	asJson := flags.Bool("json", false, "emit diagnostics as JSON records")
 	lifetime := flags.String("lifetime", acdsl.LifetimeDoctrine, "rule lifetimes to gate: doctrine|task|all")
 	ruleId := flags.String("rule", "", "gate only this rule id (any lifetime) — the generation dry-run")
-	registryPath := flags.String("registry", "acdsl/registry.json", "verifier registry file")
+	reportPath := flags.String("report", "", "also write the grouped violations report to this file")
+	registryPath := flags.String("registry", "", "registry overlaid on the root's acdsl/registry.json, entries winning by name")
 	root := flags.String("root", ".", "module root")
 	flags.Parse(args)
 
@@ -93,7 +70,13 @@ func runCheck(args []string) int {
 		fmt.Fprintln(os.Stderr, "acdsl:", err)
 		return exitError
 	}
+	committed, err := acdsl.ValidateCommittedClean(ctx, *root)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "acdsl:", err)
+		return exitError
+	}
 	violations := append(discovery.Violations, staged...)
+	violations = append(violations, committed...)
 	if len(violations) > 0 {
 		for _, violation := range violations {
 			fmt.Println(violation)
@@ -114,7 +97,7 @@ func runCheck(args []string) int {
 			return exitError
 		}
 	}
-	registry, err := acdsl.LoadRegistry(*registryPath)
+	registry, err := acdsl.LoadRegistryOverlay(*registryPath, *root)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "acdsl:", err)
 		return exitError
@@ -145,6 +128,13 @@ func runCheck(args []string) int {
 				fmt.Printf("%s: [%s] %s — %s\n", diagnostic.Message, diagnostic.RuleId, diagnostic.Verifier, diagnostic.Why)
 			}
 		}
+		report := acdsl.BuildReport(registry, diagnostics)
+		fmt.Println(report)
+		if *reportPath != "" {
+			if err := os.WriteFile(*reportPath, []byte(report), 0o644); err != nil {
+				fmt.Fprintln(os.Stderr, "acdsl: report not written:", err)
+			}
+		}
 		fmt.Fprintf(os.Stderr, "acdsl: %d violation(s) across %d rule(s)\n", len(diagnostics), len(gated))
 		return exitViolations
 	}
@@ -152,9 +142,27 @@ func runCheck(args []string) int {
 	return exitClean
 }
 
-// logVerdicts archives the run to the verdict sink — best-effort by
-// contract: the gate's exit code never depends on logging. Logs the gated
-// set, the rules this run actually executed.
+func runGuard(args []string) int {
+	flags := flag.NewFlagSet("guard", flag.ExitOnError)
+	root := flags.String("root", ".", "module root")
+	flags.Parse(args)
+
+	ctx := context.Background()
+	staged, err := acdsl.ValidateStagedClean(ctx, *root)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "acdsl:", err)
+		return exitError
+	}
+	if len(staged) > 0 {
+		for _, violation := range staged {
+			fmt.Println(violation)
+		}
+		fmt.Fprintf(os.Stderr, "acdsl: %d staged projection violation(s)\n", len(staged))
+		return exitViolations
+	}
+	return exitClean
+}
+
 func logVerdicts(ctx context.Context, root string, rules []acdsl.Rule, diagnostics []acdsl.Diagnostic) {
 	if os.Getenv("ACDSL_VERDICTS_ENABLED") == "0" {
 		return
@@ -179,8 +187,6 @@ func logVerdicts(ctx context.Context, root string, rules []acdsl.Rule, diagnosti
 	}
 }
 
-// runDist distributes a target's gate slice: reach-covered rules, their
-// registry subset, and the prebuilt runner + verifier binaries.
 func runDist(args []string) int {
 	flags := flag.NewFlagSet("dist", flag.ExitOnError)
 	target := flags.String("target", "", "deploy-target repo name (dir basename); required")
@@ -247,7 +253,7 @@ func runProject(args []string) int {
 	file := flags.String("file", "", "repo-relative file whose projection to sync in place")
 	strip := flags.Bool("strip", false, "remove every projection block (pre-commit sweep)")
 	plan := flags.String("plan", "", "repo-relative path that need not exist: print the rules that would govern it")
-	contextFile := flags.String("context", "", "repo-relative non-projectable file: print its delivered rules as plain lines")
+	contextFile := flags.String("context", "", "repo-relative file: print its delivered rules as plain lines, the read hook's data source")
 	root := flags.String("root", ".", "module root")
 	flags.Parse(args)
 	modes := 0
@@ -309,9 +315,6 @@ func runProject(args []string) int {
 		return exitClean
 	}
 	if *contextFile != "" {
-		if acdsl.Projectable(*contextFile) {
-			return exitClean // projectable files get the on-disk block, not context delivery
-		}
 		governing, err := acdsl.RulesForFile(discovery.Rules, discovery.Universe, *contextFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "acdsl:", err)
@@ -359,7 +362,7 @@ func runProject(args []string) int {
 func runFixtures(args []string) int {
 	flags := flag.NewFlagSet("fixtures", flag.ExitOnError)
 	lifetime := flags.String("lifetime", acdsl.LifetimeDoctrine, "rule lifetimes to prove: doctrine|task|all")
-	registryPath := flags.String("registry", "acdsl/registry.json", "verifier registry file")
+	registryPath := flags.String("registry", "", "registry overlaid on the root's acdsl/registry.json, entries winning by name")
 	root := flags.String("root", ".", "module root")
 	flags.Parse(args)
 
@@ -381,7 +384,7 @@ func runFixtures(args []string) int {
 		fmt.Fprintln(os.Stderr, "acdsl:", err)
 		return exitError
 	}
-	registry, err := acdsl.LoadRegistry(*registryPath)
+	registry, err := acdsl.LoadRegistryOverlay(*registryPath, *root)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "acdsl:", err)
 		return exitError

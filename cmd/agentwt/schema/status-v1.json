@@ -1,0 +1,921 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Document",
+  "description": "Root envelope.",
+  "type": "object",
+  "properties": {
+    "candidates": {
+      "description": "Non-agent local branches every containment question was asked against, default branch first.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checkout": {
+      "description": "The main checkout's branch and dirty count.",
+      "$ref": "#/$defs/Checkout"
+    },
+    "kinds": {
+      "description": "Every kind the inventory holds (sorted, distinct): agent namespaces and `codex`, whatever `--kind` selected.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order": {
+      "description": "Merge-order result over the rows with own commits.",
+      "$ref": "#/$defs/OrderSummary"
+    },
+    "repo": {
+      "description": "Repo-wide facts.",
+      "$ref": "#/$defs/RepoInfo"
+    },
+    "rows": {
+      "description": "One row per agent branch (name order) or detached worktree.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Row"
+      }
+    },
+    "schema": {
+      "description": "Always [`SCHEMA`].",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "timings": {
+      "description": "Wall time per phase — the load evidence the UI timing line and the load test read.",
+      "$ref": "#/$defs/Timings"
+    },
+    "trains": {
+      "description": "One train per requested `--train-base`, in request order (duplicates dropped); absent when none was requested.",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/$defs/BaseTrain"
+      }
+    },
+    "warnings": {
+      "description": "Registry files that could not be read (path plus reason); the document is still complete.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "repo",
+    "checkout",
+    "candidates",
+    "rows",
+    "kinds",
+    "order",
+    "warnings",
+    "timings"
+  ],
+  "$defs": {
+    "AheadBehind": {
+      "description": "Commits ahead and behind.",
+      "type": "object",
+      "properties": {
+        "ahead": {
+          "description": "Commits only on this side.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "behind": {
+          "description": "Commits only on the other side.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "ahead",
+        "behind"
+      ]
+    },
+    "BaseTrain": {
+      "description": "The merge train seeded with one requested base's tip instead of the default branch's; same inputs as the\ndefault train, so `pairs`, `components` and `dirty_snapshots` equal it and only the train steps differ.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base branch the train starts from.",
+          "type": "string"
+        },
+        "branches": {
+          "description": "Per-branch facts against this base, by branch name; branches with nothing to merge are absent.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RowOrder"
+          }
+        },
+        "order": {
+          "description": "Order summary against this base.",
+          "$ref": "#/$defs/OrderSummary"
+        }
+      },
+      "required": [
+        "base",
+        "order",
+        "branches"
+      ]
+    },
+    "Checkout": {
+      "description": "The main checkout.",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "Checked-out branch, `HEAD` when detached.",
+          "type": "string"
+        },
+        "dirty": {
+          "description": "Tracked changes (staged or unstaged).",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "branch",
+        "dirty"
+      ]
+    },
+    "CommitEntry": {
+      "description": "One commit line.",
+      "type": "object",
+      "properties": {
+        "committed_at": {
+          "description": "Committer time, RFC 3339 UTC.",
+          "type": "string"
+        },
+        "is_merge": {
+          "description": "`true` for a merge commit (never counted as unpicked).",
+          "type": "boolean"
+        },
+        "sha": {
+          "description": "Full hex sha.",
+          "type": "string"
+        },
+        "short_sha": {
+          "description": "Eight-character prefix.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "Subject line.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha",
+        "short_sha",
+        "subject",
+        "committed_at",
+        "is_merge"
+      ]
+    },
+    "Commits": {
+      "description": "Commit lists.",
+      "type": "object",
+      "properties": {
+        "ahead": {
+          "description": "Own commits (not on the base), newest first, complete.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CommitEntry"
+          }
+        },
+        "behind": {
+          "description": "Base commits missing here, newest first, capped at 200.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CommitEntry"
+          }
+        },
+        "behind_truncated": {
+          "description": "`true` when `behind` was cut at the cap.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ahead",
+        "behind",
+        "behind_truncated"
+      ]
+    },
+    "ConflictPair": {
+      "description": "One conflicting pair.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "First branch.",
+          "type": "string"
+        },
+        "b": {
+          "description": "Second branch.",
+          "type": "string"
+        },
+        "paths": {
+          "description": "Unresolved conflict paths, sorted.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "paths"
+      ]
+    },
+    "Containment": {
+      "description": "The one candidate holding a branch's work.",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "Candidate branch.",
+          "type": "string"
+        },
+        "rank": {
+          "description": "Where it sits in the preference order.",
+          "$ref": "#/$defs/ContainmentRank"
+        },
+        "reason": {
+          "description": "Why it counts as containing the work.",
+          "$ref": "#/$defs/ContainmentReason"
+        }
+      },
+      "required": [
+        "branch",
+        "reason",
+        "rank"
+      ]
+    },
+    "ContainmentRank": {
+      "description": "Preference order of the containing branch.",
+      "oneOf": [
+        {
+          "description": "The branch this one was created from.",
+          "type": "string",
+          "const": "base"
+        },
+        {
+          "description": "The repository's default branch.",
+          "type": "string",
+          "const": "default"
+        },
+        {
+          "description": "Any other non-agent branch.",
+          "type": "string",
+          "const": "other"
+        }
+      ]
+    },
+    "ContainmentReason": {
+      "description": "Containment vocabulary.",
+      "oneOf": [
+        {
+          "description": "The tip is an ancestor of the candidate.",
+          "type": "string",
+          "const": "ancestor"
+        },
+        {
+          "description": "Every own non-merge commit is on the candidate: re-applies as a no-op, was picked (pick trailer, or the same\nauthor, author time and subject committed later — conflict resolution included) or has a patch-id twin.",
+          "type": "string",
+          "const": "all_commits_placed"
+        },
+        {
+          "description": "Merging the tip into the candidate changes nothing: the candidate's tree already holds the branch's net change\n(a squash merge, commits that cancel out).",
+          "type": "string",
+          "const": "merge_adds_nothing"
+        }
+      ]
+    },
+    "Counts": {
+      "description": "Ahead/behind pairs.",
+      "type": "object",
+      "properties": {
+        "vs_from": {
+          "description": "Against the base; absent when the base is unknown.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AheadBehind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "From": {
+      "description": "Base branch resolution.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The resolved base, `null` when unknown.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "description": "The raw reflog origin text, for the tooltip.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolution": {
+          "description": "How it was resolved.",
+          "$ref": "#/$defs/FromResolution"
+        }
+      },
+      "required": [
+        "resolution"
+      ]
+    },
+    "FromResolution": {
+      "description": "How the base was resolved.",
+      "oneOf": [
+        {
+          "description": "The reflog named a ref that exists.",
+          "type": "string",
+          "const": "ref"
+        },
+        {
+          "description": "The reflog carried a bare sha; the closest containing candidate was chosen.",
+          "type": "string",
+          "const": "sha"
+        },
+        {
+          "description": "The reflog named another agent branch; its own origin was followed to a root.",
+          "type": "string",
+          "const": "chain"
+        },
+        {
+          "description": "A rebase, reset or `branch -f` moved the branch onto another candidate after creation; that candidate is the\nbase.",
+          "type": "string",
+          "const": "reanchored"
+        },
+        {
+          "description": "Nothing resolvable — never guessed.",
+          "type": "string",
+          "const": "unknown"
+        }
+      ]
+    },
+    "Head": {
+      "description": "Tip commit facts.",
+      "type": "object",
+      "properties": {
+        "committed_at": {
+          "description": "Committer time, RFC 3339 UTC.",
+          "type": "string"
+        },
+        "sha": {
+          "description": "Full hex sha.",
+          "type": "string"
+        },
+        "short_sha": {
+          "description": "Abbreviated per `core.abbrev`.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "Subject line.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha",
+        "short_sha",
+        "subject",
+        "committed_at"
+      ]
+    },
+    "Operation": {
+      "description": "In-progress git operation.",
+      "oneOf": [
+        {
+          "description": "A merge is in progress.",
+          "type": "string",
+          "const": "merge"
+        },
+        {
+          "description": "A rebase is in progress.",
+          "type": "string",
+          "const": "rebase"
+        },
+        {
+          "description": "A cherry-pick is in progress.",
+          "type": "string",
+          "const": "cherry_pick"
+        },
+        {
+          "description": "A revert is in progress.",
+          "type": "string",
+          "const": "revert"
+        },
+        {
+          "description": "A bisect is in progress.",
+          "type": "string",
+          "const": "bisect"
+        }
+      ]
+    },
+    "OrderSummary": {
+      "description": "Document-level order summary.",
+      "type": "object",
+      "properties": {
+        "components": {
+          "description": "Connected components of the conflict graph (branches with no conflicts form singleton components).",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "dirty_snapshots": {
+          "description": "Branches whose worktree had tracked modifications; their snapshot, not their tip, was merged.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pairs": {
+          "description": "Conflict pairs, each once, lexicographic.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConflictPair"
+          }
+        },
+        "train": {
+          "description": "Recommended order, branch names.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "train",
+        "pairs",
+        "components",
+        "dirty_snapshots"
+      ]
+    },
+    "RepoInfo": {
+      "description": "Repo-wide facts.",
+      "type": "object",
+      "properties": {
+        "default_branch": {
+          "description": "The default branch (rank `default` of a containment).",
+          "type": "string"
+        },
+        "path": {
+          "description": "Canonical path of the main checkout.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "default_branch"
+      ]
+    },
+    "Row": {
+      "description": "One agent branch, or one detached worktree (`branch` null).",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "description": "Branch name; `null` for a detached worktree.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commits": {
+          "description": "Commit lists behind the counts.",
+          "$ref": "#/$defs/Commits"
+        },
+        "containment": {
+          "description": "The one candidate that holds this branch's work, in preference order base → default → any other;\n`null` when none does.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Containment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "counts": {
+          "description": "Commit counts.",
+          "$ref": "#/$defs/Counts"
+        },
+        "from": {
+          "description": "Base branch resolution.",
+          "$ref": "#/$defs/From"
+        },
+        "head": {
+          "description": "Tip commit.",
+          "$ref": "#/$defs/Head"
+        },
+        "kind": {
+          "description": "Agent namespace (`claude`, `claude-routines`, …); `codex` for detached pool rows; `null` otherwise.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "order": {
+          "description": "Merge-order facts; absent when the branch has no own commits.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RowOrder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "safe_to_remove": {
+          "description": "The removal predicate.",
+          "type": "boolean"
+        },
+        "session": {
+          "description": "Session attached to the worktree; absent when none.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Session"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unpicked": {
+          "description": "Number of `unpicked_commits`.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "unpicked_commits": {
+          "description": "Own non-merge commits no candidate holds (ancestor, no-op re-apply, replay, patch-id twin), full shas, newest\nfirst; empty when contained.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unsafe_reasons": {
+          "description": "Why removal is refused; empty when safe.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "worktree": {
+          "description": "Worktree facts; absent when the branch has no checkout.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Worktree"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "head",
+        "from",
+        "counts",
+        "commits",
+        "unpicked",
+        "unpicked_commits",
+        "safe_to_remove",
+        "unsafe_reasons"
+      ]
+    },
+    "RowOrder": {
+      "description": "Merge-order facts of one branch.",
+      "type": "object",
+      "properties": {
+        "conflicts_with": {
+          "description": "Branches this one conflicts with pairwise (touched paths overlap and the merge is unresolved).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "train": {
+          "description": "The train step outcome.",
+          "$ref": "#/$defs/TrainOutcome"
+        },
+        "train_position": {
+          "description": "1-based position in the recommended train.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "conflicts_with",
+        "train_position",
+        "train"
+      ]
+    },
+    "Session": {
+      "description": "Session attached to a worktree.",
+      "type": "object",
+      "properties": {
+        "account_uuid": {
+          "description": "Account uuid from the profile's `.claude.json`; absent when unreadable.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agent": {
+          "description": "`claude` or `codex`.",
+          "$ref": "#/$defs/SessionAgent"
+        },
+        "alive": {
+          "description": "The process is alive right now (Claude only; Codex rollouts carry no pid → absent).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "entrypoint": {
+          "description": "`claude-desktop`, `cli`, … / Codex `originator`.",
+          "type": "string"
+        },
+        "host_session_id": {
+          "description": "Desktop host session id (Claude only).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Claude `sessionId` / Codex rollout id.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Session name (Claude).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pid": {
+          "description": "Registry pid (Claude only); absent for Codex.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "status": {
+          "description": "Registry status (`busy`, `idle`, `waiting`); absent for Codex.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "description": "Last registry update, RFC 3339 UTC.",
+          "type": "string"
+        },
+        "waiting_for": {
+          "description": "What the session waits for, while `waiting`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "agent",
+        "id",
+        "entrypoint",
+        "updated_at"
+      ]
+    },
+    "SessionAgent": {
+      "description": "Which agent owns the session.",
+      "oneOf": [
+        {
+          "description": "Claude Code.",
+          "type": "string",
+          "const": "claude"
+        },
+        {
+          "description": "Codex.",
+          "type": "string",
+          "const": "codex"
+        }
+      ]
+    },
+    "Timings": {
+      "description": "Milliseconds per phase of one run.",
+      "type": "object",
+      "properties": {
+        "analysis_ms": {
+          "description": "Base, ahead/behind, containment over every row (main thread, serial).",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "checkout_ms": {
+          "description": "The main checkout's branch and dirty count.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "gitstate_ms": {
+          "description": "Wall of the row phase: history analysis and worktree status run concurrently.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "inventory_ms": {
+          "description": "Refs and worktrees.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "order_ms": {
+          "description": "Matrix and train.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "sessions_ms": {
+          "description": "Registry reads and the join.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "total_ms": {
+          "description": "Everything.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "worktrees_ms": {
+          "description": "The slowest worktree's status, content hashes of racily-clean entries included.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "inventory_ms",
+        "gitstate_ms",
+        "analysis_ms",
+        "worktrees_ms",
+        "checkout_ms",
+        "sessions_ms",
+        "order_ms",
+        "total_ms"
+      ]
+    },
+    "TrainOutcome": {
+      "description": "Outcome of one train step.",
+      "oneOf": [
+        {
+          "description": "Merged cleanly onto the train head before it.",
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "clean"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        },
+        {
+          "description": "Conflicted against the train head; `blocked_by` names the branches merged before it, `paths` the conflicts.",
+          "type": "object",
+          "properties": {
+            "blocked_by": {
+              "description": "Branches merged before this one.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "paths": {
+              "description": "Unresolved conflict paths.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "state": {
+              "type": "string",
+              "const": "blocked"
+            }
+          },
+          "required": [
+            "state",
+            "blocked_by",
+            "paths"
+          ]
+        },
+        {
+          "description": "Skipped: no own commits (already contained).",
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "nothing"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        }
+      ]
+    },
+    "Worktree": {
+      "description": "Worktree facts.",
+      "type": "object",
+      "properties": {
+        "detached": {
+          "description": "HEAD is detached.",
+          "type": "boolean"
+        },
+        "dirty": {
+          "description": "Tracked changes, staged or unstaged (the count the remove gate and dirty badge use).",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "locked": {
+          "description": "Lock reason when locked; absent otherwise.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "main": {
+          "description": "`true` for the main worktree.",
+          "type": "boolean"
+        },
+        "operation": {
+          "description": "In-progress operation; absent when none.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Operation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "description": "Canonical filesystem path.",
+          "type": "string"
+        },
+        "prunable": {
+          "description": "Git considers it prunable (gitdir gone).",
+          "type": "boolean"
+        },
+        "untracked": {
+          "description": "Untracked files after the infrastructure filter.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "untracked_paths": {
+          "description": "The untracked paths counted (first 20), for the tooltip.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "path",
+        "main",
+        "detached",
+        "prunable",
+        "dirty",
+        "untracked",
+        "untracked_paths"
+      ]
+    }
+  }
+}
