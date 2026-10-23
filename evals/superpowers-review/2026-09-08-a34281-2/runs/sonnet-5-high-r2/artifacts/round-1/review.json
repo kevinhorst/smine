@@ -1,0 +1,36 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "routines/smine-nightly/run.sh",
+      "line": 325,
+      "severity": "MAJOR",
+      "claim": "Both smine-orchestrate wrapper call sites (routines/smine-nightly/run.sh:325-336 and cmd/bootstrap/run.sh:163-171) run the merge on the real main checkout with no rollback — the postcondition only detects a dirty tree after the fact and never runs git merge --abort or resets, so an agent killed mid-merge (budget exhausted, bootout, crash) leaves the checkout half-merged and the next nightly run starts from that broken tree.",
+      "fix": "Either wrap the merge in the wrapper so it can git merge --abort on a nonzero orchestrate exit before reporting, or add to the skill's hard invariants that on any failure inside step 2 it must git merge --abort before writing .orchestrate-report, as a wrapper-independent obligation."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/acdsl-policy-guard.sh",
+      "line": 43,
+      "severity": "MINOR",
+      "claim": "The hook unconditionally denies any Write/Edit to acdsl/registry.local.json in gated mode, so an agent using Write/Edit can never exercise a local_overrides escape hatch that policy.json sanctions and that the authoritative overlayViolations gate accepts, even though the path remains reachable via Bash and acdsl check.",
+      "fix": "Add a follow-up note in the README's Modes section if the intent is that the hook only blocks the tool-mediated path (this matches the plan's own hook listing, so it is a plan-level rough edge rather than an implementer deviation)."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/config/installenv.go",
+      "line": 33,
+      "severity": "MINOR",
+      "claim": "installEnvValues does not strip inline trailing comments from a KEY=value # comment line (only a whole-line leading # is recognized), so a hand-annotated install.env would silently include the comment in the value.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "plans/v1-2-1/2026-08-30-repo-cache-reload-wip-46c8d9e/design/change-repo-cache.md",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "handleReposDelete never revokes the additionalDirectories grant that handleReposAdd makes (explicitly deferred in the plan's own Deferred findings, not a finding against this diff), and the surface grows since casual installs now always grant, accumulating ungranted-on-delete entries over time.",
+      "fix": ""
+    }
+  ]
+}

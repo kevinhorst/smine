@@ -1,0 +1,15 @@
+{
+  "finding_id": "code-style-MIN-23-r2",
+  "verdict": "confirmed",
+  "reason": "internal/repos/registry.go:67-70 Registry's unexported-field group reads mu, loadedModTime, loadedSize, repos; alphabetically it is loadedModTime, loadedSize, mu, repos. git diff against b4981b88d5 shows the pre-diff struct (mu, repos only) was already alphabetical, so this diff's two new fields are what breaks RULE-GOLANG-STRUCT-002's ordering, not a pre-existing deviation.",
+  "probe": "none: ACDSL repo but both verdict invocations are denied by this session's tool-policy: `<worktree>/bin/acdsl check -rule PROBE-CODE-STYLE-MIN-23-R2` -> denied, no allow rule matches candidate Bash(<worktree>/bin/acdsl *); `make -C <worktree> acdsl ARGS=...` -> denied, no `acdsl` make target exists. Two attempts, both denied; settled manually per PROBE-006.",
+  "evidence": {
+    "read": [
+      "internal/repos/registry.go:67-70 mu sync.RWMutex / loadedModTime time.Time / loadedSize int64 / repos []Repo",
+      "context/rules/go.md:221 Fields sort alphabetically within each group; Id is always the first public field."
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/code-style-min-23-r2-evidence.txt"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-MIN-19-r2",
+  "verdict": "confirmed",
+  "reason": "The startPeek(ctx, *peekBin, *peekPort, *peekControlPort, \"http://\"+*addr+\"/\", *claudeHome, *codexHome) call at main.go:128 has 7 arguments on one line, over RULE-GOLANG-CALL-001's 5-argument multiline threshold; the custom probe went RED on exactly the claimed file and line (also hit a second hunk at line 245, not part of the original claim).",
+  "probe": "PROBE-CODE-STYLE-MIN-19-R2",
+  "script": "probe-startpeek-multiline.sh",
+  "fixture": "fixtures/code-style-min-19-r2/bad.go",
+  "registry": "registry-code-style-min-19-r2.json",
+  "evidence": {
+    "read": [
+      "cmd/configserver/main.go:128 at e5245d08 (git show): if !startPeek(ctx, *peekBin, *peekPort, *peekControlPort, \"http://\"+*addr+\"/\", *claudeHome, *codexHome) { — 7 arguments, single line"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-MIN-19-R2 -registry probes/registry-code-style-min-19-r2.json -root <review worktree> -lifetime task => cmd/configserver/main.go:128: single-line startPeek call with 6 commas exceeds RULE-GOLANG-CALL-001 multiline threshold (5+ args)",
+    "validity": "same probe on fixtures/code-style-min-19-r2/bad.go (fresh git-init fixture repo, a single-line startPeek call with 7 args) went RED at bad.go:4 before the real run"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/probe-startpeek-multiline.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-min-19-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-19-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-19-r2/bad.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-19-r2/probe.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b1-r2/railroad-probes-r2.acdsl"
+  ]
+}

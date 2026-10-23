@@ -1,0 +1,28 @@
+{
+  "finding_id": "tests-NIT-69-r1",
+  "verdict": "confirmed",
+  "reason": "run_wrapper (test_bootstrap_wrapper.sh:39-41) sets only HOME and BOOTSTRAP_DRY_RUN; run.sh:64 reads SMINE_DEV_MODE and :88-89 BOOTSTRAP_N/BOOTSTRAP_SINCE from the ambient env, and `make test` (Makefile:117) runs the script with the caller's env unscrubbed, so an exported SMINE_DEV_MODE=1 trips line 47's '--dev' guard.",
+  "probe": "PROBE-TESTS-NIT-69-R1",
+  "script": "tests-nit-69-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-69-r1/cmd/tests/test_bootstrap_wrapper.sh",
+  "registry": "registry-tests-nit-69-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-69-R1 -registry probes/registry-tests-nit-69-r1.json -> exit 1: cmd/tests/test_bootstrap_wrapper.sh:40: run_wrapper inherits ambient SMINE_DEV_MODE/BOOTSTRAP_SINCE/BOOTSTRAP_N — exported values flip the defaults-case assertions",
+    "read": [
+      "cmd/tests/test_bootstrap_wrapper.sh:39-47 — run_wrapper: HOME=\"$fake_home\" BOOTSTRAP_DRY_RUN=1 bash run.sh; defaults case asserts --last 30 and no --dev",
+      "cmd/bootstrap/run.sh:64-66 — dev_mode=${SMINE_DEV_MODE:-}; profile fills only when empty; casual clears",
+      "cmd/bootstrap/run.sh:88-97 — n=${BOOTSTRAP_N:-30}; since=${BOOTSTRAP_SINCE:-} replaces --last; --dev appended when dev_mode set",
+      "Makefile:115-117 — test: for t in cmd/tests/test_*.sh; do bash $$t; no env scrub"
+    ],
+    "validity": "fixture run: bin/acdsl check -root scratch/tests-nit-69-r1/root (git-init'd copy of the fixture) -> exit 1 at cmd/tests/test_bootstrap_wrapper.sh:2",
+    "not_run": "the env-leak reproduction (SMINE_DEV_MODE=1 make test-shell) needs a VAR= prefix or env wrapper, both outside this shell policy; the probe plus the read chain settle it",
+    "known_check": "distinct from code-style-NIT-122-r1 (grep && fail under set -e), tests-NIT-56-r1 (dry-run only), tests-NIT-13-r2 (repos roster)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-69-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-69-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-69-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-69-r1/cmd/tests/test_bootstrap_wrapper.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-69-r1/railroad-probes-r1.acdsl"
+  ]
+}

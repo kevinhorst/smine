@@ -1,0 +1,15 @@
+{
+  "finding_id": "code-style-NIT-223-r1",
+  "verdict": "debunked",
+  "reason": "The repo's own authoring grammar at 1f725ce prescribes the '## When to use' layout: skills.md names skillroutine-create as the authoring-grammar home, and skillroutine-create L37 requires '## When to use (Use when / Don't use when / Preconditions / Workflow position)'. 37 of 39 repo skills (every smine sibling) use it, and the three files are imported existing skills (changelogs 1.2/1.1/0.1.0 predate this range), not fresh authoring.",
+  "probe": "none: the claim turns on which layout rule binds new skills (RULE-SKILL-011 vs the skillroutine-create authoring grammar), not on a textual pattern — a header probe goes red on 37 of 39 compliant sibling skills and cannot decide the normative question",
+  "evidence": {
+    "read": [
+      "skills/skillroutine/skillroutine-create/SKILL.md L37: 'Required sections in order: title, `## When to use` (Use when / Don't use when / Preconditions / Workflow position linking the README Skill map), `## Args` ..., the body, `## Model`.'",
+      "context/rules/skills.md L7: 'the authoring grammar lives in the skillroutine-create skill'; RULE-SKILL-003 lists 'the When-to-use fields' as a legitimate skill surface; RULE-SKILL-008: legacy skills are 'rule-only ... until /fmt migrates them'",
+      "grep '^## When to use' skills/ -> 37 SKILL.md files incl. all 11 smine skills and railroad-review; grep '^## Routing' -> only skills/fmt/fmt and skills/orchestration/peek",
+      "changelog.json: smine-orchestrate 1.0 2026-08-26..1.2 2026-08-27, smine-style 1.0..1.1 2026-08-27, smine-permissions 0.1.0 2026-08-30 — pre-existing skills added to this repo, not newly authored"
+    ]
+  },
+  "artifacts": []
+}

@@ -1,0 +1,130 @@
+{
+  "eval": {
+    "date": "2026-09-26",
+    "notes": "",
+    "notesBullets": [
+      "arms: nosuchmodel-low",
+      "start commit 55ae869e",
+      "smoke only, no judges"
+    ],
+    "skill": "qq",
+    "skillMdPath": "evals/qq/2026-09-26-55ae86/SKILL.md"
+  },
+  "metrics": [
+    {
+      "id": "smoke_pass",
+      "direction": "higher",
+      "label": "Smoke pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "wall_seconds",
+      "direction": "lower",
+      "label": "Wall time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "active_seconds",
+      "direction": "lower",
+      "label": "Active time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "output_tokens",
+      "direction": "lower",
+      "label": "Output tokens",
+      "source": "telemetry",
+      "unit": "tokens"
+    },
+    {
+      "id": "cost_usd",
+      "direction": "lower",
+      "label": "Cost",
+      "source": "telemetry",
+      "unit": "usd"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "nosuchmodel-low-r1",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "nosuchmodel-low-r1",
+      "value": 10
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "nosuchmodel-low-r1",
+      "value": 10
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "nosuchmodel-low-r1",
+      "value": 513
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "nosuchmodel-low-r1",
+      "value": 0.28441459999999996
+    }
+  ],
+  "probes": [
+    {
+      "name": "variant",
+      "result": "requested model nosuchmodel but the cell ran claude-opus-5-5[1m]",
+      "ruleIds": [],
+      "runId": "nosuchmodel-low-r1"
+    }
+  ],
+  "rubric": [],
+  "runs": [
+    {
+      "id": "nosuchmodel-low-r1",
+      "invalid": true,
+      "invalidReason": "requested model nosuchmodel but the cell ran claude-opus-5-5[1m]",
+      "model": {
+        "id": "claude-opus-5-5[1m]",
+        "effort": "low",
+        "mode": ""
+      },
+      "output": "runs/A/diff.patch",
+      "skillMd": "evals/qq/2026-09-26-55ae86/SKILL.md",
+      "transcript": "dbf16824-e07b-4769-bcb7-5d8a96c60cb1",
+      "variant": {
+        "disable": [],
+        "name": "nosuchmodel-low"
+      }
+    }
+  ],
+  "schemaVersion": "2.7",
+  "scores": [],
+  "setup": null,
+  "sharedTotals": [],
+  "totals": [],
+  "verdict": {
+    "bestArm": "",
+    "perRun": [
+      {
+        "failedThresholds": [],
+        "pass": false,
+        "runId": "nosuchmodel-low-r1"
+      }
+    ],
+    "reason": "threshold, smoke or variant failures 100% (1)",
+    "status": "fail",
+    "thresholds": {
+      "smoke_pass": 1
+    }
+  }
+}

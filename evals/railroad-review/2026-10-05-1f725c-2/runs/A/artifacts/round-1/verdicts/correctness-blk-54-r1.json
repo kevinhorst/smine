@@ -1,0 +1,32 @@
+{
+  "finding_id": "correctness-BLK-54-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at 1f725ce on internal/server/repos.go:605/607/624: casual adds always grant (line 570) and return the raw '+ additionalDirectories grant' line, and both registry ops render the '_registry' lock key as the op-result Subject; the Projects page with add/remove forms and #op-result is in the casual nav (layout.html:33), while the template deliberately hides the additionalDirectories checkbox from casual users.",
+  "probe": "PROBE-CORRECTNESS-BLK-54-R1",
+  "script": "correctness-blk-54-r1.sh",
+  "fixture": "probes/fixtures/correctness-blk-54-r1/internal/server/repos.go",
+  "registry": "registry-correctness-blk-54-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-BLK-54-R1 -registry .../probes/registry-correctness-blk-54-r1.json -> exit 1: internal/server/repos.go:605 (additionalDirectories grant line), :607 and :624 (runRepoOp(registryLockKey) -> Subject \"_registry\"); 3 violation(s)",
+    "validity_run": "bin/acdsl check -rule PROBE-CORRECTNESS-BLK-54-R1 -root probes/fixtures/correctness-blk-54-r1 -> exit 1, 2 violations on the fixture (direct /bin/bash run of the script was denied by tool policy; acdsl over a fixture root used instead; make acdsl ARGS=... also denied, repo ships bin/acdsl so it ran directly)",
+    "read": [
+      "internal/server/repos.go:570 grantAccess := ... || !s.presentation.isDeveloperAudience()",
+      "internal/server/repos.go:605 return fmt.Sprintf(\"added %s (%s) + additionalDirectories grant\", ...)",
+      "internal/server/repos.go:234 opResult{... Subject: lockKey}; :33 registryLockKey = \"_registry\"",
+      "internal/server/templates/_op_result.html renders untranslated Ok/Failed badges, {{.Subject}} and <pre>{{.Output}}</pre>",
+      "internal/server/templates/repos_index.html:5-31 add/remove forms and #op-result rendered for both audiences; :12-14 additionalDirectories checkbox hidden for casual",
+      "internal/server/templates/layout.html:33 casual nav links /repos as Projects",
+      "known.json: no entry on repos.go matching this claim (only git-init ordering, doc comment, cache-delete test, style nits)"
+    ],
+    "attacked_cells": "effect incorrect holds: correctness-11/13 require no engine/repo-management internals in casual-visible text — an absent required behavior; exposure often holds: named path is every casual POST /repos/add and /repos/delete"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-blk-54-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-blk-54-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-blk-54-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-54-r1/internal/server/repos.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-54-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-54-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-blk-54-r1/files.txt"
+  ]
+}

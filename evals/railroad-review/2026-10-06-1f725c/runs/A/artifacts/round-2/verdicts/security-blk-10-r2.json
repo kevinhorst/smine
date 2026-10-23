@@ -1,0 +1,31 @@
+{
+  "finding_id": "security-BLK-10-r2",
+  "verdict": "confirmed",
+  "reason": "Confirmed at skills/smine/smine-skills/SKILL.md:45 and cross-checked against skills/smine/smine-apply/SKILL.md step 4 ('Casual lockout (hard gate)') and step 5 (Auto-apply): the casual-lockout control is scoped by its own text to edits targeting an existing skill ('before implementing a skills-kind proposal targeting an existing skill, read the target's frontmatter'); new-skill proposals are never checked against it and smine-apply unconditionally stamps origin: user on any new skill it creates from a proposal. In 'always' auto-apply mode every remaining proposed skills-kind entry (new-skill proposals included) becomes an implicit '+' vote up to the implementation cap with no rules-file judgment at all; 'decide' mode judges against a user-authored rules file, not against injection risk, and carries no hard gate for new-skill creation either. smine-batch (the mining source) extracts skill candidates from raw session transcript prose with no sanitization beyond quoting, so a prompt-injected or adversarial transcript can reach a created, trusted (origin: user), SKILL.md-instructions-as-code skill with zero human vote in always mode. No ledger entry (rejected.json empty; known.json has no smine-skills/smine-apply origin:user row) covers this.",
+  "probe": "PROBE-SECURITY-BLK-10-R2",
+  "script": "security-blk-10-r2.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/security-blk-10-r2/SKILL.md",
+  "registry": "registry-security-blk-10-r2.json",
+  "cells": {
+    "effect": "destructive",
+    "exposure": "rare"
+  },
+  "evidence": {
+    "probe_run": "acdsl check -rule PROBE-SECURITY-BLK-10-R2 -registry registry-security-blk-10-r2.json -lifetime task -json -> {\"id\":\"PROBE-SECURITY-BLK-10-R2\",\"verifier\":\"security-blk-10-r2-verifier\",\"message\":\"skills/smine/smine-skills/SKILL.md:45: new-skill creation is exempted from the casual-lockout gate that governs edits\",...} / acdsl: 1 violation(s) across 1 rule(s)",
+    "read": [
+      "skills/smine/smine-skills/SKILL.md:45 — 'New-skill proposals stay allowed — smine-apply stamps them origin: user at creation.'",
+      "skills/smine/smine-apply/SKILL.md step 4 — 'Casual lockout (hard gate) ... before implementing a skills-kind proposal targeting an existing skill, read the target's frontmatter; without origin: user, do not touch the skill' (no new-skill clause) and '... a new skill created from a proposal additionally gets origin: user in its frontmatter ... (never added to shipped skills, never removed)'",
+      "skills/smine/smine-apply/SKILL.md step 5 — 'in always mode every remaining entry with status proposed ... become implicit + votes filling the implementation-cap slots'",
+      "skills/smine/smine-batch/SKILL.md — skill-candidate extraction has no sanitization beyond quoting verbatim transcript content",
+      "round-2/rejected.json — empty",
+      "round-2/known.json — no smine-skills/smine-apply origin:user entry"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-blk-10-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-security-blk-10-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/security-blk-10-r2/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/security-blk-10-r2/railroad-probes-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-security-blk-10-r2-r2/railroad-probes-r2.acdsl"
+  ]
+}

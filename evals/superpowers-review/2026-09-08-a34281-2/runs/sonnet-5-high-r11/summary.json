@@ -1,0 +1,64 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "The CheckPolicy self-management gate is fully bypassable: when base resolution fails, the fatal-vs-free decision uses policy.Mode from the untrusted working-tree file, so an agent can set mode=free plus an unresolvable base_ref in acdsl/policy.json and change any protected rule with zero diagnostics, verified by a runnable exploit test.",
+      "fix": "Never let policy.Mode from the working tree be the sole gate for a failed base resolution: either always hard-fail when the default candidate chain (not a possibly-forged custom base_ref) cannot resolve regardless of local mode, or when policy.BaseRef is set first cross-check the default candidate chain and only report free/bootstrapping when no candidate resolves."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "settings/claude_code/settings.json",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "Commit 5c11486 removes the Edit/Write permissions.ask entries for ACDSL rule files globally — a removal not called for by the acdsl-policy-modes plan — leaving gated/strict target repos with no human-in-the-loop step between an agent and a rule-file edit, given the fail-open hook and the bypassable checker.",
+      "fix": "Confirm the removal was intentional and, if so, document it in the plan's Changelog per RULE-PLAN-049 rather than leaving it as an unreviewed side effect."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/git.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "GitRevParse is dead production code — nothing in policy.go calls it (policyBase/basePolicy use GitMergeBase/GitShowFile directly) and it is exercised only by its own test.",
+      "fix": "Wire it in where the plan intended it or drop it, per ACTION-IMPL-ARCH-001."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 65,
+      "severity": "MAJOR",
+      "claim": "The Bash cat post-invocation guard is trivially defeated by quoting — any command containing a double or single quote is excluded from inspection entirely, so cat \"context/rules/go.md\" bypasses the guard that the unquoted form would trip, giving narrower coverage than the file's comment implies.",
+      "fix": "Add at minimum a one-line comment noting the quoting gap."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/statuscache.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "Type-block order violates RULE-GOLANG-FILE-001: statusEntry is declared before statusCache although statusCache sorts first alphabetically.",
+      "fix": "Swap the two type declarations."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/acdsl/dist.go",
+      "line": 127,
+      "severity": "MINOR",
+      "claim": "writePolicy aborts Dist entirely when LoadPolicy returns a non-ErrNotExist error (e.g. malformed JSON mid-edit), which may surface as an unrelated-looking dist failure.",
+      "fix": "Confirm Dist callers (the smine dist CLI path) surface this error clearly rather than as an unrelated dist failure."
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "internal/routines/routines.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "RunResult.IsRunning/History started-row filtering is only asserted implicitly through downstream template behavior — there is no dedicated multi-row started-supersession unit test pinning the \"only the newest survives\" contract.",
+      "fix": "Add a direct unit test for History with an interleaved started/finished/started sequence."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

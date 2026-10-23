@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-NIT-163-r1",
+  "verdict": "confirmed",
+  "reason": "bootstrap_darwin.go L17 is the stray short line '// Called once at', and the sentence carries on at L18. The diff hunk @@ -11,7 +11,10 @@ split the old line and inserted new text without reflowing, so the godoc paragraph is now broken mid-sentence.",
+  "probe": "PROBE-CODE-STYLE-NIT-163-R1",
+  "script": "code-style-nit-163-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-163-r1/fail/bootstrap_darwin.go",
+  "registry": "registry-code-style-nit-158-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-163-R1 -registry .../probes/registry-code-style-nit-158-r1.json -> exit 1: internal/routines/bootstrap_darwin.go:17: doc comment line \"Called once at\" breaks the paragraph mid-sentence (continues on the next line)",
+    "validity": "-FIXFAIL rule over the fail fixture copy -> exit 1 at fail/bootstrap_darwin.go:4; -FIXPASS over the reflowed fixture -> '1 rule(s) OK'. The direct verifier run was denied by tool policy.",
+    "read": [
+      "internal/routines/bootstrap_darwin.go L13-22 at 1f725ce",
+      "git diff b4981b8 1f725ce -- internal/routines/bootstrap_darwin.go: '-// and not disabled ... Called once at' replaced by three new lines plus '+// Called once at'"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-163-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-163-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-158-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-163-r1/fail/bootstrap_darwin.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-163-r1/pass/bootstrap_darwin.go"
+  ]
+}

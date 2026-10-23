@@ -1,0 +1,71 @@
+{
+  "allowedTools": "Edit, Read, Skill(railroad-review), ToolSearch, Workflow, Write, Bash(*/bin/acdsl check *), Bash(*/bin/verifiers/*), Bash(./bin/acdsl check *), Bash(bin/acdsl check *), Bash(cp *), Bash(git add*), Bash(git apply *), Bash(git branch*), Bash(git check-ignore *), Bash(git checkout -B *), Bash(git diff*), Bash(git format-patch *), Bash(git init *), Bash(git log*), Bash(git merge-base*), Bash(git rev-list*), Bash(git rev-parse*), Bash(git show *), Bash(git status*), Bash(git worktree add*), Bash(git worktree list*), Bash(git worktree remove*), Bash(go * build *), Bash(go * test *), Bash(go * vet *), Bash(go run *), Bash(go tool cover *), Bash(jq *), Bash(make *), Bash(mkdir *), Bash(mv *), Bash(smine-rules base *), Bash(smine-rules buildtest *), Bash(smine-rules cleanup *), Bash(smine-rules entries *), Bash(smine-rules lanes *), Bash(smine-rules ledger *), Bash(smine-rules pairs *), Bash(smine-rules present *), Bash(smine-rules probe-replay *), Bash(smine-rules provision *), Bash(smine-rules prune *), Bash(smine-rules reset-round *), Bash(smine-rules snapshot *), Bash(smine-rules walk *), Workflow, Skill",
+  "auth": "token Work-Team-Premium",
+  "candidateCount": 61,
+  "checkExit": null,
+  "costUsd": 326.35874040000016,
+  "endedAt": "2026-10-06T10:33:07.774312+02:00",
+  "exitStatus": 0,
+  "golden": "test",
+  "invalidReasons": null,
+  "isError": false,
+  "layer": "eval",
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "connected"
+    }
+  ],
+  "mode": "nightly",
+  "model": "claude-opus-5-5",
+  "outputTokens": 4289132,
+  "permissionDenials": 452,
+  "resultText": "The review ran both rounds to the cap and ends CONDITIONAL. Two fix commits are on the branch, but the round-1 fix commit `e5245d0` broke a test, so the head is red right now. 11 findings still need a human decision.\n\n**The red test.** The code-style-MIN-9 fix moved shared code from `cmd/bootstrap/r…",
+  "sessionId": "2494cad3-74f1-4418-99c8-7b3882e98f1d",
+  "skill": "railroad-review",
+  "skillVersion": "24.1.0",
+  "startedAt": "2026-10-06T04:16:33.595903+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 83,
+      "errors": 7,
+      "name": "Bash"
+    },
+    {
+      "calls": 5,
+      "errors": 0,
+      "name": "Edit"
+    },
+    {
+      "calls": 9,
+      "errors": 0,
+      "name": "Read"
+    },
+    {
+      "calls": 11,
+      "errors": 0,
+      "name": "Workflow"
+    },
+    {
+      "calls": 5,
+      "errors": 0,
+      "name": "Write"
+    }
+  ],
+  "toolErrors": 7,
+  "unparsedLines": 0
+}

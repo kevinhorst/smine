@@ -1,0 +1,20 @@
+{
+  "finding_id": "code-style-NIT-225-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on dist.go:255 `if _, statErr := os.Stat(schemaSrc); statErr == nil {`; err is free in that if-init scope and the nested `if err := fsx.CopyFile(...)` still compiles as a shadow, so RULE-GOLANG-ERR-003 is violated. Line 240 left to known code-style-NIT-58-r1.",
+  "probe": "PROBE-CODE-STYLE-NIT-225-R1",
+  "script": "literal-owner (repo registry verifier, literal=\"statErr := os.Stat(schemaSrc)\" allowed=\"^NO-OWNER$\")",
+  "fixture": "probes/fixtures/code-style-nit-225-r1-fail.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-NIT-225-R1 -> exit 1: internal/acdsl/dist.go:255: literal \"statErr := os.Stat(schemaSrc)\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-225-r1/files.txt literal=\"statErr := os.Stat(schemaSrc)\" allowed=^NO-OWNER$ -> exit 1 on fixtures/code-style-nit-225-r1-fail.go:6",
+    "read": [
+      "internal/acdsl/dist.go:255 if _, statErr := os.Stat(schemaSrc); statErr == nil {",
+      "context/rules/go.md:499-502 RULE-GOLANG-ERR-003"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-225-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-225-r1-fail.go"
+  ]
+}

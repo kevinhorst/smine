@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-MIN-14-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on the exact claimed file:line: skills/smine/smine-permissions/SKILL.md:5 carries frontmatter version 0.1.0, a three-part semver, confirmed as the sole hit via git grep across skills/**/SKILL.md. changelog.json[0].version matches (0.1.0), so ACDSL-SKILL-001 (version-sync) is satisfied and would not catch this — the two-part-scheme convention is purely a review-owned check, matching the claim's own framing. The skill is new in this diff (cd9a4fa), so this is a regression against an established repo-wide convention, not pre-existing legacy.",
+  "probe": "PROBE-CODE-STYLE-MIN-14-R1",
+  "script": "artifacts/round-1/probes/two-part-version.sh (custom verifier, registered as \"two-part-version\")",
+  "fixture": "artifacts/round-1/probes/fixtures/code-style-min-14-r1/fail-SKILL.md (validity self-check run via acdsl check against a worktree-local copy, zz-probe-fixture-min14.md, since direct `bash <script>` invocation is tool-policy-denied in this environment)",
+  "registry": "registry-code-style-min-14-r1.json",
+  "evidence": {
+    "read": [
+      "skills/smine/smine-permissions/SKILL.md:5 — version: 0.1.0",
+      "git grep -nE '^version: [0-9]+\\.[0-9]+\\.[0-9]+$' -- 'skills/**/SKILL.md' — exactly one hit, this file",
+      "skills/smine/smine-permissions/changelog.json[0].version — 0.1.0, matches frontmatter (two-surface sync holds; only the numbering scheme is wrong)",
+      "git log --diff-filter=A -- skills/smine/smine-permissions/SKILL.md — added in cd9a4fa, part of this diff (new skill, not legacy)"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-MIN-14-R1 -registry registry-code-style-min-14-r1.json -root <worktree> -> exit 1: skills/smine/smine-permissions/SKILL.md:5: version 0.1.0 uses three-part semver, not the repo's two-part major.minor scheme"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/two-part-version.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-min-14-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-min-14-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/zz-probe-fixture-min14.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/railroad-probes-r1.acdsl"
+  ]
+}

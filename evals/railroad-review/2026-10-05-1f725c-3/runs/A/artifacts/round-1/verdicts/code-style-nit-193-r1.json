@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-193-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at 1f725ce: cmd/configserver/install_windows.go:145 writes filepath.Join(repoDir, \"install.env\") as a bare literal while its Go reader spells the same file name separately as internal/config installEnvPath (installenv.go:11); writer and reader share no declaration.",
+  "probe": "PROBE-CODE-STYLE-NIT-193-R1",
+  "script": "code-style-nit-193-r1.sh",
+  "registry": "registry-code-style-nit-193-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-193-R1 -registry probes/registry-code-style-nit-193-r1.json -root <worktree> -> exit 1: cmd/configserver/install_windows.go:145: bare \"install.env\" literal",
+    "read": [
+      "cmd/configserver/install_windows.go:136-149 writeInstallEnv (added in range) uses literal \"install.env\"",
+      "internal/config/installenv.go:11 installEnvPath = \"install.env\" (unexported, added in range)"
+    ],
+    "validity": "Direct fixture run was denied by tool policy (candidate rule Bash(/bin/bash *)); fixture authored, not executed. Real run RED on the claimed line.",
+    "note": "install.sh / sync_settings.sh also spell install.env, so a Go constant unifies only the Go side; the Go writer/reader duplication the claim names still stands."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-193-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-193-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-193-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-193-r1/install_windows.go"
+  ]
+}

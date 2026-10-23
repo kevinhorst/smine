@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-BLK-2-r1",
+  "verdict": "confirmed",
+  "reason": "writeInstallEnv (install_windows.go:139-149), called from runInstall (line 97), never reads install.env before overwriting it with the raw flag values; install.sh's D9 preserve-on-reinstall semantics (source install.env first, env overrides, defaults, write back) has no Windows counterpart. Spec correctness-115 and plan decision D9 explicitly require: re-running the install with no overrides must preserve a profile's previously resolved ports. install.ps1's own flag defaults are the same hardcoded literals (127.0.0.1:6001/4242/42442), so a plain re-run of install.ps1 (the documented from-source Windows install path) always resets a customized profile's ports.",
+  "probe": "PROBE-CORRECTNESS-BLK-2-R1",
+  "script": "correctness-blk-2-r1-readbeforewrite.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-BLK-2-r1/fixroot/cmd/configserver/install_windows.go",
+  "registry": "registry-correctness-blk-2-r1.json",
+  "evidence": {
+    "read": [
+      "cmd/configserver/install_windows.go:72-149 (runInstall, writeInstallEnv) — no ReadFile/sourcing of install.env anywhere before or inside writeInstallEnv",
+      "cmd/configserver/main.go:34,51-52 — addr/peekPort/peekControlPort flag defaults are hardcoded literals (127.0.0.1:6001, 4242, 42442), not sourced from install.env",
+      "install.sh:4-23 — macOS counterpart sources install.env first (ENV_CONFIGSERVER_PORT/ENV_PEEK_PORT/ENV_PEEK_CONTROL_PORT), falls back to env vars then defaults, then writes resolved values back",
+      "install.ps1:4-8,64 — Windows from-source install path passes the same hardcoded literal defaults straight into configserver.exe -install with no install.env read",
+      "internal/config/installenv.go — install.env is read only for expanding settings-fragment markers ({{PEEK_CONTROL_PORT}} etc.), never to seed writeInstallEnv's own defaults",
+      "spec-13-change-multi-profile-ports.md D9 — 'install.sh sources install.env first (existing values are the defaults) ... runInstall (Windows) writes the same file from its params' / 'Re-running ./install.sh with no envs must keep the profile's ports — otherwise every routine reinstall resets profile B to colliding defaults, recreating DR1'; checklist item correctness-115 states the same requirement"
+    ],
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-BLK-2-R1 -registry probes/registry-correctness-blk-2-r1.json -lifetime task -> exit 1: \"cmd/configserver/install_windows.go:72: runInstall/writeInstallEnv never reads the existing install.env before writing a new one (no ReadFile call found in or after runInstall) ... correctness-115\""
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-blk-2-r1-readbeforewrite.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/install_windows.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-blk-2-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-blk-2-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-blk-2-r1-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-BLK-2-r1/fixroot"
+  ]
+}

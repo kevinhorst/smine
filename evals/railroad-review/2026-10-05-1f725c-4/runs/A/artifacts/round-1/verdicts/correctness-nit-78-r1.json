@@ -1,0 +1,27 @@
+{
+  "finding_id": "correctness-NIT-78-r1",
+  "verdict": "confirmed",
+  "reason": "repo_detail.html:117 unhides #wt-filter-empty ('No agent branches matching the active filter.', _worktree_status.html:150) on visible == 0 while tr[data-kind] exist; applyFilter counts data-removed rows (L105) as hidden and runs on htmx:afterSettle (L130) after the #op-result swap; repos.go:508-515 sends no repo-op on a clean removal, so removing every row with no ?kind/?base shows the filter message.",
+  "probe": "PROBE-CORRECTNESS-NIT-78-R1",
+  "script": "correctness-nit-78-r1.sh",
+  "fixture": "probes/fixtures/correctness-nit-78-r1/fail/repo_detail.html",
+  "registry": "registry-correctness-nit-78-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-NIT-78-R1 -registry registry-correctness-nit-78-r1.json -> internal/server/templates/repo_detail.html:117: wt-filter-empty unhides on visible == 0 without checking an active kind/base filter (exit 1, 1 violation)",
+    "read": [
+      "internal/server/templates/repo_detail.html:117 empty.hidden = visible > 0 || !document.querySelector('tr[data-kind]')",
+      "internal/server/templates/repo_detail.html:80-90 beforeRequest marks selected rows data-removed + hidden",
+      "internal/server/templates/repo_detail.html:105 hide = !!row.dataset.removed || ...; L130 applyFilter on htmx:afterSettle",
+      "internal/server/repos.go:508-515 clean run: no HX-Trigger repo-op, only the op-result fragment into #op-result",
+      "internal/server/templates/_worktree_status.html:150 'No agent branches matching the active filter.'"
+    ],
+    "validity_note": "Direct interpreter run over the fixture was denied by tool policy (Bash(/bin/bash *)); acdsl -root on the fixture dir refused (no git repo)."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-nit-78-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-nit-78-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-correctness-nit-78-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-nit-78-r1/fail/repo_detail.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-nit-78-r1/files.txt"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "scripts",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "notes": "Cross-chunk for the station: (1) cmd/configserver/install_windows.go:101-105 runs runSyncs before installPresentationProfile — same casual-hiding gap as correctness-BLK-1, though spec-3 correctness-29 prescribes that order. (2) internal/server config revert of the claude settings fragment may drop skillOverrides like correctness-MAJ-3 — not verified (Go chunk). Untraced to the 14 round specs (concept audit, likely other plans, not flagged): skill-invoke-gate.sh (its deny text says 'bare, no args' while lanes invoke with lane:<direction>), read-gate.sh subagent spill requirement, worktree-sessionstart .serena husk, print_agent_worktrees_status verdict cache, routine_worktree_create HEAD check + merge-resolve prompt, skill-eval fexplore defaults/default-disabled, SMINE_SUBAGENTS, Makefile build-install. Known-ledger entries for this chunk were not re-reported.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "In-chunk: presentation-profile.de.md front matter/body (correctness-1/3) and nightly consolidate `language <lang>` threading (correctness-5, run.sh 175-178) PASS; UI/i18n/skill items live in other chunks."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "In-chunk surfaces (de template, nightly language threading) PASS; skill-visibility gaps are recorded under correctness-43/44 (spec-5 group)."},
+    {"group": "spec-3-raw", "hits": [], "note": "correctness-17 template PASS (language: de, audience: casual, Technisches Detail); correctness-25/26 run.sh sed + consolidate prompt PASS; global-context.sh, Go and templates are outside this chunk."},
+    {"group": "spec-3-raw (part 2)", "hits": [], "note": "correctness-27 install.sh copies only when SMINE_PRESENTATION_PROFILE set PASS; correctness-28 smine.iss PASS, install.ps1 two-word forwarding is known BLK-57; CLAUDE.md out of chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "All items are templates/Go/SKILL.md — none in the scripts chunk."},
+    {"group": "spec-5-change-nondev-automation", "hits": ["correctness-BLK-1", "correctness-MAJ-2", "correctness-MAJ-3"], "note": "correctness-41 sync_hooks.sh `read -r answer || answer=n` PASS. correctness-43 sync_skills.sh merge/flip logic itself PASS, but install.sh runs it before the profile exists (BLK-1) and sync_settings.sh drops its skillOverrides (MAJ-3). correctness-44 nightly worktree copy PASS, but the chain-sync /merge-resolve runs before the copy (MAJ-2). Remaining items are Go/templates."},
+    {"group": "spec-5-change-nondev-automation (part 2)", "hits": [], "note": "correctness-50 audience parse + env-wins defaults PASS in run.sh (plist pinning SMINE_AUTO_APPLY=never is known BLK-15); correctness-51 stage-3 gate/flags/postconditions PASS (report-file dirty check is known MIN-17); skill/UI items out of chunk."},
+    {"group": "spec-6-raw", "hits": [], "note": "correctness-64 acdsl-policy-guard.sh: jq fail-open, walk-up root, gated/strict surface denies, strict *.acdsl|acdsl/*, outside-root pass, settings.json registration after worktree-write-guard with timeout 10 — PASS (path-normalization gap is known security-MIN-3-r2); Go policy items out of chunk."},
+    {"group": "spec-7-raw", "hits": [], "note": "railroad-review skill/workflow items — none in the scripts chunk."},
+    {"group": "spec-8-change-bootstrap-profile", "hits": [], "note": "correctness-76 in-chunk parts PASS (run.sh compares casual, de template audience: casual + casual-user prose, smine.iss '(German, casual)'); correctness-77 sync_skills.sh in-place migration via tmp+mv before reading audience PASS; other items out of chunk."},
+    {"group": "spec-8-change-bootstrap-profile (part 2)", "hits": [], "note": "Sessions store, routes, templates, repo add form — all Go/templates, none in the scripts chunk."},
+    {"group": "spec-9-change-headless-bootstrap", "hits": [], "note": "cmd/bootstrap/run.sh: correctness-88 MSYS exports, lib sourcing, main/clean-tree exit 64, warn-only deps, token exit 78 PASS; correctness-89 sed profile parse, dev-mode resolution, overlay copy, --repos roster PASS (overwrite of operator keys is known BLK-22); correctness-90 stage prompts PASS; correctness-91 routine_run_claude flags, --add-dir, JSONL append, continue-on-failure, orchestrate last, DRY lines PASS; correctness-92 dirty-tree 70 + report tail, report removal, first non-zero status PASS; correctness-94 header documents operator entry PASS (README out of chunk); correctness-93/95 Go/skill sides out of chunk."},
+    {"group": "spec-9-change-headless-bootstrap (part 2)", "hits": [], "note": "correctness-99 nightly dev-mode (initialized empty, SMINE_DEV_MODE, casual forces off, --dev appended) PASS; correctness-103 install.sh warn-only shellcheck with brew hint PASS (install.ps1 hard prerequisite is known MAJ-16); remaining items Go/skills."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "Plan rules, verifier, skills, context.json — none in the scripts chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": ["correctness-MIN-4"], "note": "correctness-114 squash_contained/hash_explained_anywhere PASS; correctness-115 layer 4 placement, explain-all-on-hit, squashed recount + summary PASS for local candidates; correctness-116 remote FROM squash upgrade PASS and remove_agent_worktrees inherits it; correctness-117 v2 salt + header docs PASS, detail annotation misses the remote-FROM case (MIN-4); template/Go items out of chunk."},
+    {"group": "spec-12-raw", "hits": [], "note": "In-chunk part of correctness-127 (install/sync never write style-profile.md) PASS — install.sh and sync_*.sh never touch it; skill/Go/template items out of chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "correctness-137 install.env env>file>default resolution, write-back, peek-mcp@v1.2.2 pin, peek-port listener kill before bootstrap PASS (unquoted home write is known MAJ-10-r2); correctness-138 __PEEK_HOME_ARGS__ expansion PASS on the install.sh side; correctness-139 settings.json marker + sync_settings.sh install.env sourcing/expansion PASS; correctness-141 .gitignore /install.env PASS, ci.yml peek v1.2.2 consistent; correctness-133-135 belong to the peek-mcp repo, 136/140 Go out of chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "Registry/status-cache Go items; correctness-149 'no status-script changes' is judged against the repo-cache change only — the status-script edits in this diff belong to spec-11."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-BLK-1",
+      "file": "install.sh",
+      "line": 100,
+      "checklist": "correctness-43",
+      "severity": "BLOCKER",
+      "effect": "incorrect",
+      "exposure": "often",
+      "claim": "install.sh plants the presentation profile (lines 100-105) only after it has already run sync_skills.sh (line 92), so on a casual install sync_skills.sh finds no profile, takes the developer branch (drops leaf overrides, deletes the overlay) and the casual skill hiding correctness-43 requires is absent after install.",
+      "evidence": "Re-read install.sh 82-105 and cmd/sync/sync_skills.sh 249-301 at the pinned head. Sequence: fresh macOS install with SMINE_PRESENTATION_PROFILE=de -> install.sh:92 runs sync_skills.sh while ~/.claude/context/global/presentation-profile.md does not exist yet -> sync_skills.sh:253 skips, profile_audience stays empty -> line 263 false -> else branch 286-300 removes any leaf skillOverrides and rm -f the routine overlay -> install.sh:103 then copies the de profile (audience: casual). Result: a casual install whose ~/.claude/settings.json carries no skillOverrides 'off' entries and no ~/.config/claude-routine/skill-overrides.json, so every deployed skill stays visible/invocable in the casual user's sessions until some later sync_skills.sh run (a /profile audience change or the first successful nightly orchestrate stage). The Windows runInstall has the same order (install_windows.go:101 runSyncs before :105 installPresentationProfile) — cross-chunk, noted.",
+      "fix": "Move the SMINE_PRESENTATION_PROFILE copy block (install.sh 97-105) above the RUN_SYNC block so sync_skills.sh reads the installed profile."
+    },
+    {
+      "finding_id": "correctness-MAJ-2",
+      "file": "routines/_lib/worktree.sh",
+      "line": 171,
+      "checklist": "correctness-44",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "On a casual install the unattended /merge-resolve run of routine_chain_sync_main executes inside the fresh routine worktree before run.sh copies the skill overlay into it, so merge-resolve (a deployed leaf set to \"off\" in user settings) is denied and the chain sync runs without its skill.",
+      "evidence": "Re-read routines/_lib/worktree.sh 56-91 and 161-178, routines/smine-nightly/run.sh 128-148, cmd/sync/sync_skills.sh 263-285, .gitignore 51. Sequence: casual profile -> sync_skills.sh sets skillOverrides.merge-resolve=\"off\" in ~/.claude/settings.json (skills/git/merge-resolve is a deployed leaf) -> a previous nightly branch is kept unmerged (orchestrate rejected it) and main has moved with a conflicting change -> routine_worktree_create (run.sh:128) adds the worktree on the chain tip and calls routine_chain_sync_main, which runs claude -p \"/merge-resolve theirs main...\" with cwd $wt; the worktree has no .claude/settings.local.json (gitignored, never checked out), because run.sh copies the overlay only at 144-148, after create returned. The \"off\" override (documented in sync_skills.sh as hiding AND denying, incl. headless) therefore applies and the merge-resolve skill does not load; correctness-44 requires routine runs to get the overlay in their worktree. The same gap leaves routines/skill-eval/run.sh and its matrix cell worktrees without any overlay copy.",
+      "fix": "Copy ~/.config/claude-routine/skill-overrides.json into \"$wt/.claude/settings.local.json\" inside routine_worktree_create right after `git worktree add` (before routine_chain_sync_main), and drop the per-wrapper copy in smine-nightly/run.sh."
+    },
+    {
+      "finding_id": "correctness-MAJ-3",
+      "file": "cmd/sync/sync_settings.sh",
+      "line": 69,
+      "checklist": "correctness-43",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "sync_settings.sh replaces ~/.claude/settings.json wholesale with the expanded template, which carries no skillOverrides, so any settings sync not followed by sync_skills.sh silently lifts the casual skill hiding that sync_skills.sh merged into the same file.",
+      "evidence": "Re-read cmd/sync/sync_settings.sh 52-72 and 169, cmd/sync/sync_skills.sh 263-269, settings/claude_code/settings.json (no skillOverrides key). sync_file diffs the expanded template against the live file and cp's it over on any difference — after sync_skills.sh added skillOverrides the files always differ, so the next sync_settings.sh run drops every \"off\" entry. Sequence: casual install -> user runs `bash cmd/sync/sync_settings.sh` (the fix hint fixPeekFragment the Welcome page shows when the peek fragment is missing, internal/server/welcome_darwin.go:12) -> settings.json has no skillOverrides -> all deployed skills visible and invocable in the casual user's sessions until a later sync_skills.sh. Distinct from the known additionalDirectories loss in the orchestrate flow (that flow re-runs sync_skills.sh afterwards, so skillOverrides survive it).",
+      "fix": "In sync_settings.sh carry the live file's .skillOverrides into the expanded template before the compare/copy (jq --slurpfile live \"$dst\" '.skillOverrides = $live[0].skillOverrides' when present), or run the sync_skills.sh visibility step from sync_settings.sh."
+    },
+    {
+      "finding_id": "correctness-MIN-4",
+      "file": "cmd/worktrees/_lib/verdict.sh",
+      "line": 511,
+      "checklist": "correctness-117",
+      "severity": "MINOR",
+      "effect": "degraded",
+      "exposure": "rare",
+      "claim": "A squash containment proven only on a remote-tracking FROM stars the IN column (origin/main*) but is never counted as squashed: UNPICKED keeps the commits as untransferred and the detail view still prints 'no twin on any local branch', because layer 4, the squashed recount and the detail annotation iterate local candidates only.",
+      "evidence": "Re-read verdict.sh 417-519 and print_agent_worktrees_status.sh 152-219. Sequence: agent branch created from refs/remotes/origin/main (resolve_from -> origin/main, not a candidate), several commits, squash-merged on the remote, local main not yet pulled -> from_plus non-empty (squash patch-id differs from each commit) -> layer 4 (453-463) checks only local candidates, main does not contain the content, nothing is marked explained -> recount 469-483: hash_explained_anywhere false -> unpicked_n = n, no squashed:n in VERDICTS -> line 511 squash_contained origin/main true -> eval_in = origin/main*. The row shows UNPICKED n (documented as 'genuinely untransferred work') next to an IN that declares the branch safe; detail mode's squash_in loop (180-184) also skips the remote FROM, so each commit reads 'no twin ... verify before treating as lost' instead of the 'content contained in ... via squash' annotation correctness-117 asks for when applicable.",
+      "fix": "When squash_contained \"$from\" \"$branch\" holds for a non-candidate FROM, count the FROM-unplaced intersection commits as squashed (not unpicked) and include $from in print_agent_worktrees_status.sh's squash_in list."
+    }
+  ],
+  "walk_complete": true
+}

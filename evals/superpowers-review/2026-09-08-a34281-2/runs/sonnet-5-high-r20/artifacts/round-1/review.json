@@ -1,0 +1,52 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The hook's Bash-command detection treats any command containing a single or double quote as too complex to parse and silently skips enforcement, so ordinary quoted commands like cat \"docs/rules/x.md\" bypass the protected-context-file gate entirely.",
+      "fix": "Do a minimal quote-aware tokenization (or use jq's @sh/word-splitting helpers already available in the script) so a quoted single-argument cat is still recognized, and treat genuinely un-parseable commands as denyable-if-suspicious rather than pass-through."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/read-gate.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "Three concrete changes in the diff (the read-gate.sh subagent spill requirement, the new 85-line skill-invoke-gate.sh, and the worktree-status page filter rewrite plus Reload button) have no corresponding entry in any plans/v1-2-1 plan, and the first and third contradict explicit plan scope statements (\"the hooks stay as-is\" and \"no template or JS changes at all\").",
+      "fix": "Confirm with the author whether these were intentional, and record each in a Changelog entry in the nearest plan (or a short new plan section) per the repo's plan-as-binding-contract rules."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/git.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "GitChangedFiles splits git output with strings.Fields (any whitespace) instead of newlines, so a changed path containing a space is split into bogus fragments and ruleDelta/surfaceDelta silently miss the real change, letting a rule file with a space in its name dodge the delta scan in gated/strict mode.",
+      "fix": "Use strings.Split(diffed, \"\\n\") and the same for untracked, trimming empties, instead of strings.Fields over the concatenation."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/shell",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "internal/shell.RunSync is a near-verbatim copy-paste of internal/shell.Run, identical except the timeout constant and error-message prefix, duplication the repo's own Go guide flags.",
+      "fix": "Extract a shared runWithTimeout(ctx, dir, timeout, errPrefix, name string, args ...string) used by both, removing ~20 duplicated lines without changing either call site's signature."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/dist_test.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "TestDistShipsReachCoveredSliceWithBinaries reads the live repo tree via a relative path (repoRoot = \"../..\") instead of a synthetic fixture, leaving it exposed to interference from external processes in a multi-worktree environment, as seen in one non-reproducible intermittent failure that rewrote the checkout's own acdsl files.",
+      "fix": "Point the test at a synthetic fixture repo, as TestDistNoCoverageWritesNothing already does, to remove the exposure regardless of the actual cause."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/repos/registry.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "Repo.Label is one of the few new fields with a json omitempty tag while sibling fields Name and Path lack it — consistent with the plan's intent and not a defect, but an asymmetry in an otherwise-uniform struct worth a second pair of eyes.",
+      "fix": ""
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "finding_id": "security-MAJ-2-r1",
+  "verdict": "confirmed",
+  "reason": "The literal code gap is real and probe-confirmed: Repo.Validate (internal/repos/registry.go:35-58) has no guard rejecting Name == \".\" or Name == \"..\" — both match namePattern (`^[A-Za-z0-9._-]+$`) and survive unrejected, unlike internal/sessions/sessions.go's validateScopeName, which explicitly excludes both for the identical path-segment concern. But the claim's exploit chain does not hold as stated: it rests on 'any later code that builds filepath.Join(sessionsDir, repo.Name, ...)' for the repo's mining folder — a full-repo search (git grep, not limited to the lane's chunk) finds no such join anywhere in the current source tree. The only confirmed consumers of Repo.Name today are: map/cache keys (statusCache, repoLocks), log strings, an exact-match registry lookup keyed by URL path value (server/repos.go:212, Find() does a linear equality scan, not a filesystem path build), and UI/display strings. The sessions package's own path-segment joins (archive/delete/unarchive, sessions.go:301-378) all run through validateScopeName first, which already rejects \".\"/\"..\" independently of Repo.Validate. So at headCommit there is no reachable sink where a Name of \".\" or \"..\" resolves to a path-traversal write/read — the 'resolves one directory above the intended sessions root' effect is speculative, not demonstrated, consistent with the finding's own hedge (exposure scored 'rare' because the downstream join was cross-chunk and not re-read). ACTION-REVIEW-SEC-002/SEC-003 (quantified, reproducible exploit) are not met for a MAJOR security defect: effect/exposure fall to debt/eventually — the defect is a real consistency gap against the sibling guard, worth fixing, but not a demonstrated security exploit today.",
+  "probe": "PROBE-SECURITY-MAJ-2-R1",
+  "script": "security-maj-2-r1.sh",
+  "fixture": "fixtures/security-maj-2-r1/bad_registry.go",
+  "registry": "registry-security-maj-2-r1.json",
+  "effect": "debt",
+  "exposure": "eventually",
+  "evidence": {
+    "read": [
+      "internal/repos/registry.go:1-58 (package doc, Repo.Validate, namePattern) — no \".\"/\"..\" guard",
+      "internal/sessions/sessions.go:221-230 (validateScopeName) — explicit `name == \".\" || name == \"..\"` guard for the identical concern, called from ArchiveScope/DeleteScope/UnarchiveScope (lines 301-378) before every filepath.Join(s.dir, name)",
+      "internal/server/repos.go:212,256,290,356,476,540,572 — every Repo.Name consumer in the one HTTP-reachable constructor file: map keys, log strings, an exact-match registry lookup, UI strings; none builds a filesystem path from Name",
+      "git grep -n \"repo.Name\" across internal/ and cmd/ and a separate git grep for \"filepath.Join\"+\"Mkdir\" combined with repo.Name/repoName — zero hits of a path-join using Repo.Name anywhere in the tracked tree at headCommit"
+    ],
+    "probe_run": "bin/acdsl check -rule PROBE-SECURITY-MAJ-2-R1 -registry registry-security-maj-2-r1.json -root <worktree> -> exit 1: internal/repos/registry.go:35: Repo.Validate has no explicit guard rejecting Name == \".\" or Name == \"..\" (sessions.validateScopeName guards the identical concern) — RED on the claimed file, as expected at headCommit (fix not yet applied)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-maj-2-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/security-maj-2-r1/bad_registry.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-security-maj-2-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-maj-2-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-security-maj-2-r1-r1/railroad-probes-r1.acdsl"
+  ],
+  "notes": "Validity-first self-check: the sanctioned direct interpreter run ('bash <script> <fileslist>') was denied by this session's tool-policy (candidate rule Bash(bash *), no allow rule present); per ACTION-IMPL-EXEC-006 this was not retried. Substituted an equivalent read-only check (grep, same detection regex) against the fail fixture under probes/fixtures/security-maj-2-r1/bad_registry.go, confirming the regex misses the guard on the fail fixture (grep exit 1) before the real acdsl run. The real verdict run went through the compiled bin/acdsl binary (not a direct bash invocation) and is the authoritative probe result above."
+}

@@ -1,0 +1,15 @@
+{
+  "finding_id": "code-style-MIN-8-r1",
+  "verdict": "confirmed",
+  "reason": "Direct re-read of cmd/sync/sync_skills.sh at headCommit confirms the claim: lines 288-291 (against $SETTINGS_FILE) and 295-298 (against $REPO_LOCAL_SETTINGS) carry the byte-identical jq program `if .skillOverrides then .skillOverrides = (.skillOverrides | with_entries(select(.key as $k | $leaves | index($k) | not))) else . end | if .skillOverrides == {} then del(.skillOverrides) else . end`, each followed by the identical `> \"$f.tmp\" && mv \"$f.tmp\" \"$f\"` rewrite pattern. git diff against the fork point confirms the whole block (including both copies) is new in this change, not pre-existing debt merely touched in passing. One correction to the write-up's own evidence: its claim that `sync_file()`/`merge_mcp_servers()` 'elsewhere in this same file already factor repeated file-rewrite logic' is false — those two helpers live in cmd/sync/sync_settings.sh, a different file; grep across cmd/sync/sync_skills.sh itself finds no such helpers. That correction does not change the effect/exposure cells (debt/often) or the core duplication defect, which is independently verified by direct inspection of the two blocks.",
+  "probe": "none: bin/acdsl execution is categorically denied by this sandbox's tool-policy gate (see code-style-min-7-r1 verdict for the two exhausted attempts); falling back to the manual path.",
+  "evidence": {
+    "read": [
+      "cmd/sync/sync_skills.sh:287-301 — the two `if [ -f ... ]; then jq --argjson leaves ... '<filter>' ... fi` blocks at 288-291 and 295-298 are identical apart from the target file variable",
+      "grep -rn 'sync_file|merge_mcp_servers' cmd/sync/ — both helpers found only in cmd/sync/sync_settings.sh, none in cmd/sync/sync_skills.sh",
+      "git diff b4981b88d52deaa69d6ed1d60eb51b57ead47ba0 1f725cedc5c8b092c8a3d7e408793ef72840ec7e -- cmd/sync/sync_skills.sh: the entire skill-visibility block (lines 243-301, including both jq duplicates) is added by this diff"
+    ],
+    "probe_run": "none — acdsl execution denied, see probe field"
+  },
+  "artifacts": []
+}

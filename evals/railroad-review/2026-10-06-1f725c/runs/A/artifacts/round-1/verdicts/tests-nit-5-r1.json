@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-5-r1",
+  "verdict": "confirmed",
+  "reason": "The named test function does not exist in the file; coverage is only real under a differently named subtest, exactly as the claim states — probe RED confirms it.",
+  "probe": "PROBE-TESTS-NIT-5-R1",
+  "script": "symbol-exists (repo registry verifier, reused — no new script)",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-nit-5-r1",
+  "evidence": {
+    "read": [
+      "spec-8-change-bootstrap-profile.md:752 — '| internal/repos/registry_test.go `TestRepoValidate` | reserved names rejected<br>existing name rules still pass | extend existing validate cases |'",
+      "internal/repos/registry_test.go: `grep -n \"func Test\"` lists TestRegistryAdd (and 16 other funcs) but no TestRepoValidate; TestRegistryAdd's `reserved-name-fails` subtest (lines 87-95) exercises the reserved-name rule the spec names"
+    ],
+    "probe_run": "acdsl check -root <verify-b6-r1 worktree> -rule PROBE-TESTS-NIT-5-R1 -lifetime task -> exit 1: \"internal/repos/registry_test.go:1: symbol \\\"TestRepoValidate\\\" not found in anchored files\""
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b6-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-nit-5-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-nit-5-r1",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/tests-nit-5-r1/files.txt"
+  ],
+  "cells": {
+    "effect": "cosmetic",
+    "exposure": "often"
+  },
+  "notes": "Cells unchanged from the candidate's own assessment — agreed, not overridden."
+}

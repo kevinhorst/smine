@@ -1,0 +1,48 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "plans/v1-2-1/session-context-report/",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The plans/v1-2-1/session-context-report/ plan appears entirely unimplemented (none of its specified handlers, routes, options, or templates exist in the diff or at HEAD) and its directory name violates RULE-PLAN-071's <date>-<slug>-<state>-<hash> convention.",
+      "fix": "Confirm with the author whether the plan was deliberately deferred past 1.2.1 (then move it out of the v1-2-1 bucket) or is forgotten work; either way fix or remove the non-conformant directory so RULE-PLAN-072's glob-uniqueness contract holds."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "install.sh",
+      "line": 2619,
+      "severity": "MAJOR",
+      "claim": "The new port-kill loop propagates a fragile pattern to PEEK_PORT and PEEK_CONTROL_PORT where kill \"$pid\" silently no-ops when lsof returns multiple PIDs, because embedded newlines make the quoted variable a single invalid kill argument swallowed by 2>/dev/null || true.",
+      "fix": "Fix all three call sites (ADDR_PORT included) while hardening the peek multi-profile story: use kill $pid unquoted with a loop, or pipe the lsof output through xargs kill."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "presentation_test.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "presentationStore.saveProfileSelection's first-activation template seed is untested and relies on an implicit contract that the process cwd is the repo root for its relative templatePath to resolve.",
+      "fix": "Add a t.Chdir test exercising this branch to catch a future regression if the server is ever invoked from a different cwd in a test harness or a future refactor."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/shell",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "internal/shell.RunSync duplicates Run almost verbatim (only the timeout differs) instead of parameterizing Run with a timeout argument or option.",
+      "fix": "Revisit and consolidate if a third timeout tier is ever added — three near-identical copies would be the point to consolidate."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The Bash-target detection (set -- $command after excluding shell metacharacters) is a coarse heuristic that only catches an exact bare `cat <path>`, missing forms like `cat -- <path>` or `cat < path`.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

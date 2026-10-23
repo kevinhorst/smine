@@ -1,0 +1,104 @@
+{
+  "findings": [],
+  "runs": [
+    {
+      "id": 1,
+      "anchors": [
+        {
+          "id": "base",
+          "seq": 8991
+        },
+        {
+          "id": "lanes",
+          "seq": 8998
+        },
+        {
+          "id": "base_health",
+          "seq": 9004
+        },
+        {
+          "id": "head_buildtest",
+          "seq": 9006
+        },
+        {
+          "id": "checklist",
+          "seq": 9052
+        },
+        {
+          "id": "lanes",
+          "seq": 9096
+        },
+        {
+          "id": "round",
+          "seq": 9102
+        },
+        {
+          "id": "ledger",
+          "seq": 17266
+        },
+        {
+          "id": "cleanup",
+          "seq": 17272
+        }
+      ],
+      "failures": [],
+      "findings": 0,
+      "passes": [
+        {
+          "check": "cleanup_before_end",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_fix_check",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_ledger",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_replay",
+          "count": 1
+        },
+        {
+          "check": "round_after_lanes",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_build",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_tests",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_build",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_tests",
+          "count": 1
+        },
+        {
+          "check": "round_id_floor",
+          "count": 1
+        },
+        {
+          "check": "round_known_path",
+          "count": 1
+        },
+        {
+          "check": "round_lane_plan",
+          "count": 1
+        }
+      ],
+      "reason": "session_ended",
+      "session": "b26f7f7c-513d-46b4-b52b-db7811fd96eb",
+      "skill": "railroad-review",
+      "state": "ended",
+      "title": "run-2026-10-05-1f725c-3-a-ed",
+      "version": "24.1.0"
+    }
+  ]
+}

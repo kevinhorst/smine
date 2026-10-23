@@ -1,0 +1,317 @@
+[
+  {
+    "g": 1,
+    "verdict": "matches-golden",
+    "goldenId": "GV3-108",
+    "reason": "Same branch: CheckPolicy's baseErr!=nil + working policy.Mode==free early return (policy.go:331-333). Golden already names 'CheckPolicy free+unresolvable-base' at this exact location; judges only re-cast its severity.",
+    "evidence": "internal/acdsl/policy.go:330-334 (if baseErr != nil { if policy.Mode == PolicyModeFree { return nil, nil } ... })"
+  },
+  {
+    "g": 2,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "ruleDelta discards ParseRules errors on both work and base sides via blank identifiers; whole file is new in range; no golden entry addresses this swallowed-error path.",
+    "evidence": "internal/acdsl/policy.go: workRules, _ := ParseRules(workLines); baseRules, _ := ParseRules(baseLines) (ruleDelta, ~line 259)"
+  },
+  {
+    "g": 3,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "classViolations rebuilds the editable-scope map from policy.EditableScopes on every call regardless of mode, including strict mode where it is never consulted; cheap but real wasted work, new code, not in golden.",
+    "evidence": "internal/acdsl/policy.go: classViolations builds `editable := map[string]bool{}` from policy.EditableScopes unconditionally before the per-rule loop that only uses it in the non-strict branch"
+  },
+  {
+    "g": 4,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "overlayViolations reads acdsl/registry.local.json straight off the working-tree disk (os.ReadFile), not through the base-commit diff machinery used elsewhere in the file; a pre-existing legacy overlay entry not yet in local_overrides flags on every check. New code, no golden entry covers this path (golden's overlay-related entries, e.g. GV3-068/125, are about the guard hook's path-matching, a different file).",
+    "evidence": "internal/acdsl/policy.go: overlayViolations() -> path := filepath.Join(root, \"acdsl\", LocalRegistryName); raw, err := os.ReadFile(path) — no base-ref diff"
+  },
+  {
+    "g": 5,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "policyBase computes isBoundary via a plain branch!=baseName string compare with no explicit detached-HEAD case; correctness relies on the incidental fact that GitBranch's detached-HEAD sentinel never equals a real base branch name. True and new code; not the same mechanism as GV4-202 (base==HEAD via ref aliasing) or GV3-002 (base_ref=branch).",
+    "evidence": "internal/acdsl/policy.go:216-217 (return base, branch != baseName, nil) inside policyBase, ~line 195-217"
+  },
+  {
+    "g": 6,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "GitShowFile's absent-path contract (ok=false, no error) is implemented by inspecting the underlying git command's failure shape; the claim that this implicitly depends on shell.Run producing *exec.ExitError is a genuine coupling/fragility observation on new code not covered by any golden entry.",
+    "evidence": "internal/acdsl/git.go GitShowFile (consumed by policy.go surfaceDelta/ruleDelta/basePolicy/effectiveAllowlist)"
+  },
+  {
+    "g": 7,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The new peek-port stop loop does `pid=\"$(lsof -tiTCP:\"$peek_port\" -sTCP:LISTEN || true)\"` then `kill \"$pid\"`; if lsof returns multiple newline-separated PIDs, kill gets one invalid multi-line argument, fails, and `|| true` swallows the failure, then `kill -0 \"$pid\"` also fails so the wait loop falls through as if dead. Genuine, in-range (new block). Golden's only install.sh lsof entry (GV3-148) is a pure code-style duplication nit, not this correctness failure mode.",
+    "evidence": "install.sh:173-180 (for peek_port in \"$PEEK_PORT\" \"$PEEK_CONTROL_PORT\"; do pid=\"$(lsof -tiTCP:\"$peek_port\" -sTCP:LISTEN || true)\"; ... kill \"$pid\" 2>/dev/null || true; while kill -0 \"$pid\" 2>/dev/null; do sleep 0.1; done; done)"
+  },
+  {
+    "g": 8,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The sed substitution for __PEEK_HOME_ARGS__ (and the pre-existing __REPO_DIR__/__PORT__ ones it's now applied alongside) uses '|' as its delimiter while substituting a value built from PEEK_CLAUDE_HOME/PEEK_CODEX_HOME that could itself contain '|', which would break the sed command syntax outright. Distinct mechanism from golden's GV3-167 (XML/plist injection when the value is well-formed but unescaped) — this is a delimiter-collision breakage, not an injection.",
+    "evidence": "install.sh:134-142 sed -e ... -e \"s|__PEEK_HOME_ARGS__|$PEEK_HOME_ARGS|g\" ..."
+  },
+  {
+    "g": 9,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The fast hook denies every Write/Edit to acdsl/registry.local.json in gated/strict unconditionally, with no check against policy.LocalOverrides, so the sanctioned local-override escape hatch (which overlayViolations authoritatively accepts) can never be exercised through Write/Edit — only via raw Bash (a separate, already-cataloged gap per GV3-199). Not the same mechanism as GV3-068/GV3-125 (path-canonicalization/case bypasses) or GV3-199 (Bash blind spot).",
+    "evidence": "cmd/hooks/acdsl-policy-guard.sh:39-42 (case \"$rel\" in acdsl/policy.json|...|acdsl/registry.local.json|...) deny \"...\" ;; esac) — no local_overrides check"
+  },
+  {
+    "g": 10,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "`case \"$first_user\" in \"/$required\"*) invoked=1 ;;` is an unanchored prefix match against the whole first-user message text: a message beginning with /railroad-review-observability or /smine-batch (when required=railroad-review or smine) satisfies it without invoking the actual required skill. Distinct from golden's skill-invoke-gate entries (GV3-132/138/152/159/166), none of which address this prompt-start prefix-match path.",
+    "evidence": "cmd/hooks/skill-invoke-gate.sh:38 (case \"$first_user\" in \"/$required\"*) invoked=1 ;; *) invoked=\"\" ;; esac)"
+  },
+  {
+    "g": 11,
+    "verdict": "matches-golden",
+    "goldenId": "GV3-166",
+    "reason": "Same root cause as GV3-166: the post-invocation Bash-command matcher only recognizes an exact unquoted two-token `cat <path>` form. GV3-166 explicitly enumerates 'any Bash command other than an exact bare cat <path>' as invisible to the tokenizer, which covers a quoted `cat \"path\"` (rejected earlier by the quote-char exclusion list) as one instance of that same family.",
+    "evidence": "cmd/hooks/skill-invoke-gate.sh:61-68 (quote characters in the exclusion case skip the two-token cat check entirely)"
+  },
+  {
+    "g": 12,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The presentation-profile sed-extraction block (language/audience/dev-mode plus the dev_mode precedence chain) is duplicated near-verbatim between cmd/bootstrap/run.sh and routines/smine-nightly/run.sh, along with the skill_overlay copy-into-settings.local.json block; both files are touched/new in range. No golden entry addresses this duplication (GV3-148 is a different file/duplication).",
+    "evidence": "cmd/bootstrap/run.sh:52-67 vs routines/smine-nightly/run.sh:27-45 (near-identical sed -n 's/^language:.../.../p' etc. blocks)"
+  },
+  {
+    "g": 13,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "run_stage in cmd/bootstrap/run.sh: when routine_allowed_tools returns empty (error or no manifest), the code only echoes a warning and proceeds without --allowedTools at all — an unattended, commit-authority-holding stage runs unrestricted. New code, not covered by golden.",
+    "evidence": "cmd/bootstrap/run.sh:118-126 (tools=\"$(routine_allowed_tools \"$skill_name\")\"; if [ -n \"$tools\" ]; then flags=(--allowedTools \"$tools\"); else echo \"no allowed-tools manifest ...\" >&2; fi)"
+  },
+  {
+    "g": 14,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "peekIdentity's mismatch branch always logs 'another profile's peek holds this port' whenever decoded JSON fields differ, even though the listener could be any unrelated process that happens to serve valid-shaped JSON on /healthz — a distinct, milder claim (misleading diagnostic wording) from GV3-147's security-exploit framing (spoofing to hijack dashboard reuse).",
+    "evidence": "cmd/configserver/main.go:252 (log.Printf(\"ERROR: ... another profile's peek holds this port; ...\"))"
+  },
+  {
+    "g": 15,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "squash_contained's comment claims 'no side effects', but `git merge-tree --write-tree` writes the computed merge tree object into the repo's object database — a real (if harmless) ODB write, contradicting the comment. New function in range; no golden entry on verdict.sh addresses this.",
+    "evidence": "cmd/worktrees/_lib/verdict.sh:97-108 (comment: '... no worktree, no index, no side effects.' above squash_contained(), which calls git merge-tree --write-tree)"
+  },
+  {
+    "g": 16,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "NO_CACHE=1 only skips the cache read; the else branch still writes the row into the persistent cache file",
+    "evidence": "cmd/worktrees/print_agent_worktrees_status.sh:268-278"
+  },
+  {
+    "g": 17,
+    "verdict": "claim-false",
+    "goldenId": null,
+    "reason": "smine's own acdsl/policy.json sets mode \"gated\", not \"free\" as the claim asserts; premise is factually wrong",
+    "evidence": "acdsl/policy.json:9 \"mode\": \"gated\""
+  },
+  {
+    "g": 18,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "prebuilt-copy branch names dest via filepath.Base(prebuilt) not out; a Windows prebuilt lacking .exe copies without the extension",
+    "evidence": "internal/acdsl/dist.go:285 fsx.CopyFile(prebuilt, filepath.Join(destDir, filepath.Base(prebuilt)))"
+  },
+  {
+    "g": 19,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "LoadPolicy returns nil error only for ErrNotExist; any other error (e.g. malformed JSON) propagates and aborts writePolicy/Dist entirely",
+    "evidence": "internal/acdsl/policy.go:380-394 LoadPolicy; internal/acdsl/dist.go writePolicy 'if err != nil { return \"\", fmt.Errorf(...) }'"
+  },
+  {
+    "g": 20,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "writePolicy marshals the full Policy struct (only DistMode cleared); BaseRef survives untouched into every distributed target's policy.json, no per-target override",
+    "evidence": "internal/acdsl/dist.go writePolicy (json.MarshalIndent(policy,...) after policy.DistMode=\"\"); internal/acdsl/policy.go:41 BaseRef field"
+  },
+  {
+    "g": 21,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "installEnvPath is the bare relative literal \"install.env\"; os.ReadFile fails silently when cwd != repo root and installEnvValues falls back to the default port with no logging",
+    "evidence": "internal/config/installenv.go:11,26-29"
+  },
+  {
+    "g": 22,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "strings.Cut(trimmed, \"=\") on a line like KEY=value # comment leaves \" # comment\" inside value; only quotes are trimmed, no comment stripping",
+    "evidence": "internal/config/installenv.go:30-34"
+  },
+  {
+    "g": 23,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Add/Remove/save serialize only via in-process r.mu; no OS-level file lock, so two separate processes racing within the read-modify-write window can still drop a write",
+    "evidence": "internal/repos/registry.go:106-124 (save), :132-152 (Add), :184-200 (Remove) — all guarded only by r.mu"
+  },
+  {
+    "g": 24,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "save() passes &registrySnapshot{...} as an inline composite literal directly into r.apply(), matching RULE-GOLANG-CALL-005 verbatim",
+    "evidence": "internal/repos/registry.go:126 r.apply(&registrySnapshot{modTime: info.ModTime(), repos: repos, size: info.Size()}); context/rules/go.md:416 RULE-GOLANG-CALL-005"
+  },
+  {
+    "g": 25,
+    "verdict": "claim-false",
+    "goldenId": null,
+    "reason": "The file already scatters every type immediately before its using function throughout (registrySnapshot before readRegistrySnapshot, registryFile, contextIndex/contextAspect/contextEntry, ContextCoverage, etc.); WorktreeKindCount before WorktreeCounts follows that identical existing in-file convention, not a fresh top-of-file-vs-middle deviation",
+    "evidence": "internal/repos/registry.go type/func ordering: types at 214,259,321,345,350,356,366,472 each sit directly before their consuming function, same as the new 362/371 pair"
+  },
+  {
+    "g": 26,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "grep across internal/ and cmd/ shows subtype \"started\" is emitted only by the unit test fixture; no production writer ever appends a started row, so IsRunning()/the started-filter are dead in shipped code",
+    "evidence": "internal/routines/routines.go:113-126,157; only match outside routines_test.go is the routines.go declaration itself"
+  },
+  {
+    "g": 27,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "bootstrapEnv only rejects quotes and newlines via strings.ContainsAny(extraPrompt, \"\\\"'\\n\"); other shell-meaningful characters ($, `, ;, |, &) pass through unchecked, benign only because the value is never eval'd today",
+    "evidence": "internal/server/bootstrap.go:182-187"
+  },
+  {
+    "g": 28,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "cmd.Wait()'s return value is called and discarded outright (not even assigned to _), so a non-zero exit or wait error leaves no server-side trace",
+    "evidence": "internal/server/bootstrap.go:97-103 goroutine body: cmd.Wait(); cancel(); logFile.Close(); ..."
+  },
+  {
+    "g": 29,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Shipped styleTestPrompt wording diverges materially from plan D9's exact text, and styleTestTarget's ROUTINE_MODEL/ROUTINE_TOKEN override logic goes beyond D8's described mechanics; the plan's Changelog (2 entries) records neither change, per RULE-PLAN-049",
+    "evidence": "internal/server/profilesettings.go:26-29 (styleTestPrompt), :178-210 (styleTestTarget) vs plans/v1-2-1/2026-08-27-smine-profile-settings-wip-ca34568/design/raw.md:76-77 (D8/D9), :505-510 (Changelog, no matching entry)"
+  },
+  {
+    "g": 30,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "handleProfileTest's shell.Run invokes claude with no tool-restriction flag (no --allowedTools/--tools none); the only barrier to tool use is the prompt text itself",
+    "evidence": "internal/server/profilesettings.go:146-147 script + shell.Run args (bashPath, script, target.TokenPath, styleTestPrompt, target.Model) — no tool-disabling flag present"
+  },
+  {
+    "g": 31,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "On fresh-scan error, entry is never reassigned; data.ScannedAt = entry.ScannedAt renders stale/zero timestamp beside StatusErr.",
+    "evidence": "internal/server/repos.go:356-367 (entry only reassigned in err==nil branch; data.ScannedAt = entry.ScannedAt used unconditionally after)"
+  },
+  {
+    "g": 32,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "start:=time.Now() precedes the fingerprint check; statusMs timing bucket therefore includes fingerprint-check cost even on cache hits.",
+    "evidence": "internal/server/repos.go:351-353 (start before repos.Fingerprint call, statusMs computed after)"
+  },
+  {
+    "g": 33,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Add form's user-editable 'name' field overrides Repo.Name from folder base, deviating from plan G17 spec (Repo{Name: filepath.Base(path)}); Label was meant to be the only editable field (C16).",
+    "evidence": "internal/server/repos.go:561-564 (name := FormValue(\"name\"); fallback only if empty) vs plans/.../change-nondev-automation.md G17/C16"
+  },
+  {
+    "g": 34,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Inner .git existence check treats any stat error (not just IsNotExist) as needs-init, so a transient/permission stat error triggers a redundant git init on an existing repo — distinct from golden's outer-IsDir-guard finding.",
+    "evidence": "internal/server/repos.go:582-583 (if _, gitErr := os.Stat(filepath.Join(path, \".git\")); gitErr != nil { ...git init... })"
+  },
+  {
+    "g": 35,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Plan explicitly specifies a TestReposDelete subtest for cross-instance persistence (second NewRegistry writes, repo stays deleted); TestReposDelete only has removes-and-persists/unknown-name/empty-name subtests — no such case exists.",
+    "evidence": "internal/server/repos_test.go:689-718 (three subtests, none re-instantiate the registry); plan change-repo-cache.md:456 specifies the missing case"
+  },
+  {
+    "g": 36,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "reloadSessions()->Store.Reload() runs unconditionally on every Batch/ArchiveTab/Index/Scope GET handler, doing a full ReadDir+ReadFile+Unmarshal pass with no cache/staleness tier.",
+    "evidence": "internal/server/sessions.go:75,127,142,154 (each calls s.reloadSessions()); internal/sessions/sessions.go:131-165 (Reload does a full rescan, no cache check)"
+  },
+  {
+    "g": 37,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Go 1.22+ mux resolves the literal 'GET /sessions/archive' over the wildcard 'GET /sessions/{scope}' regardless of registration order, and validateScopeName/Repo.Validate only reserve \"archived\"/\"default\", not \"archive\", so a scope literally named archive is unreachable.",
+    "evidence": "internal/server/server.go:316-319 (literal + wildcard both registered); internal/sessions/sessions.go:225 (checks archivedDirName, \".\", \"..\" only); internal/repos/registry.go:48 (reserves \"default\"/\"archived\" only)"
+  },
+  {
+    "g": 38,
+    "verdict": "out-of-range",
+    "goldenId": null,
+    "reason": "The claim's premise (D1 reversal vs approved plan, missing Changelog entry) is a plan-provenance claim resting entirely on plans/.../raw.md content, which is excluded from the reviewed pathspec.",
+    "evidence": "plans/v1-2-1/2026-08-26-railroad-review-observability-wip-5158764/design/raw.md (excluded path); the in-range railroad-review.js code itself (skills/quality/railroad-review/workflows/railroad-review.js:186-206, REQUIRE-SKILL + forced Skill invocation) is functioning code, not a defect on its own"
+  },
+  {
+    "g": 39,
+    "verdict": "claim-false",
+    "goldenId": null,
+    "reason": "Claim only alleges a missing plan doc for an already-implemented, working feature — a provenance/process observation, not a code defect, matching the pattern of golden's several rejected provenance-only false positives.",
+    "evidence": "routines/README.md (feature documented and implemented); no corresponding code defect alleged"
+  },
+  {
+    "g": 40,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "Both call sites run the orchestrate merge on the real main checkout with no git merge --abort/reset; only a post-hoc dirty-tree check exists, so a killed mid-merge agent leaves the checkout half-merged for the next run.",
+    "evidence": "routines/smine-nightly/run.sh:325-336 (postcondition checks git status --porcelain only, no abort/reset); cmd/bootstrap/run.sh:163-171 (same pattern)"
+  },
+  {
+    "g": 41,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The redirection creates settings_file.tmp before jq's exit status gates the mv via &&; on jq failure the .tmp file is left behind with no cleanup.",
+    "evidence": "routines/smine-nightly/run.sh:303-307 (jq ... > \"$settings_file.tmp\" && mv \"$settings_file.tmp\" \"$settings_file\", no rm on failure)"
+  },
+  {
+    "g": 42,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The claim's cited line numbers (94/136) don't match current layout, but the identical tautology is real: the enclosing if at line 297 already requires exit_status -eq 0, and nothing mutates exit_status before line 339's guard.",
+    "evidence": "routines/smine-nightly/run.sh:297 (if [[ \"$orchestrate\"==\"1\" && \"$exit_status\" -eq 0 && ... ]]) ... :339 ([[ \"$exit_status\" -eq 0 ]] && exit_status=$orchestrate_status — always true given line 297)"
+  },
+  {
+    "g": 43,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "The reconciliation jq-merge into ~/.claude/settings.json runs with no check for jq's presence and no lock guarding against the config server's independent writer of the same file — distinct from golden's denylist/validation finding (GV3-196).",
+    "evidence": "routines/smine-nightly/run.sh:301-307 (unconditional jq call, mv last-writer-wins, no flock on settings_file); routines/_lib/platform.sh & worktree.sh locks only cover routine self-overlap, not this file"
+  },
+  {
+    "g": 44,
+    "verdict": "matches-golden",
+    "goldenId": "GV5-237",
+    "reason": "Same root cause already in golden: the casual-lockout gate has no compiled/mechanical backstop, only agent-followed SKILL.md prose — grep across the repo finds zero Go/shell code checking origin:user before a skill write.",
+    "evidence": "skills/smine/smine-skills/SKILL.md:45, smine-apply/SKILL.md:31, smine-orchestrate/SKILL.md:41 (all prose-only); no matching Go/shell enforcement found repo-wide"
+  },
+  {
+    "g": 45,
+    "verdict": "confirmed",
+    "goldenId": null,
+    "reason": "acdsl/testdata/ACDSL-JSON-003/fail/policy.json combines an invalid enum (\"mode\":\"loose\") and an unknown key (\"editable_rules\" vs schema's \"editable_scopes\") in one file instead of two separate fail fixtures.",
+    "evidence": "acdsl/testdata/ACDSL-JSON-003/fail/policy.json (both defects in one file); acdsl/policy.schema.json (enum [free,gated,strict], additionalProperties:false, property name editable_scopes)"
+  }
+]

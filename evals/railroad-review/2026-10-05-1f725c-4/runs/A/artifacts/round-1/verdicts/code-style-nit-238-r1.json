@@ -1,0 +1,27 @@
+{
+  "finding_id": "code-style-NIT-238-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red: README.md:76 lists 'Git for Windows, Go, jq' for the from-source install.ps1 path while install.ps1:20 (added in this diff) also detects shellcheck and winget-installs koalaman.shellcheck.",
+  "probe": "PROBE-CODE-STYLE-NIT-238-R1",
+  "script": "code-style-nit-238-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-238-r1/README.md",
+  "registry": "registry-code-style-nit-238-r1.json",
+  "exposure": "rare",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-238-R1 -registry probes/registry-code-style-nit-238-r1.json -> exit 1: README.md:76: from-source prerequisites row omits shellcheck, which install.ps1 detects and winget-installs (koalaman.shellcheck)",
+    "read": [
+      "README.md:76 at 1f725ce: '| From source (`install.ps1`) | Git for Windows, Go, jq (installed via winget after a consent prompt) | ...'",
+      "install.ps1:20 at 1f725ce: 'if (-not (Test-Cmd shellcheck.exe)) { $missing += \"koalaman.shellcheck\" }'"
+    ],
+    "cells": "exposure lowered often -> rare: the mismatch only bites a Windows from-source installer without shellcheck, a narrow install path; effect cosmetic held",
+    "known": "known correctness-MAJ-16-r1 (install.ps1: shellcheck should be a non-fatal warning) is a different file and substance; if that fix lands, the README row should name shellcheck as optional rather than winget-installed",
+    "validity": "Direct fixture run denied by tool policy (/bin/bash <script> has no allow rule) and acdsl needs a git root; the real run went red, so the probe is not blind"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-238-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-code-style-nit-238-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-238-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-238-r1/README.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-238-r1/install.ps1"
+  ]
+}

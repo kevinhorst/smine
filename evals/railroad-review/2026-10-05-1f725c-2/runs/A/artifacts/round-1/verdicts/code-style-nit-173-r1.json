@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-173-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on presentation_test.go:28,38,48,58,68: five TestLoadPresentationProfile literals omit the declared and asserted _expectedDevMode while dev-mode-garbage-off (92) sets the same zero value explicitly. Caveat: RULE-GOLANG-TEST-011's 'every meta field set explicitly' sentence is worded for validation-style tables; the defect stands as an in-table inconsistency.",
+  "probe": "PROBE-CODE-STYLE-NIT-173-R1",
+  "script": "code-style-nit-173-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-173-r1/presentation_test.go",
+  "registry": "registry-code-style-nit-173-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-173-R1 -registry probes/registry-code-style-nit-173-r1.json -root <worktree> -> exit 1: internal/server/presentation_test.go:28/38/48/58/68: testCase literal omits the asserted meta field _expectedDevMode; 5 violation(s)",
+    "read": [
+      "internal/server/presentation_test.go:18 declares _expectedDevMode bool; :109 asserts it on every case; :81 and :92 set it, the other five literals do not",
+      "context/rules/go.md:884-886 RULE-GOLANG-TEST-011: 'Every meta field is set explicitly, including zero values' — inside the validation-style-tables bullet",
+      "known.json code-style-NIT-26-r2 is the same claim for profilesettings_test.go:59 — different file and test, not a duplicate"
+    ],
+    "validity": "Direct interpreter run of the script over scratch/code-style-nit-173-r1/files.txt was denied by tool policy (candidate Bash(/bin/bash *)); fixture is in place. The real run went RED with the expected message on the claimed file."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-173-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-173-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-173-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-173-r1/presentation_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-173-r1/files.txt"
+  ]
+}

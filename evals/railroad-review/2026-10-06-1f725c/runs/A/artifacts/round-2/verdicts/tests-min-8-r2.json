@@ -1,0 +1,14 @@
+{
+  "finding_id": "tests-MIN-8-r2",
+  "verdict": "confirmed",
+  "reason": "routineSession (routines.go:236) sits at 9.1% line coverage — only its len(sessions)==0 early-return guard is exercised by the package's one existing test (TestHandleRoutineDetailRunHistory, an unrelated feature); the prefix-match-plus-latest-wins loop this diff introduced is not reached by any test. The claim's phrase \"zero coverage\" overstates by a hair (9.1%, not 0%) — confirmed as stated in substance, with exposure/effect cells unchanged.",
+  "probe": "PROBE-TESTS-MIN-8-R2",
+  "script": "bin/verifiers/symbolcoverage (repo-registry verifier \"symbol-coverage\", reused — no custom script)",
+  "fixture": "artifacts/round-2/scratch/tests-min-8-r2/files.txt",
+  "evidence": "acdsl check -rule PROBE-TESTS-MIN-8-R2 -> github.com/kevinhorst/smine/internal/server/routines.go:236: coverage of routineSession is 9.1% < planned 10.0%",
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b5-r2/railroad-probes-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/tests-min-8-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/tests-min-8-r2/files.txt"
+  ]
+}

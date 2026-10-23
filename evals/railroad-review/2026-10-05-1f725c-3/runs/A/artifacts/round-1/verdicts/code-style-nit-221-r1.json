@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-221-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at 1f725ce: smine-batch SKILL.md L73 'Cost: ... this is why it is opt-in' restates the L29 --subagents Args cost note and carries rationale in the executed body (RULE-SKILL-008 binds legacy skills as a review rule).",
+  "probe": "PROBE-CODE-STYLE-NIT-221-R1",
+  "script": "code-style-nit-221-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-221-r1/skills/smine/smine-batch/SKILL.md",
+  "registry": "registry-code-style-nit-221-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-221-R1 -registry probes/registry-code-style-nit-221-r1.json -> skills/smine/smine-batch/SKILL.md:73: rationale bullet restates the --subagents Args cost note (Why content in skill body) (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/code-style-nit-221-r1 -rule PROBE-CODE-STYLE-NIT-221-R1 -> skills/smine/smine-batch/SKILL.md:3 hit (exit 1)",
+    "read": [
+      "skills/smine/smine-batch/SKILL.md L29: '--subagents: ... Off by default — it costs one extra paginated session_get/session_events pull per subagent.'",
+      "skills/smine/smine-batch/SKILL.md L71: 'Off by default: ... (current behavior).'; L73: 'Cost: one extra paginated pull per subagent — this is why it is opt-in. Only run it when explicitly enabled.' — both added in this diff",
+      "context/rules/skills.md RULE-SKILL-008: no Why content in skill bodies; 'rule-only for legacy skills until /fmt migrates them'",
+      "known.json: smine-batch rows (L33, L34, L35, L42, L44, L58) cover other claims; no match"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-221-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-221-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-221-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-221-r1/skills/smine/smine-batch/SKILL.md"
+  ]
+}

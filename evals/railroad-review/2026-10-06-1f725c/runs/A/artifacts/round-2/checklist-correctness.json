@@ -1,0 +1,187 @@
+{
+  "shape": "group-first",
+  "groups": [
+    {
+      "id": "spec-1-concept",
+      "items": [
+        "correctness-1: One per-install presentation profile declares language, register, and audience for the whole install; every other mechanism derives from it.",
+        "correctness-2: Every user-facing surface (config server UI, proposal cards, session/batch views, welcome/tutorial, smine skill-run prose) must honor the presentation profile.",
+        "correctness-3: Enforcement against model drift back to English/developer register must be a checked gate in the pipeline (nightly consolidate), not just a polite instruction.",
+        "correctness-4: Operator surfaces (repo content, logs, results.jsonl) stay English regardless of the profile; a machine must be switchable back to developer/English mode.",
+        "correctness-5: All user-visible smine prose (proposal titles, change lines, detail fields, evidence notes, group titles, batch report views) must render in the profile's language, semi-casual/jargon-free register, using a banned-term/plain-language glossary.",
+        "correctness-6: Nightly consolidate must thread the profile's language into its rewording pass over the proposal store.",
+        "correctness-7: Code snippets, ids, dates, tags, and gate fields must never be translated or reworded.",
+        "correctness-8: Config-server UI must honor the profile's language (lang attribute, navigation, proposal card labels, headings) with English as default/fallback.",
+        "correctness-9: Audience field must gate a reduced, non-developer-safe navigation (Overview, Proposals, Sessions only) hiding Skills/Context/Repos/Tools internals, while remaining a render-time filter (not a fork) so switching back to developer restores the full UI.",
+        "correctness-10: Proposal cards must hide gate-band/tag/target internals for non-developer audience; technical snippets render collapsed, untranslated, labeled as technical detail."
+      ]
+    },
+    {
+      "id": "spec-2-user_stories",
+      "items": [
+        "correctness-11: Proposal titles, change lines, and detail fields must render in plain German (profile language) so a non-developer can understand without translating developer terms.",
+        "correctness-12: Evidence notes must be phrased as everyday explanations of session events, understandable without knowledge of the mining engine's internals.",
+        "correctness-13: Engine/developer terms (worktree, gate, transcript mining, consolidation) must never appear in user-visible reading surfaces.",
+        "correctness-14: Navigation, page headings, and welcome/tutorial content must render in German for the non-developer user.",
+        "correctness-15: The non-developer user must see only pages relevant to them (overview, proposals, sessions) — no skills/context-pack/repo-management internals.",
+        "correctness-16: Proposal cards shown to the non-developer must omit gate bands, tags, and target paths — showing only what is suggested and why.",
+        "correctness-17: Nightly runs must keep all content German and jargon-free over time, preventing English/developer prose drift.",
+        "correctness-18: Technical code blocks must be visibly marked \"technical detail\" and left untranslated.",
+        "correctness-19: The operator must be able to set the presentation profile once at install so the machine is fully configured without ongoing manual styling.",
+        "correctness-20: The operator must be able to switch a machine back to developer/English mode to get the full UI; repo content, logs, and pipeline results must stay English regardless of the profile."
+      ]
+    },
+    {
+      "id": "spec-3-raw",
+      "items": [
+        "correctness-21: Presentation profile must be a single per-install markdown file (~/.claude/context/global/presentation-profile.md) with language/audience front matter plus a directive body, parsed by both Go and shell.",
+        "correctness-22: Absent, unreadable, or malformed profile must fail open to defaults (English, developer) so machines without a profile behave exactly as before.",
+        "correctness-23: The global-context hook must scan a machine-global directory ($HOME/.claude/context/global) before the repo-local docs dir so the profile reaches every session (interactive and smine skill runs) via the existing kill switch.",
+        "correctness-24: Config server must load the profile once per install (FuncMap closures: t, langAttr, isDeveloperAudience) and expose a German catalog keyed by English source strings with identity fallback on a missing key.",
+        "correctness-25: Non-developer audience must gate: Welcome/Config/Skills/Context/Repos/Routines/Tools/Checklist nav anchors hidden; Overview tiles reduced to session + proposal tiles only; proposal card target/gate/tag badges and gate-detail row hidden; snippet summaries relabeled \"Technisches Detail\".",
+        "correctness-26: Nightly consolidate invocation must thread the profile's language value into its prompt (/smine-consolidate proposals language <lang>) whenever set and not English.",
+        "correctness-27: Install scripts (macOS install.sh, Windows installer wizard + configserver -install -presentation-profile=<id>) must provision the chosen presentation-profile template into the per-install profile path, defaulting to none (opt-in only).",
+        "correctness-28: The English-only artifact-language rule in CLAUDE.md must gain an explicit supersede clause: an installed presentation profile overrides it for end-user-visible artifacts only, never for code/logs/commits/repo docs.",
+        "correctness-29: Templates must fail to boot (New returns a parse error) if any template references an undefined FuncMap function (t/isDeveloperAudience/langAttr) — no silent template forking between audiences."
+      ]
+    },
+    {
+      "id": "spec-4-change-englishness",
+      "items": [
+        "correctness-30: Every content-producing skill (smine-batch + the four dimension skills) must gain a presentation-profile language contract: author user-visible prose fields in the profile's language when set and not English, following its register/glossary, while never translating ids, targets, paths, code, dates, tags, schema keys, or canonical group titles.",
+        "correctness-31: Canonical group titles (\"New skills\", \"Edits to existing skills\", \"Workflows (skill-bundled scripts)\", \"Considered, not proposed\") must stay verbatim in stored JSON (smine-apply routes on them) and be translated only at render time via the t/catalog overlay.",
+        "correctness-32: Nightly consolidate's language sweep must widen from \"reworded prose only\" to every user-visible prose field of every mutable (unvoted, status=proposed) entry — titles' change-name part, change, fields, evidence titles, session notes, free-form group titles — leaving voted/archived entries and canonical titles untouched.",
+        "correctness-33: The server render path must wrap all remaining raw store-content headings and literals (kind heading, category/group/subgroup titles, \"updated\", \"Everything applied, happy …!\", \"file(s) failed to load:\", vote-tooltip format strings, overview detail composites) through the existing t/translate overlay.",
+        "correctness-34: On a developer machine (no profile), every touched page must render byte-identical to before this change.",
+        "correctness-35: After deploy, a one-time /smine-consolidate proposals language de run (or the next nightly) must translate the already-seeded English proposal/session store backlog without any separate migration script.",
+        "correctness-36: Batch content in sessions JSON (theme bullets, arc summaries, per-session summaries/notes, finding titles) must be authored in the profile language by smine-batch; batch .md reports and other operator-only artifacts stay English."
+      ]
+    },
+    {
+      "id": "spec-5-change-nondev-automation",
+      "items": [
+        "correctness-37: Install sync scripts must guard the prune-prompt read against EOF (defaulting to \"no\") and run all sync scripts under a 10-minute timeout (shell.RunSync) instead of the 60-second ceiling, so a cold/headless install never aborts mid-sync.",
+        "correctness-38: Every route must stay reachable on every install (no route-level audience blocking); instead, on non-developer installs, sync must hide deployed skills from the user's own sessions via per-leaf skillOverrides: \"off\" in user settings while keeping them invocable for pipeline runs via a project/local-scope overlay.",
+        "correctness-39: The repos page must render as \"Projects/Projekte\" for non-developer audiences: add/remove kept and localized, dev-only columns (Path/Context/ACDSL/Worktrees) hidden, and the additionalDirectories opt-in applied automatically on add.",
+        "correctness-40: A new smine-orchestrate skill must run as a gated nightly stage that judges, fixes-or-rejects, merges the run branch into main, re-syncs deployed state and context packs, reconciles additionalDirectories (append-only), prunes merged branches, and pushes only when a remote exists — gated on the audience being non-developer (env override wins), defaulting off on developer machines.",
+        "correctness-41: A failed/rejected orchestrate run must never half-merge: the branch is kept, the reason recorded, and the wrapper verifies hard postconditions (clean tree, merged-or-kept) rather than trusting the agent for invariants.",
+        "correctness-42: Repo registry entries must gain an optional display Label that never substitutes for the identity-bearing Name; adding a folder without .git must initialize a local (no-remote) git repo so the mining/worktree machinery can use it.",
+        "correctness-43: The orchestrator skill's manifest must be granted the Edit/Write/settings-editing capability it needs for its duties, verified headlessly before being trusted.",
+        "correctness-44: The Welcome page must gain a Bootstrap button that spawns a detached /smine-bootstrap run (refusing a second concurrent run) and a status endpoint that resolves and renders the newest running session via peek."
+      ]
+    },
+    {
+      "id": "spec-6-raw",
+      "items": [
+        "correctness-45: Each repo must declare a self-management policy (acdsl/policy.json) with exactly three modes — strict (nothing about the rule system editable), gated (rules editable only in designated taxonomy scopes with only sanctioned verifiers bindable), free (today's behavior) — governed by a draft-07 JSON schema.",
+        "correctness-46: The finite validator set in gated/strict mode must be exactly the frozen, base-ref-pinned shipped verifier registry; no second validator catalog may exist, and new verifier binaries may only enter through the existing human-voted evalgen proposal flow (autoApply: false).",
+        "correctness-47: Policy enforcement must be authoritative inside the compiled acdsl check binary (never a registry-bindable verifier, since that would let a policy edit neuter its own enforcement), with a fail-open PreToolUse hook as a secondary, non-authoritative fast-feedback layer.",
+        "correctness-48: The privilege boundary for changing the self-management surface must be git branch topology: diff against merge-base with the base branch; an agent working on a claude/* branch can never self-escalate, only a commit to the base branch (or sync, for targets) changes the surface.",
+        "correctness-49: In gated mode, editability must be scoped by taxonomy SCOPE segment (editable_scopes) and by an explicit verifier_allowlist (empty meaning the base-ref registry's own name set); registry.local.json overlay entries must be checked against a local_overrides sanction list by content, even when untracked.",
+        "correctness-50: Dist must ship the policy file with its mode rewritten from dist_mode (and dist_mode itself stripped) so every distributed target repo is gated with zero setup, while the source repo (smine) keeps mode: free.",
+        "correctness-51: Task-lifetime (lifetime: task) rule contracts must be exempt from the rule-delta check by default (flippable via allow_task_contracts), since ephemeral plan task contracts are never synced.",
+        "correctness-52: An unresolvable base ref in strict/gated mode must be a hard tool error (exit 2), never a silent degrade to \"ungated\".",
+        "correctness-53: Initial shipped policy values must be mode: free for smine itself, dist_mode: gated for targets, with editable_scopes covering language scopes (GOLANG/PYTHON/SHELL/SQL/JSON) and protecting PLAN/SKILL/SMINE/RUNBOOK/COMMIT scopes."
+      ]
+    },
+    {
+      "id": "spec-7-raw",
+      "items": [
+        "correctness-54: Railroad-review lane subagents must invoke the Skill tool with the --no-context opt-out token so they receive no full-doctrine injection, since the skill-context hook currently has no subagent guard and spills the ~45KB dispatcher doctrine into every lane.",
+        "correctness-55: Every branch the railroad-review skill creates (lane, refuter, station) must move from the claude/railroad-* prefix to the claude-review/* namespace, with cleanup and prose updated to match, and nothing else in the repo may depend on the old prefix.",
+        "correctness-56: A trace runbook of jq recipes over on-disk workflow transcripts must answer: per-lane context reads, injection presence, token/time cost per direction/round, and step adherence — self-sufficient at the current peek-mcp version, with no peek dependency.",
+        "correctness-57: A future peek-mcp verbose-mode contract must be specified (events-per-subagent by default, full transcript on demand, main-agent thinking included, subagent thinking excluded) without being implemented or depended upon in this change.",
+        "correctness-58: Context-entry eviction must be observational-only: a candidate is an entry never read by a lane whose direction requires it, never cited in any finding, and not gate/lint-enforced across at least 3 traced real runs; no confidence scores or usage counters are added to entries, and removal stays a manual tombstone decision.",
+        "correctness-59: The causal benchmark/ablation harness (defect-seeded benchmark, scorer, cell driver) must stay deferred until a specific eviction decision requires causal proof — not built speculatively now."
+      ]
+    },
+    {
+      "id": "spec-8-change-bootstrap-profile",
+      "items": [
+        "correctness-60: The Welcome Bootstrap card must gain a date picker (mine sessions since a date) and an extra-prompt text field, both server-validated and passed into the bootstrap invocation.",
+        "correctness-61: The non-developer audience value must be renamed to casual everywhere (Go constant, shell comparisons in sync_skills.sh/run.sh, installer label, German profile template), with sync_skills.sh performing a one-time in-place migration of any existing audience: non-developer profile file before comparing.",
+        "correctness-62: On a casual install, the pipeline must never propose or apply edits to any skill the user does not own; ownership is an origin: user front-matter stamp applied by smine-apply/skillroutine-create at skill creation, enforced at extraction (smine-skills drops the candidate), apply (smine-apply hard-refuses, disposition casual-locked), and the orchestrate judge (rejects any surviving violating commit).",
+        "correctness-63: Session mining output must be partitioned per connected repo (folder = roster repo name) plus a default folder for repo-less sessions, retiring the --scopes work/personal concept entirely from smine and smine-batch; existing sessions/personal|work folders are not force-migrated.",
+        "correctness-64: The sessions UI must gain per-folder Archive (move to sessions/archived/<name>, excluded from mining and the live store) with an Archive tab offering Unarchive and the only Delete; the session-selection skip-list for dedup must union ledgers across live and archived folders.",
+        "correctness-65: The Reload-from-disk button and its endpoint must be removed; the sessions store and overview must rescan on every page GET instead, fixing the fresh-install bug where an empty state never renders a reload control.",
+        "correctness-66: The repo-add form must gain an editable Name field (collision-resolvable) and reject the reserved names default/archived (both the identity key and the mining-folder name)."
+      ]
+    },
+    {
+      "id": "spec-9-change-headless-bootstrap",
+      "items": [
+        "correctness-67: The Welcome-button bootstrap must be rebuilt as a wrapper-orchestrated shell script (cmd/bootstrap/run.sh, mirroring smine-nightly's run.sh) running one claude -p per stage with that stage's installed skill --allowedTools manifest passed explicitly, since headless claude -p ignores skill frontmatter allowed-tools and has no Skill/Workflow tool.",
+        "correctness-68: The /smine-bootstrap skill must be deleted; the wrapper script becomes the single bootstrap mechanism, invoked by the config server launcher (spawning bash cmd/bootstrap/run.sh with env vars) or by an operator directly.",
+        "correctness-69: Bootstrap parameters (since date, extra prompt, session count) must travel as the wrapper's environment variables, translated deterministically into stage command-line flags (--since/--last/free text) — never as relayed prose inside a skill prompt.",
+        "correctness-70: smine-batch's session selection must default-deny: without an explicit --dev flag, drop every session whose cwd resolves inside the pipeline's own repo root (including worktrees) or whose branch starts with claude-routines/, so the pipeline can never self-mine by default.",
+        "correctness-71: A profile-level Dev Mode boolean (dev-mode: true|false front matter, Profile-page toggle) must control the --dev flag for both the bootstrap wrapper and the nightly wrapper; casual audience forces it off regardless of the stored value.",
+        "correctness-72: Every bootstrap stage must grant the spawned claude -p call --add-dir <global context dir> so the style-profile and presentation-profile writes succeed directly, never staged to a separate file.",
+        "correctness-73: The style-mining stage (smine-style) must write its directives in the profile's language (or the dominant language of sampled user turns when no profile exists), since the directive file must itself exemplify the register it prescribes.",
+        "correctness-74: The four dimension skills plus smine-consolidate plus the orchestrate judge must enforce that casual-install user-visible prose contains no file paths, rule/FACT/ACDSL IDs, or schema/taxonomy jargon — enforced at authoring, swept at consolidate, and gated at the orchestrate judge.",
+        "correctness-75: Earlier stages (style, mine, consolidate, apply) must be best-effort — a failed stage logs and the run continues — while the final orchestrate-bootstrap stage always runs as the terminal judge that commits or reports, so a run never strands with nothing committed."
+      ]
+    },
+    {
+      "id": "spec-10-change-viewer-fixes",
+      "items": [
+        "correctness-76: Plan IDs (F20, D6) must be plain text, never raw-HTML anchors (<a id=\"...\">), because the Claude Code plan viewer renders such anchors literally inside table cells.",
+        "correctness-77: Every reference to a fact, decision, or section must be a markdown link to its containing section's heading auto-slug (e.g. [F20](#baseline-verified)), not a row-level fragment link, so it navigates in VS Code and renders as clean styled text in the Claude viewer.",
+        "correctness-78: The canonical plan section order must move Open questions to directly after Decisions (previously second-to-last), enforced by both the rule text and the planformat verifier's canon slice, which must move together.",
+        "correctness-79: UI-evidence requirements (hot-class gate) must require a screenshot of the actual running UI under design, stored under the plan's design/ui/ dir and referenced via a ui: line on every Changes entry that alters that UI; a rendered mockup is allowed only when the UI does not exist yet.",
+        "correctness-80: <br> cell-stacking and path:line file links must remain unchanged by the anchor-removal change, since both render correctly in both viewers.",
+        "correctness-81: Existing plans already written are not migrated automatically; /fmt plan must migrate on demand, now stripping anchors instead of adding them.",
+        "correctness-82: context/context.json must be regenerated via cmd/rules generate after any rule-text edit — never hand-edited."
+      ]
+    },
+    {
+      "id": "spec-11-change-repos-routines-ui",
+      "items": [
+        "correctness-83: The worktree status script's containment detection must gain a fourth, branch-level layer using git merge-tree --write-tree: when a conflict-free merge of the branch into a candidate produces a tree identical to the candidate's own tree, the branch's content counts as fully contained (catches squash-merges the per-commit layers cannot see), without weakening any existing dirty/untracked safety check.",
+        "correctness-84: The row-cache key used by the worktree status script must be version-salted so a logic change in verdict computation never serves stale pre-change verdicts for unchanged SHAs.",
+        "correctness-85: Worktree-removal handlers must drop the removed branches from the server-side statusCache entry immediately on a clean run, so a subsequent plain (non-refresh) status load never re-serves rows for worktrees that were just deleted; registry-delete must remove the whole cached entry.",
+        "correctness-86: The repos index Worktrees column must show one line per branch-kind prefix (e.g. claude:3, claude-routines:5) instead of a single bare total, omitting zero-count kinds.",
+        "correctness-87: The routine detail run-history table must group rows into collapsible per-ISO-week band header rows client-side, newest week expanded and older weeks collapsed by default.",
+        "correctness-88: On the routine detail page, the status table must render directly below the routine header block, with the configure widget moved below status and above run history.",
+        "correctness-89: The unreachable single-branch worktree-remove route/handler, which no template posts to, must be flagged for a separate cleanup decision rather than changed in this plan."
+      ]
+    },
+    {
+      "id": "spec-12-raw",
+      "items": [
+        "correctness-90: A new leaf skill (smine-style) must mine the user's own chat messages from the last n sessions via peek-mcp and write a learned style profile (~/.claude/context/global/style-profile.md), distilling at most 30 directive lines without ever quoting user messages verbatim or including PII, secrets, or profanity.",
+        "correctness-91: The style profile and the declared presentation profile must stay two separate files with separate owners (install/template vs. mining/editor), so a reinstall that overwrites the declared-profile template never clobbers the learned voice.",
+        "correctness-92: Style mining must become a stage of /smine-bootstrap (after reading the declared profile, before mining), so a fresh install gets a learned voice automatically; mining must never contradict or rewrite the declared audience/language — those stay authoritative.",
+        "correctness-93: A new config-server Profile page (/profile) must let the operator pick the initial presentation profile (audience: developer / casual non-developer / a disabled business-later placeholder, plus UI language), edit the style-profile textarea directly (64 KiB cap), and test the current combined profile via a one-shot claude -p call rendering the answer inline.",
+        "correctness-94: The server's in-memory presentation profile must become a mutex-guarded live store (atomic file write plus in-memory swap on save) so audience/language edits take effect without a server restart, instead of being loaded once at startup.",
+        "correctness-95: Saving a selector change that flips the audience must re-run the existing skill sync so skillOverrides visibility flips accordingly, rather than duplicating that jq logic in Go.",
+        "correctness-96: The Profile page must be visible and reachable in both developer and casual audience modes, since it is the one settings page a casual user must be able to find."
+      ]
+    },
+    {
+      "id": "spec-13-change-multi-profile-ports",
+      "items": [
+        "correctness-97: Each macOS user profile running its own smine install must spawn its own peek-mcp process on its own MCP and control ports (via PEEK_PORT/PEEK_CONTROL_PORT envs persisted to a gitignored install.env, baked into the per-profile LaunchAgent plist), so two profiles sharing loopback never have the second silently reuse the first's peek.",
+        "correctness-98: The configserver-spawned peek process must receive explicit --claude-home/--codex-home flags (configserver-level overridable) instead of inheriting ambient defaults, so peek reads the correct profile's session homes.",
+        "correctness-99: Before reusing any process already listening on the configured peek port, the configserver must verify its identity via a new GET /healthz endpoint (version + claudeHome + codexHome + controlPort); on a mismatch or an unidentifiable holder, it must log a loud error and leave the peek integration disabled rather than silently serving another user's data.",
+        "correctness-100: Reinstalling must deterministically kill this profile's own stale peek listener (by port, same-user only) before respawning it with the current binary and flags, closing the defect where a stale process survives every reinstall.",
+        "correctness-101: peek-mcp's control port must bind exactly (never walk to a neighboring port) whenever --control-port is explicitly set via flag or env, failing loudly instead of silently landing on another profile's base port.",
+        "correctness-102: The synced Claude Code settings' OTLP telemetry endpoint must become per-profile via a {{PEEK_CONTROL_PORT}} marker, expanded both by the sync script and by the config server's own fragment compare/revert logic from the same install.env source of truth.",
+        "correctness-103: peek-mcp setup must derive its written OTLP endpoint from a configurable --control-port flag instead of the hardcoded base port.",
+        "correctness-104: Re-running install with no env overrides must preserve a profile's previously-chosen ports (reading install.env as the default before applying env overrides), so routine reinstalls never silently reset a non-default profile back to colliding default ports."
+      ]
+    },
+    {
+      "id": "spec-14-change-repo-cache",
+      "items": [
+        "correctness-105: The in-memory repo registry must become a read-through cache of repos.json: every read stats the file and reloads on an identity (mtime+size) change, so external edits and other writers' deletions become visible without a server restart.",
+        "correctness-106: Registry Add/Remove must re-read the file under lock and apply their delta to that freshly read state before saving, so a stale in-memory slice held by one writer can never resurrect a repo deleted by another.",
+        "correctness-107: A failed reload triggered by a malformed repos.json during a read must keep the last good in-memory state and log the error, rather than fail the request; only the one-time startup Reload fails loudly.",
+        "correctness-108: The worktree status cache must gain deterministic invalidation via a cheap git fingerprint (agent branch tips plus worktree set, computed on every plain load); a mismatch forces a full re-scan, while a match serves the cached entry, replacing the \"never expires\" behavior.",
+        "correctness-109: A fingerprint-computation error (non-git path, git unavailable) must be treated as \"changed\" (forcing a re-scan), never as \"unchanged\".",
+        "correctness-110: The optimistic worktree-removal UX (instant row hide, silent clean run, DropBranches editing the cached entry's row list) must stay exactly as-is; the entry's fingerprint is deliberately left at its pre-removal value so the next plain load's fingerprint mismatch is what forces the cache to converge to scan truth.",
+        "correctness-111: The dead, UI-unreachable single-branch worktree-remove endpoint and handler must be deleted outright, while the batch remove-selected path and its removal-safety logic stay untouched.",
+        "correctness-112: Dirty/untracked-file-count staleness, which the fingerprint cannot see since it only tracks refs and worktree identity, is accepted staleness, covered by the existing manual Reload button."
+      ]
+    }
+  ]
+}

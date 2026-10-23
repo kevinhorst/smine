@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-NIT-47-r1",
+  "verdict": "confirmed",
+  "reason": "UnarchiveScope has no invalid-name case and every existing invalid-name assertion (ArchiveScope archived/../evil/'', DeleteScope archived/../evil) errors from filesystem state even without validateScopeName — probe red on sessions_test.go.",
+  "probe": "PROBE-TESTS-NIT-47-R1",
+  "script": "tests-nit-47-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-47-r1",
+  "registry": "registry-tests-nit-47-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-47-R1 -registry probes/registry-tests-nit-47-r1.json -> exit 1: internal/sessions/sessions_test.go:222: no UnarchiveScope invalid-name case (traversal / archived / empty)",
+    "validity": "same check with -root probes/fixtures/tests-nit-47-r1 (UnarchiveScope only with a valid name) -> exit 1, 1 violation",
+    "read": [
+      "internal/sessions/sessions_test.go:222-225 ArchiveScope invalid names; 241-242 DeleteScope invalid names; 249-264 TestStoreUnarchiveScope calls only UnarchiveScope(\"oldscope\")",
+      "internal/sessions/sessions.go:301-382 traced without validateScopeName: ArchiveScope(\"archived\") -> Rename(root/archived, root/archived/archived) EINVAL; (\"../evil\") -> Rename of absent root/../evil ENOENT; (\"\") -> target root/archived exists -> already archived; DeleteScope(\"archived\"/\"../evil\") -> Stat of absent target errors — all asserts still pass",
+      "known.json: sessions entries are code-style only (NIT-47/48/49/80-r1, NIT-16-r2), none on this test gap"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-47-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-47-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-47-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-47-r1"
+  ]
+}

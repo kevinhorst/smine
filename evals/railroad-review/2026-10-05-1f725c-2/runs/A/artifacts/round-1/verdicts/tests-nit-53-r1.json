@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-53-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at internal/server/proposals.go:39 — no _test.go in internal/server contains dimension=harness-friction; the only permissions test (permissions-kind-accepted, proposals_test.go:598) has no evidence sessions.",
+  "probe": "PROBE-TESTS-NIT-53-R1",
+  "script": "tests-nit-53-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-53-r1/internal/server/proposals.go",
+  "registry": "registry-tests-nit-53-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-53-R1 -registry registry-tests-nit-53-r1.json -> exit 1: internal/server/proposals.go:39: permissions default dimension harness-friction is asserted by no _test.go in internal/server",
+    "read": [
+      "internal/server/proposals.go:37-42 kindDimension adds \"permissions\": \"harness-friction\"; consumed only at sessionLinks:736 (default dimension) and handleProposalVote:614 (key presence)",
+      "git grep dimension= internal/server/proposals_test.go -> only routine-candidate (94) and skill-report-card (95); permissions fixture 602-610 has no evidence",
+      "skills/smine/smine-permissions/SKILL.md:50,76 — evidence carries dimension: harness-friction optionally, so the kind default applies when it is omitted"
+    ],
+    "validity": "Direct interpreter run on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails (fixture is no git repo, FileUniverse exit 128). The real run going RED shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-53-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-53-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-53-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-53-r1/internal/server/proposals.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-53-r1/internal/server/proposals_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-nit-53-r1/files.txt"
+  ]
+}

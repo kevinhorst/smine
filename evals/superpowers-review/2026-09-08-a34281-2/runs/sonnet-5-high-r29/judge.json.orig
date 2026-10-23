@@ -1,0 +1,72 @@
+{
+  "matched": [
+    {
+      "goldenId": "GV3-198",
+      "findingId": "SP-001",
+      "note": "Same defect: removal of ask entries for acdsl/**/**/*.acdsl from settings.json with no replacement, hook default mode is free (no protection)."
+    },
+    {
+      "goldenId": "GV3-012",
+      "findingId": "SP-002",
+      "note": "Same defect: RunSync (line 45) duplicates Run (line 25) verbatim except timeout const and message prefix. Candidate cites line 19 (Run's start), golden cites line 50 (RunSync's start) - same pair."
+    },
+    {
+      "goldenId": "GV3-166",
+      "findingId": "SP-003",
+      "note": "Same root cause as GV3-166's points 2 and 3: the post-invocation check only recognizes literal Read and exact two-token `cat <path>` Bash commands, missing quoted/metacharacter Bash forms and other reading tools (grep/head/sed/less)."
+    }
+  ],
+  "missed": [
+    "GV3-001",
+    "GV3-002",
+    "GV3-042",
+    "GV3-048",
+    "GV3-069",
+    "GV3-077",
+    "GV3-083",
+    "GV3-089",
+    "GV3-097",
+    "GV3-108",
+    "GV3-112",
+    "GV3-118",
+    "GV3-132",
+    "GV3-138",
+    "GV3-148",
+    "GV3-152",
+    "GV3-159",
+    "GV3-167",
+    "GV3-170",
+    "GV4-202",
+    "GV5-219",
+    "GV5-224",
+    "GV5-228",
+    "GV5-230",
+    "GV5-235"
+  ],
+  "misclassified": [
+    {
+      "goldenId": "GV3-012",
+      "findingId": "SP-002",
+      "expected": "MINOR",
+      "actual": "MAJOR"
+    },
+    {
+      "goldenId": "GV3-166",
+      "findingId": "SP-003",
+      "expected": "MAJOR",
+      "actual": "MINOR"
+    }
+  ],
+  "falsePositives": [
+    {
+      "findingId": "SP-005",
+      "reason": "Claim alleges no defect: it explicitly states the basePolicy() re-resolution deviation from the plan pseudocode is 'a sanctioned improvement exercised by a regression test, not a problem' and supplies an empty fix. Same category as the golden's rejected 'provenance/process observation, not a code defect' false positives (e.g. correctness-INF-2, correctness-INF-1)."
+    }
+  ],
+  "uncataloged": [
+    {
+      "findingId": "SP-004",
+      "reason": "Genuine in-range functional bug distinct from GV3-148 (which only flags code-style duplication). install.sh:173-180 (new PEEK_PORT/PEEK_CONTROL_PORT block) does `pid=\"$(lsof -tiTCP:\"$peek_port\" -sTCP:LISTEN || true)\"`; when lsof returns multiple PID lines, $pid holds an embedded-newline multi-line string. `kill \"$pid\"` then receives one malformed argument, fails, and is swallowed by the trailing `|| true`; the following `while kill -0 \"$pid\"` also fails immediately (invalid argument), so the wait loop exits as if the process were already gone -- a silent no-op on the actual stale process. Same latent pattern also exists in the pre-existing ADDR_PORT block, but this candidate's claim is specifically about the newly introduced PEEK_PORT/PEEK_CONTROL_PORT sites added by this diff, and no golden entry catalogs the multi-pid functional defect (GV3-148's claim is duplication/code-style only)."
+    }
+  ]
+}

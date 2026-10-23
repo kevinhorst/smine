@@ -1,0 +1,21 @@
+{
+  "finding_id": "code-style-NIT-219-r1",
+  "verdict": "confirmed",
+  "reason": "smine-orchestrate SKILL.md:7 allowed-tools grants Bash(mv *); a full read of the 76-line body shows no step that moves a file (git, jq, make audit, go run ./cmd/acdsl, bash cmd/sync/*, .orchestrate-report via Write); probe RED on L7.",
+  "probe": "PROBE-CODE-STYLE-NIT-219-R1",
+  "fixture": "probes/fixtures/code-style-nit-219-r1/SKILL.md",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-219-R1 -> exit 1: skills/smine/smine-orchestrate/SKILL.md:7: literal \"Bash(mv *)\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-219-r1/files.txt literal=\"Bash(mv *)\" allowed=^$ -> exit 1 on fixture SKILL.md:3",
+    "read": [
+      "smine-orchestrate/SKILL.md (new file in diff) read in full: 'mv' appears only on L7 frontmatter; L48 reconcile 'cache the branch's delta' names no mv and git mv would fall under Bash(git *) anyway; .orchestrate-report is removed by the wrapper (L29)",
+      "known.json smine-orchestrate rows (MIN-44, NIT-150, MAJ-58, MAJ-59) — none on allowed-tools"
+    ],
+    "note": "First probe attempt was a /bin/bash script checking grant-without-body-use; its validity run was denied by tool policy (Bash(bash *)), so the second attempt uses the registry literal-owner verifier for the grant and the full-file read for absence of use."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-219-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-219-r1/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-219-r1/files.txt"
+  ]
+}

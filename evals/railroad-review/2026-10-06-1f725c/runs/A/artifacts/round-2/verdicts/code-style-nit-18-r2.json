@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-18-r2",
+  "verdict": "confirmed",
+  "reason": "internal/server/bootstrap.go:71-74 passes the bare os.CreateTemp error straight to respond.WithInternalServerError, while the cmd.Start() error nine lines later (line 97) is wrapped with fmt.Errorf(\"handleWelcomeBootstrap: Failed to start claude: %w\", err) in the same function; RULE-GOLANG-ERR-001 (context/rules/go.md:466-476) permits a bare return only when the callee's error is already fully contextualized, which os.CreateTemp's stdlib *PathError is not, and respond.WithInternalServerError (internal/server/respond/respond.go:14-16) does nothing but http.Error(w, err.Error(), 500) — so the unwrapped message reaches the HTTP client with no Component.Method prefix, unlike the sibling path.",
+  "probe": "none: tool-policy denies direct execution of the authored bash probe script, denies direct invocation of the prebuilt bin/acdsl binary (both tried, candidate rules Bash(/.../code-style-nit-18-r2.sh *) and Bash(/.../bin/acdsl *)), and this repo's Makefile has no \"acdsl\" target declaring an ARGS parameter (make acdsl ARGS=... denied: \"sets a variable the target's help line does not declare\") — the probe verdict mechanism is unexecutable in this sandbox after three attempts; settled manually instead.",
+  "script": "probes/code-style-nit-18-r2.sh",
+  "fixture": "probes/fixtures/code-style-nit-18-r2/bad.go",
+  "registry": "registry-code-style-nit-18-r2.json",
+  "cells": {},
+  "evidence": {
+    "read": [
+      "internal/server/bootstrap.go:71-98 (headCommit e5245d08d2fe5c05f67742fd8ec5a67b759ca316, re-read in full in the pinned worktree)",
+      "context/rules/go.md:466-476 (RULE-GOLANG-ERR-001 text: bare return err allowed ONLY as direct pass-through where the callee's error is already fully contextualized)",
+      "internal/server/respond/respond.go:14-16 (WithInternalServerError does only http.Error(w, err.Error(), 500) — no added context)"
+    ],
+    "probe_run": null
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-nit-18-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-nit-18-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-nit-18-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-nit-18-r2/bad.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/code-style-nit-18-r2/bad.go"
+  ]
+}

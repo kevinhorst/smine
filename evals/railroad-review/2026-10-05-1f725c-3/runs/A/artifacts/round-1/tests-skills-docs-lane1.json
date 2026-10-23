@@ -1,0 +1,53 @@
+{
+  "direction": "tests",
+  "lane": 1,
+  "chunk": "skills-docs",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "artifact_json": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/tests-skills-docs-lane1.json",
+  "notes": "Chunk is prose/doc plus three new workflow JS files and one modified one; the repo has no workflow-JS test harness (spec-7 Tests section states this explicitly), so missing unit tests on workflow JS were not raised as findings on their own — only a concrete untested defect (tests-MIN-1). foreign-toolchain-pretag.js gates on exit_code (pure JS, no analogous flaw); subsystem-grounding.js has no gate logic. Spec-10's named test (ACDSL-PLAN-001 pass fixture with Open questions after Decisions) exists at acdsl/testdata/ACDSL-PLAN-001/pass/plan.md — other chunk, verified present. Known-ledger entries on these files (BLK-29 cleanup prefix, MAJ-39/MAJ-40/MIN-42 unreachable workflows, MIN-43 save-button count) not re-reported. Cross-chunk suspicion for the station: skillroutine-create v1.9 documents `origin: user` as 'the provenance marker the casual lockout keys on', but no Go code under internal/ or cmd/ parses an `origin` frontmatter key (git grep), so the lockout is prompt-only in smine-skills/smine-apply/smine-orchestrate — whether those prompts and their tests exist is outside this chunk. Build/test health (ACTION-REVIEW-TEST-003/004) is the dispatcher's buildtest; no Go or test file is in this chunk.",
+  "walk": [
+    {"file": "context/actions/implementing.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "context/rules/plan.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/feature/fdesign/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/feature/fdesign/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/feature/fdesign/workflows/subsystem-grounding.js", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/feature/fimplement/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/feature/fimplement/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js", "group": "ACTION-REVIEW-TEST", "hits": ["tests-MIN-1"]},
+    {"file": "skills/fmt/fmt/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/fmt/fmt/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/git/merge-resolve/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/git/merge-resolve/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/git/package-commit/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/git/package-commit/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/git/package-commit/workflows/foreign-toolchain-pretag.js", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/orchestration/close/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/orchestration/close/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/quality/dod-report/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/quality/dod-report/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/quality/railroad-review/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/quality/railroad-review/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/quality/railroad-review/workflows/railroad-review.js", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/skillroutine/skillroutine-create/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/skillroutine/skillroutine-create/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/skillroutine/skillroutine-eval/SKILL.md", "group": "ACTION-REVIEW-TEST", "hits": []},
+    {"file": "skills/skillroutine/skillroutine-eval/changelog.json", "group": "ACTION-REVIEW-TEST", "hits": []}
+  ],
+  "findings": [
+    {
+      "finding_id": "tests-MIN-1",
+      "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+      "line": 96,
+      "checklist": "ACTION-REVIEW-TEST-001",
+      "severity": "MINOR",
+      "effect": "incorrect",
+      "exposure": "eventually",
+      "claim": "The new gate's aggregate verdict is derived from the violations strings, not from the per-template pass flags, and no test pins it: gate.pass = (violations.length === 0) where violations = gated.filter(r => !r.pass).flatMap(r => r.violations...). A Gate agent returning {pass: false, violations: []} for a template (GATE_SCHEMA requires the violations array but allows it empty) contributes zero strings, so the workflow returns gate.pass = true and the commit is not blocked although a template failed. The script also never re-checks the agent's pass against save_button_count === 1 / unstyled_input_types empty, so {pass: true, save_button_count: 2} passes as well. No test (the repo has no workflow-JS harness) exercises this aggregation.",
+      "fix": "Derive the verdict from the flags: `const failed = gated.filter(r => !r.pass || r.save_button_count !== 1 || (r.unstyled_input_types || []).length)`; `gate.pass = failed.length === 0`, with violations falling back to `${r.template}: failed without a stated violation` when r.violations is empty.",
+      "evidence": "Re-read `git show 1f725ce:skills/feature/fimplement/workflows/config-ui-fidelity-gate.js` in full: L37-48 GATE_SCHEMA requires violations as an array with no minItems; L62-85 the Gate stage returns the agent result unmodified; L88-95 only null results are replaced; L96 flattens r.violations of failed rows; L99 sets gate.pass from violations.length alone. Input {template:'t.html', pass:false, save_button_count:1, violations:[]} -> violations=[] -> gate.pass=true. Exposure set to eventually because the known ledger records that no skill invokes this workflow today (correctness-MAJ-39-r1); this claim is the distinct aggregation defect, not the unreachability. `git ls-files` shows no *.test.js or workflow test harness, so no test pins the aggregation."
+    }
+  ],
+  "walk_complete": true
+}

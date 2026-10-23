@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "The ACDSL self-management policy gate can be fully disabled: when the working-tree acdsl/policy.json is tampered to mode free with an unresolvable base_ref, CheckPolicy's baseErr branch trusts the untrusted Mode and returns nil, nil before the authoritative basePolicy re-read runs, so acdsl check exits 0 with no diagnostics.",
+      "fix": "Move the policy.Mode == PolicyModeFree fast path to after the basePolicy call succeeds (the safe duplicate already exists at line 341); when policyBase errors, gated/strict must never fall back to free based on the untrusted working copy — if the intent is that a repo without any prior policy is implicitly free, determine that from whether the base has no policy file (basePolicy's exists distinction), not from the local Mode field."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+      "line": 230,
+      "severity": "MAJOR",
+      "claim": "The persistent cross-process per-branch row cache under <git-common-dir>/agent-status-cache/ is an entirely new subsystem not present in the base commit and not covered by any plan decision (the plan's D3 only versions a supposedly existing cache), despite feeding the worktree-removal safety gate.",
+      "fix": "Confirm the cache was a deliberate, reviewed choice rather than a discovery that should have paused for the materially-exceeds-scope check, and get it plan-reviewed."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": null,
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The repos-routines-improvements plan's baseline facts (C1-C3, C11) describe the pre-squash-layer evaluate_branch/cache state as already present, but at least C3 was not accurate against the actual base commit at plan-writing time.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/repos/registry.go",
+      "line": 54,
+      "severity": "MINOR",
+      "claim": "Registry's field order (path, mu, loadedModTime, loadedSize, repos) is not alphabetical within group, violating RULE-GOLANG-STRUCT-002, and the struct was touched in this diff.",
+      "fix": "Reorder the fields to loadedModTime, loadedSize, mu, path, repos while the struct is already being edited."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/repos/registry.go",
+      "line": 360,
+      "severity": "MINOR",
+      "claim": "WorktreeKindCount, a type, is declared in the middle of the free-function section between Fingerprint and WorktreeCounts instead of with the other type blocks near the top of the file, violating RULE-GOLANG-FILE-001.",
+      "fix": "Move the new type declaration to the type blocks near the top of the file to start conforming."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The header comment says WORKTREE_STATUS_NO_CACHE=1 bypasses the cache, but the implementation only bypasses the read path — a NO_CACHE=1 run still recomputes and writes the row into the persistent cache, so the doc comment overstates what the flag does.",
+      "fix": "Add a one-line clarification to the header comment so a future reader does not assume diagnostic runs leave no trace."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

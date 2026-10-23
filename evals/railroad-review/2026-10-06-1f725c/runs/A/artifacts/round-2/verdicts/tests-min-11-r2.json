@@ -1,0 +1,14 @@
+{
+  "finding_id": "tests-MIN-11-r2",
+  "verdict": "confirmed",
+  "reason": "Confirmed by direct file-existence and content comparison: internal/routines/ has no bootstrap_darwin_test.go anywhere (git ls-files), the new DefaultDisabled-skip branch in SyncAll (bootstrap_darwin.go:45) has zero test coverage, while sched_windows.go's analogous branch is covered by TestSyncAllSkipsDefaultDisabledNotFoundTask in sched_windows_test.go. Static asymmetry claim, no execution needed to settle it.",
+  "probe": "none: ACDSL repo, but the verdict command is unreachable in this harness — attempt 1: direct `<worktree>/bin/acdsl check -rule ...` denied by tool-policy (no allow rule matches the absolute bin/acdsl path); attempt 2: `make -C <worktree> acdsl ARGS=...` denied (this repo's Makefile declares no `acdsl` target, so ARGS= is an undeclared variable under the make-policy gate). Both routes structurally blocked before a probe could even be authored meaningfully; settled via the manual path instead.",
+  "evidence": {
+    "read": [
+      "internal/routines/bootstrap_darwin.go:36-62 (e5245d08) — new branch `if routine.DefaultDisabled && overrides[routine.Label] != \"enabled\"` at line 45, no accompanying test",
+      "git ls-files internal/routines/ — lists launchctl_darwin_test.go, plist_test.go, routines_test.go, sched_windows_test.go, taskxml_test.go, tokens_test.go; no bootstrap_darwin_test.go",
+      "internal/routines/sched_windows_test.go:28 — func TestSyncAllSkipsDefaultDisabledNotFoundTask(t *testing.T) exists, confirming the windows side has the equivalent coverage the darwin side lacks"
+    ]
+  },
+  "artifacts": []
+}

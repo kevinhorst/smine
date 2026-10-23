@@ -1,0 +1,27 @@
+{
+  "finding_id": "tests-NIT-67-r1",
+  "verdict": "confirmed",
+  "reason": "handleWelcome computes BootstrapSinceDefault/BootstrapToday (welcome.go:292-293) feeding welcome.html's since input value/max, and no _test.go in internal/server references the since input or those fields.",
+  "probe": "PROBE-TESTS-NIT-67-R1",
+  "script": "tests-nit-67-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-67-r1/internal/server/welcome.go",
+  "registry": "registry-tests-nit-67-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-67-R1 -registry probes/registry-tests-nit-67-r1.json -> exit 1: internal/server/welcome.go:292: bootstrap since/max form defaults are computed here but never asserted by any test",
+    "read": [
+      "internal/server/welcome.go:292-293 — BootstrapSinceDefault = now.AddDate(0, 0, -30).Format(\"2006-01-02\"); BootstrapToday = now.Format(...)",
+      "internal/server/templates/welcome.html:24 — <input type=\"date\" name=\"since\" value=\"{{.BootstrapSinceDefault}}\" max=\"{{.BootstrapToday}}\">",
+      "git grep name=\"since\"|BootstrapSinceDefault|AddDate(0, 0, -30) over internal/server/*_test.go — no hit"
+    ],
+    "validity": "fixture run: bin/acdsl check -root scratch/tests-nit-67-r1/root (git-init'd copy of the fixture) -> exit 1 at internal/server/welcome.go:4",
+    "known_check": "distinct from code-style-NIT-18-r2 (hard-coded -30) and code-style-NIT-38-r1 (layout literal) — those are style, this is coverage"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-67-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-67-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-67-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-67-r1/internal/server/welcome.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-67-r1/internal/server/welcome_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-67-r1/railroad-probes-r1.acdsl"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-NIT-55-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at cmd/sync/sync_hooks.sh:31 — no test_*.sh or *_test.go under cmd/, internal/ or routines/ references sync_hooks; the only reference is the production caller install_windows.go:386.",
+  "probe": "PROBE-TESTS-NIT-55-R1",
+  "script": "tests-nit-55-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-55-r1/cmd/sync/sync_hooks.sh",
+  "registry": "registry-tests-nit-55-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-55-R1 -registry registry-tests-nit-55-r1.json -> exit 1: cmd/sync/sync_hooks.sh:31: EOF-answers-n prune guard is exercised by no test file (no test references sync_hooks)",
+    "read": [
+      "cmd/sync/sync_hooks.sh:2 set -euo pipefail; :31 read -r answer || answer=n (the diff's only change)",
+      "git grep sync_hooks cmd internal routines Makefile -> cmd/configserver/install_windows.go:386 only"
+    ],
+    "validity": "Direct interpreter run on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails (fixture is no git repo). The real run going RED shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-55-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-55-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-55-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-55-r1/cmd/sync/sync_hooks.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-55-r1/cmd/tests/test_sync_skills_overrides.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-nit-55-r1/files.txt"
+  ]
+}

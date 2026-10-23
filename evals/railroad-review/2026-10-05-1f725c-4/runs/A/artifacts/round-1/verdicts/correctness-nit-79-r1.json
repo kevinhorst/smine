@@ -1,0 +1,27 @@
+{
+  "finding_id": "correctness-NIT-79-r1",
+  "verdict": "confirmed",
+  "reason": "profilesettings.go:168 Title: \"Profile\" and sessions.go:137 Title: \"Sessions — archive\" are untranslated literals rendered raw by layout.html:7 <title>{{.Title}}</title>, while germanCatalog (i18n.go:108, :24, :10) carries Profile/archive/Sessions and siblings (proposals.go:186, sessions.go:172) translate.",
+  "probe": "PROBE-CORRECTNESS-NIT-79-R1",
+  "script": "correctness-nit-79-r1.sh",
+  "fixture": "probes/fixtures/correctness-nit-79-r1/fail/page.go",
+  "registry": "registry-correctness-nit-79-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-NIT-79-R1 -registry registry-correctness-nit-79-r1.json -> internal/server/profilesettings.go:168: page Title set from an untranslated literal (exit 1, 1 violation)",
+    "read": [
+      "internal/server/profilesettings.go:168 Title: \"Profile\"",
+      "internal/server/sessions.go:137 Title: \"Sessions — archive\"",
+      "internal/server/templates/layout.html:7 <title>{{.Title}}</title>",
+      "internal/server/i18n.go:108 \"Profile\": \"Profil\"; :24 \"archive\": \"Archiv\"",
+      "internal/server/proposals.go:186 and sessions.go:172 pass titles through translate"
+    ],
+    "validity_note": "Direct interpreter run over the fixture was denied by tool policy (Bash(/bin/bash *)); acdsl -root on the fixture dir refused (no git repo)."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-nit-79-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-nit-79-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-correctness-nit-79-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-nit-79-r1/fail/page.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-nit-79-r1/files.txt"
+  ]
+}

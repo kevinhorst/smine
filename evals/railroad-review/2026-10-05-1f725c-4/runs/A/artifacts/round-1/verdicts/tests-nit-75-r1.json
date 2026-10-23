@@ -1,0 +1,18 @@
+{
+  "finding_id": "tests-NIT-75-r1",
+  "verdict": "confirmed",
+  "reason": "Rewriting main.go:248 `id.ClaudeHome == claudeHome && id.CodexHome == codexHome` to `||` keeps all five TestStartPeek cases passing; the only mismatch case differs in both homes.",
+  "probe": "manual: mutation test (command with actual vs expected output)",
+  "evidence": {
+    "probe_run": "go -C <wt> test ./cmd/configserver/ -run TestStartPeek -count=1 -v with main.go:248 && -> || : '--- PASS: TestStartPeek/home-mismatch-refuses' and all 5 subtests PASS (expected: a mismatch case with one equal home to fail)",
+    "read": [
+      "cmd/configserver/main.go:245-258 — startPeek reuse requires both homes equal",
+      "cmd/configserver/main_test.go:49-69 — identity-match-reuses (both equal) and home-mismatch-refuses (both differ) are the only identity cases"
+    ],
+    "unprobeable_why": "claim is about test-suite sensitivity to a mutation; no registry verifier expresses it and a script verifier would have to run go test",
+    "restore": "git diff --stat -- cmd/configserver/main.go empty after restoring"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/tests-nit-75-r1.json"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-BLK-53-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl check RED on internal/server/templates/repos_index.html:7 — the add form (both audiences) includes _repo_path.html whose 'Choose folder…', 'picker failed' and 'chosen:' literals bypass t and have no germanCatalog entry; effect lowered to degraded because spec-5's enumerated catalog list (line 264) omits these strings, so the requirement rests only on C5's general 't-localized labels' wording and the impact is a mixed-language button, not wrong behavior.",
+  "probe": "PROBE-CORRECTNESS-BLK-53-R1",
+  "script": "correctness-blk-53-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-53-r1/fail/repos_index.html",
+  "registry": "registry-correctness-blk-53-r1.json",
+  "effect": "degraded",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-BLK-53-R1 -registry probes/registry-correctness-blk-53-r1.json -root <worktree> -> exit 1: internal/server/templates/repos_index.html:7: add form includes _repo_path.html whose literal >Choose folder…< is not wrapped in t (plus >picker failed< and >chosen: <); 3 violation(s)",
+    "read": [
+      "internal/server/templates/_repo_path.html:5 `hx-swap=\"outerHTML\">Choose folder…</button>`, :6 `picker failed`, :7 `chosen: <code>` — raw literals at 1f725ce",
+      "internal/server/templates/repos_index.html:7 `{{template \"_repo_path.html\" .AddPath}}` inside the add form rendered for both audiences; neighbouring labels use t",
+      "internal/server/i18n.go: grep for 'Choose folder|chosen|picker failed' finds no catalog key",
+      "spec-5-change-nondev-automation.md:117 C5 'add/remove forms kept with t-localized labels'; :264 enumerated catalog list names Projects/add/remove/Add/Remove/label/confirm/empty-state only — no picker strings"
+    ],
+    "validity": "Direct interpreter run of the script over scratch/correctness-blk-53-r1/files.txt was denied by tool policy twice (/bin/bash, bash); the fixture is in place but its self-check could not be executed. The real run went RED with the expected message on the claimed file, so the probe demonstrably fires; no GREEN verdict depends on the unexecuted self-check."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-blk-53-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-blk-53-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-blk-53-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-53-r1/fail/repos_index.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-53-r1/fail/_repo_path.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-blk-53-r1/files.txt"
+  ]
+}

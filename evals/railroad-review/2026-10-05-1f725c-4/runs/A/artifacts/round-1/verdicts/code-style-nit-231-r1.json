@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-231-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at cmd/configserver/main.go:128 — the diff turned the bare startPeek call into `if !startPeek(...)` under `if *peekPort != 0` -> `if *peekStart`, a third control level where RULE-GOLANG-NEST-001 writes new code to 2.",
+  "probe": "PROBE-CODE-STYLE-NIT-231-R1",
+  "script": "code-style-nit-231-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-231-r1-fail.go",
+  "registry": "registry-code-style-nit-231-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-231-R1 -registry registry-code-style-nit-231-r1.json -> exit 1: cmd/configserver/main.go:128: startPeek conditional nested at control level 3",
+    "read": [
+      "cmd/configserver/main.go:122 if *peekPort != 0 { / :127 if *peekStart { / :128 if !startPeek(ctx, ...) {",
+      "diff: -startPeek(ctx, *peekBin, *peekPort, *peekControlPort) +if !startPeek(...) { endpoint = \"\"; dashboardURL = \"\" }",
+      "context/rules/go.md:358 A function body nests at most 4 levels of control flow; new code is written to 2."
+    ],
+    "validity": "Direct /bin/bash run denied by tool policy; the script's exact grep -nE pattern over the fail fixture hit line 6 (\\t\\t\\tif !startPeek(ctx, bin) {).",
+    "notes": "Known NIT-97 (one-line 7-arg call at the same line) and NIT-95 (else-if in startPeek) are different substance."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-231-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-231-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-code-style-nit-231-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-231-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/code-style-nit-231-r1/files.txt"
+  ]
+}

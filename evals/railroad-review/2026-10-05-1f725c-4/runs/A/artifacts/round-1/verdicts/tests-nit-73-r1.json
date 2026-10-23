@@ -1,0 +1,19 @@
+{
+  "finding_id": "tests-NIT-73-r1",
+  "verdict": "confirmed",
+  "reason": "Flipping the modified-class bindsVerifier argument at policy.go:373 from true to false keeps go test ./internal/acdsl/... green; policy_test.go/dist_test.go are the only tests touching CheckPolicy/policy.json and none re-binds an editable-scope rule's verifier.",
+  "probe": "manual: mutation test (command with actual vs expected output)",
+  "evidence": {
+    "probe_run": "go -C <wt> test ./internal/acdsl/... -count=1 with policy.go:373 classViolations(..., \"modified\", false) -> 'ok github.com/kevinhorst/smine/internal/acdsl 10.165s' (expected: a failure if any test pinned the gated verifier check on modified rules)",
+    "read": [
+      "internal/acdsl/policy.go:82-109 — classViolations: editable-scope continue at 100-103 precedes the bindsVerifier allowlist check at 104",
+      "internal/acdsl/policy.go:372-374 — added/modified pass true, removed false",
+      "git grep -l -e CheckPolicy -e verifier_allowlist -- '*_test.go' -> internal/acdsl/policy_test.go only; 'policy.json'/'sanctioned set' also in internal/acdsl/dist_test.go (same package, covered by the run)"
+    ],
+    "unprobeable_why": "claim is about test-suite sensitivity to a mutation; no registry verifier expresses it and a script verifier would have to run go test",
+    "restore": "git diff --stat -- internal/acdsl/policy.go empty after restoring"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/tests-nit-73-r1.json"
+  ]
+}

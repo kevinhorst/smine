@@ -1,0 +1,278 @@
+{
+  "baseline": "claude-opus-5-5[1m]-medium-no-serena",
+  "comparisons": [
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 0.25,
+      "df": 5.879999999999999,
+      "metricId": "smoke_pass",
+      "note": "",
+      "significant": false,
+      "welchT": 0.6546536707079772
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 0.25,
+      "df": 5.879999999999999,
+      "metricId": "check_pass",
+      "note": "",
+      "significant": false,
+      "welchT": 0.6546536707079772
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 340.5,
+      "df": 5.2935060869559,
+      "metricId": "wall_seconds",
+      "note": "",
+      "significant": true,
+      "welchT": 2.6459624209148407
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 340.25,
+      "df": 5.5002552232171755,
+      "metricId": "active_seconds",
+      "note": "",
+      "significant": true,
+      "welchT": 2.60719198610602
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 8684.75,
+      "df": 5.335291053042513,
+      "metricId": "output_tokens",
+      "note": "",
+      "significant": true,
+      "welchT": 2.6120124690762316
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 3.3681609500000005,
+      "df": 3.2262805023520986,
+      "metricId": "cost_usd",
+      "note": "",
+      "significant": false,
+      "welchT": 2.1632772228740826
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 2.25,
+      "df": 5.347218628719276,
+      "metricId": "permission_denials",
+      "note": "",
+      "significant": false,
+      "welchT": 1.7110554764160903
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": -6.954619454619461,
+      "df": 5.894527249167556,
+      "metricId": "step_miss_pct",
+      "note": "",
+      "significant": false,
+      "welchT": -1.0355260794480796
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": -0.75,
+      "df": 4.972602739726026,
+      "metricId": "defects_major",
+      "note": "",
+      "significant": false,
+      "welchT": -1.5666989036012806
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": -2,
+      "df": 5.685245901639344,
+      "metricId": "quality_rank",
+      "note": "",
+      "significant": false,
+      "welchT": -1.1881770515720091
+    }
+  ],
+  "groups": [
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 0.5,
+      "metricId": "smoke_pass",
+      "n": 4,
+      "note": "",
+      "stddev": 0.5773502691896257,
+      "variance": 0.3333333333333333
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 0.5,
+      "metricId": "check_pass",
+      "n": 4,
+      "note": "",
+      "stddev": 0.5773502691896257,
+      "variance": 0.3333333333333333
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1699.5,
+      "metricId": "wall_seconds",
+      "n": 4,
+      "note": "",
+      "stddev": 212.65073085539427,
+      "variance": 45220.333333333336
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1090.75,
+      "metricId": "active_seconds",
+      "n": 4,
+      "note": "",
+      "stddev": 210.547500578848,
+      "variance": 44330.25
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 28025,
+      "metricId": "output_tokens",
+      "n": 4,
+      "note": "",
+      "stddev": 5469.416726976774,
+      "variance": 29914519.333333332
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1.34811055,
+      "metricId": "cost_usd",
+      "n": 4,
+      "note": "",
+      "stddev": 0.5940433439367729,
+      "variance": 0.35288749447558315
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 2,
+      "metricId": "permission_denials",
+      "n": 4,
+      "note": "",
+      "stddev": 2.160246899469287,
+      "variance": 4.666666666666667
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 28.571428571428577,
+      "metricId": "step_miss_pct",
+      "n": 4,
+      "note": "",
+      "stddev": 10.113210267757665,
+      "variance": 102.27702191987906
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1,
+      "metricId": "defects_major",
+      "n": 4,
+      "note": "",
+      "stddev": 0.816496580927726,
+      "variance": 0.6666666666666666
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 5.5,
+      "metricId": "quality_rank",
+      "n": 4,
+      "note": "",
+      "stddev": 2.0816659994661326,
+      "variance": 4.333333333333333
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 0.75,
+      "metricId": "smoke_pass",
+      "n": 4,
+      "note": "",
+      "stddev": 0.5,
+      "variance": 0.25
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 0.75,
+      "metricId": "check_pass",
+      "n": 4,
+      "note": "",
+      "stddev": 0.5,
+      "variance": 0.25
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 2040,
+      "metricId": "wall_seconds",
+      "n": 4,
+      "note": "",
+      "stddev": 144.98505670125687,
+      "variance": 21020.666666666668
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 1431,
+      "metricId": "active_seconds",
+      "n": 4,
+      "note": "",
+      "stddev": 154.25736071038338,
+      "variance": 23795.333333333332
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 36709.75,
+      "metricId": "output_tokens",
+      "n": 4,
+      "note": "",
+      "stddev": 3782.331412854599,
+      "variance": 14306030.916666666
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 4.7162715,
+      "metricId": "cost_usd",
+      "n": 4,
+      "note": "",
+      "stddev": 3.056755359034669,
+      "variance": 9.343753324987167
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 4.25,
+      "metricId": "permission_denials",
+      "n": 4,
+      "note": "",
+      "stddev": 1.5,
+      "variance": 2.25
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 21.616809116809115,
+      "metricId": "step_miss_pct",
+      "n": 4,
+      "note": "",
+      "stddev": 8.839851068493594,
+      "variance": 78.14296691314733
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 0.25,
+      "metricId": "defects_major",
+      "n": 4,
+      "note": "",
+      "stddev": 0.5,
+      "variance": 0.25
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 3.5,
+      "metricId": "quality_rank",
+      "n": 4,
+      "note": "",
+      "stddev": 2.6457513110645907,
+      "variance": 7
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

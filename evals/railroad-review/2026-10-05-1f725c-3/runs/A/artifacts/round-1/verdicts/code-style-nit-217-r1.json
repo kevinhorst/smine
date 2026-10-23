@@ -1,0 +1,20 @@
+{
+  "finding_id": "code-style-NIT-217-r1",
+  "verdict": "confirmed",
+  "reason": "smine-permissions SKILL.md:74 Rules bullet restates the step-2 derivation constraints of L45-46 (bare Bash(*), whole-server mcp__server only when every tool granted); probe RED on L74.",
+  "probe": "PROBE-CODE-STYLE-NIT-217-R1",
+  "fixture": "probes/fixtures/code-style-nit-217-r1/SKILL.md",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-217-R1 -> exit 1: skills/smine/smine-permissions/SKILL.md:74: literal \"unless every tool of it was granted\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-217-r1/files.txt literal=\"unless every tool of it was granted\" allowed=^$ -> exit 1 on fixture SKILL.md:7",
+    "read": [
+      "smine-permissions/SKILL.md (new file in diff) L45 'never a bare `Bash(*)`, never `Bash(<program> *)` when only one subcommand was ever granted'; L46 'a whole-server `mcp__server` only when every tool of that server was granted'; L74 'never a bare `Bash(*)` or a whole-server `mcp__server` unless every tool of it was granted'",
+      "known.json: smine-permissions rows (NIT-131 version, NIT-132 person name, MIN-42 schema anchor, MIN-4-r2 exec-wrapper, INF-50 spec) — none on this duplication"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-217-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-217-r1/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-217-r1/files.txt"
+  ]
+}

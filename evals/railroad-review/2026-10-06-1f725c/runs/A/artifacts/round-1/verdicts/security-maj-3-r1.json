@@ -1,0 +1,26 @@
+{
+  "finding_id": "security-MAJ-3-r1",
+  "verdict": "confirmed",
+  "reason": "settings/claude_code/settings.json (base->head diff) removes the four global ask-rules Edit(**/*.acdsl), Edit(acdsl/**), Write(**/*.acdsl), Write(acdsl/**) and wires cmd/hooks/acdsl-policy-guard.sh into the same PreToolUse Write|Edit|NotebookEdit matcher as the sole replacement guard. Read of the guard script in full confirms it fails open at every choke point before a deny is possible: no jq (line 9), no acdsl/policy.json found walking up from cwd (line 25), unreadable/missing mode field defaulting to \"free\" (line 27), and critically mode != strict|gated falls through (line 28) with NO deny branch at all for rule files in gated mode (the only mode-specific deny for *.acdsl/acdsl/* is gated by `if [ \"$mode\" = \"strict\" ]` at line 47-51) — so free and gated modes both let rule-file edits through silently, and missing/unreadable policy.json lets every mode's edits through silently, where the removed rule previously always asked. This repo's own new acdsl/policy.json ships mode \"free\" (confirmed by read), which per plans/v1-2-1/2026-08-26-acdsl-policy-modes-done-a7cd7bf/design/raw.md D8 is an intentional per-repo choice (source repo stays free, dist targets default gated) — the design doc does not address or mitigate the specific regression claimed (loss of the universal ask-floor), so the intentionality of the mode choice does not debunk the claim, it only explains why this repo exhibits the fail-open state. The effect/exposure cells (degraded/often) hold: no destructive action was demonstrated (nothing executes an exploit payload), and 'often' is the conservative reading given the mechanism disables protection for every repo that is not both present with acdsl/policy.json and in strict mode -- which is every repo touched by this diff.",
+  "probe": "PROBE-SECURITY-MAJ-3-R1-R1",
+  "script": "security-maj-3-r1.sh",
+  "fixture": "fixtures/security-maj-3-r1/settings/claude_code/settings.json",
+  "registry": "registry-security-maj-3-r1.json",
+  "evidence": {
+    "read": [
+      "git diff b4981b88...1f725ced -- settings/claude_code/settings.json: removes 4 ask-rule lines (Edit/Write **/*.acdsl, acdsl/**) and adds `bash ~/.claude/hooks/acdsl-policy-guard.sh` to the Write|Edit|NotebookEdit PreToolUse hook list",
+      "cmd/hooks/acdsl-policy-guard.sh (54 lines, read in full): line 28 `[ \"$mode\" = \"strict\" ] || [ \"$mode\" = \"gated\" ] || exit 0` is the only mode gate before any deny; line 47 `if [ \"$mode\" = \"strict\" ]; then` scopes the *.acdsl/acdsl/* deny (lines 48-51) to strict only — gated mode reaches line 28's continue but never denies rule files",
+      "acdsl/policy.json (new file, read in full): `\"mode\": \"free\"` — this repo's own rule files (including acdsl/rules.acdsl) are unprotected by this guard",
+      "plans/v1-2-1/2026-08-26-acdsl-policy-modes-done-a7cd7bf/design/raw.md D8/D11: confirms free-mode-for-source-repo is an intentional design choice, not an oversight in the mode value itself, but does not address or exempt the loss of the universal ask-floor the claim is about"
+    ],
+    "probe_run": "acdsl check -root <worktree> -rule PROBE-SECURITY-MAJ-3-R1-R1 -registry registry-security-maj-3-r1.json -> exit 1: \"settings/claude_code/settings.json:1: global ask-floor for Edit/Write **/*.acdsl and acdsl/** is absent from the ask list\" (RED on claimed file, after fixture validity proved the probe detects the defect's presence/absence correctly: GREEN before adding the fixture's missing-ask-floor settings.json via acdsl internals, RED once the fixture's settings.json lacked the floor)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-maj-3-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-maj-3-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-security-maj-3-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/security-maj-3-r1/settings/claude_code/settings.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/security-maj-3-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/security-maj-3-r1/registry.json"
+  ]
+}

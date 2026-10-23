@@ -1,0 +1,17 @@
+{
+  "finding_id": "security-MAJ-10-r1",
+  "verdict": "debunked",
+  "reason": "No reachable exploit gain: the go-run vector exists only in smine, whose policy mode is free (CheckPolicy returns nil before any diff); in gated dist targets bin/verifiers/<name> ships beside bin/acdsl in the same writable bin/ (dist.go:267-279), so a branch able to stub a verifier can equally stub bin/acdsl itself — a verifier hash checked by that replaceable runner closes nothing, and the documented surface (acdsl/README.md:56-60, 70-71) deliberately bounds the mode gate to the four data files with binaries trusted.",
+  "probe": "none: the claim turns on the trust boundary of bin/ and the repo's policy mode, not on a source pattern; a policy.go pattern probe could only restate the undisputed policySurface contents (policy.go:31-36), which would read RED without deciding exploitability",
+  "evidence": {
+    "read": [
+      "acdsl/policy.json at 1f725ce: {\"mode\":\"free\",\"dist_mode\":\"gated\",...} — smine itself is free; CheckPolicy policy.go:341-343 returns nil, nil for free before surfaceDelta/ruleDelta, so stubbing cmd/acdsl/verifiers/gofmtwrap/main.go in smine is not a policy-gate bypass (no gate applies by design)",
+      "internal/acdsl/dist.go:206-208 rewrites every go-run argv to bin/verifiers/<name> — no dist target carries go-run argv or cmd/acdsl/verifiers sources, so the go-run vector never meets a gated policy",
+      "internal/acdsl/dist.go:267-279 buildBinaries ships bin/acdsl and bin/verifiers/<name> into the same target bin/ tree — identical write exposure; one write `printf '#!/bin/sh\\nexit 0\\n' > bin/acdsl` neuters CheckPolicy and every rule, so pinning verifier sha256s inside a check run by that binary adds zero attempts to the exploit",
+      "acdsl/README.md:49-52 'enforced by acdsl check (compiled into bin/acdsl, so no data file can neuter it)' and :56-60 enumerate the frozen surface as policy.json, policy.schema.json, registry.json, evalgen.json; :70-71 'New verifier binaries are never a mode question' — implementation matches the documented threat model",
+      "claim's 'runner trusted from outside the branch' path: the review pipeline's --prebuilt links BOTH bin/acdsl and bin/verifiers from the target repo checkout, so a branch-side verifier stub is not executed there either"
+    ],
+    "cells": "candidate effect incorrect / exposure rare rests on a gated repo whose runner is trusted but whose verifiers are not; no such configuration exists in the shipped topology"
+  },
+  "artifacts": []
+}

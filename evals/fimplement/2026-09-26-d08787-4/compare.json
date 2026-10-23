@@ -1,0 +1,43 @@
+{
+  "ranking": ["D", "B", "C", "A"],
+  "arms": [
+    {
+      "label": "D",
+      "summary": "Complete, reference-equivalent implementation of all plan sections (dry-run step plan, transparent refusal, -close trigger, isAwaitingAi, wiring, skill Check step, fact) with State.afterClose ordered alphabetically before afterDelivery and both deviations recorded in the plan Changelog.",
+      "defects": []
+    },
+    {
+      "label": "B",
+      "summary": "Complete, reference-equivalent implementation with State.afterClose correctly ordered alphabetically before afterDelivery, but the deviation from the plan's placement is not recorded in the plan Changelog.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:677",
+          "claim": "Plan Changelog not updated: the afterClose placement deviation (alphabetical instead of the plan's after-afterDelivery location) is undocumented"
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "summary": "Complete, reference-equivalent implementation with implementation notes appended to the plan Changelog, but State.afterClose follows the plan's non-alphabetical placement after afterDelivery.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:40",
+          "claim": "State.afterClose placed after afterDelivery per the plan sketch; go.md orders private methods alphabetically, so afterClose belongs before afterDelivery"
+        }
+      ]
+    },
+    {
+      "label": "A",
+      "summary": "Complete, reference-equivalent implementation, but State.afterClose follows the plan's non-alphabetical placement and the plan Changelog carries no implementation notes.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:40",
+          "claim": "State.afterClose placed after afterDelivery per the plan sketch; go.md orders private methods alphabetically, so afterClose belongs before afterDelivery"
+        }
+      ]
+    }
+  ]
+}

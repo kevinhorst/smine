@@ -1,0 +1,65 @@
+{
+  "allowedTools": "Edit, Read, Skill(railroad-review), ToolSearch, Workflow, Write, Bash(*/bin/acdsl check *), Bash(*/bin/verifiers/*), Bash(./bin/acdsl check *), Bash(bin/acdsl check *), Bash(cp *), Bash(git add*), Bash(git apply *), Bash(git branch*), Bash(git checkout -B *), Bash(git diff*), Bash(git format-patch *), Bash(git init *), Bash(git log*), Bash(git merge-base*), Bash(git rev-list*), Bash(git rev-parse*), Bash(git show *), Bash(git status*), Bash(git worktree add*), Bash(git worktree list*), Bash(git worktree remove*), Bash(go * build *), Bash(go * test *), Bash(go * vet *), Bash(go run *), Bash(go tool cover *), Bash(jq *), Bash(make *), Bash(mkdir *), Bash(mv *), Bash(smine-rules base *), Bash(smine-rules buildtest *), Bash(smine-rules cleanup *), Bash(smine-rules entries *), Bash(smine-rules lanes *), Bash(smine-rules ledger *), Bash(smine-rules pairs *), Bash(smine-rules present *), Bash(smine-rules probe-replay *), Bash(smine-rules provision *), Bash(smine-rules prune *), Bash(smine-rules reset-round *), Bash(smine-rules snapshot *), Bash(smine-rules walk *), Workflow, Skill",
+  "auth": "token Max-Private",
+  "candidateCount": 59,
+  "checkExit": null,
+  "costUsd": 216.85966880000072,
+  "endedAt": "2026-10-05T01:48:42.59225+02:00",
+  "exitStatus": 0,
+  "invalidReasons": null,
+  "isError": false,
+  "layer": "eval",
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "connected"
+    }
+  ],
+  "mode": "nightly",
+  "model": "claude-opus-5-5",
+  "outputTokens": 1813778,
+  "permissionDenials": 136,
+  "resultText": "Round 1 recommends CONDITIONAL. The reviewers confirmed 59 findings: 2 blockers, 3 majors, 6 minors, the rest nits and one info. Nothing was fixed, because `autofix-level: none` sends every finding to the ledger as open. One round was the cap, so the run is over. It was not clean, since there are ne…",
+  "sessionId": "ad9914dd-d4b9-47fc-ae15-1145269d11c7",
+  "skill": "railroad-review",
+  "skillVersion": "24.0.1",
+  "startedAt": "2026-10-05T01:00:51.071449+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 40,
+      "errors": 0,
+      "name": "Bash"
+    },
+    {
+      "calls": 4,
+      "errors": 0,
+      "name": "Read"
+    },
+    {
+      "calls": 3,
+      "errors": 0,
+      "name": "Workflow"
+    },
+    {
+      "calls": 2,
+      "errors": 0,
+      "name": "Write"
+    }
+  ],
+  "toolErrors": 0,
+  "unparsedLines": 0
+}

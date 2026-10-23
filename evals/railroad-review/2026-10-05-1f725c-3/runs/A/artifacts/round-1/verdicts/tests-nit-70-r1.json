@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-NIT-70-r1",
+  "verdict": "confirmed",
+  "reason": "The only truncated-cache fixture (test line 606) writes 'garbage', whose first line already fails the key clause at script line 269, so the wc -l -eq 5 clause at line 270 never decides any test outcome; no other test (test_rm_safety.sh, Go tests stub the script) touches the cache.",
+  "probe": "none: probe authored with fail/pass fixtures, but both its validity run (/bin/bash <script> <list>) and the verdict run (<worktree>/bin/acdsl check) are denied by the tool policy and the Makefile has no acdsl target",
+  "evidence": {
+    "read": [
+      "grep -nE 'cache_file|update-ref refs/remotes|head -[0-9]' cmd/tests/test_print_agent_worktrees_status.sh -> 606: printf 'garbage\\n' > \"$cache_file\" is the only write to the cache row; no head -N of the cache file anywhere (expected for coverage: a short row that starts with the valid key)",
+      "cmd/worktrees/print_agent_worktrees_status.sh:268-270: hit = NO_CACHE!=1 && -f && head -1 == cache_key && wc -l == 5; with first line 'garbage' clause 3 is short-circuited",
+      "grep -rln 'agent-status-cache|print_agent_worktrees_status' cmd internal -> only test_rm_safety.sh (detail mode, no cache) and internal/server/repos_test.go (stubs the script)"
+    ],
+    "probe_attempts": [
+      "/bin/bash probes/tests-nit-70-r1.sh scratch/tests-nit-70-r1/fail.list -> tool-policy denied (no Bash(/bin/bash *) rule)",
+      "<worktree>/bin/acdsl -h -> tool-policy denied; Makefile has no acdsl target, so make -C <wt> acdsl is unavailable"
+    ],
+    "cells": "effect debt / exposure rare agreed: the guard only matters for an externally truncated row that keeps the key line (writes are tmp+mv atomic)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-70-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-70-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-70-r1/fail/test_cache.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-70-r1/pass/test_cache.sh"
+  ]
+}

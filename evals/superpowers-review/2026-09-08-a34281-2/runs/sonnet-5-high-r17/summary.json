@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/server/repos.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The worktree filter mechanism was reworked from server-side query-param filtering to a client-side JS mechanism without being in either plan that touches these files, with a misattributed (D6) decision ID and no screenshot or ui: Changes line despite the plan claiming the UI was untouched.",
+      "fix": "Either retroactively document this as a decision in the repo-cache-reload plan (Changelog row, screenshot, ui: line) with the actual rationale, or confirm with the author whether this was an intentional scope addition."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "MAJOR",
+      "claim": "When policyBase fails to resolve, CheckPolicy's fallback trusts the attacker-editable working-tree policy.Mode, so an agent that forges mode to \"free\" via a route the hook misses and makes base resolution fail gets a silent pass instead of D10's mandated hard error.",
+      "fix": "When policyBase fails, treat any declared mode (a policy.json present on disk at all) as requiring the hard error unless there truly is no policy file, or resolve the mode from a source that isn't itself the protected surface (e.g., require base_ref to be set for gated/strict repos and fail if it's unset AND unresolvable)."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The entire feature set landed in one multi-concern commit (22f663c) touching every layer at once, breaking the repo's per-package one-plan-one-commit discipline and materially reducing review confidence, leaving several plan dirs unverified against the diff.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/repos/registry.go",
+      "line": 126,
+      "severity": "MINOR",
+      "claim": "An inline composite literal is passed as a call argument in save's r.apply call, violating RULE-GOLANG-CALL-005 which requires binding it to a named variable first.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/repos.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "handleRepoWorktreeStatus's timing log now folds the fingerprint-check cost into the status timing bucket, so on a cache hit status=Nms means fingerprint-check time rather than scan time — an intentional semantics change readers of historical timing logs may not know about.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/acdsl/dist.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "writePolicy signals \"nothing shipped\" by silently returning an empty string that callers check with if distMode != \"\", which is an indirect signaling pattern compared to a named sentinel or a second boolean return.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

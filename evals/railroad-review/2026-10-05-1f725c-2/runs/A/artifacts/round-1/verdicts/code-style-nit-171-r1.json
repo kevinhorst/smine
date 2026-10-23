@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-171-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: bootstrap.go:90 wraps the cmd.Start error as \"Failed to start claude\" while line 82 starts bash running cmd/bootstrap/run.sh; claude is resolved only inside the wrapper (doc comment 39-43).",
+  "probe": "PROBE-CODE-STYLE-NIT-171-R1",
+  "script": "code-style-nit-171-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-171-r1/bootstrap.go",
+  "registry": "registry-code-style-nit-171-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-171-R1 -registry probes/registry-code-style-nit-171-r1.json -root <worktree> -> exit 1: internal/server/bootstrap.go:90: cmd.Start of the bash bootstrap wrapper reported as \"Failed to start claude\"; 1 violation(s)",
+    "read": [
+      "internal/server/bootstrap.go:82 exec.CommandContext(runCtx, bashPath, \"-c\", script, \"bash\", filepath.Join(\"cmd\", \"bootstrap\", \"run.sh\"))",
+      "internal/server/bootstrap.go:90 fmt.Errorf(\"handleWelcomeBootstrap: Failed to start claude: %w\", err)",
+      "known.json: no bootstrap.go entry about the start error message (BLK-5 log path, NIT-13/14/21/25/29/43 are other claims)"
+    ],
+    "validity": "Direct interpreter run of the script over scratch/code-style-nit-171-r1/files.txt was denied by tool policy (candidate Bash(/bin/bash *)); fixture is in place. The real run went RED with the expected message on the claimed file."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-171-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-171-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-171-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-171-r1/bootstrap.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-171-r1/files.txt"
+  ]
+}

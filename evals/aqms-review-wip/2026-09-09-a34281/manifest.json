@@ -1,0 +1,55 @@
+{
+  "startedAt": "2026-09-09T09:43:03Z",
+  "arms": {
+    "models": ["claude-sonnet-5[1m]"],
+    "efforts": ["high"],
+    "replicas": 1,
+    "parallel": 1
+  },
+  "run": {
+    "roundCap": 1,
+    "directions": null,
+    "desktop": {
+      "mode": "single-pass",
+      "render": "body"
+    },
+    "armBudgetUsd": 45,
+    "armTimeoutS": 7200,
+    "windowBudgetUsd": 150,
+    "permissionMode": null,
+    "armTools": "Read, Write, Agent, Glob, Grep, Bash",
+    "extraPrompt": "",
+    "promptTemplateSha256": "da84c6589105d9935360503778b995cc1639d8debe399a2041658da856e84afd",
+    "note": "desktop per-arm dispatcher route (parallel 1, smoke round): armBudgetUsd/armTimeoutS/windowBudgetUsd/permissionMode accepted-not-enforceable; reviewer prompt = wip-review.md body verbatim + dispatch notes (run.desktop.render body); judge via Agent tool, effort not settable there (session-inherited)"
+  },
+  "seed": null,
+  "judge": {
+    "budgetUsd": 30,
+    "timeoutS": 3600
+  },
+  "range": {
+    "baseSha": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+    "headSha": "a342811b4cf7b8bb2b54359ced6c786d3b5f349b",
+    "contextOverlay": "smine-1.1.4-1.2.1.overlay.patch"
+  },
+  "golden": {
+    "file": "../railroad-review/eval/golden/smine-1.1.4-1.2.1.v6.json",
+    "goldenVersion": 6,
+    "scope": "full",
+    "total": 252
+  },
+  "context": {
+    "knob": true,
+    "freeze": {
+      "indexSha256": "f0b43c8555d7777e688305626d81656879b2d026658d98d99095b881e8e8b5a3",
+      "resolvedCount": 163
+    },
+    "freezeDrift": null
+  },
+  "harness": {
+    "commit": "74c36e8c8dc9b2f12bed5e2e74264b2c1efc2d55",
+    "claudeVersion": "2.1.236 (Claude Code)"
+  },
+  "finishedAt": "2026-09-09T10:02:42Z",
+  "runtimeS": 1179
+}

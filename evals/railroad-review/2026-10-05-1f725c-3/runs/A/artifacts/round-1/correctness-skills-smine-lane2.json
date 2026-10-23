@@ -1,0 +1,33 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "skills-smine",
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "aborted": false,
+  "notes": "All 24 manifest files read in full; no partners. Drafted claims (--since/--last both forwarded and both applied, session-mine.js never forwarding --repos, Trim skipping proposals/permissions.json, Drift glob matching analyzed-sessions.txt, orchestrate duty-5 additionalDirectories deviation from correctness-49) all match open known.json rows by file and substance and were suppressed. Cross-chunk (not chased): whether the nightly run.sh actually appends registry paths to additionalDirectories before /smine-orchestrate, which duty 5 of smine-orchestrate now assumes instead of writing them itself as correctness-49 states; peek MCP server naming differs across manifests (mcp__Peek_MCP__ in smine-batch/smine-style vs mcp__peek-mcp__ in smine) - settings.json allows mcp__Peek_MCP, so it was not provable from this chunk.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": []},
+    {"group": "spec-2-user_stories", "hits": []},
+    {"group": "spec-3-raw", "hits": []},
+    {"group": "spec-3-raw (part 2)", "hits": []},
+    {"group": "spec-4-change-englishness", "hits": []},
+    {"group": "spec-5-change-nondev-automation", "hits": []},
+    {"group": "spec-5-change-nondev-automation (part 2)", "hits": []},
+    {"group": "spec-6-raw", "hits": []},
+    {"group": "spec-7-raw", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile (part 2)", "hits": []},
+    {"group": "spec-9-change-headless-bootstrap", "hits": []},
+    {"group": "spec-9-change-headless-bootstrap (part 2)", "hits": []},
+    {"group": "spec-10-change-viewer-fixes", "hits": []},
+    {"group": "spec-11-change-repos-routines-ui", "hits": []},
+    {"group": "spec-12-raw", "hits": []},
+    {"group": "spec-13-change-multi-profile-ports", "hits": []},
+    {"group": "spec-14-change-repo-cache", "hits": []}
+  ],
+  "findings": [],
+  "walk_complete": true
+}

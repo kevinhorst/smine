@@ -1,0 +1,21 @@
+{
+  "finding_id": "code-style-NIT-224-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on policy.go:211 resolveErr, 248 readErr, 251 showErr, 307 readErr, 330 baseErr; each rename to err compiles (if-init or loop-body scopes introduce new non-error names; 330 needs 337 switched to `=`), so RULE-GOLANG-ERR-003 is violated with no scoping excuse.",
+  "probe": "PROBE-CODE-STYLE-NIT-224-R1",
+  "script": "literal-owner (repo registry verifier, literal=\"Err := \" allowed=\"^NO-OWNER$\")",
+  "fixture": "probes/fixtures/code-style-nit-224-r1-fail.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-NIT-224-R1 -> exit 1: internal/acdsl/policy.go:211,248,251,307,330: literal \"Err := \" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-224-r1/files.txt literal=\"Err := \" allowed=^NO-OWNER$ -> exit 1 on fixtures/code-style-nit-224-r1-fail.go:6",
+    "read": [
+      "internal/acdsl/policy.go:211 if resolved, resolveErr := shellGitAbbrevRef(ctx, root, candidate); resolveErr == nil {",
+      "internal/acdsl/policy.go:330 base, isBoundary, baseErr := policyBase(ctx, root, policy) / 337 policy, err := basePolicy(...)",
+      "context/rules/go.md:499-502 RULE-GOLANG-ERR-003: the error variable MUST be named err; shadow, do not introduce xErr"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-224-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-224-r1-fail.go"
+  ]
+}

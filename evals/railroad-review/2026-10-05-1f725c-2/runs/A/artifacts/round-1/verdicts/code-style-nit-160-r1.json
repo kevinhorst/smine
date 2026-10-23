@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-160-r1",
+  "verdict": "confirmed",
+  "reason": "The Windows SyncAll doc comment (L135-139) still says 'unregistered -> register+enable' with no exception. The diff-added branch at L157-160 skips an unregistered (NotFound) routine that carries the default-disabled marker, so the comment is now wrong for that arm. The darwin twin's comment was updated for the same change; this one was not.",
+  "probe": "PROBE-CODE-STYLE-NIT-160-R1",
+  "script": "code-style-nit-160-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-160-r1/fail/sched_windows.go",
+  "registry": "registry-code-style-nit-158-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-160-R1 -registry .../probes/registry-code-style-nit-158-r1.json -> exit 1: internal/routines/sched_windows.go:136: SyncAll doc comment states unregistered -> register+enable unconditionally; the body skips default-disabled routines",
+    "validity": "-FIXFAIL rule over the fail fixture copy -> exit 1 at fail/sched_windows.go:4; -FIXPASS over the amended-comment fixture -> '1 rule(s) OK'. The direct verifier run was denied by tool policy.",
+    "read": [
+      "internal/routines/sched_windows.go L135-171 at 1f725ce",
+      "git diff b4981b8 1f725ce -- internal/routines/sched_windows.go: +if state == \"NotFound\" && routine.DefaultDisabled { ... continue }, comment block untouched",
+      "known.json code-style-NIT-14-r2 (state literals at L157) is a different defect"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-160-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-160-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-158-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-160-r1/fail/sched_windows.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-160-r1/pass/sched_windows.go"
+  ]
+}

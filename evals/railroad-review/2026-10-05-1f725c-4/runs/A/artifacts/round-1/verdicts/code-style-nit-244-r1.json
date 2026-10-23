@@ -1,0 +1,21 @@
+{
+  "finding_id": "code-style-NIT-244-r1",
+  "verdict": "confirmed",
+  "reason": "L75 forbids colon forms while L47 of the same skill prescribes WebFetch(domain:<host>), and the live allowlist it copies from carries colon forms (settings/claude_code/settings.json L68-74).",
+  "probe": "manual: command output — ACDSL probe unrunnable: /bin/bash validity run and bin/acdsl denied by tool-policy, Makefile has no acdsl target",
+  "evidence": {
+    "read": [
+      "grep -n 'never colon forms|WebFetch(domain:' skills/smine/smine-permissions/SKILL.md at 1f725ce -> 47 '- Web: `WebFetch(domain:<host>)`; Skill: `Skill(<name>)`.', 75 '... (space wildcards, never colon forms).' (expected: no contradiction)",
+      "grep -n 'domain:|:*)' settings/claude_code/settings.json -> 68 Skill(update-config:*), 69-74 WebFetch(domain:...)",
+      "known.json rows for this file (MIN-42 L31, NIT-131 L5, NIT-132 L55, INF-50 L1, MIN-4-r2 L45, NIT-217 L74) do not cover the L75/L47 conflict"
+    ],
+    "attempts": [
+      "attempt 1: /bin/bash probes/code-style-nit-244-r1.sh <fixture files list> -> tool-policy denied",
+      "attempt 2: bin/acdsl / make acdsl -> denied, no acdsl make target"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-244-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-244-r1-fail.md"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "finding_id": "correctness-BLK-10-r2",
+  "verdict": "confirmed",
+  "reason": "Re-read internal/acdsl/policy.go confirms the chain exactly as claimed: policyBase() (line 195-218) sets candidates=[]string{policy.BaseRef} whenever the WORKING policy's BaseRef is non-empty, skipping the safe origin/HEAD, origin/main, main, master fallback entirely; GitMergeBase runs `git merge-base HEAD <ref>`, so BaseRef=\"HEAD\" resolves to HEAD's own SHA; CheckPolicy then calls basePolicy(ctx, root, base, policy), which reads acdsl/policy.json via `git show <base>:acdsl/policy.json` -- since base IS the current HEAD commit, this re-reads the exact same forged, attacker-committed policy.json. A built fixture (base commit mode=strict + registry.json={c}; a branch commit that both sets base_ref=\"HEAD\" and adds an \"evil\" entry to acdsl/registry.json) run through the real prebuilt acdsl binary produces zero ACDSL-POLICY diagnostics, while the identical registry.json change on a branch without the self-referencing base_ref is correctly flagged (acdsl/registry.json:1: ... differs from the policy base). isBoundary (branch != baseName) stays true throughout, so this is not the base-branch exemption -- the self-management surface check is silently vacuous for any commit whose own policy.json points base_ref at itself. effect and exposure as filed (destructive: strict/gated mode can be defeated in one commit with zero diagnostics; rare: requires the attacker to also control a base_ref value, which is plausible but not the default path) both hold.",
+  "probe": "PROBE-CORRECTNESS-BLK-10-R2",
+  "script": "correctness-blk-10-r2.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-blk-10-r2",
+  "registry": "registry-correctness-blk-10-r2.json",
+  "evidence": {
+    "read": [
+      "internal/acdsl/policy.go:195-219 (policyBase): candidates = []string{policy.BaseRef} when policy.BaseRef != \"\" -- no check that the ref is not self-referencing before it is trusted to pick the base commit.",
+      "internal/acdsl/policy.go:63-76 (basePolicy): reads acdsl/policy.json via GitShowFile(ctx, root, base, \"acdsl/policy.json\") -- whatever commit `base` names, including the working commit itself.",
+      "internal/acdsl/git.go:69-75 (GitMergeBase): runs `git merge-base HEAD <ref>` verbatim, so ref=\"HEAD\" returns HEAD's own SHA.",
+      "cmd/acdsl/main.go:122-137 (runCheck): policy := acdsl.LoadPolicy(*root) (the working/HEAD policy.json) is exactly the `policy` argument CheckPolicy receives and policyBase reads BaseRef from."
+    ],
+    "probe_run": "internal/acdsl/policy.go:195: policyBase() honors Policy.BaseRef=\"HEAD\" from the branch's own working policy.json, so GitMergeBase resolves merge-base(HEAD,HEAD)=HEAD and CheckPolicy diffs acdsl/policy.json and acdsl/registry.json against that self-chosen commit -- a real registry.json change lands with zero ACDSL-POLICY diagnostics, while the identical change without the self-referencing base_ref is correctly flagged: [PROBE-CORRECTNESS-BLK-10-R2] correctness-blk-10-r2-selfref-bypass -- policyBase() lets Policy.BaseRef (an agent-editable field in acdsl/policy.json) be set to a self-referencing ref like HEAD ... ; acdsl: 1 violation(s) across 1 rule(s)",
+    "manual_control_run": "Hand-built fixture under round-2/scratch/correctness-blk-10-r2/selfcheck: identical acdsl/registry.json surface change (adding an \"evil\" entry) committed on a branch WITHOUT base_ref override produced `acdsl/registry.json:1: policy(strict): acdsl/registry.json differs from the policy base ... [ACDSL-POLICY] ...; acdsl: 1 violation(s) across 0 rule(s)` (exit 2... actually exit 1) -- confirming the surface check works correctly absent the self-referencing base_ref, isolating the self-ref as the cause of the bypass."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-blk-10-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-correctness-blk-10-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-blk-10-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-blk-10-r2/base/acdsl/policy.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-blk-10-r2/base/acdsl/registry.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-blk-10-r2/attack/acdsl/policy.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-blk-10-r2/attack/acdsl/registry.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-blk-10-r2-r2/railroad-probes-r2.acdsl"
+  ]
+}

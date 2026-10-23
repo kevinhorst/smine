@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-175-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at remove_agent_worktrees.sh:15: the header's safe-to-lose criterion (lines 12-18, untouched by the diff) never mentions squash containment, while this diff adds squash_contained to verdict.sh (absent at base) and evaluate_branch uses it as a removal ground (test_squash_contained_branch_removed_without_force).",
+  "probe": "PROBE-CODE-STYLE-NIT-175-R1",
+  "script": "code-style-nit-175-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-175-r1/remove_agent_worktrees.sh",
+  "registry": "registry-code-style-nit-174-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-175-R1 -root <worktree> -registry probes/registry-code-style-nit-174-r1.json -> exit 1: cmd/worktrees/remove_agent_worktrees.sh:15: header safe-to-lose criterion omits the squash-containment layer (verdict.sh squash_contained) that evaluate_branch uses as a removal ground; 1 violation(s)",
+    "read": [
+      "cmd/worktrees/remove_agent_worktrees.sh:12-18 at 1f725ce: criterion lists tip ancestor / patch-present via git cherry / FROM applied-probe only; no 'squash' anywhere before set -euo pipefail",
+      "git grep squash_contained at b4981b8 -- cmd/worktrees/_lib/verdict.sh -> no match; at 1f725ce: definition :104, use in evaluate_branch :457 and :511",
+      "cmd/tests/test_remove_agent_worktrees.sh:195-221: squash-landed branch is removed without --force",
+      "print_agent_worktrees_status.sh:23-47 documents the squash layer (UNPICKED, VERDICTS squashed:n, IN stars) — sibling header updated, this one not",
+      "known.json: NIT-102-r1 is the line-68 untracked-filter pointer, a different claim"
+    ],
+    "validity": "Direct interpreter self-check denied by tool policy (Bash(/bin/bash *), Bash(bash *)); acdsl -root on the fixture dir fails (not a git repo). The real run went RED on the claimed file and line."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-175-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-175-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-175-r1/remove_agent_worktrees.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-175-r1/_lib/verdict.sh"
+  ]
+}

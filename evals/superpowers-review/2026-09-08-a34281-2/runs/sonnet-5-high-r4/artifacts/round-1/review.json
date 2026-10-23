@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy reads BaseRef and Mode from the untrusted working-tree acdsl/policy.json before establishing the authoritative base-branch policy, so an agent in a gated/strict repo can bypass enforcement by setting mode to free with an unresolvable base_ref (check returns nil, nil) or by pointing base_ref at a commit predating policy.json (basePolicy falls back to the tampered working policy).",
+      "fix": "Resolve the base from a fixed candidate order (origin/HEAD -> origin/main -> main -> master) without reading the working policy, honor a base_ref override only after it is validated against the resolved base's own policy (or drop working-tree base_ref for gated/strict entirely), and make basePolicy's !exists branch fall back to a hardcoded free-mode Policy{} instead of the caller-supplied working value."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/acdsl/git.go",
+      "line": 77,
+      "severity": "MAJOR",
+      "claim": "GitRevParse is a new exported function that is dead code — never called outside its own test, since policyBase uses GitMergeBase and shellGitAbbrevRef instead.",
+      "fix": "Either wire GitRevParse in where the plan intended or remove it."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/server/repos_test.go",
+      "line": 689,
+      "severity": "MAJOR",
+      "claim": "The plan-specified cross-instance regression case for TestReposDelete (repo stays deleted after a second registry instance writes, through the HTTP handler path) was not implemented; only registry-unit-level coverage exists in TestRegistryAddPreservesExternalEdit.",
+      "fix": "Confirm the substitution was deliberate, or add the documented TestReposDelete case through the HTTP handler path."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/server/presentation.go",
+      "line": 107,
+      "severity": "MINOR",
+      "claim": "saveProfileSelection locates the German seed template via a cwd-relative path, an undocumented assumption that the process cwd is the repo root; a future deployment path not setting cwd there silently degrades to an empty seed body.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "ruleMarkers/ruleDelta silently ignore ParseRules errors on the working side as well as the base side, so a syntactically broken rule file would yield zero delta entries instead of a diagnostic, and this working-side case was not explicitly reasoned about in the plan.",
+      "fix": ""
+    }
+  ]
+}

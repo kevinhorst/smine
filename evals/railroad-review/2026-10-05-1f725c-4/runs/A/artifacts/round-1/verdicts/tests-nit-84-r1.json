@@ -1,0 +1,30 @@
+{
+  "finding_id": "tests-NIT-84-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at 1f725ce: run.sh:328 stage-3 postcondition block (dirty -> 70, merged-or-kept, .orchestrate-report surfacing) is referenced by no cmd/tests shell test; spec-5 lines 168/360/372 require the stage3-postconditions test extension.",
+  "probe": "PROBE-TESTS-NIT-84-R1",
+  "script": "tests-nit-84-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-84-r1/routines/smine-nightly/run.sh",
+  "registry": "registry-tests-nit-84-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-84-R1 -registry probes/registry-tests-nit-84-r1.json -> routines/smine-nightly/run.sh:328: stage-3 postcondition block (dirty -> 70, merged-or-kept) is driven by no cmd/tests shell test (spec-5 stage3-postconditions); acdsl: 1 violation(s) across 1 rule(s)",
+    "fixture_run": "acdsl check -rule PROBE-TESTS-NIT-84-R1 -root scratch/tests-nit-84-r1/fixture-repo (git-backed copy of probes/fixtures/tests-nit-84-r1) -> exit 1, routines/smine-nightly/run.sh:2 hit",
+    "read": [
+      "routines/smine-nightly/run.sh:293-341 — stage-3 gate; dirty check 328-331; merged-or-kept 332-337; status merge 339",
+      "git grep smine-nightly/run.sh|orchestrate-report|orchestrate_status over cmd routines Makefile — only run.sh itself, cmd/bootstrap/run.sh and the plist template; no test",
+      "git diff --stat b4981b8..1f725ce -- cmd/tests: test_routine_worktree.sh not changed",
+      "cmd/tests/test_routine_worktree.sh test list 329-342 — test_reset_after_merge covers prune-on-create of a merged dated branch (lib level), nothing drives the wrapper's stage-3 dirty->70 or kept-branch report path",
+      "spec-5 lines 168, 360, 372 name the stage-3 postcondition test extension",
+      "known.json: tests-MIN-33-r1 (run.sh:43 casual/dev gating test) and correctness-MIN-17-r1 (run.sh:328 .orchestrate-report trips dirty check — a behaviour bug, not test coverage) are distinct from this claim"
+    ]
+  },
+  "notes": "Partial mitigation: routine_prune_merged-style pruning of a merged branch is exercised indirectly by test_reset_after_merge; the uncovered part is the wrapper's postcondition routing. Cells debt/rare stand.",
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-84-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-tests-nit-84-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-84-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-84-r1/routines/smine-nightly/run.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-84-r1/cmd/tests/test_other.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-84-r1/railroad-probes-r1.acdsl"
+  ]
+}

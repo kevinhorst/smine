@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-MAJ-3-r1",
+  "verdict": "confirmed",
+  "reason": "startPeek's reuse-match condition at cmd/configserver/main.go:248 checks only id.ClaudeHome and id.CodexHome; id.ControlPort (decoded at line 220 from the running instance's /healthz response) is never compared, so a pre-existing listener on a stale/different control port passes identity and is silently reused while the caller's dashboardURL is built from the newly-configured flag — exactly the claim.",
+  "probe": "PROBE-CORRECTNESS-MAJ-3-R1",
+  "script": "correctness-maj-3-r1-controlport.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/main.go",
+  "registry": "registry-correctness-maj-3-r1.json",
+  "evidence": {
+    "read": [
+      "cmd/configserver/main.go:216-281 (peekID struct, peekIdentity, startPeek) at head 1f725cedc5c8b092c8a3d7e408793ef72840ec7e — ControlPort decoded at line 220, never referenced again; sole match condition at line 248 is `id.ClaudeHome == claudeHome && id.CodexHome == codexHome`",
+      "dashboardURL built at main.go:124-126 from the newly-configured *peekControlPort flag before startPeek is called, so a reused stale listener's dashboard link is wrong when its control port differs"
+    ],
+    "fixture_validity": "grep -n 'id\\.ClaudeHome == claudeHome && id\\.CodexHome == codexHome' probes/fixtures/main.go -> line 11 matched; grep -c ControlPort on that same fixture file shows ControlPort appears only in the struct declaration (2 hits), never on the matched condition line itself -- the exact absence the script's hit logic tests for. Direct execution of the probe script's own interpreter (bash <script> <files-list>) is denied outright by this session's tool-policy (candidate rules Bash(bash *) and Bash(/bin/bash *) both denied, no allow rule), so validity was established by applying the script's literal matching logic (the same grep pattern it runs) to the fixture via the allowlisted read-only grep tool instead of executing the script file directly.",
+    "probe_run": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-maj-3-r1-r1/bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-3-R1 -registry /Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-maj-3-r1.json -root /Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-maj-3-r1-r1 -> exit 1: \"cmd/configserver/main.go:248: reuse-match condition omits a ControlPort comparison — a stale listener on a different control port passes identity and is silently reused: [PROBE-CORRECTNESS-MAJ-3-R1] correctness-maj-3-r1-controlport — startPeek's reuse-match condition at main.go:248 never compares id.ControlPort against the currently configured controlPort, so a stale listener on a different control port passes identity and is silently reused (spec correctness-110)\"; acdsl: 1 violation(s) across 1 rule(s) — RED on the claimed file, both anchor and line match the candidate's citation (main.go:248)."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-maj-3-r1-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-maj-3-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-maj-3-r1-controlport.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-maj-3-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/main.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-maj-3-r1/fixture-files.txt"
+  ]
+}

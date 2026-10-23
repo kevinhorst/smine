@@ -1,0 +1,24 @@
+{
+  "finding_id": "correctness-MAJ-65-r1",
+  "verdict": "confirmed",
+  "reason": "At 1f725ce policy.go:105 renders `rule %s binds verifier %q outside the sanctioned set` (no added|modified action), :93 renders strict as `rule %s %s — no rule is editable in this repo` (no `outside <detail>`), and :228 Why is a constant naming no base ref; spec-6 raw.md L256 mandates `policy(<mode>): rule <id> added|modified|removed outside <detail>` and a Why `sanction the scope in acdsl/policy.json on <base ref>, or revert`; no later spec decision or errata overrides L256, and policy_test.go pins the deviating strings (L182, L236).",
+  "probe": "manual: command with actual and expected output",
+  "evidence": {
+    "read": [
+      "grep internal/acdsl/policy.go @1f725ce -> 105: fmt.Sprintf(\"policy(gated): rule %s binds verifier %q outside the sanctioned set\", rule.Id, rule.Verifier); 93: \"policy(strict): rule %s %s — no rule is editable in this repo\"; 228: Why: \"acdsl/policy.json governs who may change the rule system — sanction the change on the policy base branch, or revert\" — expected per spec-6 L256: `<file>:<line>: policy(<mode>): rule <id> added|modified|removed outside <detail>`, Why \"sanction the scope in acdsl/policy.json on <base ref>, or revert\"",
+      "spec-6-raw.md L256: Diagnostic shape contract; grep of spec-6 for diagnostic/message found no other decision overriding it (L530 contract row keys consumers on RuleId only)",
+      "internal/acdsl/policy_test.go L182 asserts \"no rule is editable\", L236 asserts `rule ACDSL-GOLANG-101 binds verifier \"rogue\" outside the sanctioned set` — tests pin the off-spec text",
+      "known.json: no entry on policy diagnostic message/Why shape (policy.go entries cover base resolution, CRLF, task-lifetime exemption, FileUniverse, style nits)"
+    ],
+    "probe_attempts": [
+      "attempt 1: authored script probe correctness-maj-65-r1-diag-shape.sh + registry + rule line; validity run `/bin/bash <script> <files list>` denied by tool policy (no allow rule for Bash(/bin/bash *))",
+      "attempt 2: verdict runner unavailable — worktree Makefile has no `acdsl` target and direct `<worktree>/bin/acdsl` invocation is denied by tool policy; probe never executed, so the settlement is manual"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-65-r1-diag-shape.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-65-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-maj-65-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-65-r1/policy.go"
+  ]
+}

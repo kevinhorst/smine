@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-NIT-46-r1",
+  "verdict": "confirmed",
+  "reason": "No policy_test.go case removes a declaration file; ruleDelta's missing-working-copy branch (policy.go:248, removed rules at 274-278) is never exercised — probe red on internal/acdsl/policy.go.",
+  "probe": "PROBE-TESTS-NIT-46-R1",
+  "script": "tests-nit-46-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-46-r1",
+  "registry": "registry-tests-nit-46-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-46-R1 -registry probes/registry-tests-nit-46-r1.json -> exit 1: internal/acdsl/policy.go:248: no test in internal/acdsl/policy_test.go deletes a declaration file",
+    "validity": "same check with -root probes/fixtures/tests-nit-46-r1 (policy_test.go rewrites rules.acdsl and removes only policy.json) -> exit 1, 1 violation",
+    "read": [
+      "internal/acdsl/policy.go:237-280 ruleDelta: work-side os.ReadFile skipped on error (248), base side read (251-257), base rules absent from workMarkers classified removed (274-278)",
+      "internal/acdsl/git.go:46-66 GitChangedFiles uses git diff --name-only base, which lists deleted paths, so production does reach the deleted-file path",
+      "internal/acdsl/policy_test.go: only os.Remove is policy.json (189); TestCheckPolicyGatedScopes (204), TestCheckPolicyGatedChangedMarkerLine (219), TestRuleDelta (312) all rewrite rules.acdsl in place",
+      "known.json: no entry on a ruleDelta deleted-file test gap (MIN-19 policyBase origin/HEAD, NIT-1-r2 free-mode escape are distinct)"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-46-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-46-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-46-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-46-r1"
+  ]
+}

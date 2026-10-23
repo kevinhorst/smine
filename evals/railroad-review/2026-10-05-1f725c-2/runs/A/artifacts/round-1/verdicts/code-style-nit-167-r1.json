@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-167-r1",
+  "verdict": "confirmed",
+  "reason": "config_sync.go:50 adds expandMarkers := revert && target != catalog.TargetCodex while L70 keeps if !revert || target == catalog.TargetCodex, its exact De Morgan negation, inside a closure that already captures expandMarkers; probe RED at config_sync.go:70.",
+  "probe": "PROBE-CODE-STYLE-NIT-167-R1",
+  "script": "code-style-nit-167-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-167-r1/fail.go",
+  "registry": "registry-code-style-nit-167-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-167-R1 -registry probes/registry-code-style-nit-167-r1.json at 1f725ce -> exit 1: internal/server/config_sync.go:70: claude-revert predicate restated as its negation; already named by 'revert && target != catalog.TargetCodex'",
+    "read": [
+      "internal/server/config_sync.go:50 expandMarkers := revert && target != catalog.TargetCodex; :57 copyFileAtomic(src, dst, expandMarkers); :70 if !revert || target == catalog.TargetCodex { return output, nil }",
+      "git diff b4981b8..1f725ce internal/server/config_sync.go — L50 is new in this diff; L70 pre-existing, so the change introduced the second spelling",
+      "known.json config_sync.go rows: code-style-NIT-18-r1 (expandMarkers not predicate-named), NIT-42-r1 (blank line), correctness-MAJ-5-r2 (apply direction marker loss) — none about the duplicated predicate"
+    ],
+    "validity": "acdsl check -root scratch/code-style-nit-167-r1/fixroot (fixture at internal/server/config_sync.go, git init) -rule PROBE-CODE-STYLE-NIT-167-R1 -> exit 1 at config_sync.go:5",
+    "cells": "agree with debt/rare"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-167-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-167-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-167-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-167-r1/fail.go"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-170-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: repos_index.html:48 sets class=\"wt-kinds\" and assets/style.css has no wt-kinds selector; git grep over internal/ and cmd/ finds no other reference.",
+  "probe": "PROBE-CODE-STYLE-NIT-170-R1",
+  "script": "code-style-nit-170-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-170-r1/templates/repos_index.html",
+  "registry": "registry-code-style-nit-170-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-170-R1 -registry probes/registry-code-style-nit-170-r1.json -root <worktree> -> exit 1: internal/server/templates/repos_index.html:48: class wt-kinds has no rule in assets/style.css (dead class); 1 violation(s)",
+    "read": [
+      "git grep wt-kinds -- internal cmd at 1f725ce: single hit internal/server/templates/repos_index.html:48",
+      "exposure always holds: the cell renders on every developer-audience GET /repos with registered repos (repos_index.html:39-48)"
+    ],
+    "validity": "Direct interpreter run of the script over scratch/code-style-nit-170-r1/files.txt was denied by tool policy (candidate Bash(/bin/bash *)); fixture is in place. The real run went RED with the expected message on the claimed file."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-170-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-170-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-170-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-170-r1/templates/repos_index.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-170-r1/assets/style.css",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-170-r1/files.txt"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "ranking": ["C", "D", "B", "A"],
+  "arms": [
+    {
+      "label": "C",
+      "summary": "Committed, plan-faithful implementation of all ten sections; main.go and title.go byte-identical to the reference, transparent refusal fix and single-occurrence stderr assertion included, context.json regenerated.",
+      "defects": []
+    },
+    {
+      "label": "D",
+      "summary": "Committed, complete implementation matching the reference behavior with context.json regenerated and deviations recorded in the plan Changelog; only cosmetic and fixture-shape nits.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/main.go:139",
+          "claim": "DecideFirst doc comment broken mid-sentence ('first prompt line is missing,' / '// so the next tool call retries.') instead of the planned reflowed wording"
+        },
+        {
+          "severity": "MINOR",
+          "file": "cmd/agentwt/tests/scenarios/mod.rs:498",
+          "claim": "ops_remove_dry_run drops f.lock(&session_wt), so unlike the mirrored from_inside_worktree fixture the dry-run-then-real-remove path never exercises a locked worktree"
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "summary": "Committed, functionally complete implementation with context.json regenerated and good tests, but it trims module docs beyond what the plan specifies.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/agentwt/src/ops.rs:7",
+          "claim": "Module doc line 'There is deliberately no merge, cherry-pick or sync here' deleted; the plan replaces only lines 1-5 and the reference keeps it"
+        },
+        {
+          "severity": "MINOR",
+          "file": "cmd/agentwt/src/error.rs:2",
+          "claim": "Module doc rewritten shorter than planned, losing '(unknown branch, unsafe removal): the operation did not run' and the operator-facing-line statement"
+        }
+      ]
+    },
+    {
+      "label": "A",
+      "summary": "Code in cmd/, settings, skill and fact matches the reference, but the run left everything uncommitted, skipped the context.json regeneration and left a 4.6 MB build artifact in the repo root.",
+      "defects": [
+        {
+          "severity": "MAJOR",
+          "file": "context/context.json",
+          "claim": "Not regenerated after the FACT-REPO-ARCH-022 edit (no 'remove --dry-run' in context.json), so the make audit generate-check the plan requires (V1, Contracts row FACT-REPO-ARCH-022) is red"
+        },
+        {
+          "severity": "MAJOR",
+          "file": "(worktree)",
+          "claim": "No commits past base 694e7466; all 14 changed files are left as unstaged modifications, so the fimplement deliverable (committed code) is missing"
+        },
+        {
+          "severity": "MINOR",
+          "file": "sessiontitle",
+          "claim": "Untracked 4.6 MB Go binary left at repo root (not gitignored); any add -A would commit it"
+        }
+      ]
+    }
+  ]
+}

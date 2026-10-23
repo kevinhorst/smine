@@ -1,0 +1,26 @@
+{
+  "finding_id": "correctness-MAJ-4-r1",
+  "verdict": "confirmed",
+  "reason": "install.ps1 line 20 appends koalaman.shellcheck to the same $missing array as the hard-required git/go/jq deps; any non-empty $missing throws (either winget absent, line 23, or the user declining the winget prompt, line 27) under $ErrorActionPreference=\"Stop\" (line 10), aborting the whole install before any build step. install.sh's equivalent check (lines 56-60) is a plain warn-only for-loop with no effect on control flow. Spec confirms this is cross-platform: spec-9-change-headless-bootstrap.md line 500 states shellcheck is 'warn-only with the install hint (brew install shellcheck / winget install koalaman.shellcheck)' — the Windows hint is explicitly named in the same warn-only requirement, so install.ps1's hard-blocking treatment is the defect, not an intentional platform divergence.",
+  "probe": "PROBE-CORRECTNESS-MAJ-1-R1",
+  "script": "correctness-maj-1-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/correctness-maj-1-r1-fail.ps1",
+  "registry": "registry-correctness-maj-4-r1.json",
+  "evidence": {
+    "read": [
+      "install.ps1 lines 1-70 (full file): line 20 `if (-not (Test-Cmd shellcheck.exe)) { $missing += \"koalaman.shellcheck\" }`; lines 21-27 show the shared throw paths (winget absent -> throw line 23; user declines -> throw line 27)",
+      "install.sh lines 40-65: lines 56-60 are a warn-only `for dep in jq shellcheck; do command -v \"$dep\" ... || echo \"WARN: ...\"; done` loop with no control-flow effect",
+      "spec-9-change-headless-bootstrap.md line 500: 'Add shellcheck next to the existing jq presence check -- warn-only with the install hint (brew install shellcheck / winget install koalaman.shellcheck); the acdsl gate is the enforcement, the installer is the early warning.'"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CORRECTNESS-MAJ-1-R1 -registry registry-correctness-maj-4-r1.json over install.ps1 at head 1f725cedc5c8b092c8a3d7e408793ef72840ec7e -> RED: `install.ps1:20: shellcheck.exe is appended to the hard-required $missing array (blocks install) instead of a separate warn-only check`"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-maj-1-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-maj-1-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-maj-4-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/correctness-maj-1-r1-fail.ps1",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-maj-1-r1/files.txt",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-maj-4-r1-r1/railroad-probes-r1.acdsl"
+  ],
+  "notes": "Validity-first check: the one permitted direct run (bash <script> over a hand-built files list) hit tool-policy denial in this reviewer's own shell (candidate rule Bash(bash *); ACTION-IMPL-EXEC-006 forbids re-issuing a denied call). Substituted the equivalent read-only check: `grep -n '\\$missing[[:space:]]*+=[[:space:]]*\"koalaman\\.shellcheck\"' <fixture>` matched line 4 of the fail fixture, confirming the probe's detection regex is sound before the real acdsl-mediated run (which internally invokes bash itself, not through this session's Bash tool, and is unaffected by the policy). Cells (effect=incorrect, exposure=rare) stand as given: the block only triggers in the no-winget or declined-prompt branches, not on every Windows run."
+}

@@ -1,0 +1,28 @@
+{
+  "findings": [
+    {
+      "finding_id": "MAJ-1",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 62,
+      "severity": "MAJOR",
+      "claim": "The post-invocation Bash gate against direct reads of injected context files is trivially bypassed by quoting the path or using a relative path, since it only matches the exact shape `cat <absolute-unquoted-path>`, so quoted or relative `cat` commands pass silently.",
+      "fix": "For the Bash case, don't special-case cat's exact argv shape — either resolve the command's arguments against $ctx_dir after normalizing quotes/relative paths (eval set -- in a subshell with cd \"$cwd\", or argv-parse via python3), or drop the metacharacter allowlist and grep the raw command string for $ctx_dir as a conservative superset."
+    },
+    {
+      "finding_id": "MAJ-2",
+      "file": "cmd/hooks/acdsl-policy-guard.sh",
+      "line": 43,
+      "severity": "MAJOR",
+      "claim": "The PreToolUse guard unconditionally denies every write to acdsl/registry.local.json in gated or strict mode, contradicting the README and the authoritative Go overlayViolations check, making it impossible to add a sanctioned local verifier override through Claude Code in any gated/strict repo.",
+      "fix": "Drop acdsl/registry.local.json from the hook's frozen-surface case arm (line 43); either let it fall through to acdsl check's authoritative judgment, or replicate overlayViolations' sanctioned-name check inline via jq against policy.json's local_overrides and the new content."
+    },
+    {
+      "finding_id": "MAJ-3",
+      "file": "internal/server/sessions.go",
+      "line": 182,
+      "severity": "MAJOR",
+      "claim": "handleSessionsScopeArchive, handleSessionsScopeDelete, and handleSessionsScopeUnarchive set HX-Redirect unconditionally before checking the operation's error, so htmx clients never render the server-side error card on failure — a failed delete looks identical to a successful one in the UI.",
+      "fix": "In all three handlers, set HX-Redirect only in the success branch (mirroring internal/server/repos.go:509's conditional HX-Trigger pattern)."
+    }
+  ]
+}

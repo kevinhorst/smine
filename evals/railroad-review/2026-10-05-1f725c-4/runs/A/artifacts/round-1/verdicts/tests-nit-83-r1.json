@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-NIT-83-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at 1f725ce: skill-invoke-gate.sh:28 scopes the marker to [ ... type==\"user\" ][0]; test_skill_invoke_gate.sh builds every transcript with a single user line (lines 40-44, 92-93) and no tool_result line, so widening the scope to all user lines stays green.",
+  "probe": "PROBE-TESTS-NIT-83-R1",
+  "script": "tests-nit-83-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-83-r1/cmd/hooks/skill-invoke-gate.sh",
+  "registry": "registry-tests-nit-83-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-83-R1 -registry probes/registry-tests-nit-83-r1.json -> exit 1: cmd/hooks/skill-invoke-gate.sh:28: first-user-line-only marker scope is pinned by no test transcript with a later marker-bearing user line",
+    "read": [
+      "cmd/hooks/skill-invoke-gate.sh:27-31 first_user=$(jq -rs '[ .[] | select(.type == \"user\") ][0].message.content ...')",
+      "cmd/tests/test_skill_invoke_gate.sh:40-44,92-93 each transcript = one user_line (+ optional skill_use); no tool_result anywhere in the file"
+    ],
+    "validity": "Direct interpreter run over scratch/tests-nit-83-r1/files.txt denied by tool policy (candidate rule Bash(/bin/bash *)); acdsl -root on fixture dir needs git (exit 2). Real run RED. Distinct from known tests-NIT-54-r1 (string-content branch)."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-83-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-83-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-tests-nit-83-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-83-r1/cmd/hooks/skill-invoke-gate.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-83-r1/cmd/tests/test_skill_invoke_gate.sh"
+  ]
+}

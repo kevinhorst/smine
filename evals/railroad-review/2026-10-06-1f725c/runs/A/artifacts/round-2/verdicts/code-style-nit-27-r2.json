@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-27-r2",
+  "verdict": "confirmed",
+  "reason": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:50 and :73 call phase('Render') and phase('Gate') with no preceding '// ---- Stage ... ----' banner comment. The two other new workflow files in the same diff (subsystem-grounding.js:56/78, foreign-toolchain-pretag.js:42/57) both carry the banner before every phase() call, and the convention is not local to this diff — it predates it: skills/smine/smine/workflows/session-mine.js (only +74/-10 lines changed here, pre-existing otherwise) already had '// ---- Stage 1: Mine ----' etc. at base commit b4981b88d52deaa69d6ed1d60eb51b57ead47ba0. So this is an established repo-wide convention (ACTION-REVIEW-QUALITY-001), not an incidental pairing within one commit, and the new file breaks it.",
+  "probe": "none: tool-policy denies direct execution of the authored bash probe script in this sandbox (candidate rule Bash(bash *), same denial already hit and exhausted on this claim's sibling in the same round) — the probe verdict mechanism is unexecutable here; settled manually instead.",
+  "script": "probes/code-style-nit-27-r2.sh",
+  "fixture": "probes/fixtures/code-style-nit-27-r2/bad.js",
+  "registry": "registry-code-style-nit-27-r2.json",
+  "cells": {},
+  "evidence": {
+    "read": [
+      "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:1-102 (headCommit e5245d08d2fe5c05f67742fd8ec5a67b759ca316, full file, no banner before phase('Render') line 50 or phase('Gate') line 73)",
+      "skills/feature/fdesign/workflows/subsystem-grounding.js:56-79 and skills/git/package-commit/workflows/foreign-toolchain-pretag.js:42-58 (both carry the banner before every phase() call)",
+      "git show b4981b88d52deaa69d6ed1d60eb51b57ead47ba0:skills/smine/smine/workflows/session-mine.js — banner lines 59/75/107 already present at the base commit, proving the convention pre-dates this diff"
+    ],
+    "probe_run": null
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-nit-27-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-nit-27-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-nit-27-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-nit-27-r2/bad.js",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/code-style-nit-27-r2/bad.js"
+  ]
+}

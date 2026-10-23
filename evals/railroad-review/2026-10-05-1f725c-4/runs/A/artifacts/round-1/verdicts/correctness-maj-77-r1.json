@@ -1,0 +1,24 @@
+{
+  "finding_id": "correctness-MAJ-77-r1",
+  "verdict": "confirmed",
+  "reason": "At 1f725ce the select-all handler (repo_detail.html:67) checks every input[name=\"branch\"] incl. rows applyFilter hid, applyFilter never unchecks, and both remove forms hx-include input[name=branch]:checked; at b4981b8 the filter was server-side (repos.go matchesBase && matchesKind), so hidden rows never existed — a regression.",
+  "probe": "PROBE-CORRECTNESS-MAJ-77-R1",
+  "fixture": "probes/fixtures/correctness-maj-77-r1-fail.html",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-77-R1 -registry acdsl/registry.json -> exit 1: internal/server/templates/repo_detail.html:67: literal \"querySelectorAll('input[name=\\\"branch\\\"]').forEach\" outside its owner: [PROBE-CORRECTNESS-MAJ-77-R1] literal-owner",
+    "fixture_run": "bin/verifiers/literalowner scratch/correctness-maj-77-r1/fixture-files.txt literal=... allowed=^$ -> exit 1 on probes/fixtures/correctness-maj-77-r1-fail.html:5",
+    "read": [
+      "internal/server/templates/repo_detail.html:65-72 — select-all sets box.checked on document.querySelectorAll('input[name=\"branch\"]'), no visibility scope",
+      "internal/server/templates/repo_detail.html:100-118 — applyFilter only sets row.hidden, never unchecks",
+      "internal/server/templates/_worktree_status.html:65-75 — both remove forms hx-include \"#op-force, input[name=branch]:checked\"",
+      "git diff b4981b8..1f725ce internal/server/repos.go — removed server-side matchesBase && matchesKind filtering of data.Statuses; all rows now rendered (data.Statuses = statuses)"
+    ],
+    "cells": "effect incorrect and exposure rare agreed: needs an active kind/base filter plus select-all (or a pre-filter check) plus Remove; the hx-confirm dialog lists every checked branch, which is a partial mitigation only.",
+    "notes": "Rule line uses the repo-registry verifier literal-owner, so no probe registry is needed. probes/correctness-maj-77-r1-selectall.sh and probes/registry-correctness-maj-77-r1.json are leftovers from attempt 1 (its direct validity run via /bin/bash was denied by tool policy); they are not part of this probe."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-maj-77-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-maj-77-r1-fail.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-maj-77-r1/fixture-files.txt"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "finding_id": "tests-MIN-13-r2",
+  "verdict": "confirmed",
+  "reason": "Confirmed: cmd/hooks/acdsl-policy-guard.sh is a wholly new 54-line file added in commit c1b52fb (same commit as read-gate.sh and skill-invoke-gate.sh), and grepping cmd/tests/ for any reference to it (by name or content) finds nothing — no dedicated shell test, unlike its two siblings which each got cmd/tests/test_read_gate.sh and cmd/tests/test_skill_invoke_gate.sh. The claim is scoped correctly (effect debt, not a spec violation) and matches the lane's own framing.",
+  "probe": "none: same structural block as tests-MIN-11-r2 — direct bin/acdsl invocation and `make acdsl ARGS=...` both denied by tool-policy (no allow rule / no such make target), so the probe verdict command is unreachable in this harness after two attempts. Settled via the manual path.",
+  "evidence": {
+    "read": [
+      "git diff b4981b88...e5245d08 --stat -- cmd/hooks/acdsl-policy-guard.sh — 54 insertions, 0 deletions, confirming the file is wholly new in this change",
+      "grep -rl 'acdsl-policy-guard' cmd/tests/ — no matches, confirming no shell test references this hook",
+      "git ls-files cmd/hooks/ and cmd/tests/ — test_read_gate.sh and test_skill_invoke_gate.sh exist for the sibling hooks added in the same commit, no equivalent exists for acdsl-policy-guard.sh"
+    ]
+  },
+  "artifacts": []
+}

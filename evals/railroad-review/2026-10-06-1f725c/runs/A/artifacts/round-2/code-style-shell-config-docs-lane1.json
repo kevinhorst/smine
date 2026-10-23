@@ -1,0 +1,23 @@
+{
+  "artifact": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/code-style-shell-config-docs-lane1.json",
+  "direction": "code-style",
+  "lane": 1,
+  "chunk": "shell-config-docs",
+  "head": "e5245d08d2fe5c05f67742fd8ec5a67b759ca316",
+  "checkout_sha": "e5245d08d2fe5c05f67742fd8ec5a67b759ca316",
+  "overlay_ok": true,
+  "aborted": false,
+  "notes": "All candidate issues in this chunk (Makefile build-install help-label collision, sync_skills.sh jq-strip duplication, presentation.sh extraction duplication, worktree.sh HEAD-off-branch test gap) match known.json rows code-style-MIN-7-r1, code-style-MIN-8-r1, code-style-MIN-9-r1, tests-NIT-6-r1 — not re-reported. settings.json's OTEL_EXPORTER_OTLP_ENDPOINT now templates {{PEEK_CONTROL_PORT}}; the substitution mechanism lives in configserver's Go installer (cmd/configserver, outside this chunk) — flagging for station in case no consumer renders this placeholder, though install.ps1 in this chunk does pass -peek-control-port suggesting the template is consumed.",
+  "walk": [
+    {"file": "Makefile", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "cmd/bootstrap/run.sh", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "cmd/sync/sync_skills.sh", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "cmd/tests/test_routine_worktree.sh", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "install.ps1", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "routines/_lib/presentation.sh", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "routines/_lib/worktree.sh", "group": "ACTION-REVIEW-QUALITY", "hits": []},
+    {"file": "settings/claude_code/settings.json", "group": "ACTION-REVIEW-QUALITY", "hits": []}
+  ],
+  "findings": [],
+  "walk_complete": true
+}

@@ -1,0 +1,48 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "BLOCKER",
+      "claim": "The ACDSL self-management policy gate is fully bypassable: policyBase trusts the working copy's base_ref, so an agent that sets base_ref to its own branch name makes isBoundary false and every gated/strict check is skipped (reproduced empirically — same tree goes from 2 diagnostics to 0).",
+      "fix": "Never let a working-copy value decide the base ref or boundary status: resolve isBoundary and the base commit from the fixed candidate chain (origin/HEAD, origin/main, main, master), using base_ref only as a fallback when none resolve — or resolve the base via the fixed chain first and only then consult the base-side policy's own base_ref; add a regression test for the self-referential base_ref scenario."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 55,
+      "severity": "MAJOR",
+      "claim": "The hook's denial of direct context-file reads only matches the Read tool or an exact 2-token 'cat <path>' Bash command, so cat with multiple files, head/tail/sed/less, or the Grep tool bypass it entirely, giving a false sense the context-injection guarantee is enforced.",
+      "fix": "Match the ctx-dir path anywhere in the tokenized Bash command (not only as the second token of a 2-token cat) and extend the tool check beyond Read/cat to at least Grep/head/tail/sed/less, reusing read-gate.sh's matching approach if possible."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "MAJOR",
+      "claim": "CheckPolicy's base-ref-authoritative redesign silently deviates from the approved plan's literal Changes-§1 pseudocode (working-copy free-mode short-circuit first) without a Changelog row or stop-and-report, and that unreviewed trust-model change is the direct cause of Critical #1.",
+      "fix": "No separate code fix beyond #1 — flag this class of deviation for confirmation rather than resolving it unilaterally next time, per the repo's own doctrine."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/acdsl/git.go",
+      "line": 46,
+      "severity": "MINOR",
+      "claim": "GitChangedFiles uses strings.Fields over the diff and untracked output, so a changed path containing a space splits into two bogus paths and a rule declared or edited in such a file is invisible to the gated/strict check.",
+      "fix": "Split the output on newlines (strings.Split, trimming empty lines) instead of strings.Fields."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "acdsl/testdata/ACDSL-JSON-003/fail/policy.json",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The fixture collapses the plan's two fail cases (mode \"loose\" and an unknown key, mirroring ACDSL-JSON-001's structure) into a single file, though the schema gate is still exercised end-to-end.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-188-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at smine-batch SKILL.md:33 — the ToolSearch-load data-source list names session_list/events/full but not session_get, which L7 allowed-tools (added this diff) grants and L72 Subagent mining (added this diff) calls.",
+  "probe": "PROBE-CODE-STYLE-NIT-188-R1",
+  "script": "code-style-nit-188-r1.sh",
+  "fixture": "fixtures/code-style-nit-188-r1-fail.md",
+  "registry": "registry-code-style-nit-188-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-188-R1 -registry probes/registry-code-style-nit-188-r1.json -> exit 1: skills/smine/smine-batch/SKILL.md:33: ToolSearch-load data-source list omits mcp__Peek_MCP__session_get, which allowed-tools grants and Subagent mining calls",
+    "read": [
+      "skills/smine/smine-batch/SKILL.md:7 allowed-tools ends with mcp__Peek_MCP__session_get (added in this diff)",
+      "skills/smine/smine-batch/SKILL.md:33 'Data source: peek-mcp — session_list, session_events, session_full ... Subagents must load these tools via ToolSearch first.' (unchanged)",
+      "skills/smine/smine-batch/SKILL.md:72 'pull each one with the `subagent: <id>` parameter on `session_get` (turns)' (added in this diff)",
+      "known.json: smine-batch entries (MAJ-30, MIN-43, MIN-7, NIT-40-r2) are different claims"
+    ],
+    "validity": "Fixture self-run via /bin/bash denied by tool-policy (candidate Bash(/bin/bash *)). RED on the real file demonstrates the probe fires."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-188-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-188-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-188-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-188-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-188-r1/files.txt"
+  ]
+}

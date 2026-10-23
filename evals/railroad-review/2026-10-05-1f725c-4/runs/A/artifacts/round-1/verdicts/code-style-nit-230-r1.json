@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-230-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at policy.go:186 and :218 — both new error strings start their message lower-case after the function prefix (\"unknown mode\", \"no policy base resolves\"), against RULE-GOLANG-LOG-001's capital-letter Message that it extends to error strings.",
+  "probe": "PROBE-CODE-STYLE-NIT-230-R1",
+  "script": "code-style-nit-230-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-230-r1-fail.go",
+  "registry": "registry-code-style-nit-230-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-230-R1 -registry registry-code-style-nit-230-r1.json -> exit 1: internal/acdsl/policy.go:186 and internal/acdsl/policy.go:218: error message after the function prefix starts lower-case (RULE-GOLANG-LOG-001)",
+    "read": [
+      "internal/acdsl/policy.go:186 return Policy{}, fmt.Errorf(\"parsePolicy: unknown mode %q\", policy.Mode)",
+      "internal/acdsl/policy.go:218 return \"\", false, fmt.Errorf(\"policyBase: no policy base resolves (tried %s) — ...\")",
+      "context/rules/go.md:539-540 The <Message> MUST begin with a capital letter ... This applies equally to error strings (RULE-GOLANG-ERR-001)."
+    ],
+    "validity": "Direct /bin/bash run of the script over scratch/code-style-nit-230-r1/files.txt was denied by tool policy (candidate Bash(/bin/bash *)); validity was established by running the script's exact grep -nE pattern over the fail fixture -> 6: return fmt.Errorf(\"parsePolicy: unknown mode %q\", mode) (hit).",
+    "notes": "The probe also hit policy.go:73, :131, :391; those are lower-case <Context> segments (\"acdsl/policy.json at %s: %w\") whose Message is the wrapped error — not violations and not part of this claim. policy.go is a new file in the diff, so 186/218 are added code; no known.json row covers message casing in policy.go."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-230-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-230-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-code-style-nit-230-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-230-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/code-style-nit-230-r1/files.txt"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "server",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "aborted": false,
+  "walk": [
+    {"group": "spec-1-concept", "hits": []},
+    {"group": "spec-2-user_stories", "hits": []},
+    {"group": "spec-3-raw", "hits": ["correctness-BLK-1"]},
+    {"group": "spec-4-change-englishness", "hits": []},
+    {"group": "spec-5-change-nondev-automation", "hits": []},
+    {"group": "spec-6-raw", "hits": []},
+    {"group": "spec-7-raw", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile", "hits": ["correctness-BLK-1"]},
+    {"group": "spec-9-change-headless-bootstrap", "hits": []},
+    {"group": "spec-10-change-viewer-fixes", "hits": []},
+    {"group": "spec-11-change-repos-routines-ui", "hits": []},
+    {"group": "spec-12-raw", "hits": []},
+    {"group": "spec-13-change-multi-profile-ports", "hits": []},
+    {"group": "spec-14-change-repo-cache", "hits": []}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-BLK-1",
+      "file": "internal/server/presentation.go",
+      "line": 27,
+      "checklist": "correctness-66",
+      "claim": "The canonical non-developer audience value was renamed from \"non-developer\" (audienceNonDeveloper) to \"casual\" (audienceCasual) in this change, but no migration of existing on-disk presentation-profile.md files from the old value to the new one exists anywhere in internal/server (nor is one invoked from it). loadPresentationProfile() reads the audience: field verbatim with no value translation, and isDeveloperAudience() now tests Audience != \"casual\". Any machine that already had a profile file with `audience: non-developer` (written by a pre-upgrade install) will, after this update, have isDeveloperAudience() return true — i.e. the install silently flips from casual/non-developer to full developer audience: the nav shows Config/Skills/Context/Repos/Routines/Tools/Checklist, proposal cards show gate/tag/target internals, and the overview shows every internals tile — exactly the surface correctness-66's sibling items (8/9/15/16/26/41) say must stay hidden for a non-developer install. correctness-66 explicitly requires \"every existing profile file on disk migrated in place to the new value before anything reads it\"; that migration is completely absent.",
+      "evidence": "Re-read the full diff of internal/server/presentation.go against the base commit: the constant was literally renamed (`audienceNonDeveloper = \"non-developer\"` -> `audienceCasual = \"casual\"`) with no accompanying translation step. Re-read loadPresentationProfile() in full (lines ~135-172 of the committed file) and saveProfileSelection(): the only places that write or read the audience field, and neither handles the old string. Grepped the full committed server package for \"non-developer\" and \"migrat\": zero hits outside an unrelated hooks-migration comment in disabled_hooks.go. Confirmed via `git show 1f725cedc5c8b092c8a3d7e408793ef72840ec7e:internal/server/presentation.go` that line 27 (`return p.Audience != audienceCasual`) is the exact committed line with no normalization of a legacy value before the comparison.",
+      "fix": "In loadPresentationProfile (or newPresentationStore), after parsing the audience field, translate the legacy value: `if profile.Audience == \"non-developer\" { profile.Audience = audienceCasual }` before any isDeveloperAudience() check runs; alternatively perform a one-time on-disk rewrite of the file's audience: line the first time it is loaded.",
+      "effect": "incorrect",
+      "exposure": "often",
+      "severity": "BLOCKER"
+    }
+  ],
+  "walk_complete": true,
+  "notes": "Two suspected cross-chunk gaps, not confirmed as findings because the enforcement point is outside internal/server (cmd/ wrapper scripts, not reviewed here): (1) correctness-78 requires the profile's dev-mode setting be 'threaded as a flag by both the bootstrap and nightly wrappers'; internal/server/bootstrap.go's bootstrapEnv() never reads presentation.isDevMode() or passes any dev-mode env var to cmd/bootstrap/run.sh — plausible by design if the shell wrappers read presentation-profile.md directly instead, but unverifiable from this chunk. (2) correctness-43 requires a casual install's effective SMINE_AUTO_APPLY default to become 'decide' instead of 'never'; internal/server/routines.go's routineSettings[\"smine-nightly\"] hard-codes Default: \"never\" with no audience branching — if this Default string is only a UI placeholder (actual default enforced by the nightly wrapper script) this is merely a misleading display value on a casual install's Configure panel, not a behavior bug; if nothing else sets 'decide' for casual installs, it is a real gap. Neither could be resolved without reading cmd/bootstrap and cmd/nightly, which are out of the server chunk."
+}

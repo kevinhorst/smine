@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy decides between hard error and silent free-mode pass on base-resolution failure using the untrusted working-tree policy's Mode and BaseRef, so tampering acdsl/policy.json to {\"mode\":\"free\",\"base_ref\":\"nosuchref\"} silently defeats the gate on gated/strict repos.",
+      "fix": "Never trust the working file's Mode on the base-resolution failure path: either always hard-error when a policy file is present at all (only a truly absent acdsl/policy.json implies free), or resolve base_ref only from a trusted source (try the default candidate chain unconditionally first, using the working BaseRef only as an additional candidate, never the sole one); add a regression test combining tampered mode: free with an unresolvable/attacker-controlled base_ref."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "Two substantial security/behavior-relevant additions — the new skill-invoke-gate.sh PreToolUse hook and the row-level verdict cache in cmd/worktrees/print_agent_worktrees_status.sh — trace to no plan in this release, violating the traceability doctrine.",
+      "fix": "Confirm with the operator that both were intended as part of this release, and either add a retroactive plan note (giving them their own review pass) or flag them as scope creep."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/server/repos.go",
+      "line": 564,
+      "severity": "MAJOR",
+      "claim": "The repo Add form adds a user-editable name input that overrides Repo.Name, deviating from the language-style-setting plan's C16/G17 design that identity is derived from the folder and only Label is editable, with no plan changelog row.",
+      "fix": "Confirm this was a deliberate scope addition and record it as a decision in the plan rather than shipping it silently."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/server/profilesettings.go",
+      "line": 25,
+      "severity": "MAJOR",
+      "claim": "handleProfileTest diverged from the smine-profile-settings plan's D8/D9 (rewritten prompt and a styleTestTarget model override from ROUTINE_MODEL) without any Changelog entry recording the change.",
+      "fix": "Add Changelog rows to the smine-profile-settings plan documenting the prompt rewrite and the styleTestTarget introduction so the frozen plan is not misleading."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/bootstrap.go",
+      "line": 114,
+      "severity": "MINOR",
+      "claim": "cmd.Wait()'s return value is silently dropped in the background goroutine, leaving no server-side trace when a bootstrap run exits non-zero.",
+      "fix": "Log the exit status (e.g. log.Printf on non-nil error) so finished-vs-crashed is distinguishable from server state."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/server/profilesettings.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "styleTestPrompt relies purely on prompt compliance to prevent tool use while the profile-test call runs with the full default permission surface.",
+      "fix": "Consider passing --disallowedTools as a second layer rather than relying only on the prompt."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

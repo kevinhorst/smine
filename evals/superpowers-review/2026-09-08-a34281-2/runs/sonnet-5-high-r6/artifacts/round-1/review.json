@@ -1,0 +1,60 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy's unresolvable-base early-out consults the working-tree policy's Mode/BaseRef, so an agent in a gated/strict repo can disable the entire self-management gate by editing acdsl/policy.json to {\"mode\":\"free\",\"base_ref\":\"<nonexistent>\"}, making the check return clean instead of the D10-mandated hard error (confirmed by a reproduction test).",
+      "fix": "Make the unresolvable-base hard-error decision independent of the working-tree Mode/BaseRef: either always hard-error on an unresolvable base regardless of the claimed mode, or resolve the base via a fixed non-configurable candidate list first and only consult BaseRef after confirming the working tree has not redirected resolution."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "skills/quality/railroad-review/workflows/railroad-review.js",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The shipped lanePrompt implements the opposite of the approved plan's twice-affirmed D1 (--no-context suppression of doctrine injection), instead requiring full doctrine injection via REQUIRE-SKILL and skill-invoke-gate.sh, with no Decision or Changelog entry documenting the reversal.",
+      "fix": "Have the implementer confirm intent; if the reversal is intentional, update the plan with a new Decision row and Changelog entry, otherwise restore the D1 behavior."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "plans/v1-2-1/session-context-report/",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The session-context-report plan has zero corresponding code anywhere in the diff or repo history (the referenced templates and route do not exist), yet ships verification screenshots that per its own checklist could only be captured after the feature was built, and the plan directory violates the RULE-PLAN-071 naming rule.",
+      "fix": "Confirm whether this plan is in scope for v1.2.1; if not, move it out of plans/v1-2-1/, and if so, note the missing implementation."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 62,
+      "severity": "MAJOR",
+      "claim": "The post-invocation Bash-read detection only recognizes Read and a two-word `cat <path>` command, so head/sed/grep or multi-argument cat invocations trivially bypass the 'do not read context files directly' enforcement while the lane-facing text presents it as a hard guarantee.",
+      "fix": "Tighten the Bash-command detection if the gate is meant to be load-bearing, or state plainly that it is an advisory nudge that only catches the common case."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "classViolations builds the editable map and computes editable/scope for every rule even when the mode is strict for every rule, doing wasted (though cheap) work on every strict-mode call.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/config/installenv.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "installEnvValues reads install.env via a bare relative path, depending on the caller's CWD being the repo root, so a future caller from a different CWD silently gets defaults instead of an error.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "plans/v1-2-1/2026-08-26-railroad-review-observability-wip-5158764/design/raw.md",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The plan's deferred findings (README.md:362 linking a nonexistent docs/telemetry.md, and a missing sessions/parallelize/verdicts.md directory) are not recorded as tracked open items outside the plan prose, contrary to ACTION-REVIEW-DOCS-004.",
+      "fix": ""
+    }
+  ]
+}

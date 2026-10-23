@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-181-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at config-ui-fidelity-gate.js:73: phase('Gate') sits inside the per-template stage closure of the barrier-less pipeline (L51-86), while every sibling workflow calls phase() only at top level and labels in-pipeline agents via opts.phase.",
+  "probe": "PROBE-CODE-STYLE-NIT-181-R1",
+  "script": "code-style-nit-181-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-181-r1/skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+  "registry": "registry-code-style-nit-181-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-181-R1 -registry registry-code-style-nit-181-r1.json -> exit 1: skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:73: phase() called inside a pipeline() stage closure",
+    "read": [
+      "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:50-86 — phase('Render') at 50, pipeline(templates, render, gate) at 51, phase('Gate') at 73 inside the gate closure before agent(..., {phase: 'Gate'}) at 74-84",
+      "skills/git/package-commit/workflows/foreign-toolchain-pretag.js:43-58 — phase('Build') before pipeline, phase('Gate') after the awaited pipeline",
+      "skills/smine/smine/workflows/session-mine.js:96,115,132,173 — indented phase() calls are inside top-level if blocks, never inside a pipeline/parallel closure"
+    ],
+    "validity": "Direct interpreter run of the script on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails because the fixture dir is no git repo (FileUniverse exit 128). The real run going RED on the claimed line shows the probe is not blind.",
+    "known_ledger": "correctness-MAJ-39-r1 and correctness-MIN-43-r1 on the same file concern the gate never being invoked and the save-button count — different substance"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-181-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-181-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-181-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-181-r1/skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-181-r1/files.txt"
+  ]
+}

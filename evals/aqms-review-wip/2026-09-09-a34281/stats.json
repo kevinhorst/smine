@@ -1,0 +1,133 @@
+{
+  "baseline": "sonnet-5-high",
+  "comparisons": null,
+  "groups": [
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.011904761904761904,
+      "metricId": "recall",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.015590200445434299,
+      "metricId": "weighted_recall",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.47216035634743875,
+      "metricId": "golden_coverage",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.0330188679245283,
+      "metricId": "weighted_recall_reachable",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "precision",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0,
+      "metricId": "false_positives",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "uncataloged",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "misclassified",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "rounds",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 76950,
+      "metricId": "output_tokens",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 17744462,
+      "metricId": "cache_read_tokens",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 433361,
+      "metricId": "cache_creation_tokens",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1179000,
+      "metricId": "duration_ms",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 89,
+      "metricId": "turns",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

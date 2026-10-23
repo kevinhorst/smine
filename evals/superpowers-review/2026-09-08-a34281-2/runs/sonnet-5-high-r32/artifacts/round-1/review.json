@@ -1,0 +1,60 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "settings/claude_code/settings.json",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The globally synced permissions.ask entries requiring confirmation for Edit/Write to acdsl/** and **/*.acdsl were removed and replaced only by the acdsl-policy-guard.sh hook, which is a no-op in free mode, leaving the smine repo's own registry/rules editable with zero friction — an undocumented behavior change reopening the exact door the ACDSL policy feature was built to close.",
+      "fix": "Restore an ask (or permissions.deny, if acceptable for a dev repo) entry scoped to the free-mode case, or add a lighter-weight advisory hook step for free mode."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "print_agent_worktrees_status.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The entire row-level verdict cache subsystem lands in the same commit as the squash layer with no plan tracing it as new infrastructure — the repos-routines-improvements plan's Current-State fact C3 describes it as pre-existing, but the base commit contains no cache code, making it either a hallucinated plan baseline or an undocumented folded-in feature.",
+      "fix": "Confirm the untraced addition: fix the plan's baseline fact (a plan-quality defect in the authoring skill) or add its own plan entry for the cache subsystem."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/server/repos.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The file's diff carries changes from at least three different plans that aren't all individually traceable — the worktree-filter rewrite (worktreeFilter.Query to worktreeFilter.Value, removing the ?base=&kind= query-param mechanism) and worktreeSessions/peek.SessionIndex wiring appear in no plan's Scope, and the repo-cache-reload plan explicitly scopes out template/JS changes for this file.",
+      "fix": "Resolve the plan-to-diff traceability for this file, e.g. a changelog note assigning the filter-UI rewrite to its owning plan."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/acdsl/git.go",
+      "line": 78,
+      "severity": "MAJOR",
+      "claim": "GitRevParse is dead code — implemented per the ACDSL policy plan's git-helpers list but never called by policyBase or anything else except its own test.",
+      "fix": "Either wire it in (e.g. to short-circuit policyBase's candidate loop before attempting a merge-base) or remove it."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/bootstrap.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The file is introduced as new in this diff, yet the bootstrap-profile-improvements change plan's Context and Current-State sections describe it as already existing and frame the work as a modification — a change-route plan describing a current state that never shipped outside this same branch.",
+      "fix": "Note for next time: use a new route plan when the before state is itself unreleased."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "acdsl-policy-guard.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The command-injection heuristic for detecting cat <ctx-file> doesn't account for glob characters, so cat some*file can pathname-expand to more than two words and silently evade the two-argument check.",
+      "fix": "Add a one-line comment noting the gap is accepted rather than accidental, if it's already understood."
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "MINOR",
+      "claim": "policyBase derives isBoundary from a straight branch != baseName string compare with no explicit handling for a fully detached HEAD, relying on the incidental fact that \"HEAD\" != \"main\" evaluates the right way.",
+      "fix": "Add a comment stating the detached-HEAD edge case is deliberate rather than an oversight."
+    }
+  ]
+}

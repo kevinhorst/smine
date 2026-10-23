@@ -1,0 +1,100 @@
+[
+  {
+    "finding_id": "SP-001",
+    "run_file": "cmd/worktrees/_lib/verdict.sh",
+    "run_severity": "MAJOR",
+    "run_claim": "filter_untracked (was count_untracked) silently adds exclusion of .serena/ and .DS_Store entries from the UNTRACKED column / removal-safety count, changing the remove-safety gate's behavior without any plan document, driver, decision, or test backing it.",
+    "golden_same_file": [
+      {
+        "golden_id": "GV3-004",
+        "severity": "MAJOR",
+        "claim": "`claude-review/*` counted as containment candidate → false-safe `git branch -D` of unmerged work (data loss)"
+      },
+      {
+        "golden_id": "GV3-095",
+        "severity": "INFO",
+        "claim": "filter_untracked any-depth `/\\.DS_Store$` branch untested (fixtures only at worktree root)"
+      }
+    ]
+  },
+  {
+    "finding_id": "SP-002",
+    "run_file": "internal/acdsl/git.go",
+    "run_severity": "MAJOR",
+    "run_claim": "GitRevParse is declared, exported, and exercised only by git_test.go with no production caller, leaving a public API surface with no caller.",
+    "golden_same_file": [
+      {
+        "golden_id": "GV3-061",
+        "severity": "INFO",
+        "claim": "GitChangedFiles strings.Fields fragments space-containing paths"
+      },
+      {
+        "golden_id": "GV3-065",
+        "severity": "INFO",
+        "claim": "GitRevParse is a test-only export"
+      },
+      {
+        "golden_id": "GV3-174",
+        "severity": "NIT",
+        "claim": "New unexported function `shellGitAbbrevRef` is placed after the pre-existing unexported `shellGitGrepCached`, but alphabetically 'shellGitAbbrevRef' sorts before 'shellGitGrepCached', violating RULE-GOLANG-FILE-001's alphabetical-within-group ordering for private functions."
+      }
+    ]
+  },
+  {
+    "finding_id": "SP-003",
+    "run_file": "internal/server/presentation.go",
+    "run_severity": "MINOR",
+    "run_claim": "saveProfileSelection and internal/config/installenv.go both read from repo-relative paths rather than an injected root, adding second and third instances of the same implicit CWD==repo-root contract.",
+    "golden_same_file": [
+      {
+        "golden_id": "GV3-071",
+        "severity": "MINOR",
+        "claim": "D6 template-body seeding (de+casual from presentation-profile.de.md) never exercised (body falls back to empty)"
+      },
+      {
+        "golden_id": "GV3-171",
+        "severity": "MINOR",
+        "claim": "New `writeFileAtomic(path, content string) error` reimplements the tmp-file-write + fsx.ReplaceFile + cleanup-on-error discipline that already exists as `(s *Server) saveAutoApplyRules(content string) error` in internal/server/autoapplyrules.go, instead of sharing one implementation."
+      },
+      {
+        "golden_id": "GV3-175",
+        "severity": "NIT",
+        "claim": "`presentationProfile.DevMode bool` (and the corresponding `profilePage.DevMode`/`devMode`/`dev_mode` plumbing) is a bare-adjective boolean configuration field on a persisted model, violating RULE-GOLANG-BOOL-002's `Is<X>Active` naming requirement."
+      },
+      {
+        "golden_id": "GV3-186",
+        "severity": "NIT",
+        "claim": "`if body == \"\" && audience == audienceCasual && language == languageGerman {` chains two `&&` operators in one `if` condition, violating RULE-GOLANG-COND-001's 'at most one binary boolean operator' rule."
+      },
+      {
+        "golden_id": "GV3-188",
+        "severity": "NIT",
+        "claim": "New function `func (st *presentationStore) saveProfileSelection(audience, language string, devMode bool) error` orders its parameters `audience, language, devMode`, which is not alphabetical (correct order is `audience, devMode, language`), violating RULE-GOLANG-CALL-003."
+      },
+      {
+        "golden_id": "GV3-190",
+        "severity": "NIT",
+        "claim": "New function `func writeFileAtomic(path, content string) error` orders its parameters `path, content`, which is not alphabetical (`content` < `path`), violating RULE-GOLANG-CALL-003."
+      },
+      {
+        "golden_id": "GV4-214",
+        "severity": "NIT",
+        "claim": "A 5-argument fmt.Sprintf call is written on a single line instead of one argument per line with a trailing comma, violating RULE-GOLANG-CALL-002."
+      }
+    ]
+  },
+  {
+    "finding_id": "SP-004",
+    "run_file": null,
+    "run_severity": "MINOR",
+    "run_claim": "handleReposAdd's new git init -b main side effect runs unconditionally for any existing directory without .git, mutating a directory on disk with git init and no confirmation step.",
+    "golden_same_file": []
+  },
+  {
+    "finding_id": "SP-005",
+    "run_file": null,
+    "run_severity": "MINOR",
+    "run_claim": "Several new German i18n catalog entries mix straight sentence punctuation with the more terse existing entries, and i18n prose quality is not mechanically checkable here.",
+    "golden_same_file": []
+  }
+]

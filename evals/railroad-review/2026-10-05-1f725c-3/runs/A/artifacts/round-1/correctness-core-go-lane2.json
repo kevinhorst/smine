@@ -1,0 +1,48 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "core-go",
+  "round": 1,
+  "aborted": false,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "notes": "Cross-chunk for the station: (1) correctness-140 — config.LoadFragment/ExpandInstallMarkers exist here, but their use at the revert copy and override-comparison fragment loads is in internal/server/config_sync.go (other chunk). (2) correctness-48/87 — git init and name-before-init ordering live in internal/server/repos.go. (3) darwin SyncAll requires an explicit launchctl 'enabled' override for default-disabled routines (routines/skill-eval/default-disabled); whether Start writes that override is in launchctl_darwin.go, outside the manifest. (4) startPeek passes --back-link to peek-mcp; an older peek without the flag fails to start (README documents it) — no spec covers the flag. Known-ledger rows on policy.go/git.go/registry.go were not re-reported.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "Chunk carries only the -presentation flag wiring (cmd/configserver/main.go, pre-existing) and installPresentationProfile; UI overlay/audience gating lives in internal/server (other chunk). No FAIL in chunk."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "User stories are realized in templates/server and skills — outside core-go; nothing in chunk contradicts them."},
+    {"group": "spec-3-raw", "hits": [], "note": "correctness-20: -presentation flag defaults to server.DefaultPresentationPath() and threads into Options.PresentationPath (main.go L58/L149) — PASS. Other items (hook script, FuncMap, templates, run.sh) out of chunk."},
+    {"group": "spec-3-raw (part 2)", "hits": [], "note": "correctness-29: -presentation-profile passed into runInstall; installPresentationProfile copies the template, empty id installs nothing (install_windows.go L356-379) — PASS; install ordering vs sync_skills already carried by known correctness-BLK-3-r2. Other items out of chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "All items are templates/proposals.go/catalog/skills — none in core-go."},
+    {"group": "spec-5-change-nondev-automation", "hits": [], "note": "correctness-42: shell.RunSync with SyncTimeout=10m mirrors Run/RunDialog (platformArgv, HideWindow, WaitDelay, log line, wrapped error); call sites install_windows.go x2 (L86, L387), contextdocs/sync.go L62, skills/sync.go L23; repo-wide grep finds no shell.Run on sync_*/ensure_git_repo — PASS. correctness-47: Repo.Label json:label,omitempty with 80 cap (byte-count issue is known correctness-MAJ-14-r1). correctness-48 git init lives in internal/server/repos.go (other chunk)."},
+    {"group": "spec-5-change-nondev-automation (part 2)", "hits": [], "note": "correctness-54: folderDialogScript shows (Opacity=0) and activates the TopMost owner before ShowDialog, closes it after (contextdocs/sync.go L93-101) — PASS. Other items (orchestrate skill, run.sh, bootstrap handler, nav) out of chunk."},
+    {"group": "spec-6-raw", "hits": ["correctness-MAJ-1"], "note": "55: policy.json/schema/ACDSL-JSON-003 rule line match spec (fixtures out of scope). 56: LoadPolicy/parsePolicy defaults and errors PASS. 57: runCheck wiring PASS; base_ref acts as an override per D10; isBoundary uses branch-name equality instead of HEAD==base tip (documented, stricter for fresh agent branches; base-name recognition already known correctness-MAJ-52-r1). 58/59/60: surface/overlay/delta PASS modulo known MAJ-10-r1, MAJ-1-r2, MAJ-9-r1, MAJ-51-r1. 61: FAIL — diagnostic shape/Why deviate (correctness-MAJ-1). 62: GitRevParse stderr known MIN-1-r2. 63: writePolicy PASS. 64: README Modes section, deny snippet and amended overlay paragraph PASS (hook script out of chunk)."},
+    {"group": "spec-7-raw", "hits": [], "note": "railroad-review skill/workflow and runbooks — none in core-go."},
+    {"group": "spec-8-change-bootstrap-profile", "hits": [], "note": "Items concern the welcome form, skills, smine-batch routing and the de profile — none in core-go."},
+    {"group": "spec-8-change-bootstrap-profile (part 2)", "hits": [], "note": "83: sessions.Store skips archived/ in Reload; ArchiveScope errors when already archived; UnarchiveScope errors and moves nothing when a live folder exists; DeleteScope only under archived/; ArchivedFolders counts md reports, missing dir -> empty; validateScopeName rejects '', archived, ., .., separators; default archivable — PASS. 87: Repo.Validate rejects default/archived, duplicates still rejected by Add — PASS (name-before-git-init ordering is server-side). 84-86 server/templates."},
+    {"group": "spec-9-change-headless-bootstrap", "hits": [], "note": "cmd/bootstrap/run.sh and bootstrap.go are outside core-go."},
+    {"group": "spec-9-change-headless-bootstrap (part 2)", "hits": [], "note": "Profile DevMode, skills, nightly run.sh, installers — outside core-go."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "107: planformat canon reordered to ... Decisions, Open questions, Baseline (verified) ... Stop conditions, Changelog with checks unchanged — PASS. Rule/skill/context items out of chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "119: WorktreeCounts returns []WorktreeKindCount{Count, Label} in prefix order, label = prefix minus trailing slash, zero kinds omitted, git error -> nil; CountPoolWorktrees doc updated — PASS. Other items scripts/server/templates."},
+    {"group": "spec-12-raw", "hits": [], "note": "127: -style flag defaulting to server.DefaultStylePath() threaded into Options.StylePath (main.go L60/L157) — PASS. Store/handlers/templates out of chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "136: -claude-home/-codex-home default from os.UserHomeDir() (fatal on error); startPeek reuses on matching healthz homes, logs ERROR and returns false on mismatch or unidentifiable listener, spawns with --port/--claude-home/--codex-home (+--control-port when nonzero), false on spawn failure; caller clears endpoint and dashboard URL — PASS (extra --back-link arg traces to no spec; concept already carried by known correctness-INF-2-r2). 138: plist template args and __PEEK_HOME_ARGS__ placeholder — PASS. 140: config.ExpandInstallMarkers/LoadFragment read install.env from cwd, defaults 42442, unknown markers untouched — PASS here; application at revert/compare sites is internal/server (cross-chunk). 141: Windows writeInstallEnv writes CONFIGSERVER_PORT/PEEK_PORT/PEEK_CONTROL_PORT into repoDir before runSyncs — PASS. 133-135, 137, 139 live in peek-mcp/install.sh/sync_settings.sh."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "142-145: registry identity (mtime+size), stat-before-read snapshot, refreshIfChanged in Find/Repos with missing-never-loaded no-op and keep-last-good logging, Add/Remove re-read under write lock and save recording identity, Fingerprint over for-each-ref + worktree list erroring on either failure — PASS against the spec's own example implementation. 146-149 server-side."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "internal/acdsl/policy.go",
+      "line": 105,
+      "checklist": "correctness-61",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "Policy diagnostics do not follow the spec-6 shape `<file>:<line>: policy(<mode>): rule <id> added|modified|removed outside <detail>` with a Why naming the base ref: the gated verifier diagnostic drops the added/modified action, the strict diagnostic drops the `outside <detail>` form, and Why is a fixed string that never names the base ref.",
+      "failure_scenario": "Gated target repo, agent branch adds `//acdsl:ACDSL-GOLANG-X-001 newverifier ...` (GOLANG editable, newverifier not in the base registry) -> acdsl check prints `acdsl/rules.acdsl:N: policy(gated): rule ACDSL-GOLANG-X-001 binds verifier \"newverifier\" outside the sanctioned set` with Why `... sanction the change on the policy base branch, or revert` — no `added`, no base ref name; strict mode prints `rule <id> added — no rule is editable in this repo` instead of `added outside <detail>`.",
+      "fix": "Render every rule diagnostic as `policy(<mode>): rule <id> <action> outside <detail>` (pass action into the verifier branch: `rule %s %s outside the sanctioned verifier set (%q)`, strict: `rule %s %s outside the editable set (strict: none)`) and build Why from the resolved base ref: `sanction the scope in acdsl/policy.json on <base>, or revert`.",
+      "evidence": "Re-read git show 1f725ce:internal/acdsl/policy.go lines 82-109 (classViolations: strict message L93 `rule %s %s — no rule is editable in this repo`, verifier message L105 `rule %s binds verifier %q outside the sanctioned set` without the action argument) and L223-231 (policyDiagnostic: Why is the constant `acdsl/policy.json governs who may change the rule system — sanction the change on the policy base branch, or revert`, no base parameter). Spec-6 raw.md L256 mandates Message `<file>:<line>: policy(<mode>): rule <id> added|modified|removed outside <detail>` and Why naming the fix `sanction the scope in acdsl/policy.json on <base ref>, or revert`; the spec's Hot items contain no alternative strings (grep found none), so L256 is the only contract. Not in known.json (no entry on diagnostic shape)."
+    }
+  ],
+  "walk_complete": true
+}

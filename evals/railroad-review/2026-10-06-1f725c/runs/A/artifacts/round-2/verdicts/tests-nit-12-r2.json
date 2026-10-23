@@ -1,0 +1,13 @@
+{
+  "finding_id": "tests-NIT-12-r2",
+  "verdict": "confirmed",
+  "reason": "Confirmed by direct read: sync.go:94-96 added `$owner.Show()` and `$owner.Activate()` to folderDialogScript as the addendum-A6 fix (comment explicitly says the unshown owner gave no z-order boost and the dialog opened behind the browser), and sync_test.go's TestFolderDialogScript (lines 76-79) asserts only `ShowDialog($owner)` and `TopMost=$true` — neither new line is pinned by any assertion. A future edit could drop Show()/Activate() and reintroduce the exact regression the comment describes without failing any test.",
+  "probe": "none: same structural block as the other three findings in this batch — direct bin/acdsl invocation and `make acdsl ARGS=...` both denied by tool-policy after two attempts (no allow rule for the former, no declared `acdsl` make target for the latter). Settled via the manual path.",
+  "evidence": {
+    "read": [
+      "internal/contextdocs/sync.go:88-101 — folderDialogScript's const block; `$owner.Show()` and `$owner.Activate()` are new lines per the diff against b4981b88, added specifically per the addendum-A6 comment above them",
+      "internal/contextdocs/sync_test.go:76-79 — TestFolderDialogScript's two assert.Contains calls check only `ShowDialog($owner)` and `TopMost=$true`, no reference to Show() or Activate()"
+    ]
+  },
+  "artifacts": []
+}

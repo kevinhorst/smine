@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-162-r1",
+  "verdict": "confirmed",
+  "reason": "Both claimed spots are added lines and go red: L92-94 (the isMissingAndUnloaded guard, followed directly by the next guard at L95) and L43-45 (the Name guard, followed directly by the new reserved-name comment at L46). RULE-GOLANG-ERR-002 requires a blank line after every early-return guard block. One part of the claim does not hold: it says the rest of registry.go follows the rule, but other new code in the same diff misses it too, at Add L140-142 -> L143 and Remove L188-190 -> L191. The fix should cover those lines as well.",
+  "probe": "PROBE-CODE-STYLE-NIT-162-R1",
+  "script": "code-style-nit-162-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-162-r1/fail/registry.go",
+  "registry": "registry-code-style-nit-158-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-162-R1 -registry .../probes/registry-code-style-nit-158-r1.json -> exit 1, 28 hits including internal/repos/registry.go:45 and internal/repos/registry.go:94 (early-return guard block ends without a blank line before the next statement)",
+    "probe_note": "The probe scans the whole file and also counts guards followed by a closing-scope return, so the other 26 hits overcount the real violations. The claimed lines 45 and 94 are both exact hits. Among the extra hits, L142 and L190 are genuine misses in new code, which undercuts the claim's 'rest of the file follows it' argument.",
+    "validity": "-FIXFAIL rule over the fail fixture copy -> exit 1 at fail/registry.go:7; -FIXPASS over the blank-line fixture -> '1 rule(s) OK'. The direct verifier run was denied by tool policy.",
+    "read": [
+      "internal/repos/registry.go L35-58, L85-102, L132-201 at 1f725ce",
+      "git diff b4981b8 1f725ce -- internal/repos/registry.go: refreshIfChanged is new, the reserved-name block was inserted right after the pre-existing Name guard, Add/Remove snapshot reads are new",
+      "known.json registry.go rows (NIT-74 && condition, NIT-51, NIT-52, NIT-76, NIT-75, NIT-7-r2, NIT-15-r2, MAJ-14) do not cover blank-line placement"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-162-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-162-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-158-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-162-r1/fail/registry.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-162-r1/pass/registry.go"
+  ]
+}

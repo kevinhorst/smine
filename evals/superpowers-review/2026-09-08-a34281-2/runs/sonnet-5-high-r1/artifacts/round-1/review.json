@@ -1,0 +1,60 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/shell/shell.go",
+      "line": 26,
+      "severity": "MAJOR",
+      "claim": "Run and RunSync are near-total byte-for-byte code duplication, differing only in the timeout constant and error-message prefix, so any future fix to the run mechanics must be applied twice.",
+      "fix": "Factor a shared unexported run(ctx context.Context, timeout time.Duration, label, dir, name string, args ...string) (string, error) and make Run/RunSync thin callers passing their own timeout/label."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/server/presentation.go",
+      "line": 14,
+      "severity": "MAJOR",
+      "claim": "The persisted audience value was renamed from \"non-developer\" to \"casual\", contradicting the approved plan's explicit D5 decision that only the two existing values are ever written, with no plan Decisions amendment or Changelog row (RULE-PLAN-049).",
+      "fix": "Flag for explicit confirmation: if the rename was deliberate, update D5/D6 and add the Changelog row; if not, keep \"non-developer\" as the constant value with \"Casual\" only as the UI label."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "Makefile",
+      "line": 81,
+      "severity": "MINOR",
+      "claim": "The build-install target's help comment is a copy-paste of build's, so make help shows a bogus/duplicate build row instead of documenting build-install.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/repos/registry.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "Add/Remove's read-modify-write against a fresh readRegistrySnapshot narrows but does not fully close the multi-process race: two processes racing within the same read-to-write window can still silently drop one write since there is no OS-level file lock.",
+      "fix": "Add a one-line comment acknowledging the residual window, or an flock-style guard if concurrent configservers become a real scenario again."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 64,
+      "severity": "MINOR",
+      "claim": "The \"was a context file read via Bash\" detector only recognizes the literal two-word form `cat <path>` and bails out on any shell metacharacter, so any other reader (less, python3 -c, \\cat, a heredoc) evades detection entirely.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "cmd/worktrees/_lib/verdict.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "squash_contained()'s comment says \"no side effects\", but git merge-tree --write-tree does write a garbage-collectible tree object into the ODB, so the comment is slightly over-stated.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "routines/smine-nightly/run.sh",
+      "line": 136,
+      "severity": "MINOR",
+      "claim": "The guard `[[ \"$exit_status\" -eq 0 ]] && exit_status=$orchestrate_status` is a tautology since the enclosing if at line 94 already requires exit_status -eq 0 and nothing mutates it before this line.",
+      "fix": "Replace with an unconditional exit_status=$orchestrate_status."
+    }
+  ]
+}

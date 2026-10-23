@@ -1,0 +1,108 @@
+{
+  "findings": [],
+  "runs": [
+    {
+      "id": 2,
+      "anchors": [
+        {
+          "id": "stack",
+          "seq": 3520
+        },
+        {
+          "id": "lanes",
+          "seq": 3531
+        },
+        {
+          "id": "base_health",
+          "seq": 3609
+        },
+        {
+          "id": "head_buildtest",
+          "seq": 3646
+        },
+        {
+          "id": "base_health",
+          "seq": 3841
+        },
+        {
+          "id": "hunk_read",
+          "seq": 3845
+        },
+        {
+          "id": "checklist",
+          "seq": 3958
+        },
+        {
+          "id": "lanes",
+          "seq": 4110
+        },
+        {
+          "id": "round",
+          "seq": 4136
+        },
+        {
+          "id": "ledger",
+          "seq": 16875
+        },
+        {
+          "id": "cleanup",
+          "seq": 16887
+        }
+      ],
+      "failures": [],
+      "findings": 0,
+      "passes": [
+        {
+          "check": "cleanup_before_end",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_fix_check",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_ledger",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_replay",
+          "count": 1
+        },
+        {
+          "check": "no_hunks",
+          "count": 1
+        },
+        {
+          "check": "round_after_lanes",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_build",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_tests",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_build",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_tests",
+          "count": 1
+        },
+        {
+          "check": "round_lane_plan",
+          "count": 1
+        }
+      ],
+      "reason": "session_ended",
+      "session": "04a93ed4-ae36-432e-90a5-41a0a96b0bfa",
+      "skill": "railroad-review",
+      "state": "ended",
+      "title": "run-2026-10-04-1f725c-a-b5",
+      "version": "23.1.0"
+    }
+  ]
+}

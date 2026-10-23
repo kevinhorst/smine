@@ -1,0 +1,1836 @@
+{
+  "eval": {
+    "date": "2026-09-26",
+    "notes": "",
+    "notesBullets": [
+      "arms: claude-opus-5-5[1m]-medium, claude-opus-5-5[1m]-medium-no-serena",
+      "start commit d08787dd",
+      "judge: opus"
+    ],
+    "skill": "fimplement",
+    "skillMdPath": "evals/fimplement/2026-09-26-d08787-3/SKILL.md"
+  },
+  "metrics": [
+    {
+      "id": "smoke_pass",
+      "direction": "higher",
+      "label": "Smoke pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "wall_seconds",
+      "direction": "lower",
+      "label": "Wall time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "active_seconds",
+      "direction": "lower",
+      "label": "Active time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "output_tokens",
+      "direction": "lower",
+      "label": "Output tokens",
+      "source": "telemetry",
+      "unit": "tokens"
+    },
+    {
+      "id": "cost_usd",
+      "direction": "lower",
+      "label": "Cost",
+      "source": "telemetry",
+      "unit": "usd"
+    },
+    {
+      "id": "permission_denials",
+      "direction": "lower",
+      "label": "Permission denials",
+      "source": "telemetry",
+      "unit": "count"
+    },
+    {
+      "id": "check_pass",
+      "direction": "higher",
+      "label": "Check pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "step_miss_pct",
+      "direction": "lower",
+      "label": "Step misses",
+      "source": "judge",
+      "unit": "%"
+    },
+    {
+      "id": "defects_major",
+      "direction": "lower",
+      "label": "Major+ defects",
+      "source": "judge",
+      "unit": "count"
+    },
+    {
+      "id": "quality_rank",
+      "direction": "lower",
+      "label": "Quality rank",
+      "source": "judge",
+      "unit": "rank"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 732
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 732
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 35714
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 4.470826
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 4
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 10.714285714285714
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "value": 4
+    },
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 651
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 651
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 31539
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 3.4276272000000008
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 2
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 13.793103448275861
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "value": 2
+    },
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 642
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 642
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 32629
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 4.0143288
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 3
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 14.285714285714286
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "value": 3
+    },
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 674
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 674
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 36992
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 3.8674410000000004
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 2
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 13.793103448275861
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "value": 1
+    }
+  ],
+  "probes": [
+    {
+      "name": "variant",
+      "result": "server serena not connected (pending) — comparison void",
+      "ruleIds": [],
+      "runId": "claude-opus-5-5[1m]-medium-r1"
+    },
+    {
+      "name": "variant",
+      "result": "server serena not connected (pending) — comparison void",
+      "ruleIds": [],
+      "runId": "claude-opus-5-5[1m]-medium-r2"
+    }
+  ],
+  "rubric": [
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Any input accepted",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-intake-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Read whole plan",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-intake-002a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Target-tier proceed",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-intake-006a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Route around denials",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-ground-005b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Re-verify against tree",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-ground-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verify touch points",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-ground-002a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Exemplar per unit",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-ground-004"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Test spec honored",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-003b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No pre-enumeration theater",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-005b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "One unit only",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Write to contract",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-002"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-003a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Gate before advance",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-003a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Advance",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-004"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-005a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Compiler-driven cascades",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-impl-005a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No proxy claim",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-verify-007b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verify observable path",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-verify-001a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Run running-app check",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-verify-003"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Report checklist gap",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-verify-006a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Gap not done",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-verify-006b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Unreachable risk locus",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-verify-007a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Stop background processes",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-commit-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Hand off commit",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-commit-002"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Report against plan",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-commit-003"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Never self-delegate",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-delegate-001a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Chained skills direct",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-delegate-007"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "External stop gates",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-stop-001a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No substitution",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-stop-003b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-004a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Scope creep",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-stop-004a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-004a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Discipline by mode",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-delegate-004a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Prerequisites present",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-ground-003"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-005c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Permission gap",
+      "source": "evals/fimplement/2026-09-26-d08787-3/SKILL.md#skill-fimplement-ground-005c"
+    }
+  ],
+  "runs": [
+    {
+      "id": "claude-opus-5-5[1m]-medium-r1",
+      "invalid": true,
+      "invalidReason": "server serena not connected (pending) — comparison void",
+      "model": {
+        "id": "claude-opus-5-5[1m]",
+        "effort": "medium",
+        "mode": ""
+      },
+      "output": "runs/C/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-d08787-3/SKILL.md",
+      "transcript": "a766a7e2-faaf-4a8f-806c-4a305e70cdf2",
+      "variant": {
+        "disable": [],
+        "name": "claude-opus-5-5[1m]-medium"
+      }
+    },
+    {
+      "id": "claude-opus-5-5[1m]-medium-r2",
+      "invalid": true,
+      "invalidReason": "server serena not connected (pending) — comparison void",
+      "model": {
+        "id": "claude-opus-5-5[1m]",
+        "effort": "medium",
+        "mode": ""
+      },
+      "output": "runs/A/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-d08787-3/SKILL.md",
+      "transcript": "93534512-cca5-43d6-b156-7c60aa2c4966",
+      "variant": {
+        "disable": [],
+        "name": "claude-opus-5-5[1m]-medium"
+      }
+    },
+    {
+      "id": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-opus-5-5[1m]",
+        "effort": "medium",
+        "mode": ""
+      },
+      "output": "runs/B/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-d08787-3/SKILL.md",
+      "transcript": "b2268ee4-c9a7-4d37-aaeb-eb2376eb072c",
+      "variant": {
+        "disable": [],
+        "name": "claude-opus-5-5[1m]-medium-no-serena"
+      }
+    },
+    {
+      "id": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-opus-5-5[1m]",
+        "effort": "medium",
+        "mode": ""
+      },
+      "output": "runs/D/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-d08787-3/SKILL.md",
+      "transcript": "05605585-620a-4d37-ac00-8898b6f14c89",
+      "variant": {
+        "disable": [],
+        "name": "claude-opus-5-5[1m]-medium-no-serena"
+      }
+    }
+  ],
+  "schemaVersion": "2.7",
+  "scores": [
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Took the plan file as the binding input.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Whole plan read in one unbounded Read before any work; later edits cite its sections and changelog rows (trace.md:20, trace.md:54).",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:3"
+      ],
+      "justification": "followed: Target opus; run proceeded silently, which is the specified at/above-target behavior. No trace line can show a silent check.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:97"
+      ],
+      "justification": "followed: pgrep, compound ps and golangci-lint --help were denied (trace.md:97, 99, 105); routed around via git grep and Read of the wrapper source (trace.md:101-103), no gate-defeating tricks.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "partial: Checked for pre-existing changes and read each target before editing it, but re-verification was interleaved per unit (Go sources first read at trace.md:34 after Rust was already written), not done before writing anything.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:8"
+      ],
+      "justification": "followed: Every Changes file read before its edit (ops.rs/error.rs 8-9, wire.rs 14, main.rs 22, Go files 34-36, settings 67-68, close skill 76, facts 81-82); DecideCommit callers checked via Serena (trace.md:44).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:26"
+      ],
+      "justification": "followed: Located and read the ops_remove and from_inside_worktree fixtures the plan names as the mirror for the new scenario test (trace.md:26-27); commitPattern sibling read at trace.md:36.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "cmd/agentwt/src/ops.rs:224"
+      ],
+      "justification": "followed: steps_follow_the_plan uses the labeled case table with the five spec cases; ops_remove_dry_run covers all four scenario cases (tests/scenarios/mod.rs:497); TestRun/TestState_Transitions extended per spec (trace.md:61-64).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:44"
+      ],
+      "justification": "followed: One Serena reference lookup before the DecideCommit signature change, then straight to edits and go test; no touch-list enumeration.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:10"
+      ],
+      "justification": "followed: Dependency order: error.rs, wire.rs, ops.rs, main.rs, scenario test (10-28), then Go title/prompts/main (46-57), settings (69-70), skill (77-79), fact (83).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "cmd/agentwt/src/ops.rs:126"
+      ],
+      "justification": "followed: steps/preview/RemoveStep match the plan's §3 code byte-for-byte; DecideBash signature and -close flag per §7 (trace.md:47-53).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:29"
+      ],
+      "justification": "followed: Rust test + lint green (29-41) before Go; go test green (65) before settings/skill/fact; config and doc units ride the final audit (88-110).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:42"
+      ],
+      "justification": "followed: Advanced Rust → Go → settings → skill → fact after each gate.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:65"
+      ],
+      "justification": "followed: Single-caller rename DecideCommit→DecideBash; build and tests via go test confirmed green; Rust enum growth validated by make rust-test/lint.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:146"
+      ],
+      "justification": "followed: Report and plan changelog mark V3, V5–V8 (live hook routing) open rather than green (plan changelog row at change-close-done.md:678).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:114"
+      ],
+      "justification": "partial: Built agentwt and exercised dry-run refusal and pass paths against real worktrees (113-119); the sessiontitle -close hook path was never run live.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:118"
+      ],
+      "justification": "followed: Ran the freshly built binary directly (make rust-build, bin/agentwt) and confirmed via git worktree list that nothing changed (trace.md:119).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "followed: Changelog row records V1, V2, V4 green and V3, V5–V8 open; repeated in the final report (trace.md:146).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:648"
+      ],
+      "justification": "followed: Checklist boxes left unticked and the report states the live part is untested; not marked done.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:146"
+      ],
+      "justification": "skipped: The risk locus (exit 3 skipping PostToolUse, the -close hook firing on a live /close) was not executed; it was reported open instead of run once with real inputs.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:124"
+      ],
+      "justification": "followed: No background processes started; stated before commit handoff.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-001",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:125"
+      ],
+      "justification": "followed: Invoked /package-commit; commits grouped by package (127-143).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:146"
+      ],
+      "justification": "followed: Final report plus plan changelog (trace.md:121) list gate results, running-app outcome and open verifications.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:125"
+      ],
+      "justification": "followed: No Agent/delegate spawn anywhere in the trace.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:125"
+      ],
+      "justification": "followed: package-commit invoked directly via the Skill tool, not via /delegate.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:110"
+      ],
+      "justification": "followed: Red audit (S5) fixed to green in-session (trace.md:88-110) rather than reported done red.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "cmd/agentwt/src/ops.rs:126"
+      ],
+      "justification": "followed: Plan mechanisms (step plan, exit-3 signal, DecideBash, second hook) implemented as designed; D1 [USER] order carried into the close skill (trace.md:77).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:108"
+      ],
+      "justification": "followed: Only out-of-plan change: golangciwrap gains --allow-serial-runners to get audit green under lock contention; self-contained, committed separately (trace.md:128) and noted in the plan changelog (trace.md:121). Flag was applied unverified (help denied) and proven only by the green audit.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "claude-opus-5-5[1m]-medium-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Plan file taken as the binding input.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Whole plan read in one call before any edit.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:3"
+      ],
+      "justification": "followed: Target opus; run proceeded silently with no warning, which is correct at-target behavior. The model check itself leaves no trace line.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:101"
+      ],
+      "justification": "followed: The denied live dry-run was not forced through a hidden script or a settings edit. The run leaned on the admitted ops_remove_dry_run scenario test and recorded the denial (trace.md:102). It tried no other admitted form.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: git grep for the plan symbols and ls of the target dirs before editing (trace.md:3-12); trace.md:9 concludes the plan is unimplemented.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:11"
+      ],
+      "justification": "followed: Each touch point was read or grepped before its edit: Rust files at 7-12, scenarios at 35-37, sessiontitle at 47-49, settings at 74-75, close skill at 79-84, fact at 89.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:37"
+      ],
+      "justification": "followed: Read the ops_remove / from_inside_worktree fixtures before writing ops_remove_dry_run, which the plan says to mirror.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "cmd/sessiontitle/main_test.go:415"
+      ],
+      "justification": "followed: All planned cases are present: TestRun close/echo cases, _expectedClose (title_test.go:165), steps_follow_the_plan labels (ops.rs:235), ops_remove_dry_run (mod.rs:498). The case-builder shape change was forced by clippy and logged in the plan Changelog.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: The only reference sweeps were the grep/Serena checks the plan's Contracts & sweeps table requires. The run did not list touch points up front.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed: Dependency order: Rust error, wire, ops, main, tests; then Go title, prompts, main, tests; then settings, close skill, fact.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:50"
+      ],
+      "justification": "followed: Applied §1-§10 as written. The only deviation (test helper shape) was noted in the Changelog (trace.md:102).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:45"
+      ],
+      "justification": "followed: Rust test and lint went green (40-45) before the Go work. go test went green (72) before settings. Config and doc units rode the final audit (96).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:72"
+      ],
+      "justification": "followed: The DecideCommit to DecideBash rename was confirmed by build/test plus the plan-mandated text sweep; the fmt error was fixed from compiler-tool output (42-45).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:678"
+      ],
+      "justification": "followed: The Changelog marks V4 as denied and V3-V8 as pending merge/install; the scenario test is not presented as the live check.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:100"
+      ],
+      "justification": "partial: Tried the built binary's dry-run against the real worktree; it was denied (101). The hook path was only exercised by unit/scenario tests. No other observable check was attempted.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:101"
+      ],
+      "justification": "partial: The running-app check was tried through a non-admitted command and denied; no admitted route was then found.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:102"
+      ],
+      "justification": "followed: The plan Changelog row reports V1/V2 as green and V3-V8 as not exercised in-session.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:125"
+      ],
+      "justification": "partial: The gap was reported and the Verification boxes were left unchecked. But the run committed and reported the plan as implemented while V3-V8 were still open. Most of those are, by plan design, user steps after merge.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:102"
+      ],
+      "justification": "skipped: The risk loci (exit 3 skipping PostToolUse; the '~'-path if rule firing: S7/S8) were never executed with real inputs; they were deferred to V5/V6 after install.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:103"
+      ],
+      "justification": "followed: Stated that no background processes were started, which matches the trace.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-001",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:104"
+      ],
+      "justification": "followed: Invoked /package-commit via the Skill tool.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:125"
+      ],
+      "justification": "followed: Final report covers the commits, audit/test gates and verification scope; details are in the plan Changelog (trace.md:102).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:104"
+      ],
+      "justification": "followed: No /delegate call; the work ran in root.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:85"
+      ],
+      "justification": "followed: Plan mode: §9 applied verbatim, and deviations were logged in the Changelog rather than made silently.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-004a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:104"
+      ],
+      "justification": "followed: /package-commit invoked directly.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:1"
+      ],
+      "justification": "followed: Injected context read first. Audit was run to a log and green (96-99, plan S5); no gate breached.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:30"
+      ],
+      "justification": "followed: The only shape change was the test-case builder, forced by clippy. No mechanism was swapped and no [USER] decision (D1) was demoted.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:108"
+      ],
+      "justification": "followed: The committed files match the plan's Changes table exactly (109-122).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "claude-opus-5-5[1m]-medium-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Took the change plan as binding contract.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Full plan read (no offset/limit) before any grounding or edit; Tests, Contracts & sweeps and Verification sections were later executed (trace.md:93, 95-96, 138).",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Plan target is opus; run proceeded silently, which is the prescribed behavior at/above target. No explicit tier check line exists, which the entry does not require at-tier.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:104"
+      ],
+      "justification": "followed: pgrep denied (104) and a ps|grep compound denied (106); routed around by re-running make audit in the background (108) rather than defeating the gate.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "partial: Up-front git grep of planned symbols (3) and reads of the agentwt sources (8-11) preceded the first edit, but sessiontitle (36-38), settings (73-74), close skill (78-82) and facts (88-89) were only read just-in-time after Rust edits had begun (12).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Symbol grep (3), directory listing (4), then every Changes file read before its edit (8-11, 28-29, 36-38, 63-64, 74, 82, 89).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:27"
+      ],
+      "justification": "followed: Located and read the ops_remove / from_inside_worktree fixtures the plan names (27-29) before writing ops_remove_dry_run; prompts.go with commitPattern read (38) before adding closeCheckPattern.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:66"
+      ],
+      "justification": "followed: _expectedClose added as struct member (title_test.go:165,191); planned TestRun cases present with labels (main_test.go:474-516); steps_follow_the_plan case table (ops.rs:224-263).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: DecideCommit rename edited directly and confirmed by go test (71); no speculative touch-list enumeration beyond the plan's sweep.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:12"
+      ],
+      "justification": "followed: Dependency order error.rs -> wire.rs -> ops.rs -> main.rs -> scenario tests (12-30), then sessiontitle (50-70), settings (75-76), close skill (84-86), fact (90).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:23"
+      ],
+      "justification": "followed: Edits follow the plan's diffs; the transparent Refused change (13) and isAwaitingAi placement are sanctioned by pre-existing plan Changelog rows (change-close-done.md:675-676).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:31"
+      ],
+      "justification": "followed: rust-test (31-32) and rust-lint fixed to green (34-46) before Go edits; go test green (71) before settings; config/doc units rode the final audit (96-114).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:47"
+      ],
+      "justification": "followed: Advanced from Rust to Go (47), settings (72), close skill (77), fact (87).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:71"
+      ],
+      "justification": "followed: DecideCommit -> DecideBash signature change had one call site; edited then compiled/tested green via go test (71).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:138"
+      ],
+      "justification": "followed: Final report states the work is not verified done and V3-V8 live checks remain; no proxy result claimed as green.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:111"
+      ],
+      "justification": "partial: Built the binary and ran a real dry-run against the dirty worktree (110-113, exit 3 refusal); the passing dry-run path and the sessiontitle hook rename path were never exercised live.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:111"
+      ],
+      "justification": "partial: Running check done through an admitted path for the refusal case only; V4 clean-worktree exit-0 path not run live.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:138"
+      ],
+      "justification": "followed: V1 (96-114) and V2 (71) exercised; gap V3-V8 explicitly reported.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:138"
+      ],
+      "justification": "followed: Run explicitly did not mark the work verified done given the V3-V8 gap.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:138"
+      ],
+      "justification": "skipped: Risk locus (PostToolUse -close hook firing via the ~ if-rule, exit-3 routing to PostToolUseFailure) held but was never executed; reported as outstanding instead.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:114"
+      ],
+      "justification": "followed: The only background process (audit, 108) completed before commit (114); no servers or listeners started.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:116"
+      ],
+      "justification": "followed: Invoked /package-commit via Skill tool; six package-grouped commits followed (122-134).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:138"
+      ],
+      "justification": "followed: Final report states units built and committed, audit green, live verification outstanding; serena caveat logged in plan Changelog (115).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:116"
+      ],
+      "justification": "followed: No Agent or /delegate call anywhere in the trace.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:116"
+      ],
+      "justification": "followed: package-commit invoked directly, not via /delegate.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:99"
+      ],
+      "justification": "followed: Red audit (S5) diagnosed as golangci lock contention and re-run to green (97-114) in-session.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:23"
+      ],
+      "justification": "followed: Plan mechanisms implemented as designed; Serena unavailability (48-49) only swapped the tooling for a grep sweep, logged in the plan Changelog (115).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:120"
+      ],
+      "justification": "followed: Committed files (122-134) match the plan's Changes table exactly.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Took the change plan as binding contract.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Full unbounded Read of the 680-line plan before any edit; Changelog and Stop conditions were later used (trace.md:61).",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:3"
+      ],
+      "justification": "followed: Target opus; opus-arm session proceeded silently, as the entry prescribes at target. No explicit trace line, silence is the expected conduct.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:117"
+      ],
+      "justification": "followed: Read-gate denial (trace.md:91) satisfied by reading skills.md (trace.md:93); tool-policy denial of the built binary not circumvented — fell back to the scenario test against the built binary and recorded it.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:4"
+      ],
+      "justification": "followed: grep of plan symbols plus reads of error.rs, ops.rs, main.rs, wire.rs (trace.md:12-16) and Go files (trace.md:58-60) before editing each.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:4"
+      ],
+      "justification": "followed: Checked named symbols/files via grep and full reads before writing; settings.json lines located (trace.md:85).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:104"
+      ],
+      "justification": "followed: Generated context index producer (make rules generate) run after the fact edit; no running infra assumed.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-003",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:36"
+      ],
+      "justification": "followed: Located ops_remove / from_inside_worktree fixtures the plan names as siblings for ops_remove_dry_run and read them (trace.md:37-38).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:118"
+      ],
+      "justification": "partial: Live dry-run check had no admitted path; run reported it as open for the user but did not name the missing rule (hook offered Bash(cmd/agentwt/target/debug/agentwt remove *)) and continued to commit.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005c",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:76"
+      ],
+      "justification": "followed: Planned cases added to TestState_Transitions (_expectedClose), TestRun (trace.md:78-82), steps_follow_the_plan labelled table (trace.md:32), wire pin 8->10 (trace.md:24); helper reshape was a lint-forced change recorded in Changelog.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:106"
+      ],
+      "justification": "followed: No upfront touch-list enumeration; residual references checked by sweep after edits.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:17"
+      ],
+      "justification": "followed: error.rs -> wire.rs -> ops.rs -> main.rs -> scenarios, then Go, settings, skill, fact in dependency order.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: Plan signatures (DecideBash, RemovePlan::steps, OpOutcome variants) implemented; placement deviations forced by go.md/funcorder noted.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: rust-test (trace.md:43) and rust-lint green before Go; go test (trace.md:83) before settings; config/doc units rode make audit (trace.md:110).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:144"
+      ],
+      "justification": "followed: Final report states V3-V8 not run; V1/V2 only ticked (trace.md:120-121); scenario-test coverage not claimed as live verification.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:116"
+      ],
+      "justification": "partial: Attempted live dry-run of the built binary; denied (trace.md:117), so observable path verified only via scenario tests; hook firing path untested.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:116"
+      ],
+      "justification": "partial: Direct binary call was not an admitted path and was denied; no admitted alternative sought for V4.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:119"
+      ],
+      "justification": "followed: Changelog row records V4 not run live; final report lists V3-V8 open (trace.md:144).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:648"
+      ],
+      "justification": "followed: V3-V8 left unticked and report says they have not been run; code committed but verification not marked done.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:118"
+      ],
+      "justification": "skipped: Risk locus (exit 3 routing to PostToolUseFailure, PostToolUse -close hook firing) never executed; only the denied binary call was attempted, the harness path was left to V5/V6.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:122"
+      ],
+      "justification": "followed: None started; stated explicitly.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-001",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:123"
+      ],
+      "justification": "followed: Six package-grouped commits (trace.md:129-141).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:144"
+      ],
+      "justification": "followed: Per-section units, gate results, open live checks and calls made reported.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:123"
+      ],
+      "justification": "followed: No Agent or /delegate calls in the run.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:123"
+      ],
+      "justification": "followed: package-commit invoked directly via Skill tool.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:110"
+      ],
+      "justification": "followed: Injected implementing gates read (trace.md:1); audit driven to green, lint reds fixed in-session (trace.md:47-56).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:34"
+      ],
+      "justification": "followed: Plan mechanisms (steps()/preview, DecideBash, -close hook, [USER] D1 order) implemented as designed; no substitution.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:107"
+      ],
+      "justification": "followed: Edits limited to plan Changes files; stale-text and contract sweeps run (trace.md:106).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    }
+  ],
+  "setup": null,
+  "sharedTotals": [],
+  "totals": [
+    {
+      "axis": "self",
+      "max": 28,
+      "pct": 89.28571428571429,
+      "raw": 25,
+      "runId": "claude-opus-5-5[1m]-medium-r1"
+    },
+    {
+      "axis": "self",
+      "max": 29,
+      "pct": 86.20689655172414,
+      "raw": 25,
+      "runId": "claude-opus-5-5[1m]-medium-r2"
+    },
+    {
+      "axis": "self",
+      "max": 28,
+      "pct": 85.71428571428571,
+      "raw": 24,
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r1"
+    },
+    {
+      "axis": "self",
+      "max": 29,
+      "pct": 86.20689655172414,
+      "raw": 25,
+      "runId": "claude-opus-5-5[1m]-medium-no-serena-r2"
+    }
+  ],
+  "verdict": {
+    "bestArm": "claude-opus-5-5[1m]-medium-no-serena-r2",
+    "perRun": [
+      {
+        "failedThresholds": [],
+        "pass": false,
+        "runId": "claude-opus-5-5[1m]-medium-r1"
+      },
+      {
+        "failedThresholds": [],
+        "pass": false,
+        "runId": "claude-opus-5-5[1m]-medium-r2"
+      },
+      {
+        "failedThresholds": [],
+        "pass": true,
+        "runId": "claude-opus-5-5[1m]-medium-no-serena-r1"
+      },
+      {
+        "failedThresholds": [],
+        "pass": true,
+        "runId": "claude-opus-5-5[1m]-medium-no-serena-r2"
+      }
+    ],
+    "reason": "threshold, smoke or variant failures 50% (2)",
+    "status": "mixed",
+    "thresholds": {
+      "check_pass": 1,
+      "smoke_pass": 1
+    }
+  }
+}

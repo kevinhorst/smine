@@ -1,0 +1,14 @@
+{
+  "finding_id": "tests-MIN-7-r2",
+  "verdict": "confirmed",
+  "reason": "profileTestAnswer (profilesettings.go:233), new in this diff, has 0.0% test coverage — no *_test.go in internal/server calls it, confirmed by the symbol-coverage probe and by direct re-read of profilesettings_test.go (only TestServer_HandleProfilePage/_HandleProfileSave/_HandleProfileStyleSave exist).",
+  "probe": "PROBE-TESTS-MIN-7-R2",
+  "script": "bin/verifiers/symbolcoverage (repo-registry verifier \"symbol-coverage\", reused — no custom script)",
+  "fixture": "artifacts/round-2/scratch/tests-min-7-r2/files.txt",
+  "evidence": "acdsl check -rule PROBE-TESTS-MIN-7-R2 -> github.com/kevinhorst/smine/internal/server/profilesettings.go:233: coverage of profileTestAnswer is 0.0% < planned 1.0%",
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b5-r2/railroad-probes-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/tests-min-7-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/tests-min-7-r2/files.txt"
+  ]
+}

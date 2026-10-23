@@ -1,0 +1,31 @@
+{
+  "finding_id": "correctness-MAJ-75-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at 1f725ce on smine-orchestrate SKILL.md:41 and :42 — both revert paths set the proposal (entry) to `rejected`, smine-apply step 4/5 has already removed every implemented and auto-applied proposal from <kind>.json into archive/done.md, and orchestrate names neither done.md nor rejected.md, so correctness-49's 'marking the proposal rejected' has no entry to land on.",
+  "probe": "PROBE-CORRECTNESS-MAJ-75-R1",
+  "script": "correctness-maj-75-r1-reject-target.sh",
+  "fixture": "probes/fixtures/correctness-maj-75-r1/root/skills/smine/smine-orchestrate/SKILL.md",
+  "registry": "registry-correctness-maj-75-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-75-R1 -registry probes/registry-correctness-maj-75-r1.json -root <worktree> -> exit 1: skills/smine/smine-orchestrate/SKILL.md:41 and :42: rejection targets a proposal entry smine-apply already moved out of <kind>.json into archive/done.md",
+    "read": [
+      "skills/smine/smine-orchestrate/SKILL.md:42 'revert a bad one on the branch and set its proposal entry to `rejected` with the reason, so it never re-applies'",
+      "skills/smine/smine-orchestrate/SKILL.md:41 casual lockout: 'set the driving proposal to `rejected` with the reason'",
+      "skills/smine/smine-apply/SKILL.md:31 'Render the proposal into `archive/done.md` with a completion note, then remove it from `<kind>.json` in place'",
+      "skills/smine/smine-apply/SKILL.md:36 auto-apply implements 'per kind exactly as step 4'; :37 'done.md entries gain an `(auto)` marker'",
+      "skills/smine/smine-skills/SKILL.md:57 (and context/routines/permissions/memory): done and rejected archive entries are both permanent suppression — so re-apply is already blocked; the defect is the record: done.md keeps reporting a reverted change as implemented",
+      "lane manifest correctness-49: 're-judges auto-applied changes reverting bad ones and marking the proposal rejected'"
+    ],
+    "validity": "fixture run (scratch git-backed copy of probes/fixtures/correctness-maj-75-r1/root, -root <scratch root>) -> exit 1 at skills/smine/smine-orchestrate/SKILL.md:2",
+    "attempts": "attempt 1 went green on the worktree because its premise grep expected 'done.md` entries' (stray backtick) and so skipped the file — a probe defect, not a refutation; attempt 2 fixed the premise regex, fixture re-validated red, real run red",
+    "cells": "effect incorrect / exposure rare accepted — the path needs decide/always auto-apply plus an orchestrate revert of that change"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-75-r1-reject-target.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-maj-75-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-75-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-75-r1/root/skills/smine/smine-orchestrate/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-75-r1/root/skills/smine/smine-apply/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-75-r1/root/railroad-probes-r1.acdsl"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "ranking": ["A", "B", "D", "C"],
+  "arms": [
+    {
+      "label": "A",
+      "summary": "Full plan implementation matching the reference in every production surface (dry-run step plan, Refusal variants, transparent Refused, would_* outcomes, DecideBash/afterClose/isAwaitingAi, hook wiring, allow rule, close skill 4.2.0, FACT update) with the plan's full test tables; the only deviation, afterClose placed before afterDelivery per the go.md private-methods-alphabetical rule, is logged in the plan Changelog.",
+      "defects": []
+    },
+    {
+      "label": "B",
+      "summary": "Production code byte-identical to the reference (title.go and main.go blobs match), all planned tests present with compact fixtures; sole blemish is afterClose following the plan sketch's placement after afterDelivery, which breaks the go.md alphabetical private-method order (the reference does the same).",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:42",
+          "claim": "afterClose placed after afterDelivery; go.md file order wants private methods alphabetical (afterClose first)"
+        }
+      ]
+    },
+    {
+      "label": "D",
+      "summary": "Complete and correct, equivalent to the reference apart from doc-comment wrapping and a terser scenario test; ticks V1/V2 in the plan and shares B's method-order slip.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:42",
+          "claim": "afterClose placed after afterDelivery; go.md file order wants private methods alphabetical (afterClose first)"
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "summary": "Complete and correct, equivalent to the reference with slightly heavier test helpers; shares the method-order slip and ticks V4 in the plan although it ran the repo-built bin/agentwt rather than the installed ~/go/bin binary V4 specifies.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:42",
+          "claim": "afterClose placed after afterDelivery; go.md file order wants private methods alphabetical (afterClose first)"
+        },
+        {
+          "severity": "MINOR",
+          "file": "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:649",
+          "claim": "V4 checkbox ticked though V4 names the installed ~/go/bin/smine-agentwt, which the run's own Changelog says still predates the change"
+        }
+      ]
+    }
+  ]
+}

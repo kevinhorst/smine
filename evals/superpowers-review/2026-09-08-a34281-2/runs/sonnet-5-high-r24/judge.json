@@ -1,0 +1,40 @@
+{
+  "matched": [
+    {
+      "goldenId": "GV3-002",
+      "findingId": "SP-001",
+      "note": "Same defect: setting policy.json's base_ref to the current branch name makes GitMergeBase(HEAD, ownBranch) resolve to HEAD, so baseName==branch and policyBase returns isBoundary=false; CheckPolicy then hits `if !isBoundary { return nil, nil }` and every gated/strict diagnostic is skipped. Identical mechanism and file/function to golden GV3-002 (base_ref=branch -> isBoundary false -> CheckPolicy returns nil before diffs). Golden GV3-001 (free-mode short-circuit taken when the working copy's own policy.Mode is free and the base fails to resolve) and GV4-202 (base_ref literally \"HEAD\", which keeps isBoundary true but makes the base commit equal HEAD so surfaceDelta/ruleDelta diff against themselves and are vacuously empty) are distinct root causes the candidate does not describe, so they remain missed rather than double-counted here."
+    },
+    {
+      "goldenId": "GV3-166",
+      "findingId": "SP-002",
+      "note": "Same defect as GV3-166: cmd/hooks/skill-invoke-gate.sh's post-invocation context-read deny only recognizes Read (raw, non-canonical file_path) and an exact two-token `cat <path>` Bash command; a multi-file cat, head/tail/sed/less, or any tool other than Read/Bash (e.g. Grep) is invisible to the tokenizer/case match and reads the governed context files unimpeded, defeating the gate's own stated enforcement guarantee."
+    },
+    {
+      "goldenId": "GV3-061",
+      "findingId": "SP-004",
+      "note": "Same defect: GitChangedFiles (internal/acdsl/git.go) splits git diff/untracked output on whitespace via strings.Fields, fragmenting any path containing a space into two bogus path tokens, so a rule declared or edited in such a file is invisible to ruleDelta and the gated/strict policy check."
+    }
+  ],
+  "missed": ["GV3-001","GV3-003","GV3-004","GV3-005","GV3-006","GV3-007","GV3-008","GV3-009","GV3-010","GV3-011","GV3-012","GV3-013","GV3-014","GV3-015","GV3-016","GV3-017","GV3-018","GV3-019","GV3-020","GV3-021","GV3-022","GV3-023","GV3-024","GV3-025","GV3-026","GV3-027","GV3-028","GV3-029","GV3-030","GV3-031","GV3-032","GV3-033","GV3-034","GV3-035","GV3-036","GV3-037","GV3-038","GV3-039","GV3-040","GV3-041","GV3-042","GV3-043","GV3-044","GV3-045","GV3-046","GV3-047","GV3-048","GV3-049","GV3-050","GV3-051","GV3-052","GV3-053","GV3-054","GV3-055","GV3-056","GV3-057","GV3-058","GV3-059","GV3-060","GV3-062","GV3-063","GV3-064","GV3-065","GV3-066","GV3-067","GV3-068","GV3-069","GV3-070","GV3-071","GV3-072","GV3-073","GV3-074","GV3-075","GV3-076","GV3-077","GV3-078","GV3-079","GV3-080","GV3-081","GV3-082","GV3-083","GV3-084","GV3-085","GV3-086","GV3-087","GV3-088","GV3-089","GV3-090","GV3-091","GV3-092","GV3-093","GV3-094","GV3-095","GV3-096","GV3-097","GV3-098","GV3-099","GV3-100","GV3-101","GV3-102","GV3-103","GV3-104","GV3-105","GV3-106","GV3-107","GV3-108","GV3-109","GV3-110","GV3-111","GV3-112","GV3-113","GV3-114","GV3-115","GV3-116","GV3-117","GV3-118","GV3-119","GV3-120","GV3-121","GV3-122","GV3-123","GV3-124","GV3-125","GV3-126","GV3-127","GV3-128","GV3-129","GV3-130","GV3-131","GV3-132","GV3-133","GV3-134","GV3-135","GV3-136","GV3-137","GV3-138","GV3-139","GV3-140","GV3-141","GV3-142","GV3-143","GV3-144","GV3-145","GV3-146","GV3-147","GV3-148","GV3-149","GV3-150","GV3-151","GV3-152","GV3-153","GV3-154","GV3-155","GV3-156","GV3-157","GV3-158","GV3-159","GV3-160","GV3-161","GV3-162","GV3-163","GV3-164","GV3-165","GV3-167","GV3-168","GV3-169","GV3-170","GV3-171","GV3-172","GV3-173","GV3-174","GV3-175","GV3-176","GV3-177","GV3-178","GV3-179","GV3-180","GV3-181","GV3-182","GV3-183","GV3-184","GV3-185","GV3-186","GV3-187","GV3-188","GV3-189","GV3-190","GV3-191","GV3-192","GV3-193","GV3-194","GV3-195","GV3-196","GV3-197","GV3-198","GV3-199","GV3-200","GV3-201","GV4-202","GV4-203","GV4-204","GV4-205","GV4-206","GV4-207","GV4-208","GV4-209","GV4-210","GV4-211","GV4-212","GV4-213","GV4-214","GV4-215","GV4-216","GV4-217","GV4-218","GV5-219","GV5-220","GV5-221","GV5-222","GV5-223","GV5-224","GV5-225","GV5-226","GV5-227","GV5-228","GV5-229","GV5-230","GV5-231","GV5-232","GV5-233","GV5-234","GV5-235","GV5-236","GV5-237","GV5-238","GV5-239","GV5-240","GV5-241","GV5-242","GV5-243","GV5-244","GV5-245","GV6-246","GV6-247","GV6-248","GV6-249","GV6-250","GV6-251","GV6-252"],
+  "misclassified": [
+    {
+      "goldenId": "GV3-061",
+      "findingId": "SP-004",
+      "expected": "INFO",
+      "actual": "MINOR"
+    }
+  ],
+  "falsePositives": [
+    {
+      "findingId": "SP-003",
+      "reason": "Matches the known-FP class already ruled on in this golden's falsePositives (correctness-INF-1, correctness-INF-1-l2, correctness-INF-2): a plan-traceability / process-deviation observation that alleges no code defect of its own. SP-003 explicitly names the resulting code behavior as the already-separately-flagged SP-001/GV3-002 bug and its fix field admits \"No separate code fix beyond #1\" — it only asks that this class of deviation be flagged for confirmation next time. Per the human-ruled precedent for that FP class, a provenance/process observation with no independent code defect is not a valid finding."
+    }
+  ],
+  "uncataloged": [
+    {
+      "findingId": "SP-005",
+      "reason": "Confirmed against the approved plan (plans/v1-2-1/2026-08-26-acdsl-policy-modes-done-a7cd7bf/design/raw.md:363): \"Fixtures mirror acdsl/testdata/ACDSL-JSON-001/ structure: pass/ one valid policy, fail/ one with \\\"mode\\\": \\\"loose\\\" and one with an unknown key.\" The shipped acdsl/testdata/ACDSL-JSON-003/fail/policy.json (new file in this diff) instead bundles both violations -- mode: \"loose\" AND the unrecognized key editable_rules (the schema's real key is editable_scopes) -- into one fixture, so the two fail scenarios the plan called for are not independently exercised. No golden entry addresses this fixture's structure (checked GV3-034/GV3-164 and all ACDSL-JSON-003/testdata-related entries). Genuine, in-range test-design gap; neutral to scoring."
+    }
+  ]
+}

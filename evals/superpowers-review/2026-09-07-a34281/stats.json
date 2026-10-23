@@ -1,0 +1,88 @@
+{
+  "baseline": "sonnet-5-high",
+  "comparisons": null,
+  "groups": [
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.004081632653061225,
+      "metricId": "recall",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.0022727272727272726,
+      "metricId": "weighted_recall",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 0.25,
+      "metricId": "precision",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 3,
+      "metricId": "false_positives",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "uncataloged",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "misclassified",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 1,
+      "metricId": "rounds",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 47043,
+      "metricId": "output_tokens",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-5-high",
+      "mean": 792021,
+      "metricId": "duration_ms",
+      "n": 1,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

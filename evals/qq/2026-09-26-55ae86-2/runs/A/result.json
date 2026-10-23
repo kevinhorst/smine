@@ -1,0 +1,61 @@
+{
+  "allowedTools": "Glob, Grep, Read, Workflow, Skill",
+  "candidateCount": null,
+  "checkExit": null,
+  "endedAt": "2026-09-26T13:38:32.903348+02:00",
+  "exitStatus": 0,
+  "invalidReasons": [
+    "requested model nosuchmodel but the cell ran claude-opus-5-5[1m]"
+  ],
+  "isError": false,
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "pending"
+    },
+    {
+      "name": "claude.ai Claude Docs",
+      "status": "connected"
+    },
+    {
+      "name": "claude.ai ClickUp",
+      "status": "needs-auth"
+    },
+    {
+      "name": "claude.ai Figma",
+      "status": "needs-auth"
+    },
+    {
+      "name": "claude.ai Sentry",
+      "status": "needs-auth"
+    }
+  ],
+  "model": "claude-opus-5-5[1m]",
+  "permissionDenials": [],
+  "resultText": "`make audit` first runs `audit-gates`, which runs four other targets first: `build-audit`, `golden-check`, `workflow-gen-check` and `rust-lint`. Then it runs `go mod verify`, `go vet ./...`, `./bin/acdsl project -strip`, `./bin/acdsl check -report bin/audit-report.md` and `./bin/acdsl fixtures`. Aft…",
+  "sessionId": "dbf16824-e07b-4769-bcb7-5d8a96c60cb1",
+  "startedAt": "2026-09-26T13:38:16.016189+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 1,
+      "errors": 0,
+      "name": "Grep"
+    }
+  ],
+  "toolErrors": 0,
+  "unparsedLines": 0
+}

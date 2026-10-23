@@ -1,0 +1,1886 @@
+{
+  "eval": {
+    "date": "2026-10-05",
+    "notes": "",
+    "notesBullets": [
+      "arms: opus-high",
+      "start commit 1f725ced",
+      "auth: token Max-Private",
+      "judge: opus"
+    ],
+    "skill": "railroad-review",
+    "skillMdPath": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md"
+  },
+  "metrics": [
+    {
+      "id": "smoke_pass",
+      "direction": "higher",
+      "label": "Smoke pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "wall_seconds",
+      "direction": "lower",
+      "label": "Wall time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "active_seconds",
+      "direction": "lower",
+      "label": "Main-loop active",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "output_tokens",
+      "direction": "lower",
+      "label": "Output tokens (all agents)",
+      "source": "telemetry",
+      "unit": "tokens"
+    },
+    {
+      "id": "cost_usd",
+      "direction": "lower",
+      "label": "Cost",
+      "source": "telemetry",
+      "unit": "usd"
+    },
+    {
+      "id": "permission_denials",
+      "direction": "lower",
+      "label": "Permission denials (all agents)",
+      "source": "telemetry",
+      "unit": "count"
+    },
+    {
+      "id": "check_failures",
+      "direction": "lower",
+      "label": "Enforce check failures",
+      "source": "heartbeat",
+      "unit": "count"
+    },
+    {
+      "id": "runs_killed",
+      "direction": "lower",
+      "label": "Runs killed by heartbeat",
+      "source": "heartbeat",
+      "unit": "count"
+    },
+    {
+      "id": "step_miss_pct",
+      "direction": "lower",
+      "label": "Step misses",
+      "source": "judge",
+      "unit": "%"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 2821
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 556
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 1908029
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 230.0967622000004
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 148
+    },
+    {
+      "metricId": "check_failures",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 0
+    },
+    {
+      "metricId": "runs_killed",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 0
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 7
+    }
+  ],
+  "probes": [],
+  "rubric": [
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Never prompt",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-002"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Preloaded tools",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-003a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Paths, never content",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-003b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Workers return refs",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-003d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003c",
+      "axis": "self",
+      "phase": "",
+      "rule": "No dispatcher hunks",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-003c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003e",
+      "axis": "self",
+      "phase": "",
+      "rule": "No copy-back",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-003e"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Foreground commands",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-exec-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-014a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Budget invariance",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-014a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-014c",
+      "axis": "self",
+      "phase": "",
+      "rule": "No budget mentions",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-014c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-CTX-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Gate evidence",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-ctx-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DIR-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Falsifiability bar",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-dir-002"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-CTX-002b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Context gates",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-ctx-002b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-CTX-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane context",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-ctx-002a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Guard",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Full-file reads",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Chunk conduct",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-005b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Relevance filter",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-005c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Done rule",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-016b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Counter reset",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-016d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016f",
+      "axis": "self",
+      "phase": "",
+      "rule": "Round-1 full",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-016f"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-007b",
+      "axis": "self",
+      "phase": "",
+      "rule": "One artifact contract",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-007b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-SCOPE-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Scope first",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-scope-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-SCOPE-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Head pin",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-scope-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Explicit base",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-002a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Wrong-base heuristic",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Diff",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-011",
+      "axis": "self",
+      "phase": "",
+      "rule": "Test pairs",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-011"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Confirm scope",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-007a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Risk tiers",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-007a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-007b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Risk-map artifact",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-007b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-008b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Auto-partition",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-008b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Direction selection",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-009",
+      "axis": "self",
+      "phase": "",
+      "rule": "Base health",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-009"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-NIGHTLY-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Run namespace",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-nightly-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-003d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane manifests",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-003d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-012",
+      "axis": "self",
+      "phase": "",
+      "rule": "Spec copy",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-proc-012"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Checklist agents",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-walk-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Extract checklist",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-walk-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-016",
+      "axis": "self",
+      "phase": "",
+      "rule": "Build and test",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-016"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Review-only lanes",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-005a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Coverage check",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-005a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Measured coverage",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-005b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Walk gate",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-walk-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-010",
+      "axis": "self",
+      "phase": "",
+      "rule": "Item citation",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-walk-010"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-022b",
+      "axis": "self",
+      "phase": "",
+      "rule": "One verdict each",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-022b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-035",
+      "axis": "self",
+      "phase": "",
+      "rule": "Refuter context parity",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-035"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-011b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No station self-verify",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-011b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-023",
+      "axis": "self",
+      "phase": "",
+      "rule": "Concurrency limits",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-023"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-009c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Station never re-derives",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-009c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-009d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Echo the drafts",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-009d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-009e",
+      "axis": "self",
+      "phase": "",
+      "rule": "Station input inline",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-009e"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-010",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verdict intake",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-010"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-019",
+      "axis": "self",
+      "phase": "",
+      "rule": "Escalate, don't bury",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-019"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane set",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-005a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005e",
+      "axis": "self",
+      "phase": "",
+      "rule": "Filter bookkeeping",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-005e"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Bracket unpacking",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-003b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-019",
+      "axis": "self",
+      "phase": "",
+      "rule": "Explicit worktrees",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-019"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fan-out",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-032",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane review",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-032"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-008",
+      "axis": "self",
+      "phase": "",
+      "rule": "Walk the checklist",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-walk-008"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Claims output",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-025",
+      "axis": "self",
+      "phase": "",
+      "rule": "Groupers",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-025"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-033",
+      "axis": "self",
+      "phase": "",
+      "rule": "Severity recompute",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-033"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Per-direction dedup",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-022a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Cross-direction dedup",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-022a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Refutation",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-026",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe claim",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-026"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-027",
+      "axis": "self",
+      "phase": "",
+      "rule": "Return verdict",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-027"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-011a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verification pool",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-011a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-028",
+      "axis": "self",
+      "phase": "",
+      "rule": "Confirm batch",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-028"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-009a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Station barrier",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-009a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-014",
+      "axis": "self",
+      "phase": "",
+      "rule": "Reconciliation",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-014"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-014b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Routing",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-014b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-015",
+      "axis": "self",
+      "phase": "",
+      "rule": "Permanent checks",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-015"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-017",
+      "axis": "self",
+      "phase": "",
+      "rule": "DoD walk",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-017"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-018",
+      "axis": "self",
+      "phase": "",
+      "rule": "Handoff",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-018"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-020",
+      "axis": "self",
+      "phase": "",
+      "rule": "Funnel",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-020"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-021",
+      "axis": "self",
+      "phase": "",
+      "rule": "Cleanup",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-021"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Failed round",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-station-002"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-010",
+      "axis": "self",
+      "phase": "",
+      "rule": "Handoff conformance",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-station-010"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Human gate",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-station-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix scope",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-station-005b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-011a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix check",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-station-011a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-004c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Known ledger",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-station-004c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Coverage ledger",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-modes-016a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-036",
+      "axis": "self",
+      "phase": "",
+      "rule": "Artifact prune",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-round-036"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-NIGHTLY-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Unattended rounds",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-nightly-001a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe persistence",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-probe-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Both directions",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-probe-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Deterministic probes",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-probe-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Validity first",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-probe-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe verdict",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-probe-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Manual path",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-probe-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Findings table",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-out-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Proposed fix",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-out-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Coverage",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-out-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Row order",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-out-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-008",
+      "axis": "self",
+      "phase": "",
+      "rule": "DoD table",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-out-008"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DELIVER-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Plan-file record",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-deliver-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DELIVER-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Section structure",
+      "source": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md#skill-railroadreview-deliver-005"
+    }
+  ],
+  "runs": [
+    {
+      "id": "opus-high-r1",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-opus-5-5",
+        "effort": "high",
+        "mode": ""
+      },
+      "output": "runs/A/diff.patch",
+      "skillMd": "evals/railroad-review/2026-10-05-1f725c-3/SKILL.md",
+      "transcript": "b26f7f7c-513d-46b4-b52b-db7811fd96eb",
+      "variant": {
+        "disable": [],
+        "name": "opus-high"
+      }
+    }
+  ],
+  "schemaVersion": "2.11",
+  "scores": [
+    {
+      "evidence": [
+        "trace.md:68"
+      ],
+      "justification": "followed: No AskUserQuestion anywhere; run carried on to the final report unattended.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-002",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed: Workflow callable from the first launch; no ToolSearch or mid-run tool load in the trace.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: review.json consumed via targeted jq (61) and smine-rules present (62); risk map and ledger travel as files.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: Round return relayed as counts/ids; claim bodies stay in lane artifacts and verdict files.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:15"
+      ],
+      "justification": "followed: Dispatcher used only --numstat (15) and --name-only (28); no hunk read.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: Workflow args carry refs, lanePlan and small health objects as the skill prescribes.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003e",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: Every smine-rules call foreground and unchained; cleanup/section used a plain \u003e redirect, not a listed anchor-breaking char.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: Full round: dedup, refutation/verification and station all ran; no thinning.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-014a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: Dispatcher args carry no budget field; prompts are script-built.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-014c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Walks are rule-id based from smine-rules lanes; permanent_checks propose ACDSL gates for classes not yet gated. Lane-side, not visible in trace.",
+      "ruleId": "SKILL-RAILROADREVIEW-CTX-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Confirmed findings carry concrete file:line and probes (48 RED); lane-side, judged from artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-DIR-002",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:1"
+      ],
+      "justification": "followed: Dispatcher read global and railroad-review context files (1-2) before any other call.",
+      "ruleId": "SKILL-RAILROADREVIEW-CTX-002b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-core-go-lane1.json"
+      ],
+      "justification": "followed: Lane-side Skill invocation not in trace (no agent lines); all 40 lanes finished walk_complete under the hook-enforced gate.",
+      "ruleId": "SKILL-RAILROADREVIEW-CTX-002a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:20"
+      ],
+      "justification": "followed: Base health pinned at b4981b8, which equals git merge-base of bracket and head.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: Lane side gate-enforced, coverageGaps empty; dispatcher read no changed file.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Manifests per chunk written by smine-rules lanes; lane-side reads gate-enforced.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Filter computed by smine-rules lanes.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: Ledger run with --coverage and no --done-after (arg absent).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: Applied by smine-rules ledger when writing coverage.json.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:52"
+      ],
+      "justification": "followed: No --coverage on round 1; nothing skipped.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016f",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-core-go-lane1.json"
+      ],
+      "justification": "followed: All lanes wrote JSON artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-007b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:11"
+      ],
+      "justification": "followed: Explicit branch[bracket] scope used and stated.",
+      "ruleId": "SKILL-RAILROADREVIEW-SCOPE-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:8"
+      ],
+      "justification": "followed: git rev-parse HEAD before base (10), buildtest (20-21) and lanes (51); headCommit used throughout.",
+      "ruleId": "SKILL-RAILROADREVIEW-SCOPE-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:10"
+      ],
+      "justification": "followed: smine-rules base --base \u003cbracket\u003e --head --mainline main; commit used as baseCommit.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-002a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:15"
+      ],
+      "justification": "skipped: Diff is ~8000 lines over 178 files; no plausibility check of the base appears. Base happens to equal the merge-base, so no harm.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-003",
+      "runId": "opus-high-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:15"
+      ],
+      "justification": "followed: numstat with exclude pathspecs after one denied unquoted form (13); excludes passed to pairs, lanes and stages.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:14"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-011",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "partial: Inclusions/exclusions first stated after the round launched (57) and in the final report (68), not up front.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-005",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:26"
+      ],
+      "justification": "followed: Tiers per ACTION-REVIEW-RISK-001..003 from file names.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-007a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:26"
+      ],
+      "justification": "followed: round-1/risk-map.json written, not passed to lanes.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-007b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:27"
+      ],
+      "justification": "followed: Layers partition into 5 chunks, stated (22), coverage of all 178 files checked (29-30).",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-008b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Exactly code-style,correctness,tests,security; stated at 52/57.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:20"
+      ],
+      "justification": "followed: Foreground, 600000 ms, basehealth branch under runNs, salvage, no overlay; result passed as baseHealth.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-009",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:20"
+      ],
+      "justification": "followed: runNs rr-2026-10-05-1f725c-3-a from run-id; all branches prefixed claude-review/\u003crunNs\u003e-.",
+      "ruleId": "SKILL-RAILROADREVIEW-NIGHTLY-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Once, after checklist (50), with --known, --worktree-root, --exclude; lanePlan, knownPath, idFloor passed verbatim (56).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-003d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:31"
+      ],
+      "justification": "followed: 14 copies spec-\u003cn\u003e-\u003cbasename\u003e (31-44), passed as specPaths.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-012",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:48"
+      ],
+      "justification": "followed: checklist.js for correctness with round-dir specPaths, laneModel; primer hop first (46).",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/checklist-correctness.json"
+      ],
+      "justification": "followed: 18 groups, 149 numbered correctness-\u003cn\u003e items.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-005",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:21"
+      ],
+      "justification": "followed: Head buildtest in the same message as base health, 600000 ms, buildtest-r1 branch; passed as buildTest.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-016",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:65"
+      ],
+      "justification": "followed: Cleanup reported no skipped rows; lane conduct itself not in trace.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: coverageGaps []; all 40 lanes walk_complete.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-005a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: Hook-enforced; sidecars not retained after prune, ledger shows no gaps.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-005b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: Every lane artifact has walk entries and walk_complete true; hook-enforced.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/correctness-core-go-lane1.json"
+      ],
+      "justification": "followed: Correctness findings carry checklist ids (correctness-\u003cn\u003e).",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-010",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: 59 verdict files for 59 non-duplicate dispositions.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-022b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: Script-built; dispatcher passed specPaths, knownPath, lanePlan to the round.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-035",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Dispositions map from verdict files; no sign of station re-derivation.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-011b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: Script-governed; 40 lanes spawned in one round.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-023",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: Dispatcher badPrefix check empty; conservation lost 0.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-009c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: Ledger validation of review.json held.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-009d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: Dispatcher assembled no station input; script-built.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-009e",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Confirmed/debunked dispositions carry probes and evidence.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-010",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:62"
+      ],
+      "justification": "followed: One escalation in review.json; gate output leads with it. Final chat report put the recommendation before it.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-019",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:27"
+      ],
+      "justification": "followed: chunks.json written, stated, passed as --chunks (51).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:52"
+      ],
+      "justification": "partial: Empty skipped list stated in chat (52, 68) but not in the review record (review-record.md).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005e",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: base, laneModel/laneEffort, stationModel/Effort, refuteLevel, ignoreLevel, excludes, prebuilt unpacked.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-003b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: worktreeMode explicit, targetRepo, worktreeRoot \u003cdirname\u003e/wt, overlayPatch, prebuilt array.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-019",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed: 40 lanes; all artifacts checkout_sha == headCommit.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-core-go-lane1.json"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-032",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/correctness-core-go-lane1.json"
+      ],
+      "justification": "followed: walk_complete true on all lanes.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-008",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/correctness-core-go-lane1.json"
+      ],
+      "justification": "followed: Findings carry evidence text; re-read itself not observable.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Funnel duplicates 10.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-025",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Script-side; no evidence of mismatch.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-033",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: One duplicate-of disposition.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-022a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: refuteLevel major passed (56); verdicts with probes.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: 49 probes indexed.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-026",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/verdicts/code-style-nit-190-r1.json"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-027",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Below-major claims second-confirmed (NIT/MIN verdicts present).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-011a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-028",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: review.json produced; handoff non-null.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-009a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: intentional_deviations lists two spec-vs-code deviations.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-014",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: All 52 confirmed routed (41 auto-fix, 11 human).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-014b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: 7 permanent checks named; dispatcher added none.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-015",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: 40 DoD criteria PASS/FAIL/N/A.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-017",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-018",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: Funnel recorded and stated in one line; conservation lost 0.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-020",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: One call with --run, --root, --overlay after the (empty) fix pipeline; skipped/unattributed relayed (65, 68).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-021",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: Handoff present, no aborted lane.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-002",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: Ledger validation exit 0 (60), ranked_plan length/prefix jq (61), conservation lost 0 (58).",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-010",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:62"
+      ],
+      "justification": "followed: smine-rules present with review.json path; output leads with escalations.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: autofix-level none: autofix [], all findings in record and surfaced.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-005b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:63"
+      ],
+      "justification": "followed: No applied fixes: skipped and stated.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-011a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: One call with --known, --coverage, --autofix-level none; run before the gate render, which STATION-010 needs.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-004c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:67"
+      ],
+      "justification": "followed: Last action, --verbose, after cleanup.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-036",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:68"
+      ],
+      "justification": "followed: Round cap 1 reached and reported; prune last (67).",
+      "ruleId": "SKILL-RAILROADREVIEW-NIGHTLY-001a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: probes[] index with script, fixture, registry per entry.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-005",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Script-side; judged from verdicts.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "partial: 49 probes; several claims went manual, some because tool policy denied the validity/verdict runs.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-001",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "partial: 4 probes (code-style NIT-190..193) carry no fixture.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-003",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: 48 RED, 1 GREEN; unprobeable flagged probe: none: \u003cwhy\u003e.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Manual-path claims flagged with reason.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:62"
+      ],
+      "justification": "followed: One row per finding with proposed fix.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: No ranked_plan entry has an empty fix.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:68"
+      ],
+      "justification": "followed: 178 files, no skipped files, no coverage gaps stated.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: ranked_plan ordered BLOCKER..INFO.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/review-record.md:58"
+      ],
+      "justification": "followed:",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-008",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:66"
+      ],
+      "justification": "partial: Record written to artifacts/review-record.md instead of a session plan file.",
+      "ruleId": "SKILL-RAILROADREVIEW-DELIVER-001",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/review-record.md:1"
+      ],
+      "justification": "partial: Rendered via present --section, but the heading passed already began 'Review — ', giving a doubled 'Review — Review —' heading.",
+      "ruleId": "SKILL-RAILROADREVIEW-DELIVER-005",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    }
+  ],
+  "setup": null,
+  "sharedTotals": [],
+  "totals": [
+    {
+      "axis": "self",
+      "max": 100,
+      "pct": 93,
+      "raw": 93,
+      "runId": "opus-high-r1"
+    }
+  ],
+  "verdict": {
+    "bestArm": "opus-high-r1",
+    "perRun": [
+      {
+        "failedThresholds": [],
+        "pass": true,
+        "runId": "opus-high-r1"
+      }
+    ],
+    "reason": "threshold, smoke or variant failures 0% (0)",
+    "status": "pass",
+    "thresholds": {
+      "smoke_pass": 1
+    }
+  }
+}

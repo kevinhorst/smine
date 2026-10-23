@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-NIT-49-r1",
+  "verdict": "confirmed",
+  "reason": "No test writes a batch after newTestServer and then GETs /; New() already reloads the store (server.go:211-214), so the request-time s.reloadSessions() at overview.go:85 is unpinned — probe red on overview.go.",
+  "probe": "PROBE-TESTS-NIT-49-R1",
+  "script": "tests-nit-49-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-49-r1",
+  "registry": "registry-tests-nit-49-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-49-R1 -registry probes/registry-tests-nit-49-r1.json -> exit 1: internal/server/overview.go:85: no test in internal/server/overview_test.go writes a batch after newTestServer",
+    "validity": "same check with -root probes/fixtures/tests-nit-49-r1 (batch written before newTestServer, and in a block without a server) -> exit 1, 1 violation",
+    "read": [
+      "internal/server/overview.go:84-85 handleOverview calls s.reloadSessions() first",
+      "internal/server/server.go:211-214 New() calls store.Reload() once at construction",
+      "internal/server/overview_test.go: batch JSON written at 54-55 and 150-151, before newTestServer at 77 and 162; other GET / tests (overview_test 193/211/382, server_test 35-75, welcome_test 200) write no batches",
+      "known.json: overview entries are NIT-17-r1 (Sprintf style) and tests-NIT-9-r1 (tile details) — distinct"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-49-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-49-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-49-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-49-r1"
+  ]
+}

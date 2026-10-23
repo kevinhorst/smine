@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-243-r1",
+  "verdict": "confirmed",
+  "reason": "L42 comment says '(pipeline, no barrier)' but L44 awaits a single-stage pipeline() to completion before phase('Gate') at L58 — the await is a barrier; repo docs define 'no barrier' as between pipeline stages, and Gate is not a pipeline stage here.",
+  "probe": "manual: command output — ACDSL probe unrunnable: /bin/bash validity run and bin/acdsl denied by tool-policy, Makefile has no acdsl target",
+  "evidence": {
+    "read": [
+      "grep -n 'no barrier|await pipeline|^phase(' foreign-toolchain-pretag.js at 1f725ce -> 42 '(pipeline, no barrier)', 43 phase('Build'), 44 'const results = await pipeline(', 58 phase('Gate') (Gate consumes results only after the await resolves)",
+      "skills/README.md L35-36: parallel() = barrier; pipeline() = 'no barrier between stages' — vacuous with one stage",
+      "skills/feature/fdesign/workflows/subsystem-grounding.js L56: same one-stage fan-out described as 'parallel() is the barrier'",
+      "known.json rows for this file (MAJ-40 L4 unreachable, NIT-139 L66 snake_case) do not cover the comment"
+    ],
+    "attempts": [
+      "attempt 1: /bin/bash probes/code-style-nit-243-r1.sh <fixture files list> -> tool-policy denied",
+      "attempt 2: bin/acdsl / make acdsl -> denied, no acdsl make target"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-243-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-243-r1-fail.js"
+  ]
+}

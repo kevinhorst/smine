@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/git.go",
+      "line": 44,
+      "severity": "MAJOR",
+      "claim": "GitChangedFiles splits git's output on whitespace via strings.Fields, silently mangling any path containing a space so ruleDelta can miss edits to such rule files and let them slip past the policy check in gated/strict mode.",
+      "fix": "Split on \"\\n\" and trim, not strings.Fields."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/sessions/sessions.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "Store.Reload() now runs unconditionally on every Sessions page view (handleSessionsIndex, handleSessionsScope, handleSessionsBatch, handleSessionsArchiveTab), doing a full directory scan and JSON parse of every batch file across every repo on each request with no staleness check.",
+      "fix": "Confirm the freshness-over-cost tradeoff was deliberate and document it, or add a cheap mtime/dir-listing short-circuit mirroring the registry's stat-identity or the repo cache's fingerprint pattern."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/git.go",
+      "line": 78,
+      "severity": "MINOR",
+      "claim": "GitRevParse is dead code in production, called only from its own test despite the plan speccing it as part of the git-helpers unit.",
+      "fix": "Either wire it in where a plain git rev-parse is actually needed or drop it and use shell.Run directly in the test."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/sessions/sessions.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "GET /sessions/archive shadows the wildcard GET /sessions/{scope} route, permanently hiding a session scope literally named \"archive\" since validateScopeName and Repo.Validate reserve \"archived\" and \"default\" but not \"archive\".",
+      "fix": "Add \"archive\" to the reserved-name check."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "install.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The sed substitution for __PEEK_HOME_ARGS__ uses | as the delimiter while substituting a value that could itself contain | on an unusual path, and the plist-templating additions expand this pre-existing pattern's surface.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "plans/v1-2-1/session-context-report/",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The plan directory does not follow RULE-PLAN-071's <date>-<slug>-<state>-<hash> naming used by every sibling plan dir under v1-2-1/.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

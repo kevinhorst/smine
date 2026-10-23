@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-MAJ-60-r1",
+  "verdict": "confirmed",
+  "reason": "The probe is RED on smine-batch SKILL.md:42. The exclusion root is 'the run's repo root' and nothing ties it to the main checkout. run.sh:128/137 runs stage 1 with cwd = ROUTINE_WT_ROOT/<group> under ~/.cache (worktree.sh:20,125,162), and the same skill's §0 uses 'repo root' to mean the cwd checkout, so the natural reading misses sessions in the main checkout and its .claude/worktrees/.",
+  "probe": "PROBE-CORRECTNESS-MAJ-60-R1",
+  "script": "correctness-maj-60-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-60-r1-fail.md",
+  "registry": "registry-correctness-maj-60-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-MAJ-60-R1 -registry probes/registry-correctness-maj-60-r1.json -> exit 1: skills/smine/smine-batch/SKILL.md:42: self-mining exclusion root is 'the run's repo root' with no main-checkout anchor; a run from a routine worktree misses main-checkout sessions",
+    "read": [
+      "skills/smine/smine-batch/SKILL.md:42 says: 'drop every session whose cwd (from session_list meta) resolves inside the run's repo root — including .claude/worktrees/'. The file has no git-common-dir, git worktree list or main-checkout anchor.",
+      "skills/smine/smine-batch/SKILL.md:33 says: 'cmd/context/context_record.sh ... (repo root)'. The same skill uses 'repo root' for the cwd checkout, which in a nightly run is the routine worktree.",
+      "routines/smine-nightly/run.sh:128 runs wt=$(routine_worktree_create), then L137 runs cd \"$wt\" before the stage-1 /smine prompt. L40-42 and L61 add --dev only when SMINE_DEV_MODE is set or the profile has dev-mode: true.",
+      "routines/_lib/worktree.sh:20 sets ROUTINE_WT_ROOT=$HOME/.cache/claude-routine/worktrees. At L125 and L162 the worktree is $ROUTINE_WT_ROOT/$ROUTINE_GROUP, outside the main checkout and its .claude/worktrees/.",
+      "spec-9-change-headless-bootstrap.md:10 states the intent: 'excludes sessions from the smine repo itself'. Its D4 (L104, L448) uses the same 'run's repo root' wording, so the skill copies the spec's words and misses its intent when the run executes in a routine worktree."
+    ],
+    "validity": "A direct /bin/bash run of the probe script was denied by tool-policy (candidate Bash(/bin/bash *)). I validated the script's two patterns with grep against the fail fixture instead: the hit pattern matched line 3, and the exemption patterns matched 0 lines. The script's logic is the conjunction of those two results, so the probe flags the fixture.",
+    "cells": "I accept effect incorrect and exposure rare. The defect needs a nightly run with dev mode off, on a non-casual install where interactive sessions run in the smine main checkout. This install's profile has dev-mode: true, so --dev is passed and the exclusion never fires here. Routine-worktree sessions are still caught by the claude-routines/ branch test."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-60-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-60-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-maj-60-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-60-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-maj-60-r1/files.txt"
+  ]
+}

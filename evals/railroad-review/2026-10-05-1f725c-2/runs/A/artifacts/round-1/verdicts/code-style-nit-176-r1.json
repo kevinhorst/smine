@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-NIT-176-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at docs/acdsl-go-tools.md:151: the 'Known documentation gap' section is wholly added by this diff and carries an open 'reconcile before shipping' action item with no ticket or plan reference; RULE-GOLANG-POINTER-003 is indeed absent (go.md has only POINTER-001/002) while line 158 still cites it.",
+  "probe": "PROBE-CODE-STYLE-NIT-176-R1",
+  "script": "code-style-nit-176-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-176-r1/acdsl-go-tools.md",
+  "registry": "registry-code-style-nit-174-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-176-R1 -root <worktree> -registry probes/registry-code-style-nit-174-r1.json -> exit 1: docs/acdsl-go-tools.md:151: open action item 'reconcile before shipping' for RULE-GOLANG-POINTER-003 carries no ticket or plan reference; 1 violation(s)",
+    "read": [
+      "git diff b4981b8..1f725ce -- docs/acdsl-go-tools.md: '+## Known documentation gap' and the line-151 sentence are added lines; line 158 rewritten ('verified negative again on 2.12.2') still cites RULE-GOLANG-POINTER-003",
+      "grep POINTER context/rules/go.md (worktree) -> only RULE-GOLANG-POINTER-001 (:331) and -002 (:336)",
+      "acdsl/registry.json:17 'forbid-addr-lit' verifier exists — the citation the gap names",
+      "known.json: no docs/acdsl-go-tools.md row"
+    ],
+    "validity": "Direct interpreter self-check denied by tool policy (Bash(/bin/bash *), Bash(bash *)); acdsl -root on the fixture dir fails (not a git repo). The real run went RED on the claimed file and line."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-176-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-176-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-176-r1/acdsl-go-tools.md"
+  ]
+}

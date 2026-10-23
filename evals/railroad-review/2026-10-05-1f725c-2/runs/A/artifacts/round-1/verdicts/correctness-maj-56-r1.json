@@ -1,0 +1,20 @@
+{
+  "finding_id": "correctness-MAJ-56-r1",
+  "verdict": "debunked",
+  "reason": "The failure path needs merge-resolve to be denied without the overlay, but the spec's recorded probe (spec-5 C4, decision log 2026-08-26) shows user-scope \"off\" spares prompt-start slashes and only denies Skill-tool loads; routine_chain_sync_main launches `claude -p \"/merge-resolve theirs main...\"`, a prompt-start slash, and merge-resolve loads no nested skill, so the late overlay copy does not stop the sync.",
+  "probe": "manual: reading of the spec's recorded probe evidence against the call shape",
+  "evidence": {
+    "read": [
+      "spec-5-change-nondev-automation.md:116 (C4): 'Probes proved: user-scope \"off\" spares prompt-start slashes but **denies Skill-tool loads**, and `--settings`-supplied skillOverrides are **ignored**; project/local scope \"on\" beats user \"off\" per key.'",
+      "spec-5-change-nondev-automation.md:438: 'C4 rebuilt on evidence: ... \"off\" denies Skill-tool loads but not prompt-start slashes'",
+      "routines/_lib/worktree.sh:64-67: prompt=\"/merge-resolve theirs main. Unattended routine run: ...\"; claude_cmd=(claude -p \"$prompt\") — the skill is reached as a prompt-start slash",
+      "skills/git/merge-resolve/SKILL.md: grep for Skill tool / nested skill invocation finds none; the skill loads no other skill through the Skill tool",
+      "routines/smine-nightly/run.sh:128 vs 144-148: ordering is as claimed (create, including the chain sync, runs before the overlay copy), but ordering alone causes no wrong behavior",
+      "cmd/sync/sync_skills.sh:246: the comment 'off hides AND denies, incl. headless' is the pre-probe wording that the candidate relies on; C4's revised evidence supersedes it"
+    ],
+    "decisive": "spec-5 C4: user-scope \"off\" spares prompt-start slashes; the merge-resolve run is `claude -p \"/merge-resolve ...\"`."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/verdicts/correctness-maj-56-r1.json"
+  ]
+}

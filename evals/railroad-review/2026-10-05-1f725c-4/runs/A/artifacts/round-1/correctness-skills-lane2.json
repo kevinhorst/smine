@@ -1,0 +1,83 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "aborted": false,
+  "artifact_json": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/correctness-skills-lane2.json",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "notes": "Premise: HEAD equals 1f725ce, base b4981b8 is an ancestor, and the overlay reverse-check passed. All 48 manifest files were read in full; there were no partners. Many walk groups are other-chunk surfaces (server, install, routines, ACDSL). Cross-chunk flags for the station: (1) proposals/schema.json is not in the repo, so whether the permissions kind validates is unverifiable here. (2) MAJ-3 relies on internal/config DisabledPath and the configserver -settings default. (3) routines/_lib/worktree.sh L64 invokes '/merge-resolve theirs main', which may not match merge-resolve's positional [ours] [theirs] contract; not chased. Known-ledger entries were not re-reported.",
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "skills/smine/smine-consolidate/SKILL.md",
+      "line": 51,
+      "checklist": "correctness-5",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "The casual jargon sweep moves displaced technical content 'into target/anchor/code/snippet fields', but a proposal's only `anchor` field is `gate.anchor` (internal/proposals/proposals.go:49-53), the ACDSL anchor regex smine-apply turns into the authored rule line. On a casual install, a mutable context proposal with gate {band: A, verifier: <registry entry>, anchor: \"^internal/.*\\.go$\"} whose change cites a rule ID or path is reworded and the ID/path lands in gate.anchor, so smine-apply step 4(a) appends a rule that governs the wrong files or none. correctness-5 requires gate fields never be translated or reworded. The same sink wording sits in the casual rules of smine-context/memory/routines/skills L33 and in smine-orchestrate L40.",
+      "fix": "Replace 'target/anchor/code/snippet fields' with 'snippet code or a fields[] entry labelled technical' in smine-consolidate L51 (and the casual bullets of smine-context/memory/routines/skills L33 and smine-orchestrate L40), and add: never write to gate.* or target during the sweep.",
+      "evidence": "Re-read smine-consolidate SKILL.md L51 (sweep moves content into target/anchor/code/snippet fields), proposals.go L31-53 (Proposal has no top-level anchor or code; Gate.Anchor is 'the anchor the rule would govern'), smine-context L60 (F/A/D proposals name an anchor regex) and smine-apply L31 step 4(a)/(b) (the gate route authors the rule line; (b) dry-run speaks of 'the anchor'). The sweep's only `anchor` destination is that machine-read regex, and correctness-5 (spec-1) says gate fields are never reworded."
+    },
+    {
+      "finding_id": "correctness-MAJ-2",
+      "file": "skills/smine/smine-consolidate/SKILL.md",
+      "line": 51,
+      "checklist": "correctness-116",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "smine-apply's permissions branch (L31) takes the rule to append from the proposal's `change` ('the allowlist string named in its change'), and smine-permissions L33 keeps the rule string in `change` on casual installs. The consolidate casual sweep (L51) has no such carve-out, and neither does the orchestrate casual gate (L40), which fixes violations as 'small defects'. Sequence on a casual install: smine-permissions writes change \"Add `Bash(gh pr view *)` to `permissions.allow` in settings/claude_code/settings.json\" (its own L48 template). The nightly consolidate sees a file path plus `permissions.allow` jargon in `change` and rewords it to plain prose, moving the technical content out. After a + vote, smine-apply finds no rule string in `change` and cannot apply the voted rule as written.",
+      "fix": "In smine-consolidate §4 (and the smine-orchestrate L40 casual gate), exempt permissions proposals: the rule string stays verbatim in `change` and only the path/jargon around it is reworded. Alternatively, have smine-permissions store the rule in a dedicated field and point smine-apply L31 at that field.",
+      "evidence": "Re-read smine-permissions L33 (casual: 'the rule string itself stays in change') and L48 (the change template carries a file path and permissions.allow), smine-consolidate L51 (the sweep rewords `change` on file paths or schema jargon, with no kind exemption, and its mutable set is all of proposals/*.json per L12), smine-orchestrate L40 (same field list, no exemption) and smine-apply L31 (the permissions branch reads the rule string from `change`). The only stage that knows the rule must stay in `change` is the producer."
+    },
+    {
+      "finding_id": "correctness-MAJ-3",
+      "file": "skills/smine/smine-permissions/SKILL.md",
+      "line": 55,
+      "checklist": null,
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "Step 3 promises that a rule parked in settings.disabled.json (one the user deliberately turned off) never resurfaces. It reads that file as the sibling of `settings/claude_code/settings.json`, i.e. settings/claude_code/settings.disabled.json, which does not exist in the repo or in any routine worktree. The config server parks rules in the sibling of the live settings file: config.DisabledPath(~/.claude/settings.json) = ~/.claude/settings.disabled.json (cmd/configserver/main.go:42, server.go:284). Sequence: the user parks `Bash(gh pr view *)` on the permissions page, two later sessions prompt and grant it, and the nightly smine-permissions run proposes it again. The promised suppression never fires.",
+      "fix": "Read the parked rules from ~/.claude/settings.disabled.json (the live settings sibling the config server writes, config.DisabledPath), not from settings/claude_code/.",
+      "evidence": "Re-read smine-permissions L55, then confirmed with `git ls-files settings/claude_code` (no settings.disabled.json; .gitignore does not list it, so a worktree never has it). internal/config/config.go:185-193 puts DisabledPath next to the settings path, whose default is ~/.claude/settings.json (cmd/configserver/main.go:42), and server.go:278-297 loads and saves the parked sidecar there."
+    },
+    {
+      "finding_id": "correctness-MIN-4",
+      "file": "skills/smine/smine-apply/SKILL.md",
+      "line": 31,
+      "checklist": "correctness-89",
+      "severity": "MINOR",
+      "effect": "degraded",
+      "exposure": "rare",
+      "claim": "On a casual install, the step-4 casual lockout only sets disposition `casual-locked`. The proposal keeps status `proposed`, gets no autoApplyHeld, and is never removed. Step 5 auto-apply (decide is the casual default) makes every remaining `proposed` entry a candidate, and SAFE candidates become implicit + votes filling the cap slots before step 4's lockout fires. So the same locked edit proposal is re-picked every night: a casual-locked line is appended to votes-archive.jsonl and .routine-commit-body each run, and with up to 3 locked entries first in JSON order the cap is consumed with nothing implemented. Locked entries reach skills.json in two ways: they predate a switch to casual, which smine-skills step 3 never drops (its lockout only filters new candidates, L45), or smine-consolidate §2 re-homes them into skills.json with no lockout.",
+      "fix": "In smine-apply step 5, exclude candidates the casual lockout would block before they claim a cap slot, and write autoApplyHeld {reason: \"casual-locked\"}. Also have smine-skills step 3 reconciliation drop `proposed` edit entries that target a skill without `origin: user` on casual installs.",
+      "evidence": "Re-read smine-apply L31 (lockout sets the disposition only), L32 (candidates are every remaining `proposed` entry), L35-36 (SAFE candidates become implicit + votes filling cap slots; only UNSAFE ones get autoApplyHeld), L43 (casual-locked is a terminal ledger outcome), smine-skills L45 (the lockout drops candidates, never existing entries) and L59 (reconciliation drops only done/rejected/already-present entries), and smine-consolidate L39-40 (re-home into skills.json has no audience check)."
+    }
+  ],
+  "walk": [
+    {"group": "spec-1-concept", "hits": ["correctness-MAJ-1"], "answer": "Items 1-4 and 6-8 are hook, profile and UI surfaces outside this chunk. Item 5: smine-consolidate receives `language <lang>` and is the style gate; ids, dates, tags and code stay verbatim, but the casual sweep's 'target/anchor' sink rewrites the gate.anchor field (MAJ-1)."},
+    {"group": "spec-2-user_stories", "hits": [], "answer": "Items 9-10 and 13-14: the dimension skills author prose in the profile language with casual jargon rules, and consolidate sweeps nightly. Items 11-12 and 15-16 are UI/install surfaces outside this chunk. Nothing new beyond the known ledger."},
+    {"group": "spec-3-raw/profile-hook-nightly-install", "hits": [], "answer": "Hook, run.sh, install.sh, installer and configserver items are outside the skills chunk; nothing here to check."},
+    {"group": "spec-3-raw/server-ui", "hits": [], "answer": "Server UI items are outside the skills chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "answer": "Items 38-40 checked: language contracts are present in smine-batch L35, smine-skills L32, smine-routines L32, smine-context L32 and smine-memory L32, versions are bumped, smine-batch's md stays English, and context/memory path group titles stay untranslated. smine-consolidate's `language` arg is widened (L25, L31, L50). Item 33: smine-skills L65 keeps the group titles verbatim. Server items (34-37, 41) are outside the chunk."},
+    {"group": "spec-5-change-nondev-automation/install-visibility-projects", "hits": [], "answer": "Sync, shell, server and registry items are outside the skills chunk."},
+    {"group": "spec-5-change-nondev-automation/orchestrator-welcome-picker", "hits": [], "answer": "Items 52-55: smine-orchestrate exists with SKILL.md and changelog; allowed-tools are a superset (Bash(mv *) is in the known ledger); branch-mode judge, merge, sync and push duties are present. The additionalDirectories append is wrapper-owned, and the nightly run.sh L298-305 does append, so branch mode is consistent; the bootstrap gap is known MAJ-58. Items 56-61 are run.sh/server, outside the chunk."},
+    {"group": "spec-6-raw/policy-engine", "hits": [], "answer": "ACDSL policy engine items are outside the skills chunk."},
+    {"group": "spec-6-raw/dist-hook-docs", "hits": [], "answer": "Dist, hook and docs items are outside the skills chunk."},
+    {"group": "spec-7-raw", "hits": [], "answer": "Item 76: the claude-review/* namespace is used in every branch builder, the cleanup enumeration and the SKILL.md prose; only historical changelog rows still name claude/railroad. Item 77: the prose is updated. Items 74-75 (--no-context) were reversed by 8.4, which is known INF-49. Items 78-80 are hooks and plans, outside the chunk."},
+    {"group": "spec-8-change-bootstrap-profile/bootstrap-casual", "hits": ["correctness-MIN-4"], "answer": "Item 83: --since is in smine's argument-hint, Args, Resolve and Run and is forwarded by session-mine.js; smine-batch Select drops sessions before the date. Item 87: origin: user is stamped in smine-apply L31 and skillroutine-create L36. Items 88 and 90 are present. Item 89 is present, but a locked proposal stays a nightly auto-apply candidate (MIN-4). Items 81-82 and 84-86 are server/installer, outside the chunk."},
+    {"group": "spec-8-change-bootstrap-profile/folders-reload", "hits": [], "answer": "Items 91-93 checked: per-folder routing and default/archived reserved (smine-batch L34), per-folder ledgers with the union skip-list (L36), batches never spanning folders with per-folder numbering (L45), the schema scope description, and --scopes removed from smine, smine-batch and the workflow; the dimension globs exclude archived/. Item 100: orchestrate names no scopes. Items 94-99 are server, outside the chunk."},
+    {"group": "spec-9-change-headless-bootstrap/wrapper-launcher", "hits": [], "answer": "Item 109: --last and --dev are in smine and smine-batch with versions bumped; the --since/--last precedence gap is known MAJ-30. Item 108: smine-style and smine-orchestrate name cmd/bootstrap/run.sh. Items 101-107 are wrapper/server, outside the chunk."},
+    {"group": "spec-9-change-headless-bootstrap/devmode-presentation", "hits": ["correctness-MAJ-2"], "answer": "Item 112: smine-batch L42 is present (the repo-root scoping gap is known MAJ-60). Item 114: smine-style L33 and L42 are present. Item 115 is present in context, memory, routines and skills L33. Item 117 is present in orchestrate L25 and L40. Item 116 is present, but the sweep strips the permissions rule string from `change`, which smine-apply needs (MAJ-2). Items 110-111, 113 and 118 are outside the chunk."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "answer": "Item 124: the fdesign template matches the spec's Phase 4 diff byte for byte (Open questions after Decisions, plain-text IDs with section-slug links, the Hot items and Changes ui: lines). The 3.6 changelog entry is present and the later 3.7 bump is the bundled workflow. Item 125: fmt's audit, migrate and self-check lines match the spec's Phase 5, at version 1.13. Items 119-123 and 126-127 are context and plans, outside the chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "answer": "verdict.sh, cache and routine UI items are outside the skills chunk."},
+    {"group": "spec-12-raw/style-store-routes", "hits": [], "answer": "Items 137-138: smine-style SKILL.md and changelog exist, with argument-hint [n] and the allowed-tools listed (both peek server names are allowlisted in settings.json L76/L85). It reads the profile as binding, samples user messages from the last n sessions skipping those with fewer than 2 user turns, writes the marker line plus at most 30 directives with the profile winning, never quotes or writes PII, writes no other file, and reports. Items 139-146 are server, outside the chunk."},
+    {"group": "spec-12-raw/nav-i18n-files", "hits": [], "answer": "Item 149: smine-style writes only style-profile.md in ~/.claude/context/global/. Items 147-148 are server, outside the chunk."},
+    {"group": "spec-13-change-multi-profile-ports/peek-mcp", "hits": [], "answer": "peek-mcp items are outside the skills chunk."},
+    {"group": "spec-13-change-multi-profile-ports/smine", "hits": [], "answer": "configserver and install port items are outside the skills chunk. fimplement L63 (the host:port listener assertion) is consistent with this spec's OTLP marker work."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "answer": "Registry and cache items are outside the skills chunk."}
+  ],
+  "walk_complete": true
+}

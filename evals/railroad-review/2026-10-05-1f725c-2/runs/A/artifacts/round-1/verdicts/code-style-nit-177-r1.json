@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-NIT-177-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at verdict.sh:112: hash_explained_anywhere (new in this diff, absent at base) is defined 156 lines above the explained_pairs global (line 268) it iterates and away from its mark_explained/is_explained siblings (269-278).",
+  "probe": "PROBE-CODE-STYLE-NIT-177-R1",
+  "script": "code-style-nit-177-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-177-r1/verdict.sh",
+  "registry": "registry-code-style-nit-174-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-177-R1 -root <worktree> -registry probes/registry-code-style-nit-174-r1.json -> exit 1: cmd/worktrees/_lib/verdict.sh:112: hash_explained_anywhere is defined 156 lines above the explained_pairs global (line 268) it iterates; 1 violation(s)",
+    "read": [
+      "cmd/worktrees/_lib/verdict.sh:111-118 at 1f725ce: hash_explained_anywhere loops ${explained_pairs[@]+...}, placed between squash_contained (104) and filter_untracked (127)",
+      "verdict.sh:263-278: explained_pairs contract comment, declaration, mark_explained, is_explained with the same loop shape",
+      "git grep hash_explained_anywhere at b4981b8 -> no match (new helper); explained_pairs=() existed at base :233",
+      "known.json: verdict.sh rows NIT-119 (eval_verdicts doc), tests-NIT-34, tests-NIT-11 — different claims"
+    ],
+    "validity": "Direct interpreter self-check denied by tool policy (Bash(/bin/bash *), Bash(bash *)); acdsl -root on the fixture dir fails (not a git repo). The real run went RED on the claimed file and line."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-177-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-177-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-177-r1/verdict.sh"
+  ]
+}

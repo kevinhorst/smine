@@ -1,0 +1,42 @@
+=== RUN   TestReproDeleteErrorHXRedirectSwallowsError
+--- PASS: TestReproDeleteErrorHXRedirectSwallowsError (0.00s)
+=== RUN   TestSessionsPages
+=== RUN   TestSessionsPages/index-redirects-to-first-scope
+=== RUN   TestSessionsPages/scope-page-lists-batches
+=== RUN   TestSessionsPages/batch-page-renders
+=== RUN   TestSessionsPages/reload-endpoint-removed
+=== RUN   TestSessionsPages/no-reload-button-rendered
+=== RUN   TestSessionsPages/rescan-per-request-picks-up-new-batch
+=== RUN   TestSessionsPages/archive-unarchive-delete-flow
+=== RUN   TestSessionsPages/session-filter-single-id
+=== RUN   TestSessionsPages/collapsed-by-default-expanded-when-selected
+=== RUN   TestSessionsPages/open-param-expands-only-target-card
+=== RUN   TestSessionsPages/session-filter-multi-id
+=== RUN   TestSessionsPages/dimension-filter-fragment
+=== RUN   TestSessionsPages/unknown-batch-404
+=== RUN   TestSessionsPages/pseudo-dimensions-in-filter-bar
+=== RUN   TestSessionsPages/positive-filter-keeps-only-positive-sessions
+=== RUN   TestSessionsPages/frustration-filter-shows-quote-block
+--- PASS: TestSessionsPages (0.01s)
+    --- PASS: TestSessionsPages/index-redirects-to-first-scope (0.00s)
+    --- PASS: TestSessionsPages/scope-page-lists-batches (0.00s)
+    --- PASS: TestSessionsPages/batch-page-renders (0.00s)
+    --- PASS: TestSessionsPages/reload-endpoint-removed (0.00s)
+    --- PASS: TestSessionsPages/no-reload-button-rendered (0.00s)
+    --- PASS: TestSessionsPages/rescan-per-request-picks-up-new-batch (0.00s)
+    --- PASS: TestSessionsPages/archive-unarchive-delete-flow (0.00s)
+    --- PASS: TestSessionsPages/session-filter-single-id (0.00s)
+    --- PASS: TestSessionsPages/collapsed-by-default-expanded-when-selected (0.00s)
+    --- PASS: TestSessionsPages/open-param-expands-only-target-card (0.00s)
+    --- PASS: TestSessionsPages/session-filter-multi-id (0.00s)
+    --- PASS: TestSessionsPages/dimension-filter-fragment (0.00s)
+    --- PASS: TestSessionsPages/unknown-batch-404 (0.00s)
+    --- PASS: TestSessionsPages/pseudo-dimensions-in-filter-bar (0.00s)
+    --- PASS: TestSessionsPages/positive-filter-keeps-only-positive-sessions (0.00s)
+    --- PASS: TestSessionsPages/frustration-filter-shows-quote-block (0.00s)
+PASS
+ok  	github.com/kevinhorst/smine/internal/server	0.388s
+testing: warning: no tests to run
+PASS
+ok  	github.com/kevinhorst/smine/internal/server/catalog	0.522s [no tests to run]
+?   	github.com/kevinhorst/smine/internal/server/respond	[no test files]

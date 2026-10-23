@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-187-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at merge-resolve SKILL.md:51 — heading 'Assert the merge base ref' while the body compares the merged ref (theirs/ours) SHAs, never the fork point; repo uses 'merge-base' only for the fork point.",
+  "probe": "PROBE-CODE-STYLE-NIT-187-R1",
+  "script": "code-style-nit-187-r1.sh",
+  "fixture": "fixtures/code-style-nit-187-r1-fail.md",
+  "registry": "registry-code-style-nit-187-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-187-R1 -registry probes/registry-code-style-nit-187-r1.json -> exit 1: skills/git/merge-resolve/SKILL.md:51: heading says 'merge base ref' (git fork-point term) for the merged ref",
+    "read": [
+      "skills/git/merge-resolve/SKILL.md:51 (added in this diff): 'Resolve the ref actually merged ... Compare SHAs (`git rev-parse <named-ref>` against the merged ref)'",
+      "git grep 'merge-base' at 1f725ce: railroad-review SKILL.md:167 and skills/README.md:83 use it for the fork point; merge_branch.sh:23 uses git merge-base --is-ancestor",
+      "known.json: no entry on this file/claim"
+    ],
+    "validity": "Fixture self-run via /bin/bash denied by tool-policy (candidate Bash(/bin/bash *)); acdsl -root on fixture tree fixtures/code-style-nit-187-r1/ failed (not a git repo). RED on the real file demonstrates the probe fires."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-187-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-187-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-187-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-187-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-187-r1/files.txt"
+  ]
+}

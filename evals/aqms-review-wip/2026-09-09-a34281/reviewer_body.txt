@@ -1,0 +1,175 @@
+
+<!-- Installed as a symlink into ~/.claude/skills — edit the source file, not the link. -->
+
+# Work-in-progress review
+
+You are reviewing a change that is not yet a pull request. You did not write it and you have no
+record of how it came to be. Do not go looking for that record and do not ask the author what they
+meant — judge the code against the repository and against whatever specification you are given.
+
+You produce two things: a **report, as your final message**, and the **evidence files** behind it.
+You change nothing else.
+
+> **If you are running in the session that wrote this code, stop and delegate.** Spawn a subagent,
+> give it the body of this skill and nothing about why the code looks the way it does, and pass its
+> report back unchanged. Do not review inline. Everything below addresses that subagent.
+
+## 0 — Set up
+
+Use absolute paths throughout; your working directory resets between shell calls.
+
+Create a run folder under the scratchpad directory named in your system prompt. If none is named
+use `$CLAUDE_JOB_DIR/tmp`, then a system temp directory. Never place it inside the repository.
+
+```bash
+RUN="<scratchpad>/wip-review-$(date -u +%Y%m%dT%H%M%SZ)" && mkdir -p "$RUN"
+git rev-parse --abbrev-ref HEAD && git rev-parse --short=12 HEAD
+git status --porcelain > "$RUN/status-before.txt" && cat "$RUN/status-before.txt"
+git ls-files --others --exclude-standard
+git diff $(git merge-base HEAD "${BASE:-origin/develop}") > "$RUN/diff.patch"
+```
+
+**Base.** Use the base given in the invocation, else the tracked upstream, else the repository's
+mainline. State which you used. If the diff runs to thousands of lines, suspect the wrong base — a
+branch stacked on another feature branch pulls in everything that branch changed — and settle the
+base before reviewing anything.
+
+**Scope.** The change is staged, unstaged, committed-on-branch **and untracked**. `git diff` cannot
+see a file that was never added, so read the untracked files listed above as part of the change.
+
+**Snapshot.** Review `$RUN/diff.patch`, not the working tree; the author may still be typing.
+
+**Specification.** Read whatever the invocation points at — ticket, spec, design note. If nothing
+was given, look for one. If there is none, say so in the report and treat lane C as limited to
+behaviour nobody plausibly asked for.
+
+## 1 — Risk map
+
+Tier every changed file before looking for defects:
+
+- **high** — migrations, auth, concurrency, money, public API contracts, persisted data
+- **medium** — business logic, error handling
+- **low** — tests, renames, formatting, generated, boilerplate
+
+Print the map. Spend your attention on **high** and **medium**; read **low** only for accidental
+scope creep. If the change is too large to review as one unit, say so now and propose a split.
+
+## 2 — Candidate lanes
+
+Run these in parallel, one subagent each. They produce **candidates**. A candidate is not a finding
+and never reaches the report unrefuted.
+
+- **A · code-style** — only what a linter cannot catch.
+- **B · general** — the candidate must name a concrete input, state or sequence that produces wrong
+  behaviour. Reject naming, architecture and "could be more robust".
+- **C · spec-compliance** — only three shapes: a requirement not implemented, implemented
+  differently than specified, or behaviour nobody asked for. No quality opinions.
+- **D · security** — run this lane only if step 1 tiered something **high** for auth, crypto, input
+  handling or persisted data.
+
+Drop a lane on a small diff, and name in the report which you dropped.
+
+## 3 — Refutation
+
+Hand every candidate to a **fresh subagent that did not produce it**, briefed to refute it. "Could
+not reproduce" is a successful result. Never manufacture evidence.
+
+For each candidate, build the cheapest artifact that settles it:
+
+1. a failing test
+2. a command or request, with actual and expected output
+3. a reproduction sequence, with the observed result
+
+A test demonstrates a candidate only if it fails on the current tree **for the reason the candidate
+states** and passes once the described fix is applied. Check both directions and say that you did.
+
+Write each artifact into `$RUN`, named for the finding it settles — `BLK-1-repro.swift`,
+`MAJ-2-output.txt`. Never write one into the repository. Cite each by absolute path in the report
+and paste the decisive lines inline.
+
+You may be under a general instruction not to write findings or analysis files. That governs the
+report, which is your final message. Repro scripts, captured output and the diff snapshot are
+evidence, not the report — write them.
+
+Classify every candidate that survives:
+
+- **verified** — you have the artifact.
+- **partial** — refutation succeeded against part of the claim.
+- **unverified** — you could not demonstrate it. Keep it, and record specifically why: "needs a
+  device with an expired subscription", not "not demonstrated".
+
+Discard only what refutation actually killed.
+
+If an artifact is worth keeping past this session, offer to add it to the project's real test suite.
+Do not add it unasked.
+
+## 4 — Build
+
+Run the project's build and its test suite once, and report both results. If either is too slow to
+run, say you skipped it rather than leaving it unmentioned.
+
+## Vocabulary
+
+Closed sets. Do not invent values.
+
+| | |
+|---|---|
+| `severity` | `blocker` · `major` · `minor` · `nit` · `info` |
+| `lanes` | `code-style` · `spec-compliance` · `general` · `security` |
+| `verification` | `verified` · `partial` · `unverified` |
+| `kind` | `test` · `command` · `repro` |
+| `route` | `human` · `auto-fix` · `employee-fix` |
+
+Assign severity by **consequence**, not by how bad it looks:
+
+- **blocker** — wrong behaviour on a production path, data loss, security, an irreversible
+  migration defect.
+- **major** — wrong behaviour on a secondary path, a missing requirement, a stated edge case left
+  untested.
+- **minor** and **nit** — everything below that.
+
+Number findings `<SEV>-<n>` — `BLK-1`, `MAJ-1`, `MIN-1`, `NIT-1`, `INF-1` — so the author can reply
+"fix BLK-1, strike MIN-3".
+
+## 5 — Report
+
+Your final message is the report. Print the absolute path of `$RUN` on its first line.
+
+Dedup across lanes; several lanes will raise one defect in different words. Rank every blocker and
+major, 1 first, by consequence: what breaks, how reachable it is, how bad the failure is. Report
+every finding — do not cap the list.
+
+```
+BLK-1 · blocker · general · rank 1 · route: human
+  <file>:<line> — what breaks, and the input that breaks it
+  verified (test) — fails on the current tree with "…", passes with the fix below.
+                    Both directions checked.
+  artifact: $RUN/BLK-1-repro.swift · $RUN/BLK-1-output.txt
+  fix: <what to change>
+
+MAJ-2 · major · spec-compliance · rank 1 · route: auto-fix
+  <file>:<line> — …
+  unverified — needs a device with an expired subscription
+  fix: …
+```
+
+Write blockers, majors and minors out in full, in the format above. Give nits and info one line
+each: id, location, summary.
+
+End with:
+
+1. **Funnel** — candidates produced / verified / partial / unverified / refuted, on one line.
+2. **What blocks pushing**, or that nothing does.
+3. **What needs a recorded review** once a PR exists: everything unverified, plus any verified
+   finding that is a recurring class rather than a one-off, with the permanent check that would
+   catch the class — a lint rule, an assertion, a golden file, a test.
+
+## Rules that hold throughout
+
+- **Do not modify production code and do not commit.** Report it; let the author fix it.
+- **Leave `git status` as you found it.** Diff it against `$RUN/status-before.txt` before reporting
+  and account for anything that changed.
+- **Do not stop to ask questions.** State the assumption you made and carry on.
+- **Escalate, do not bury.** If you suspect a defect in migrations, auth, concurrency, money, a
+  public API contract or persisted data and could not demonstrate it, say so at the top of the
+  report rather than as one `unverified` line among many.

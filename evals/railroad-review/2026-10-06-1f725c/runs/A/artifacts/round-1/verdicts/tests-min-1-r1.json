@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-MIN-1-r1",
+  "verdict": "confirmed",
+  "reason": "No test anywhere in internal/server issues GET /routines/{name} (handleRoutineDetail) or asserts a data-stamp/run-band marker; handleRoutineDetail has zero test coverage in the package, so the week-band feature spec-11's Tests table names ships with no server-side test at all.",
+  "probe": "PROBE-TESTS-MIN-1-R1",
+  "script": "tests-min-1-r1-routinedetail.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-1-r1",
+  "registry": "registry-tests-min-1-r1.json",
+  "evidence": {
+    "read": [
+      "git ls-files internal/server | grep _test.go — no routines_test.go or any file testing handleRoutineDetail",
+      "grep -rn data-stamp|run-band internal/server — only templates/routine_detail.html and assets/style.css, never a *_test.go assertion",
+      "internal/server/autoapplyrules_test.go only exercises GET /routines/{name}/configure, never the bare /routines/{name} detail route"
+    ],
+    "probe_run": "internal/server/routines.go:1: no test issues GET /routines/{name} and asserts a data-stamp/run-band marker — handleRoutineDetail's week-band rendering (spec-11 Tests table) ships without server-side coverage: [PROBE-TESTS-MIN-1-R1] tests-min-1-r1-routinedetail (acdsl check -root <worktree> -rule PROBE-TESTS-MIN-1-R1 -registry registry-tests-min-1-r1.json -lifetime task, exit 1)"
+    ,
+    "fixture_validity": "same probe run against probes/fixtures/tests-min-1-r1 (routines.go + a test file that only exercises /routines/demo/configure) exits 1 with the identical message, confirming the script is not blind to its own fixture"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-1-r1-routinedetail.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-1-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-tests-min-1-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-1-r1"
+  ]
+}

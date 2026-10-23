@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-MIN-1-r1",
+  "verdict": "confirmed",
+  "reason": "worktreeSessions sits before rootCause in internal/server/repos.go, breaking alphabetical free-function order (RULE-GOLANG-FILE-001) and leaving rootCause without its own doc comment — reproduced by a deterministic ACDSL probe, RED on the real file.",
+  "probe": "PROBE-CODE-STYLE-MIN-1-R1",
+  "script": "probe-min1-order.sh",
+  "fixture": "round-1/probes/fixtures/min1-fail.go",
+  "registry": "registry-code-style-min-1-r1.json",
+  "evidence": {
+    "read": [
+      "internal/server/repos.go:174-209 (git show 1f725cedc5c8b092c8a3d7e408793ef72840ec7e) — worktreeSessions (line 180) precedes rootCause (line 201); rootCause carries no doc comment of its own, the original comment having migrated to precede worktreeSessions instead"
+    ],
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-MIN-1-R1 -registry registry-code-style-min-1-r1.json -lifetime task => exit 1: internal/server/repos.go:201: rootCause defined after worktreeSessions (breaks alphabetical free-function order, RULE-GOLANG-FILE-001) and has no doc comment of its own (line 200)",
+    "validity_check": "probe exits 1 on round-1/probes/fixtures/min1-fail.go (ordering broken, comment orphaned) staged as an untracked file inside the pinned worktree and anchored there; exits 0 (acdsl: 1 rule(s) OK) once the fixture content is corrected to the right order with its own comment — both runs via bin/acdsl check, the direct-script-interpreter self-check substituted for the acdsl mechanism itself since this environment's tool policy denies invoking /bin/bash on a script directly"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/probe-min1-order.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/min1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-min-1-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-min-1-r1.acdsl"
+  ]
+}

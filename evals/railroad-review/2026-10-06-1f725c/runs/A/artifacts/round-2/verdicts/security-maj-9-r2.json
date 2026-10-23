@@ -1,0 +1,27 @@
+{
+  "finding_id": "security-MAJ-9-r2",
+  "verdict": "confirmed",
+  "reason": "install.sh:71 runs `uv tool install -p 3.13 --upgrade serena-agent` with no `==<version>` pin, confirmed by a full-file read at e5245d08d2fe5c05f67742fd8ec5a67b759ca316; the companion install two lines above (install.sh:64, `go install github.com/kevinhorst/peek-mcp@v1.2.2`) does pin a version, so the gap is a reviewable local inconsistency, not a sweeping unverifiable claim. settings/claude_code/claude.serena.json confirms serena-agent is wired as an MCP server, so a compromised/malicious PyPI release does reach a running agent process on any machine that re-runs install.sh --serena after the bad release ships. Cells (destructive/eventually -> MAJOR per schemas/severity-table.json) hold: INSTALL_SERENA defaults to 0 (install.sh:38, opt-in only via --serena), consistent with 'eventually' rather than 'always'/'often'; a supply-chain RCE via an installed, running MCP server is a reasonable 'destructive' effect, not overclaimed.",
+  "probe": "none: the ACDSL verdict path is categorically blocked by tool-policy in this session, confirmed on three independent attempts: (1) direct `<worktree>/bin/acdsl check -rule ...` denied, no Bash allow rule matches that literal path; (2) `make -C <worktree> acdsl ARGS=...` denied, because this repo's Makefile has no `acdsl` target at all (let alone one declaring ARGS in its `## <target>:` help line) — audit's acdsl calls are hard-coded, not parameterized; (3) even the protocol's one-off self-check exception, running the probe script directly via `bash <script>`, is denied outright (`Bash(bash *)` has no allow rule in this environment). No self-serviceable allow rule exists for any of the three forms, and widening permissions ad hoc is not mine to do absent user instruction. Settled manually instead: a probe script was authored (security-maj-9-r2.sh) and a fail fixture written, but neither could be executed under this session's tool policy, so the claim was verified by direct full-file read of install.sh plus a grep contrasting lines 64 and 71, and by locating settings/claude_code/claude.serena.json to confirm the MCP wiring.",
+  "script": "probes/security-maj-9-r2.sh",
+  "fixture": "probes/fixtures/install-unpinned.sh",
+  "registry": "registry-security-maj-9-r2.json",
+  "evidence": {
+    "read": [
+      "install.sh:71 (headCommit e5245d08d2fe5c05f67742fd8ec5a67b759ca316): `uv tool install -p 3.13 --upgrade serena-agent` — no `==` version pin",
+      "install.sh:64: `go install github.com/kevinhorst/peek-mcp@v1.2.2` — the companion install two lines above IS pinned",
+      "install.sh:37-38: `INSTALL_SERENA=0` default, set to 1 only by the `--serena` flag — confirms exposure is opt-in (`eventually`), not `always`/`often`",
+      "settings/claude_code/claude.serena.json exists — confirms serena-agent is wired as a running MCP server, not just a CLI tool"
+    ],
+    "commands_attempted": [
+      "<worktree>/bin/acdsl check -rule PROBE-SECURITY-MAJ-9-R2 -> tool-policy denied, candidate Bash(<worktree>/bin/acdsl *)",
+      "make -C <worktree> acdsl ARGS=\"check -rule PROBE-SECURITY-MAJ-9-R2\" -> tool-policy denied, no acdsl target declares ARGS in its help line (and no acdsl target exists at all)",
+      "bash probes/security-maj-9-r2.sh probes/fixtures/install-unpinned.sh -> tool-policy denied, candidate Bash(bash *)"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-maj-9-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/install-unpinned.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/security-maj-9-r2/install-pinned.sh"
+  ]
+}

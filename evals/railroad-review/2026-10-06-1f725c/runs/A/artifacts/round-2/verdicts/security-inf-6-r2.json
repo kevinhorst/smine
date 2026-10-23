@@ -1,0 +1,27 @@
+{
+  "finding_id": "security-INF-6-r2",
+  "verdict": "debunked",
+  "reason": "The claim asserts handleRepoMerge/Sync/CherryPick forward branch/commit to internal/repos.Merge/Sync/CherryPick 'with no format check', framed as an unresolved asymmetry because internal/repos/*.go was outside this lane's chunk. Reading internal/repos/ops.go resolves it: Merge (line 41) and Sync (line 101) both call ValidateBranch(ctx, branch, repoPath) before shell.Run, and CherryPick (line 25) calls ValidateCommit(ctx, commit, repoPath) before shell.Run — the validation the claim says is absent is present, just centralized in the repos package instead of duplicated in the HTTP handler (handleRepoCommits validates in the handler only because it needs the branch value for its own page data before calling repos.Commits, not because Merge/Sync/CherryPick skip validation). shell.Run also execs via exec.CommandContext with an argv slice (internal/shell/shell.go), never shell string interpolation, so there is no injection surface either way. The claim's premise is false, not merely unresolved.",
+  "probe": "none: ACDSL repo, but every execution path was denied by tool-policy — direct `bin/acdsl check -rule PROBE-SECURITY-INF-6-R2 -registry <registry>` (candidate rule Bash(/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b8-r2/bin/acdsl *), no allow rule matches), `make -C <worktree> acdsl ARGS=\"check -rule ...\"` (denied: ARGS not declared on the Makefile's '## <target>:' help line), and even the validity-check run of the authored script itself via `bash probes/validate-before-exec.sh ...` and `sh probes/validate-before-exec.sh ...` (both denied, candidate rules Bash(bash *) / Bash(sh *)) — no self-serviceable allowlisted form exists in this sandbox for any of the three, so the script and fixture below are authored and persisted but never executed; settled instead via the manual path: direct full-file read of internal/repos/ops.go, which is decisive and reproducible by anyone with repo access.",
+  "script": "probes/validate-before-exec.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/ops_missing_validate.go",
+  "registry": "registry-security-inf-6-r2.json",
+  "evidence": {
+    "read": [
+      "internal/repos/ops.go:40-51 (Merge): line 41 `if err := ValidateBranch(ctx, branch, repoPath); err != nil { return \"\", err }` precedes the shell.Run call at line 46.",
+      "internal/repos/ops.go:100-111 (Sync): line 101 `if err := ValidateBranch(ctx, branch, repoPath); err != nil { return \"\", err }` precedes the shell.Run call at line 106.",
+      "internal/repos/ops.go:24-35 (CherryPick): line 25 `if err := ValidateCommit(ctx, commit, repoPath); err != nil { return \"\", err }` precedes the shell.Run call at line 30.",
+      "internal/shell/shell.go:27-33 (runWithTimeout): `cmd := exec.CommandContext(runCtx, name, args...)` — argv exec, no shell string interpolation.",
+      "internal/server/repos.go:423-434, 518-529, 246-257: handleRepoMerge/Sync/CherryPick call repos.Merge/Sync/CherryPick directly, which is exactly where the above validation runs."
+    ],
+    "probe_run": "none — every interpreter/binary invocation needed to run the validity check (bash, sh) or the real acdsl verdict (bin/acdsl, make acdsl ARGS=) was denied by tool-policy in this sandbox (see the probe field for each candidate rule); the probe script and fixture are authored and persisted but unexecuted. The verdict rests entirely on evidence.read, decisive line: 'internal/repos/ops.go:41: ValidateBranch(ctx, branch, repoPath) called inside Merge before shell.Run at line 46' — which on its own refutes the claim's premise that no format check reaches the exec call."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b8-r2/railroad-probes-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-inf-6-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-security-inf-6-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/validate-before-exec.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/ops_missing_validate.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/security-inf-6-r2/fixture-files.txt"
+  ]
+}

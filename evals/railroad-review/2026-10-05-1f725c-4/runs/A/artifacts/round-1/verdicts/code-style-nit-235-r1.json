@@ -1,0 +1,17 @@
+{
+  "finding_id": "code-style-NIT-235-r1",
+  "verdict": "debunked",
+  "reason": "The claim's premise that sibling handlers read the language once and pass it down is false: sessions.go:168/172 and proposals.go:181/186 call s.presentation.language() repeatedly per render exactly like overview.go, so the repeated one-line accessor call is the in-repo pattern, not duplicated code under ACTION-REVIEW-QUALITY-005.",
+  "probe": "none: the claim is about whether repeated accessor calls count as duplication against the in-repo pattern; a probe for repeated language() calls goes red equally on the sibling handlers the claim cites as the correct pattern, so it cannot separate defect from convention",
+  "evidence": {
+    "read": [
+      "grep s.presentation.language() at 1f725ce: internal/server/sessions.go:168 'BatchBands: batchBands(info.Batches, s.presentation.language())' and :172 'Title: translate(s.presentation.language(), \"Sessions\") ...'; internal/server/proposals.go:181 'proposalViews(active, files, s.presentation.language(), ...)' and :186 'Title: translate(s.presentation.language(), \"Proposals\")' — the cited siblings read the language per use, not once",
+      "internal/server/overview.go:230,244,253 (sessionTiles) and 459,460,463 (proposalsTile) — same per-use read; handleOverview:92 also reads it again for the Title",
+      "internal/server/presentation.go:69-73 — language() is a three-line RLock accessor; a mid-render profile switch producing a mixed-language tile is a correctness/race concern outside the code-style lens and equally present in the sibling handlers",
+      "known.json: tests-NIT-9-r1, tests-NIT-49-r1, code-style-NIT-17-r1 cover other overview.go issues — not this claim"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/code-style-nit-235-r1.json"
+  ]
+}

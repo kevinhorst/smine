@@ -1,0 +1,9 @@
+# Interpretation — fimplement, opus-5.5[1m] vs opus-5[1m], medium, no serena, 2 replicas, 4 parallel
+
+- With concurrency capped at 4 the load artifacts of the 8-parallel run disappeared: all 4 arms committed 6 per-package commits, all post-run `make audit` checks passed, no stall on a backgrounded audit, no golangci-lint lock collision. The stalls in `2026-09-26-694e74-3` were environment, not model conduct.
+- Quality is a tie: zero MAJOR+ defects on every arm, quality rank Δ 0, step misses 17–25% with no significant difference. All four match the reference on every production surface; the only defect class is a shared MINOR (`afterClose` after `afterDelivery`, following the plan sketch over go.md ordering) — Opus 5 r2 is the one arm that fixed it and logged the deviation, which earned rank 1.
+- Opus 5.5 is faster and cheaper here, both significant at n=2: ~3.3 min shorter wall time (9m 14s–9m 55s vs 12m 31s–13m 10s) and ~$9.34 cheaper per run ($4.32–$5.15 vs $13.28–$14.88), with similar output tokens (Δ +4.4k for Opus 5, n.s.).
+- Conduct misses are shared and skill-level, not model-level: no arm invoked `/verify` (absent from this environment's skill listing) or executed the S7/S8 hook-routing risk loci; build/test gating is per language, not per unit, in every arm. Violations: one — Opus 5 r1 opened its report with "Done and committed" while V3/V5–V8 were open (and ticked V4 against the wrong binary).
+- Answer: on this plan Opus 5.5 delivers the same result as Opus 5 at roughly a third of the cost and ~25% less time; prefer Opus 5.5 for fimplement at medium effort. Smoke fails on every arm only from non-blocking permission denials.
+
+Worker pins: no arm spawned a subagent; `/package-commit` ran inline on the arm model. Judges were told not to open run.json/result.json and reported not doing so.

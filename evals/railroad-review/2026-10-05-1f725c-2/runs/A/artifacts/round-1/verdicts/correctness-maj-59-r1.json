@@ -1,0 +1,27 @@
+{
+  "finding_id": "correctness-MAJ-59-r1",
+  "verdict": "confirmed",
+  "reason": "Duty 4 selects packs only by <target>/docs/context.json, while sync_context.sh writes the pack to <target>/$CONTEXT_DIR/context.json and auto-discovers only docs/ without --context-dir; a pack deployed with --context-dir context is never re-synced, contrary to correctness-59.",
+  "probe": "PROBE-CORRECTNESS-MAJ-59-R1",
+  "script": "correctness-maj-59-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-59-r1-fail.md",
+  "registry": "registry-correctness-maj-59-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-MAJ-59-R1 -registry probes/registry-correctness-maj-59-r1.json -> exit 1: skills/smine/smine-orchestrate/SKILL.md:57: context-pack selector hard-wired to docs/context.json; packs deployed with a non-docs --context-dir are skipped",
+    "read": [
+      "skills/smine/smine-orchestrate/SKILL.md:57 — 'For each repos.json entry whose target carries docs/context.json: re-run bash cmd/sync/sync_context.sh with that file's recorded deploy options (context-dir, ...)'",
+      "cmd/sync/sync_context.sh:74-78 — CTX_FILE is $TARGET/$CONTEXT_DIR/context.json only with --context-dir, else only $TARGET/docs/context.json is probed",
+      "cmd/sync/sync_context.sh:211,325 — pack written to $TARGET/$CONTEXT_DIR/context.json; L336-340 records contextDir in the deploy section",
+      "routines/ and cmd/bootstrap/ — no other caller re-runs sync_context.sh, so nothing else covers non-docs packs"
+    ],
+    "validity": "Direct /bin/bash run of the probe script is denied by tool-policy (candidate Bash(/bin/bash *)); the script's sole match pattern was validated with grep -n against the fail fixture -> line 3 matched. make -C <wt> acdsl ARGS=... was denied by tool-policy (ARGS value with metacharacters), so the shipped bin/acdsl ran the verdict directly.",
+    "cells": "effect incorrect and exposure rare accepted: hits only targets whose recorded contextDir is not docs."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-59-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-59-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-maj-59-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-59-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-maj-59-r1/files.txt"
+  ]
+}

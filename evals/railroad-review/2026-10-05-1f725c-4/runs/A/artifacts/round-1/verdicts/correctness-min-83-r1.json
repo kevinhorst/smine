@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-MIN-83-r1",
+  "verdict": "confirmed",
+  "reason": "smine-context L33 bans rule/ACDSL IDs in user-visible fields incl. change with no exemption, while L71 mandates change = set projected=\"false\" on <ID> and smine-apply L31 route (d) dispatches on that literal; smine-permissions L33 is the only skill carrying the exemption ('the rule string itself stays in change'); smine-consolidate L51 sweep rewrites such change text on casual installs.",
+  "probe": "PROBE-CORRECTNESS-MIN-83-R1",
+  "script": "correctness-min-83-r1.sh",
+  "fixture": "probes/fixtures/correctness-min-83-r1/fail/SKILL.md",
+  "registry": "registry-correctness-min-83-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MIN-83-R1 -registry registry-correctness-min-83-r1.json -> skills/smine/smine-context/SKILL.md:33: casual rule bans IDs in change without exemption, but line 71 mandates change = set projected=\"false\" on <ID> (exit 1, 1 violation)",
+    "read": [
+      "skills/smine/smine-context/SKILL.md:33 Casual presentation: user-visible prose fields (L32 lists change) carry no file paths, no rule/FACT/ACDSL IDs",
+      "skills/smine/smine-context/SKILL.md:48,71 prescribe change text 'declare <entry-ID> in skills/<path>/SKILL.md' and 'set projected=\"false\" on <ID>' / 'remove <ID> from <skill> context:'",
+      "skills/smine/smine-apply/SKILL.md:31 route (d) keyed on the eviction change literal",
+      "skills/smine/smine-permissions/SKILL.md:33 exemption 'the rule string itself stays in change' — absent in smine-context/smine-memory/smine-skills",
+      "skills/smine/smine-consolidate/SKILL.md:51 casual sweep rewords change carrying IDs/paths into target/anchor",
+      "skills/smine/smine-skills/SKILL.md:65 Workflows change = 'author workflows/<name>.js under <target>' (a path)"
+    ],
+    "validity_note": "Direct interpreter run of the script over the fixture files list was denied by tool policy (Bash(/bin/bash *) unlisted); acdsl check -root <fixture dir> refused (fixture root is no git repo). The red on the real file reports the exact lines the claim names."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-min-83-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-min-83-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-correctness-min-83-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-min-83-r1/fail/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-min-83-r1/files.txt"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "finding_id": "code-style-NIT-196-r1",
+  "verdict": "debunked",
+  "reason": "The comment at bootstrap.go:78-79 records rationale the name bootstrapDeadline does not carry (a backstop, not an expected runtime; the routinewrap precedent; chosen far above any real run) — exactly the decision/assumption RULE-GOLANG-COMMENT-001 permits; the claim that it adds no intent the name lacks does not hold.",
+  "probe": "none: whether a comment carries intent beyond an identifier is a semantic judgment no deterministic verifier can decide; a probe on the '6h' literal would only test the subsidiary drift remark and go red trivially without settling the superfluousness claim (two designs considered: literal-match and comment-only-restates-constant, neither decidable)",
+  "evidence": {
+    "read": [
+      "bootstrap.go:78-79 '// Multi-hour child under its own backstop deadline (the routinewrap // pattern): bounded at 6h, far above any real bootstrap run.'",
+      "bootstrap.go:19 const bootstrapDeadline = 6 * time.Hour — the name states a deadline, not that it is a backstop sized far above real runs nor the precedent it follows",
+      "context/rules/go.md RULE-GOLANG-COMMENT-001: add a comment ONLY when intent is not obvious from names and code, or to record a non-obvious assumption the code cannot express",
+      "Known ledger: no entry on this comment (NIT-14-r1 call layout, NIT-29-r1 bootstrapEnv grouping comments)"
+    ],
+    "note": "Residual: the literal '6h' duplicates the constant's value; that drift risk is a weaker, different claim than the superfluous-comment defect under RULE-GOLANG-COMMENT-001 and is not what the finding asserts as its defect."
+  },
+  "artifacts": []
+}

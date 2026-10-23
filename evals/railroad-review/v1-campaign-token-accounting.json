@@ -1,0 +1,215 @@
+{
+  "purpose": "Golden v1 campaign accounting in TOKEN CATEGORIES (the plan-relevant currency) — dollars are notional on a subscription. Sources: transcript JSONL aggregation, message.id-deduped, per-id max. Canonical token scope: review-workflow-only (scope \"arm-workflow\") — arm agents only (lanes, refuters, verifiers, grouper, station); eval-harness sessions (cell mains, setup, preflight, judge, transcribe, desktop dispatcher) are excluded and appear only in rows marked scope \"orchestration-mains\". Excludes: the 2026-09-04 pre-golden bake-off runs, recheck batches. Plan-consumption calibration (percent of rolling 5h window / weekly caps) requires meter-delta measurements that do not exist yet — this file is the token side of that future calibration.",
+  "rows": [
+    {
+      "component": "v1-campaign",
+      "model": "fable-5",
+      "scope": "orchestration-mains",
+      "output_tokens": 794207,
+      "cache_creation_5m": 3389023,
+      "cache_creation_1h": 71742,
+      "cache_read": 84647706
+    },
+    {
+      "component": "v1-campaign",
+      "model": "opus-4-8",
+      "scope": "arm-workflow",
+      "output_tokens": 6218241,
+      "cache_creation_5m": 48517020,
+      "cache_creation_1h": 0,
+      "cache_read": 916104423
+    },
+    {
+      "component": "v2-run",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 3066267,
+      "cache_creation_5m": 17616463,
+      "cache_creation_1h": 0,
+      "cache_read": 511287022
+    },
+    {
+      "component": "v3-run",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 2500469,
+      "cache_creation_5m": 14345264,
+      "cache_creation_1h": 0,
+      "cache_read": 375437063
+    },
+    {
+      "component": "v4-run",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 1780457,
+      "cache_creation_5m": 12667581,
+      "cache_creation_1h": 0,
+      "cache_read": 212748527
+    },
+    {
+      "component": "v5-run",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 2858460,
+      "cache_creation_5m": 22639841,
+      "cache_creation_1h": 0,
+      "cache_read": 397128756
+    },
+    {
+      "component": "v5-run",
+      "model": "fable-5",
+      "scope": "arm-workflow",
+      "output_tokens": 70624,
+      "cache_creation_5m": 197325,
+      "cache_creation_1h": 0,
+      "cache_read": 1727483
+    },
+    {
+      "component": "v6-run",
+      "model": "opus-4-8",
+      "scope": "arm-workflow",
+      "output_tokens": 1240018,
+      "cache_creation_5m": 9534194,
+      "cache_creation_1h": 0,
+      "cache_read": 118136546
+    },
+    {
+      "component": "v7-0908-railroad",
+      "model": "sonnet-5-dominant",
+      "scope": "arm-workflow",
+      "output_tokens": 1891553,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 13836848,
+      "cache_read": 383387693
+    },
+    {
+      "component": "v7-superpowers-32arm",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 1767121,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 10590516,
+      "cache_read": 531671276
+    },
+    {
+      "component": "v7-superpowers-2arm",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 104288,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 700205,
+      "cache_read": 26975608
+    },
+    {
+      "component": "v7-aqms",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 76950,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 433361,
+      "cache_read": 17744462
+    },
+    {
+      "component": "v8-0911-r1",
+      "model": "mixed-sonnet+fable",
+      "scope": "arm-workflow",
+      "output_tokens": 1685716,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 14538289,
+      "cache_read": 359491100
+    },
+    {
+      "component": "v8-0911-r2",
+      "model": "mixed-sonnet+fable",
+      "scope": "arm-workflow",
+      "output_tokens": 1465413,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 12315327,
+      "cache_read": 311947876
+    },
+    {
+      "component": "v9-0912",
+      "model": "mixed-sonnet+fable",
+      "scope": "arm-workflow",
+      "output_tokens": 2448218,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 21896538,
+      "cache_read": 521456048
+    },
+    {
+      "component": "closure-0912",
+      "model": "mixed-sonnet+fable",
+      "scope": "arm-workflow",
+      "output_tokens": 2092119,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 18834460,
+      "cache_read": 422946180
+    },
+    {
+      "component": "side-175351",
+      "model": "sonnet-5",
+      "scope": "arm-workflow",
+      "output_tokens": 723110,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 4918866,
+      "cache_read": 137127039
+    },
+    {
+      "component": "side-175351",
+      "model": "fable-5",
+      "scope": "arm-workflow",
+      "output_tokens": 44765,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 639186,
+      "cache_read": 4059222
+    },
+    {
+      "component": "side-sp0907",
+      "model": "fable-5",
+      "scope": "arm-workflow",
+      "output_tokens": 66009,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 412877,
+      "cache_read": 11008246
+    }
+  ],
+  "totals": {
+    "output_tokens": 30894005,
+    "cache_creation_5m": 128906711,
+    "cache_creation_1h": 99188215,
+    "cache_creation_total": 228094926,
+    "cache_read": 5345032276
+  },
+  "byModel": {
+    "fable-5": {
+      "output_tokens": 975605,
+      "cache_creation_5m": 3586348,
+      "cache_creation_1h": 1123805,
+      "cache_read": 101442657
+    },
+    "mixed": {
+      "output_tokens": 7691466,
+      "cache_creation_5m": 0,
+      "cache_creation_1h": 67584614,
+      "cache_read": 1615841204
+    },
+    "opus-4-8": {
+      "output_tokens": 7458259,
+      "cache_creation_5m": 58051214,
+      "cache_creation_1h": 0,
+      "cache_read": 1034240969
+    },
+    "sonnet-5": {
+      "output_tokens": 14768675,
+      "cache_creation_5m": 67269149,
+      "cache_creation_1h": 30479796,
+      "cache_read": 2593507446
+    }
+  },
+  "notes": [
+    "v2-v6 rows restated 2026-09-14 to review-workflow-only scope from the per-session transcript trees (arm subagents only; the cell main sessions and any eval-harness agents excluded) — the earlier rows had summed the whole session tree",
+    "v8/v9/closure rows restated 2026-09-14 to arm-only from the runs armruns.jsonl (judge excluded); the earlier rows were arm+judge run totals from telemetry-subagents.json",
+    "v7-0908 cache_creation recorded without TTL split by the earlier session; listed as 1h (desktop workflow pattern)",
+    "v1-campaign orchestration-mains row (fable-5) is eval-harness spend, kept for campaign-dollar completeness — excluded from any arm-efficiency baseline"
+  ]
+}

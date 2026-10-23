@@ -1,0 +1,27 @@
+{
+  "finding_id": "security-MAJ-8-r2",
+  "verdict": "confirmed",
+  "reason": "The release build job (.github/workflows/ci.yml:49-52) fetches jq-windows-amd64.exe and peek-mcp-windows-amd64.exe via plain `curl -fsSL -o` with no checksum or signature verification anywhere in the build or installer jobs, and installer/windows/smine.iss stages both straight into the shipped Windows installer with no hash check of its own. Repo-wide grep for sha256/shasum/checksum/Get-FileHash across ci.yml and smine.iss returns nothing. Cells (effect: destructive, exposure: eventually) stand as given — an upstream release-asset swap at the same URL/tag (compromised maintainer account or asset re-upload) is the only path to exploitation, matching 'eventually'; a successful swap ships an attacker binary straight to every Windows end user, matching 'destructive'.",
+  "probe": "PROBE-SECURITY-MAJ-8-R2",
+  "script": "security-maj-8-r2.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/security-maj-8-r2-fail.yml",
+  "registry": "registry-security-maj-8-r2.json",
+  "evidence": {
+    "read": [
+      "git -C <worktree> show e5245d08d2fe5c05f67742fd8ec5a67b759ca316:.github/workflows/ci.yml lines 1-107 in full: lines 49-52 are the only fetch of the two .exe payloads, step named 'Fetch third-party payloads (pinned)' but 'pinned' refers only to the release tag in the URL (jq-1.7.1, v1.2.2), not a checksum",
+      "grep -rni 'sha256\\|shasum\\|checksum\\|Get-FileHash' .github/workflows/ci.yml installer/windows/smine.iss: no output, confirming zero verification anywhere in the chain"
+    ],
+    "probe_run": "acdsl check -root <worktree> -rule PROBE-SECURITY-MAJ-8-R2 -registry registry-security-maj-8-r2.json -lifetime task on the real file: '.github/workflows/ci.yml:51: curl download of .exe payload with no checksum verification anywhere in file' and ':52:' (same), exit 1, 2 violations — RED on both claimed curl lines"
+  },
+  "artifacts": {
+    "probe_rule_mirror": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-maj-8-r2.acdsl",
+    "probe_script": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-maj-8-r2.sh",
+    "probe_registry": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-security-maj-8-r2.json",
+    "fail_fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/security-maj-8-r2-fail.yml",
+    "validity_check_files_list": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/security-maj-8-r2/files.txt",
+    "real_file": ".github/workflows/ci.yml"
+  },
+  "validity": "Fixture-first check: fixture content placed untracked in the refuter worktree at railroad-probe-fixture-security-maj-8-r2.yml (git ls-files --others --exclude-standard picks up untracked files per acdsl's FileUniverse), rule anchored to it, acdsl check exited 1 with the expected file:line diagnostics on both curl lines; fixture then deleted (worktree restored) before re-anchoring the same rule to the real defect file for the official verdict run.",
+  "worktree": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-security-maj-8-r2-r2",
+  "notes": "Not in rejected.json (empty) or known.json (no ci.yml entries) — fresh candidate, not a re-report. Cells agreed with, not overridden."
+}

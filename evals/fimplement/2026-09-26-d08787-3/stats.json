@@ -1,0 +1,278 @@
+{
+  "baseline": "claude-opus-5-5[1m]-medium",
+  "comparisons": [
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 0,
+      "metricId": "smoke_pass",
+      "note": "insufficient replicas for significance (need \u003e=2 per arm)",
+      "significant": false,
+      "welchT": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 0,
+      "metricId": "check_pass",
+      "note": "insufficient replicas for significance (need \u003e=2 per arm)",
+      "significant": false,
+      "welchT": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": -33.5,
+      "df": 1.304724741960577,
+      "metricId": "wall_seconds",
+      "note": "",
+      "significant": false,
+      "welchT": -0.7693022632969289
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": -33.5,
+      "df": 1.304724741960577,
+      "metricId": "active_seconds",
+      "note": "",
+      "significant": false,
+      "welchT": -0.7693022632969289
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": 1184,
+      "df": 1.9961324875319248,
+      "metricId": "output_tokens",
+      "note": "",
+      "significant": false,
+      "welchT": 0.39213471204530315
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": -0.008341699999999896,
+      "df": 1.0396366200973,
+      "metricId": "cost_usd",
+      "note": "",
+      "significant": false,
+      "welchT": -0.015836325601374067
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": -0.5,
+      "df": 1.4705882352941178,
+      "metricId": "permission_denials",
+      "note": "",
+      "significant": false,
+      "welchT": -0.4472135954999579
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": 1.7857142857142883,
+      "df": 1.0511664675438308,
+      "metricId": "step_miss_pct",
+      "note": "",
+      "significant": false,
+      "welchT": 1.1454311330233797
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 0,
+      "metricId": "defects_major",
+      "note": "insufficient replicas for significance (need \u003e=2 per arm)",
+      "significant": false,
+      "welchT": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "deltaMean": -1,
+      "df": 2,
+      "metricId": "quality_rank",
+      "note": "",
+      "significant": false,
+      "welchT": -0.7071067811865475
+    }
+  ],
+  "groups": [
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 1,
+      "metricId": "smoke_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 1,
+      "metricId": "check_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 691.5,
+      "metricId": "wall_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 57.27564927611035,
+      "variance": 3280.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 691.5,
+      "metricId": "active_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 57.27564927611035,
+      "variance": 3280.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 33626.5,
+      "metricId": "output_tokens",
+      "n": 2,
+      "note": "",
+      "stddev": 2952.170811453836,
+      "variance": 8715312.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 3.9492266000000003,
+      "metricId": "cost_usd",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7376529456056682,
+      "variance": 0.5441318681607189
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 3,
+      "metricId": "permission_denials",
+      "n": 2,
+      "note": "",
+      "stddev": 1.4142135623730951,
+      "variance": 2
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 12.253694581280786,
+      "metricId": "step_miss_pct",
+      "n": 2,
+      "note": "",
+      "stddev": 2.1770528977418335,
+      "variance": 4.739559319566114
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 0,
+      "metricId": "defects_major",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium",
+      "mean": 3,
+      "metricId": "quality_rank",
+      "n": 2,
+      "note": "",
+      "stddev": 1.4142135623730951,
+      "variance": 2
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1,
+      "metricId": "smoke_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1,
+      "metricId": "check_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 658,
+      "metricId": "wall_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 22.627416997969522,
+      "variance": 512
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 658,
+      "metricId": "active_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 22.627416997969522,
+      "variance": 512
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 34810.5,
+      "metricId": "output_tokens",
+      "n": 2,
+      "note": "",
+      "stddev": 3085.1068863169066,
+      "variance": 9517884.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 3.9408849000000004,
+      "metricId": "cost_usd",
+      "n": 2,
+      "note": "",
+      "stddev": 0.10386535945357336,
+      "variance": 0.010788012894420001
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 2.5,
+      "metricId": "permission_denials",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7071067811865476,
+      "variance": 0.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 14.039408866995075,
+      "metricId": "step_miss_pct",
+      "n": 2,
+      "note": "",
+      "stddev": 0.3483284636386945,
+      "variance": 0.12133271858089333
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 0,
+      "metricId": "defects_major",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 2,
+      "metricId": "quality_rank",
+      "n": 2,
+      "note": "",
+      "stddev": 1.4142135623730951,
+      "variance": 2
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

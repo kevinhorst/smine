@@ -1,0 +1,96 @@
+{
+  "findings": [],
+  "runs": [
+    {
+      "id": 1,
+      "anchors": [
+        {
+          "id": "base",
+          "seq": 39
+        },
+        {
+          "id": "lanes",
+          "seq": 45
+        },
+        {
+          "id": "base_health",
+          "seq": 59
+        },
+        {
+          "id": "head_buildtest",
+          "seq": 63
+        },
+        {
+          "id": "checklist",
+          "seq": 107
+        },
+        {
+          "id": "lanes",
+          "seq": 157
+        },
+        {
+          "id": "round",
+          "seq": 159
+        },
+        {
+          "id": "ledger",
+          "seq": 7885
+        },
+        {
+          "id": "cleanup",
+          "seq": 7891
+        }
+      ],
+      "failures": [],
+      "findings": 0,
+      "passes": [
+        {
+          "check": "cleanup_before_end",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_fix_check",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_ledger",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_replay",
+          "count": 1
+        },
+        {
+          "check": "round_after_lanes",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_build",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_tests",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_build",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_tests",
+          "count": 1
+        },
+        {
+          "check": "round_lane_plan",
+          "count": 1
+        }
+      ],
+      "reason": "session_ended",
+      "session": "ad9914dd-d4b9-47fc-ae15-1145269d11c7",
+      "skill": "railroad-review",
+      "state": "ended",
+      "title": "run-2026-10-05-1f725c-a-55",
+      "version": "24.0.1"
+    }
+  ]
+}

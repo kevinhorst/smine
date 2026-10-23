@@ -1,0 +1,9 @@
+# Interpretation — fimplement 3.4.0, opus-5.5[1m] medium, serena vs no serena, 2 replicas, 4 parallel
+
+- No measurable Serena effect on this plan: every metric difference is non-significant at n=2 — cost Δ −$0.01, wall Δ −34 s, output tokens Δ +1.2k, step misses Δ +1.8 pts, rank Δ −1, denials Δ −0.5 (no-serena vs serena). All four arms committed, all checks green, zero MAJOR+.
+- Serena was barely used: each serena arm made exactly one Serena call (`find_referencing_symbols`). The plan names every touch point and the only rename has one caller, so symbol navigation has nothing to add here — this plan is a poor probe for Serena's value; a task that needs discovery (unfamiliar code, no plan) would be.
+- "comparison void" in the report is a false alarm: the runner's variant check reads the init-time MCP status, and Serena was `pending` there with four arms starting at once; both serena arms then loaded and called Serena. Treat both serena arms as valid.
+- Quality ranking is driven by the alphabetical-order rule (go.md file order, user ruling): only no-serena r2 ordered `afterClose` before `afterDelivery` and ranks 1; the other three follow the plan sketch and carry that MINOR. Serena r1 additionally changed `cmd/acdsl/verifiers/golangciwrap` (`--allow-serial-runners`) to survive the parallel golangci-lint lock — out of scope for the plan, but it is the fix for the lock collision that failed checks earlier today.
+- Conduct is uniform and good: 0 violations across four arms; the shared misses are the unreachable risk locus (exit-3 hook routing, `~`-path `if` rule) and partial running-app checks, several blocked by tool policy on the freshly built binary.
+
+Permission denials: stream envelope counts (4, 2, 3, 2); peek matched this time. Start commit d08787dd (tag eval-start-2026-09-26-nav). Worker pins: no subagents; /package-commit inline. Compare brief carried the alphabetical-order rule.

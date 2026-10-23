@@ -1,0 +1,30 @@
+{
+  "finding_id": "correctness-BLK-1-r1",
+  "verdict": "debunked",
+  "reason": "The migration the finding claims is 'completely absent anywhere in internal/server' is real, just placed where the approved spec (spec-8-change-bootstrap-profile.md, driver D4) puts it: cmd/sync/sync_skills.sh runs a one-time sed rewrite of 'audience: non-developer' to 'audience: casual' on every deploy/install, before the Go server ever reads the file (install.sh invokes sync_skills.sh as part of deployment; FACT-ARCH-001 — 'Deployment is script-driven'). Checklist item correctness-66 only requires the value be migrated in place before anything reads it — it does not require the migration to live inside internal/server. The finding's own evidence ('Grepped the full committed server package ... zero hits') is accurate but irrelevant: the spec explicitly assigns the migration to the shell sync step, not to loadPresentationProfile/newPresentationStore, and the proposed fix (add Go-side translation) would introduce a second migration mechanism duplicating the one the spec designed.",
+  "probe": "PROBE-CORRECTNESS-BLK-1-R1",
+  "script": "probes/correctness-blk-1-r1-check.sh",
+  "fixture": "probes/fixtures/correctness-blk-1-r1-fail.go",
+  "registry": "registry-correctness-blk-1-r1.json",
+  "evidence": {
+    "read": [
+      "spec-8-change-bootstrap-profile.md:117 — 'D4 | Canonical casual value + migration | ... | Value casual; sync_skills.sh migrates the profile file in place (one sed) before reading; loaders compare only casual | ... sync runs on every deploy on every install, so migration hits before any comparison flips behavior'",
+      "spec-8-change-bootstrap-profile.md:343 — 'run.sh runs after sync_skills.sh on every deployed install ..., so the migration in B2 lands first'",
+      "cmd/sync/sync_skills.sh:253-259 (head commit 1f725cedc5c8b092c8a3d7e408793ef72840ec7e, in the pinned worktree) — one-time migration block: `if grep -q '^audience:[[:space:]]*non-developer' ...; then sed 's/^audience:[[:space:]]*non-developer/audience: casual/' ...; fi` executed before `profile_audience` is read",
+      "install.sh calls cmd/sync/sync_skills.sh (confirmed via grep of callers), and context/facts/smine.md FACT-ARCH-001 states deployment is script-driven through this same sync script",
+      "internal/server/presentation.go:27 in the pinned worktree — `return p.Audience != audienceCasual`, the exact line the finding cites; no Go-side translation exists there or in loadPresentationProfile, matching the finding's own evidence, but that is the designed split, not an omission"
+    ],
+    "probe_run": "bin/acdsl check -root <refute worktree> -rule PROBE-CORRECTNESS-BLK-1-R1 -registry probes/registry-correctness-blk-1-r1.json -lifetime task -> 'acdsl: 1 rule(s) OK' (GREEN) against the real internal/server/presentation.go at headCommit 1f725cedc5c8b092c8a3d7e408793ef72840ec7e, because cmd/sync/sync_skills.sh in that same worktree contains the non-developer -> casual sed rewrite; the identical rule anchored at a hand-built fixture lacking that rewrite (.railroad-fixturecheck/fail.go + sync-missing.sh) went RED first ('acdsl: 1 violation(s) across 1 rule(s)'), proving the probe is sensitive to the claimed defect before trusting the clean result on the real file."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-blk-1-r1-check.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-blk-1-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-blk-1-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/correctness-blk-1-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/correctness-blk-1-r1-sync-missing.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-blk-1-r1/fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-blk-1-r1/sync-missing.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-blk-1-r1/fixturecheck.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-blk-1-r1/debug.log"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "server",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "notes": "Cross-chunk / unverifiable: (1) routines.go routineSession now prefix-matches <group> and <group>-cells/ cwds and proposals.go kindDimension gains a 'permissions' kind — neither traces to a requirement in the 14 supplied specs; if their plan is outside this spec set this is fine, otherwise a concept-audit item (ACTION-REVIEW-SPEC-005). The 'permissions' kind heading also renders untranslated for casual German. (2) presentation seeding reads settings/claude_code/presentation-profile.de.md relative to the server cwd, like the other relative defaults — depends on the configserver launch WorkingDirectory (cmd chunk). (3) config.LoadFragment / ExpandInstallMarkers semantics live in internal/config (other chunk). Known-ledger items in this chunk were not re-reported.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "answer": "Server side of 7-9 holds: html lang via langAttr, t overlay with English fallback, casual nav hides internals, proposal card hides target/band/tags/gate row, snippets collapsed under 'technical detail', gating is render-time on shared handlers. 1-6 live outside the server chunk."},
+    {"group": "spec-2-user_stories", "hits": ["correctness-BLK-2", "correctness-MAJ-3"], "answer": "12/14/16/18 hold on the pages this diff localizes; 11/13 fail on the casual Projekte op-result (lock key and additionalDirectories wording), 12 fails for the newly casual-visible Welcome nav entry. 10/15/17/19 are pipeline-side."},
+    {"group": "spec-3-raw#1", "hits": ["correctness-MAJ-3"], "answer": "21 loader fail-open defaults hold; 25 t/langAttr/isDeveloperAudience in the FuncMap; 26 every {{t \"…\"}} literal in the templates has a catalog key (grep-checked), but the layout's Welcome label is a raw literal; 27-29 hold. 20/23/24 outside chunk."},
+    {"group": "spec-3-raw#2", "hits": [], "answer": "36 holds: an unsupported language renders lang=<lang> with identity text. 30-35 outside chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "answer": "37-41 hold: group titles translated only at render via t, proposals.go/overview.go format strings via translate, catalog keys byte-match the literals; 45 developer pages unchanged except known correctness-NIT-4-r1. 42-44/46 outside chunk."},
+    {"group": "spec-5-change-nondev-automation#1", "hits": ["correctness-BLK-1"], "answer": "53 Projects nav after Proposals holds; 55 casual-or-checkbox grant holds; 56 label shown with name fallback holds; 54 fails — the casual add form's folder picker labels are untranslated. 47-52 outside chunk."},
+    {"group": "spec-5-change-nondev-automation#2", "hits": [], "answer": "57 git init via shell before Add holds (ordering vs duplicate check is known correctness-MAJ-7-r1); 65 bootstrap card/conflict/status/plain initWelcome hold except the known log-path finding correctness-BLK-5-r1; 66 outside chunk."},
+    {"group": "spec-6-raw#1", "hits": [], "answer": "acdsl policy — no server-chunk code."},
+    {"group": "spec-6-raw#2", "hits": [], "answer": "acdsl dist/guard/docs — no server-chunk code."},
+    {"group": "spec-7-raw", "hits": [], "answer": "railroad-review skill — no server-chunk code."},
+    {"group": "spec-8-change-bootstrap-profile#1", "hits": [], "answer": "90 form with since (today-30d, max today, computed in handleWelcome) and extra-prompt maxlength 500 holds; 91 400 on bad since / quote / newline holds; 93 audienceCasual = casual with unchanged predicate polarity holds. 92/94-98 outside chunk."},
+    {"group": "spec-8-change-bootstrap-profile#2", "hits": [], "answer": "103 routes and HX-Redirect targets hold (error-path redirect is known correctness-MIN-3-r1, route shadowing known correctness-MAJ-2-r1); 104 reload button/route removed and every sessions GET plus handleOverview reloads first; 105 tabs, archive button, archive page and catalog entries hold; 106 name input, basename default and Validate-before-op hold. 99-102/107 store or skill side."},
+    {"group": "spec-9-change-headless-bootstrap#1", "hits": [], "answer": "113 spawn via verifyPathPrefix + exec bash run.sh with bootstrapEnv, BOOTSTRAP_TOKEN_FILE and ROUTINE_MODEL holds; 117 dev-mode parse, save/delete rule, isDevMode RLock accessor, casual force-off and the disabled checkbox hold. 108-112/114-116 outside chunk."},
+    {"group": "spec-9-change-headless-bootstrap#2", "hits": [], "answer": "No server-chunk code."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "answer": "Plan rules / fdesign — no server-chunk code."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "answer": "138 Verdicts th title documents squashed:n; 139 Delete/DropBranches and the clean-run-only drop hold; 140 WorktreeCounts rendered per kind or 0; 141-143 run-history id/data-stamp, week-band IIFE, .run-band CSS and status-before-configure order hold. 134-137 script side."},
+    {"group": "spec-12-raw", "hits": [], "answer": "147 RWMutex store with reload, store-backed template funcs, missing style = empty, atomic saveStyle; 148 save rules and seeding; 149 routes and Profile nav/welcome link; 150 validation, skills sync under the lock, PRG (ordering known correctness-MAJ-6-r1); 151 64 KiB cap; 152 test endpoint; 153 page and catalog strings — all hold. 144-146 outside chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "answer": "162 revert path expands markers and every fragment compare uses config.LoadFragment; the apply direction is known correctness-MAJ-5-r2. Others outside chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "answer": "168 Store/Fingerprint/DropBranches keep-fingerprint hold; 169 cached-only-when-fingerprint-matches with fingerprint cost inside the status timing holds; 170 single-branch remove route and handler gone, the rest untouched; 171 refresh/reload/409 behaviour unchanged. 164-167 registry side."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-BLK-1",
+      "file": "internal/server/templates/repos_index.html",
+      "line": 7,
+      "checklist": "correctness-54",
+      "severity": "BLOCKER",
+      "effect": "incorrect",
+      "exposure": "often",
+      "fix": "Wrap the _repo_path.html literals in t (\"Choose folder…\", \"chosen:\", \"picker failed\") and add their German entries to germanCatalog.",
+      "claim": "On a casual German install the Projekte add form still renders English labels: repos_index.html:7 includes _repo_path.html, whose button reads a raw \"Choose folder…\", whose chosen-path line reads \"chosen:\" and whose error badge reads \"picker failed\" — none go through t and none are in germanCatalog. Spec-5 (correctness-54) requires the casual repos_index to keep the add form with t-localized labels.",
+      "evidence": "Re-read repos_index.html lines 5-15 at 1f725ce: the casual branch renders the same add form, with {{template \"_repo_path.html\" .AddPath}} at line 7 and t applied only to name/label placeholders, Add, add, remove, Remove and the confirm text. git show 1f725ce:internal/server/templates/_repo_path.html: line 4 `>Choose folder…</button>`, line 5 `picker failed`, line 6 `chosen: <code>` — all raw literals. i18n.go germanCatalog lines 8-122 hold no key for any of them. Sequence: profile language de + audience casual -> GET /repos -> the button reads 'Choose folder…' next to German 'hinzufügen'/'Hinzufügen'. The partial is an unchanged file, but the requirement sits on the casual add form this diff introduced."
+    },
+    {
+      "finding_id": "correctness-BLK-2",
+      "file": "internal/server/repos.go",
+      "line": 605,
+      "checklist": "correctness-11",
+      "severity": "BLOCKER",
+      "effect": "incorrect",
+      "exposure": "often",
+      "fix": "For the casual audience render a plain translated result line (e.g. t \"Project added\" / the error root cause) instead of the lock-key subject and the raw op output, or at least give handleReposAdd/Delete a human Subject and drop the 'additionalDirectories grant' wording from the casual output.",
+      "claim": "Every casual project add shows developer/engine text: handleReposAdd goes through runRepoOp(registryLockKey, …), so the op-result card's Subject is the lock key \"_registry\", the badge is English \"Ok\"/\"Failed\", and since casual adds always grant (line 570) the output line is \"added <name> (<path>) + additionalDirectories grant\" in a terminal window. A Claude settings key and an internal lock name are exactly the developer jargon spec-1/2 (correctness-11, -13) say the casual user never reads.",
+      "evidence": "Re-read repos.go: line 570 grantAccess is true whenever !isDeveloperAudience(); line 605 returns fmt.Sprintf(\"added %s (%s) + additionalDirectories grant\", …); line 607 s.runRepoOp(registryLockKey, \"repo-op\", op, w, r); runRepoOp line 234 sets Subject: lockKey; registryLockKey = \"_registry\" at line 33. git show 1f725ce:internal/server/templates/_op_result.html renders `Ok`/`Failed` badges, `{{.Subject}}` and `<pre class=\"file-view\">{{.Output}}</pre>`; repos_index.html line 31 hosts #op-result for both audiences. Sequence: casual de profile -> POST /repos/add path=/Users/x/proj -> response shows 'Ok _registry' and 'added proj (/Users/x/proj) + additionalDirectories grant'. Delete shows 'Ok _registry' / 'removed proj' the same way."
+    },
+    {
+      "finding_id": "correctness-MAJ-3",
+      "file": "internal/server/templates/layout.html",
+      "line": 28,
+      "checklist": "correctness-12",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "fix": "Render the nav entry as {{t \"Welcome\"}} and add a German catalog entry (and route the welcome.html headings/bootstrap card strings through t) now that the entry is visible to the casual audience.",
+      "claim": "The diff removed the developer gate from the Welcome nav entry (`{{if initWelcome}}`, per spec-5) so a casual install started with --init-welcome now shows it, but the label is the raw literal \"Welcome\" and the Welcome page's headings (Setup, Tutorial, bootstrap, Bootstrap, the card prose and confirm text) are untranslated English — on a German casual install the navigation and page headings are not German, against correctness-12 / correctness-26.",
+      "evidence": "Re-read layout.html line 28 at 1f725ce: `{{if initWelcome}}<a href=\"/welcome\" …>Welcome</a>{{end}}` — no t; the base version gated it with `and initWelcome isDeveloperAudience`. welcome.go line 288 sets Title \"Welcome\" untranslated; welcome.html lines 5-6, 12, 16-27 are raw English. germanCatalog has no \"Welcome\"/\"Setup\"/\"Bootstrap\" key. Sequence: configserver -init-welcome with a profile `language: de`, `audience: casual` -> any page's nav shows 'Welcome' among 'Übersicht', 'Profil', 'Sitzungen', 'Vorschläge', 'Projekte'. Exposure rare: initWelcome is an install opt-in."
+    }
+  ],
+  "walk_complete": true
+}

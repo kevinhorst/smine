@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-MAJ-66-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe red at internal/server/proposals.go:585 — stateNoteFor assigns the raw English action literal outside translate(); germanCatalog has no 'click to' key; proposals.html renders .Tooltip raw, so a de install shows a German count followed by an English suffix (spec-4 DR4 names vote tooltips as must-be-covered chrome).",
+  "probe": "PROBE-CORRECTNESS-MAJ-66-R1",
+  "script": "literal-owner (repo-registry verifier, prebuilt bin/verifiers/literalowner; params literal='= \"click to filter this set\"' allowed='^$')",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-66-r1-fail.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-66-R1 -> internal/server/proposals.go:585: literal \"= \\\"click to filter this set\\\"\" outside its owner: [PROBE-CORRECTNESS-MAJ-66-R1] literal-owner; acdsl: 1 violation(s) across 1 rule(s) (exit 1)",
+    "validity": [
+      "bin/verifiers/literalowner scratch/correctness-maj-66-r1/fail-files.txt literal='= \"click to filter this set\"' allowed='^$' -> exit 1, probes/fixtures/correctness-maj-66-r1-fail.go:4 flagged",
+      "same over scratch/correctness-maj-66-r1/pass-files.txt (fixed form: action := translate(language, \"click to filter this set\")) -> exit 0"
+    ],
+    "read": [
+      "internal/server/proposals.go:585 action := \"click to filter this set\"; :588 action = \"click to clear the filter\"; :602 note.Tooltip = tooltip + \" — \" + action; stateNoteFor (581) takes no language parameter",
+      "internal/server/proposals.go:451-454 tooltip counts translated via translate(language, \"%d of %d accepted\") etc.",
+      "internal/server/i18n.go: 0 occurrences of 'click to'",
+      "internal/server/templates/proposals.html:62/67/72 title=\"{{.Accepted.Tooltip}}\" etc. — no t",
+      "spec-4-change-englishness.md:31 DR4 lists vote tooltips as residual raw English; :244 chrome-clean check greps rendered /proposals for zero English hits"
+    ],
+    "cells": "effect incorrect and exposure rare upheld: only non-en profiles with a non-zero (or active) state count hit the suffix; English installs unaffected"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-66-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-66-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-66-r1-pass.go"
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "skills",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "notes": "Cross-chunk issues for the station: (1) MAJ-1 depends on cmd/bootstrap/run.sh, which lacks the append-only additionalDirectories reconcile that routines/smine-nightly/run.sh L298-305 has; the fix may land in the wrapper chunk. (2) skills/concept/clarify/SKILL.md:39 still contains 'non-developer' as plain English. It is not one of this lane's files, and spec-8 correctness-95 asks for a grep to zero. Known-ledger entries were left as they are: BLK-29, MAJ-30, MAJ-31, MAJ-36, MAJ-39, MAJ-40, MIN-35, MIN-42..44, MIN-13/14-r2, INF-49/50 and the NITs.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "skills chunk: dimension skills and smine-batch carry the profile-language contract (correctness-4); smine-consolidate takes language <lang> as its drift pass (correctness-5); code, ids, dates and tags are on every never-translate list (correctness-6). Profile/hook/UI items (1-3, 7-9) are outside this chunk."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "skills chunk: casual-presentation rules in context/memory/routines/skills/permissions plus the consolidate sweep cover 10, 11 and 15; UI stories are outside this chunk."},
+    {"group": "spec-3-raw#1", "hits": [], "note": "no item lands in the skills chunk (profile file, hook, server, templates)."},
+    {"group": "spec-3-raw#2", "hits": [], "note": "no item lands in the skills chunk (run.sh, installers, CLAUDE.md)."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "correctness-42/43: Language sections present in smine-batch, smine-skills, smine-routines, smine-context and smine-memory, with version bumps; group-title handling matches; batch md stays English. correctness-44: consolidate full-store sweep and amended grouping invariant present (v1.3). Render-side items are outside this chunk."},
+    {"group": "spec-5-change-nondev-automation#1", "hits": [], "note": "no item lands in the skills chunk."},
+    {"group": "spec-5-change-nondev-automation#2", "hits": ["correctness-MAJ-1", "correctness-MAJ-2"], "note": "correctness-58: smine-orchestrate exists with branch-mode judge, re-judging of auto-applied changes and the reject path (allowed-tools adds Bash(mv *) beyond the spec list). correctness-59: merge, audit, sync and push duties are present, but context-pack detection keys only on docs/context.json (MAJ-2) and the additionalDirectories append moved to the wrapper. correctness-60: bootstrap mode has no wrapper that appends, so its reconcile is absent (MAJ-1). The bootstrap clean-tree precondition is a known finding (MIN-44). Items 61-66 are outside this chunk."},
+    {"group": "spec-6-raw#1", "hits": [], "note": "no item lands in the skills chunk (acdsl policy)."},
+    {"group": "spec-6-raw#2", "hits": [], "note": "no item lands in the skills chunk."},
+    {"group": "spec-7-raw", "hits": [], "note": "correctness-84/85: lane, refuter and station branch builders use claude-review/*, and runCleanup enumerates from the same builders plus -2 variants. correctness-82/83 reversed by v8.4 (known INF-49). The stale README branch namespace and the cleanup script arm are known (NIT-45, BLK-29). Items 86-89 are outside this chunk."},
+    {"group": "spec-8-change-bootstrap-profile#1", "hits": [], "note": "correctness-92: --since is in smine Args, hint, description, Resolve and Run, is forwarded by session-mine.js, and smine-batch drops older sessions without listing them as skipped. correctness-96: origin: user stamping is in smine-apply and skillroutine-create. correctness-97: casual lockout is in smine-skills (drop), smine-apply (casual-locked) and smine-orchestrate (reject); the Safety-read conflict is known (MIN-13-r2). correctness-98: every edited SKILL.md bumps its version and changelog."},
+    {"group": "spec-8-change-bootstrap-profile#2", "hits": [], "note": "correctness-99/100: per-folder routing, ledgers and the union skip-list are in smine-batch, and the schema scope description is updated. correctness-101: --scopes is gone from smine, smine-batch and session-mine.js; --no-batch and the dimension globs exclude archived/. The README stale args and missing --repos forwarding are known (NIT-45, MAJ-36). Items 102-107 are outside this chunk."},
+    {"group": "spec-9-change-headless-bootstrap#1", "hits": [], "note": "correctness-110 (orchestrate bootstrap plus since suffix): arg-hint and Args present. correctness-114: smine-bootstrap is swept from skills except two changelog history lines. correctness-115/116: --last and --dev pass through smine to smine-batch; the default-deny exclusion and its single report line are present. --since/--last precedence is known (MAJ-30). Wrapper and server items are outside this chunk."},
+    {"group": "spec-9-change-headless-bootstrap#2", "hits": [], "note": "correctness-119: smine-style writes in the profile language and reports write failures. correctness-120: the casual-presentation clause is in context, memory, routines and skills. correctness-121: consolidate §4 casual jargon sweep is present. correctness-122: the orchestrate judge gate names the concrete field list and the since check. All carry version bumps."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "correctness-129: fdesign template has Open questions after Decisions, plain-text D/F ids with section-slug links, Hot items UI screenshot and Changes ui: line; 3.6 entry present (now 3.7). correctness-130: fmt audit, migrate and self-check use slug references, v1.13. correctness-133: no HTML-anchor mandate remains in skills/. Context and verifier items are outside this chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "no item lands in the skills chunk."},
+    {"group": "spec-12-raw", "hits": [], "note": "correctness-144/145: smine-style 1.0 to 1.1 has the specified allowed-tools, arg n default 30, the 2-user-turn skip, the marker first line, the 30-line cap and the no-quote/PII/profanity and declared-profile invariants, and writes only style-profile.md. Server and profile items are outside this chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "no item lands in the skills chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "no item lands in the skills chunk."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "skills/smine/smine-orchestrate/SKILL.md",
+      "line": 61,
+      "checklist": "correctness-60",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "In bootstrap mode the additionalDirectories reconcile duty never happens. Spec-5 correctness-59/60 require the orchestrator to append missing registry paths to permissions.additionalDirectories, and bootstrap mode to run the same reconcile duty. The skill moved that write to 'the invoking wrapper' and only verifies and reports (L31, L61), while saying duties 3-7 are identical in bootstrap (L24). Only routines/smine-nightly/run.sh (L298-305) does the append. cmd/bootstrap/run.sh, the bootstrap-mode invoker, only reads additionalDirectories to build --repos (L84) and never writes them. Failing sequence: a developer install adds a repo through /repos without the additional-dir checkbox (handleReposAdd grants only on checkbox or casual), then runs bootstrap. That repo path stays out of additionalDirectories after the run, and the orchestrator only lists it as 'missing'.",
+      "evidence": "Re-read smine-orchestrate SKILL.md L24 (bootstrap: duties 3-7 identical), L31 (additionalDirectories is wrapper-owned, never written) and L59-61 (step 5 says the invoking wrapper appends; verify and report only). Ran git grep additionalDirectories over routines/ and cmd/bootstrap/ at the head: the only write is routines/smine-nightly/run.sh:298-305, and cmd/bootstrap/run.sh:84 is a jq read. internal/server/repos.go:596 grants only on the opt-in path. Spec item correctness-60 requires the reconcile duty in bootstrap, and nothing performs it there.",
+      "fix": "In bootstrap mode, have cmd/bootstrap/run.sh run the same append-only jq reconcile as smine-nightly run.sh L298-305 before the orchestrate stage, and make SKILL.md step 5 name both wrappers; or state that bootstrap only reports missing paths and amend the spec."
+    },
+    {
+      "finding_id": "correctness-MAJ-2",
+      "file": "skills/smine/smine-orchestrate/SKILL.md",
+      "line": 57,
+      "checklist": "correctness-59",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "Duty 4 re-syncs a context pack only when the registry target has docs/context.json. sync_context.sh writes the pack's recorded deploy options to <target>/<contextDir>/context.json (L325, L336), and contextDir can be any name chosen via --context-dir or the interactive prompt (L34, L105-109). Failing sequence: a repo deployed with `sync_context.sh --context-dir ctx <repo>` gets ctx/context.json and no docs/context.json. On every accepted nightly run, orchestrate step 4 skips that registry entry and its pack never refreshes. Spec correctness-59 requires a re-run for every registry entry with a deployed pack, using its recorded options.",
+      "evidence": "Re-read smine-orchestrate SKILL.md L55-57: the only selector is 'whose target carries docs/context.json'. git grep over cmd/sync/sync_context.sh at the head: CTX_FILE=\"$CTX_ROOT/context.json\" with CTX_ROOT=\"$TARGET/$CONTEXT_DIR\" (L211, L325); CONTEXT_DIR comes from --context-dir (L34) or the prompt (L105-107) and defaults to docs only when empty (L109). Auto-discovery of the recorded options looks only at docs/context.json (L76-77), so the orchestrator would also need to pass --context-dir for a non-docs pack.",
+      "fix": "Detect a deployed pack as any <target>/<dir>/context.json that carries a .deploy section (or record contextDir in repos.json), and re-run sync_context.sh with --context-dir <dir> so it finds that file's recorded options."
+    }
+  ],
+  "walk_complete": true
+}

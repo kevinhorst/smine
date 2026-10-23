@@ -1,0 +1,20 @@
+{
+  "finding_id": "security-MIN-1-r1",
+  "verdict": "confirmed",
+  "reason": "The bootstrap log is opened at a fixed, predictable path (os.TempDir()+\"smine-bootstrap.log\") with mode 0o644 and O_APPEND|O_CREATE (no O_EXCL) — verified by direct re-read of internal/server/bootstrap.go:71-72 in the pinned worktree, matching the claim verbatim.",
+  "probe": "PROBE-SECURITY-MIN-1-R1",
+  "script": "literal-owner",
+  "fixture": "artifacts/round-1/probes/fixtures/security-min-1-r1/bad.go",
+  "evidence": {
+    "read": [
+      "internal/server/bootstrap.go:71-72 (pinned worktree, 1f725cedc5c8b092c8a3d7e408793ef72840ec7e): `logPath := filepath.Join(os.TempDir(), \"smine-bootstrap.log\")` then `os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)` — fixed name, shared OS temp dir, world-readable mode, no uniqueness guard."
+    ],
+    "validity_check": "bin/verifiers/literalowner run directly over artifacts/round-1/scratch/security-min-1-r1/files.txt (literal=0o644 allowed=^$) against the fail fixture artifacts/round-1/probes/fixtures/security-min-1-r1/bad.go: exit 1, `bad.go:8: literal \"0o644\" outside its owner` — probe proven to fire before the real run.",
+    "probe_run": "bin/acdsl check -root <worktree> -lifetime task -rule PROBE-SECURITY-MIN-1-R1 -> exit 1: `internal/server/bootstrap.go:72: literal \"0o644\" outside its owner: [PROBE-SECURITY-MIN-1-R1] literal-owner — ...` (1 violation across 1 rule) — RED on the claimed file and line."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-min-1-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/security-min-1-r1/bad.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/security-min-1-r1/files.txt"
+  ]
+}

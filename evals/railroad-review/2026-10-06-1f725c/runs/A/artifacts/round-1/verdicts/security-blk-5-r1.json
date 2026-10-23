@@ -1,0 +1,25 @@
+{
+  "finding_id": "security-BLK-5-r1",
+  "verdict": "confirmed",
+  "reason": "Independently re-read skills/smine/smine-batch/SKILL.md (full file) and skills/smine/smine-permissions/SKILL.md (full file) at headCommit: the permission-capture step (SKILL.md:58, 'record per session {tool, command, decision} for each prompted-and-granted tool/command') and its downstream copy into proposals/permissions.json evidence ('note names the concrete granted command', 'granted commands verbatim') carry zero redaction, scrub, mask, or sanitize logic — grep -rniE 'redact|scrub|mask|sanitiz' across skills/smine/ returns no hits anywhere in the skill family. Read the repo's full top-level .gitignore: sessions/**/json/*.json and proposals/permissions.json are NOT excluded (only proposals/votes.jsonl, votes-processing-*.jsonl and votes-archive.jsonl are), confirming the lane's contrast claim that these two capture artifacts are git-tracked, persisted and (per smine-permissions SKILL.md) rendered to human voters, unlike the sibling votes-archive.jsonl which the same skill family explicitly marks gitignored. The claim's cells stand: effect=destructive (credential exposure in committed git history plus a second human-facing rendering channel is not cheaply reversible — requires credential rotation and history scrub) and exposure=often (capturing arbitrary prompted-and-granted developer Bash commands verbatim is the described normal-operation behavior of this capture step, and credentialed command shapes — curl Authorization headers, DB connection strings, env-var secret assignments — are common, unremarkable developer command shapes, not an edge case) — no cell override.",
+  "probe": "none: sandbox tool-policy in this worktree denies every execution path for the ACDSL verdict step — tried `<worktree>/bin/acdsl check -rule PROBE-SECURITY-BLK-5-R1` (denied: no allow rule matches Bash(<path>/bin/acdsl *)), `go -C <worktree> run ./cmd/acdsl check -rule ...` (denied: no allow rule matches Bash(go *)), and `make -C <worktree> acdsl ARGS=\"check -rule ...\"` (denied: acdsl is not a declared Makefile target with an ARGS= help line) — three distinct invocation forms, all denied before any probe could run; settled via the manual path instead.",
+  "script": "probes/security-blk-5-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/fail.md",
+  "registry": "registry-security-blk-5-r1.json",
+  "evidence": {
+    "read": [
+      "skills/smine/smine-batch/SKILL.md:58: \"record per session {tool, command, decision} for each prompted-and-granted tool/command (`prompted_once`/`prompted_always` from the telemetry view, else `granted_event` from a `permission_granted` event) ... This is capture, not proposal-authoring (smine-permissions ranks them).\"",
+      "skills/smine/smine-permissions/SKILL.md:50: \"note names the concrete granted command\"; SKILL.md:77: \"granted commands verbatim\"",
+      "skills/smine/smine-apply/SKILL.md:43: \"...append its original vote line ... to `proposals/votes-archive.jsonl` in the worktree (gitignored; ...)\" — the only gitignore callout in the family, absent for the batch JSON and permissions.json",
+      "grep -rniE 'redact|scrub|mask|sanitiz' skills/smine/ -> no hits in smine-batch or smine-permissions (two unrelated hits elsewhere use 'mask' only as the English word in unrelated prose about failures)",
+      ".gitignore (full file, repo root): no entry for sessions/**/json/*.json or proposals/permissions.json; only proposals/votes.jsonl, votes-processing-*.jsonl, votes-archive.jsonl are ignored"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-blk-5-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-security-blk-5-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/security-blk-5-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-security-blk-5-r1-r1/railroad-probes-r1.acdsl"
+  ]
+}

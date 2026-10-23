@@ -1,0 +1,58 @@
+{
+  "startedAt": "2026-09-08T19:38:59Z",
+  "arms": {
+    "models": [
+      "claude-sonnet-5[1m]"
+    ],
+    "efforts": [
+      "high"
+    ],
+    "replicas": 32,
+    "parallel": 32
+  },
+  "run": {
+    "roundCap": 1,
+    "directions": null,
+    "desktop": {
+      "mode": "single-pass"
+    },
+    "armBudgetUsd": 60,
+    "armTimeoutS": 7200,
+    "windowBudgetUsd": 150,
+    "permissionMode": null,
+    "armTools": "Read, Write, Agent, Glob, Grep, Bash(git diff*), Bash(git log*), Bash(git show*), Bash(git rev-parse*), Bash(jq *), Bash(ls *)",
+    "extraPrompt": "",
+    "promptTemplateSha256": "7945b8618260119536da795cae7c1b583d4a639d2b2f74e93b8635f719519f81",
+    "note": "desktop fanout route: armBudgetUsd/armTimeoutS/windowBudgetUsd/permissionMode accepted-not-enforceable; fanout template mode (reviewerPromptTemplate/judgePromptTemplate, __RUNID__ substitution)"
+  },
+  "seed": null,
+  "judge": {
+    "budgetUsd": 60,
+    "timeoutS": 3600
+  },
+  "range": {
+    "baseSha": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+    "headSha": "a342811b4cf7b8bb2b54359ced6c786d3b5f349b",
+    "contextOverlay": "smine-1.1.4-1.2.1.overlay.patch"
+  },
+  "golden": {
+    "file": "../railroad-review/eval/golden/smine-1.1.4-1.2.1.v6.json",
+    "goldenVersion": 6,
+    "scope": "full",
+    "total": 252
+  },
+  "context": {
+    "knob": true,
+    "freeze": {
+      "indexSha256": "f0b43c8555d7777e688305626d81656879b2d026658d98d99095b881e8e8b5a3",
+      "resolvedCount": 163
+    },
+    "freezeDrift": null
+  },
+  "harness": {
+    "commit": "89a32ca0302f53c764f2f8192f175ee0bb5c6d44",
+    "claudeVersion": "2.1.236 (Claude Code)"
+  },
+  "finishedAt": "2026-09-08T20:31:40Z",
+  "runtimeS": 3161
+}

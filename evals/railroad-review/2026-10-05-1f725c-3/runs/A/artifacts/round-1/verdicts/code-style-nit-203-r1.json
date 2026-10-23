@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-203-r1",
+  "verdict": "confirmed",
+  "reason": "sessions_index.html:20 at 1f725ce wraps the new Archive folder form in class=\"reload-form\"; the diff removed the Reload-from-disk form and /sessions/reload route that the class was named for on this page.",
+  "probe": "PROBE-CODE-STYLE-NIT-203-R1",
+  "script": "code-style-nit-203-r1.sh",
+  "fixture": "fixtures/code-style-nit-203-r1-fail.html",
+  "registry": "registry-code-style-nit-203-r1.json",
+  "evidence": {
+    "probe_run": "internal/server/templates/sessions_index.html:20: archive form styled with class reload-form, named for the removed Reload-from-disk control: [PROBE-CODE-STYLE-NIT-203-R1] (acdsl check -rule PROBE-CODE-STYLE-NIT-203-R1, exit 1)",
+    "read": [
+      "git diff b4981b8 1f725ce -- internal/server/templates/sessions_index.html: '-<form hx-post=\"/sessions/reload\" ... class=\"reload-form\">' replaced by '+<form class=\"reload-form\" hx-post=\"/sessions/{{pathEscape .Scope.Name}}/archive\" ...>' with button 'Archive folder'",
+      "git grep reload-form at head: style.css:354 '.reload-form { margin-bottom: 16px; }', _worktree_status.html:27 (wraps a real Reload button, apt there), sessions_index.html:20 (archive form, misnamed)"
+    ],
+    "validity": "direct interpreter run of the script was denied by tool policy (Bash(/bin/bash *) unlisted); the script's match regex was run with grep over the fail fixture and hit line 1",
+    "notes": "cells kept: cosmetic naming defect, present on every render of the sessions page"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-203-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-203-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-203-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-203-r1-fail.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-203-r1/files.txt"
+  ]
+}

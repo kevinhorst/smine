@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-MIN-2-r1",
+  "verdict": "confirmed",
+  "reason": "spec-14's Tests table (line 456) explicitly requires TestReposDelete to gain a subtest pinning the cross-instance regression via a fresh repos.NewRegistry on the same repos.json path; TestReposDelete (internal/server/repos_test.go:689) has only its three pre-existing subtests and no NewRegistry( call anywhere in its body.",
+  "probe": "PROBE-TESTS-MIN-2-R1",
+  "script": "tests-min-2-r1-reposdelete.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-2-r1",
+  "registry": "registry-tests-min-2-r1.json",
+  "evidence": {
+    "read": [
+      "spec-14-change-repo-cache.md:456 — \"internal/server/repos_test.go TestReposDelete (updated) | unchanged + repo stays deleted after a second registry instance (fresh NewRegistry on same path) writes | cross-instance regression\"",
+      "grep -n NewRegistry internal/server/repos_test.go — no match anywhere in the file"
+    ],
+    "probe_run": "internal/server/repos_test.go:689: TestReposDelete has no subtest opening a second repos.NewRegistry on the same path — the cross-instance delete regression spec-14 names is unpinned: [PROBE-TESTS-MIN-2-R1] tests-min-2-r1-reposdelete (acdsl check -root <worktree> -rule PROBE-TESTS-MIN-2-R1 -registry registry-tests-min-2-r1.json -lifetime task, exit 1)"
+    ,
+    "fixture_validity": "same probe run against probes/fixtures/tests-min-2-r1 (a TestReposDelete stub with one subtest and no NewRegistry call) exits 1 with the identical message"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-2-r1-reposdelete.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-2-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-tests-min-2-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-2-r1"
+  ]
+}

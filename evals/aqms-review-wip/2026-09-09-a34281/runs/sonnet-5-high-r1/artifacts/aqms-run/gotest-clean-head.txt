@@ -1,0 +1,46 @@
+?   	github.com/kevinhorst/smine/cmd/acdsl	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/bash32compat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/errorfprefix	0.305s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/evalgenbounds	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/exhaustivewrap	0.569s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidaddrlit	0.834s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidcall	1.090s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/funcsig	1.348s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/gofmtwrap	1.614s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/goldendiff	1.855s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/idgrammar	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/jsonschemacheck	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/linttags	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/literalowner	1.719s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/planformat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/rulescheck	1.972s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/runbookformat	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/shellcheckwrap	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillcontext	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillentries	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillmeta	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/symbolcoverage	2.224s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/symbolexists	2.474s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/testschema	2.733s
+ok  	github.com/kevinhorst/smine/cmd/configserver	2.101s
+?   	github.com/kevinhorst/smine/cmd/routinewrap	[no test files]
+?   	github.com/kevinhorst/smine/cmd/rules	[no test files]
+ok  	github.com/kevinhorst/smine/internal/acdsl	17.270s
+ok  	github.com/kevinhorst/smine/internal/checklist	3.548s
+ok  	github.com/kevinhorst/smine/internal/codex	2.889s
+ok  	github.com/kevinhorst/smine/internal/config	2.632s
+ok  	github.com/kevinhorst/smine/internal/contextdocs	8.828s
+ok  	github.com/kevinhorst/smine/internal/evals	2.369s
+ok  	github.com/kevinhorst/smine/internal/fsx	3.590s
+ok  	github.com/kevinhorst/smine/internal/peek	3.926s
+ok  	github.com/kevinhorst/smine/internal/proposals	4.105s
+ok  	github.com/kevinhorst/smine/internal/reach	4.071s
+ok  	github.com/kevinhorst/smine/internal/repos	10.323s
+ok  	github.com/kevinhorst/smine/internal/routines	4.115s
+ok  	github.com/kevinhorst/smine/internal/server	14.802s
+ok  	github.com/kevinhorst/smine/internal/server/catalog	3.813s
+?   	github.com/kevinhorst/smine/internal/server/respond	[no test files]
+ok  	github.com/kevinhorst/smine/internal/sessions	4.165s
+ok  	github.com/kevinhorst/smine/internal/shell	7.176s
+ok  	github.com/kevinhorst/smine/internal/skills	4.125s
+ok  	github.com/kevinhorst/smine/internal/xp0	4.113s

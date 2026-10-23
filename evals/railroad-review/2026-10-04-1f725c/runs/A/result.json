@@ -1,0 +1,65 @@
+{
+  "allowedTools": "Edit, Read, Skill(railroad-review), ToolSearch, Workflow, Write, Bash(*/bin/acdsl check *), Bash(*/bin/verifiers/*), Bash(./bin/acdsl check *), Bash(bin/acdsl check *), Bash(cp *), Bash(git add*), Bash(git apply *), Bash(git blame *), Bash(git branch*), Bash(git checkout -B *), Bash(git diff*), Bash(git format-patch *), Bash(git init *), Bash(git log*), Bash(git merge-base*), Bash(git rev-list*), Bash(git rev-parse*), Bash(git show *), Bash(git status*), Bash(git worktree add*), Bash(git worktree list*), Bash(git worktree remove*), Bash(go * build *), Bash(go * test *), Bash(go * vet *), Bash(go run *), Bash(go tool cover *), Bash(jq *), Bash(make *), Bash(mkdir *), Bash(mv *), Bash(smine-rules buildtest *), Bash(smine-rules cleanup *), Bash(smine-rules entries *), Bash(smine-rules lanes *), Bash(smine-rules ledger *), Bash(smine-rules pairs *), Bash(smine-rules present *), Bash(smine-rules probe-replay *), Bash(smine-rules provision *), Bash(smine-rules reset-round *), Bash(smine-rules snapshot *), Bash(smine-rules stack *), Bash(smine-rules walk *), Workflow, Skill",
+  "auth": "token Max-Private",
+  "candidateCount": 151,
+  "checkExit": null,
+  "costUsd": 302.01040100000023,
+  "endedAt": "2026-10-04T23:15:15.650336+02:00",
+  "exitStatus": 0,
+  "invalidReasons": null,
+  "isError": false,
+  "layer": "eval",
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "connected"
+    }
+  ],
+  "mode": "nightly",
+  "model": "claude-opus-5-5",
+  "outputTokens": 2872798,
+  "permissionDenials": 304,
+  "resultText": "Nightly review stopped after round 1 of 2. The recommendation is **CONDITIONAL** and no fixes were applied. Round 1 cost about $300 of the $500 budget, and the remaining ~$198 can't pay for a full second round. A second round would also have re-reviewed the same unchanged commit, since nothing was f…",
+  "sessionId": "04a93ed4-ae36-432e-90a5-41a0a96b0bfa",
+  "skill": "railroad-review",
+  "skillVersion": "23.1.0",
+  "startedAt": "2026-10-04T22:06:12.222431+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 49,
+      "errors": 2,
+      "name": "Bash"
+    },
+    {
+      "calls": 6,
+      "errors": 0,
+      "name": "Read"
+    },
+    {
+      "calls": 3,
+      "errors": 0,
+      "name": "Workflow"
+    },
+    {
+      "calls": 2,
+      "errors": 0,
+      "name": "Write"
+    }
+  ],
+  "toolErrors": 2,
+  "unparsedLines": 0
+}

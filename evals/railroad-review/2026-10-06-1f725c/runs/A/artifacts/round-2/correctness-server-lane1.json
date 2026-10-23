@@ -1,0 +1,52 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "server",
+  "checkout_sha": "e5245d08d2fe5c05f67742fd8ec5a67b759ca316",
+  "overlay_ok": true,
+  "aborted": false,
+  "walk": [
+    {"group": "spec-1-concept", "hits": []},
+    {"group": "spec-2-user_stories", "hits": []},
+    {"group": "spec-3-raw", "hits": ["correctness-MAJ-1"]},
+    {"group": "spec-4-change-englishness", "hits": ["correctness-MAJ-2"]},
+    {"group": "spec-5-change-nondev-automation", "hits": []},
+    {"group": "spec-6-raw", "hits": []},
+    {"group": "spec-7-raw", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile", "hits": []},
+    {"group": "spec-9-change-headless-bootstrap", "hits": []},
+    {"group": "spec-10-change-viewer-fixes", "hits": []},
+    {"group": "spec-11-change-repos-routines-ui", "hits": []},
+    {"group": "spec-12-raw", "hits": []},
+    {"group": "spec-13-change-multi-profile-ports", "hits": []},
+    {"group": "spec-14-change-repo-cache", "hits": []}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "internal/server/templates/layout.html",
+      "line": 28,
+      "checklist": "correctness-25",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "severity": "MAJOR",
+      "fix": "Restore the audience gate on the Welcome nav anchor: change `{{if initWelcome}}` back to `{{if and initWelcome isDeveloperAudience}}` (or add `{{if and initWelcome isDeveloperAudience}}` around it), so a casual-audience install started with --init-welcome never exposes the Welcome/setup/debug nav entry.",
+      "claim": "The diff deliberately dropped the isDeveloperAudience condition from the Welcome nav anchor, so any install run with --init-welcome shows the Welcome tab (and its setup/bootstrap/acdsl-internals content) to non-developer (casual) users, contradicting correctness-25's explicit requirement that the Welcome nav anchor be hidden for non-developer audience.",
+      "evidence": "git diff b4981b88d..e5245d08d -- internal/server/templates/layout.html shows the nav line changed from `{{if and initWelcome isDeveloperAudience}}<a href=\"/welcome\" ...>Welcome</a>{{end}}` to `{{if initWelcome}}<a href=\"/welcome\" ...>Welcome</a>{{end}}` — the audience check was removed. Re-read internal/server/templates/layout.html at the committed head (lines 25-45): line 28 now reads `{{if initWelcome}}<a href=\"/welcome\" {{if eq .Page \"welcome\"}}class=\"active\"{{end}}>Welcome</a>{{end}}` with no isDeveloperAudience guard anywhere around it, while every other internals-exposing nav anchor (Config line 29, Skills/Context/Repos/Routines/Tools/Checklist lines 34-42) keeps its `{{if isDeveloperAudience}}` guard. Cross-checked server.go's initWelcome FuncMap (`\"initWelcome\": func() bool { return opts.InitWelcome }`) — it is a static server-construction flag independent of audience, and the code comment on welcomeTile in overview.go calls --init-welcome a debugging opt-in, so exposure is confined to installs explicitly started with that flag (rare, not default), keeping exposure at the lower-severity value per the cell rule even though the defect itself is unconditional whenever that flag is set."
+    },
+    {
+      "finding_id": "correctness-MAJ-2",
+      "file": "internal/server/proposals.go",
+      "line": 581,
+      "checklist": "correctness-33",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "severity": "MAJOR",
+      "fix": "Wrap the two action strings through translate: `action := translate(language, \"click to filter this set\")` / `action = translate(language, \"click to clear the filter\")` (stateNoteFor needs a language parameter threaded from groupViews, which already has `language` in scope), and add the two German strings to germanCatalog in i18n.go.",
+      "claim": "stateNoteFor builds every accepted/rejected/postponed state-note tooltip by concatenating an already-translated count phrase with a hardcoded English action suffix (\"click to filter this set\" / \"click to clear the filter\") that never passes through translate(), so on a German-language install these tooltips render as mixed German+English text, violating correctness-33's explicit requirement that vote-tooltip format strings be wrapped through the t/translate overlay.",
+      "evidence": "Re-read internal/server/proposals.go stateNoteFor (lines 581-605) in full: `action := \"click to filter this set\"` and `action = \"click to clear the filter\"` are plain Go string literals with no translate() call anywhere in the function, while the sibling `tooltip` argument passed in by groupViews (lines 450-454) is built via `fmt.Sprintf(translate(language, \"%d of %d accepted\"), ...)` — i.e. the surrounding code in the same file already follows the translate-wrap convention, making the two bare literals in stateNoteFor a clear omission rather than an intentional exception. Checked germanCatalog in internal/server/i18n.go for either string — absent. Confirmed this is reachable whenever a group's accepted/rejected/postponed count is nonzero or its filter is active (i.e., on most real Proposals-page views with data), but graded exposure at the lower value (rare) since it only manifests for installs that have opted into the German language profile, a non-default configuration."
+    }
+  ],
+  "walk_complete": true,
+  "notes": "Cross-chunk, unverifiable from the server chunk alone: (1) correctness-71 requires the profile's Dev Mode boolean to control a --dev flag on both the bootstrap wrapper and the nightly wrapper. Within this chunk, internal/server/bootstrap.go's bootstrapEnv() never threads s.presentation.isDevMode() into the spawned cmd/bootstrap/run.sh environment at all (only BOOTSTRAP_SINCE/BOOTSTRAP_EXTRA_PROMPT/BOOTSTRAP_TOKEN_FILE/ROUTINE_MODEL are set) — this could be a real gap, but cmd/bootstrap/run.sh (out of chunk) may instead read dev-mode directly from the presentation-profile.md frontmatter via its --add-dir grant (correctness-72), which would make the Go-side omission correct-by-design. Flagging for the tests/go-core/shell-config-docs lanes to check the wrapper script directly rather than claiming a finding I cannot verify. (2) correctness-61/66 (reserved repo names default/archived, audience constant rename) and correctness-83-85/105-112 (worktree fingerprinting, repo registry cache) are implemented mostly in internal/repos, out of this chunk; the server-side call sites I can see (repos.go's repo.Validate(), statuscache.go's Delete/DropBranches) look consistent with the spec but the actual validation/fingerprint logic itself needs the repos-package reviewer. (3) correctness-34 (byte-identical rendering on a developer machine with no profile) is not mechanically verifiable by static reading alone."
+}

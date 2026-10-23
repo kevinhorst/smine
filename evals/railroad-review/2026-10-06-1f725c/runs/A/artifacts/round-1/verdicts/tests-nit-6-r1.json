@@ -1,0 +1,29 @@
+{
+  "finding_id": "tests-NIT-6-r1",
+  "verdict": "confirmed",
+  "reason": "routine_worktree_create's new post-sync HEAD-off-branch discard guard (worktree.sh:171-172) has no test exercising it — probe RED confirms cmd/tests/test_routine_worktree.sh never references the symbolic-ref check that path depends on, and the file is untouched in this diff.",
+  "probe": "PROBE-TESTS-NIT-6-R1",
+  "script": "probes/check-stray-head-test.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-nit-6-r1",
+  "registry": "registry-tests-nit-6-r1.json",
+  "evidence": {
+    "read": [
+      "routines/_lib/worktree.sh:171-172 — `if [[ \"$base\" != \"main\" ]] && { ! routine_chain_sync_main \"$wt\" || [[ \"$(git -C \"$wt\" symbolic-ref --short HEAD 2>/dev/null)\" != \"$new\" ]]; }; then` discards the worktree/branch; the comment at 168-170 states the rationale (stray merge/* branch mis-targeting the whole run)",
+      "git diff --stat b4981b88...1f725ced -- cmd/tests/test_routine_worktree.sh: empty — the test file is unchanged in this diff",
+      "cmd/tests/test_routine_worktree.sh: grep for symbolic-ref/routine_chain_sync_main/routine_worktree_create shows test_chain_sync_conflict_unresolved (line 303) stubs routine_chain_sync_main to FAIL (covers the first disjunct) but no test stubs a SUCCEEDING sync that leaves HEAD off $new (the second disjunct, the actual new guard)"
+    ],
+    "probe_run": "acdsl check -root <verify-b6-r1 worktree> -rule PROBE-TESTS-NIT-6-R1 -lifetime task -registry registry-tests-nit-6-r1.json -> exit 1: \"cmd/tests/test_routine_worktree.sh:1: no test references symbolic-ref — routine_worktree_create's post-sync HEAD-off-branch discard path (worktree.sh:171-172) is unexercised\""
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b6-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-nit-6-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/check-stray-head-test.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-tests-nit-6-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-nit-6-r1"
+  ],
+  "cells": {
+    "effect": "debt",
+    "exposure": "rare"
+  },
+  "notes": "Cells unchanged from the candidate's own assessment — agreed, not overridden. First fixture attempt (attempt 1 of 2) false-GREEN'd because its own explanatory comment accidentally contained the literal marker string \"symbolic-ref\"; reworded and re-ran, RED as expected — recorded per the two-attempt allowance, not an unprobeable outcome."
+}

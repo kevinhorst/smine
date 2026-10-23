@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-191-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at 1f725ce: installEnvValues (installenv.go:24-25, new in range) returns map[string]string for install.env, whose key set is fixed by writeInstallEnv and of which the only consumer reads one key by string literal - a typed model is declarable, so RULE-GOLANG-TYPE-001 applies.",
+  "probe": "PROBE-CODE-STYLE-NIT-191-R1",
+  "script": "code-style-nit-191-r1.sh",
+  "registry": "registry-code-style-nit-191-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-191-R1 -registry probes/registry-code-style-nit-191-r1.json -root <worktree> -> exit 1: internal/config/installenv.go:24: map[string]string where a typed install.env model can be declared",
+    "read": [
+      "internal/config/installenv.go:18-40: ExpandInstallMarkers reads values[\"PEEK_CONTROL_PORT\"] only",
+      "cmd/configserver/install_windows.go:144: writer emits fixed keys CONFIGSERVER_PORT, PEEK_PORT, PEEK_CONTROL_PORT"
+    ],
+    "validity": "Direct fixture run was denied by tool policy (candidate rule Bash(/bin/bash *)); fixture authored, not executed. Real run RED on the claimed line.",
+    "known_ledger": "code-style-NIT-71-r1 (installenv.go:20, key literal without a named constant) overlaps in remedy but is a different claim (missing constant vs untyped map) - not a trivial variant."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-191-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-191-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-191-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-191-r1/installenv.go"
+  ]
+}

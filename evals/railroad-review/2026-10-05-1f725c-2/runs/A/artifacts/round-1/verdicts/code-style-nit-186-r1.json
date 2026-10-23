@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-186-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at fimplement SKILL.md:62 — unconditional sync_public.sh --exclude assertion in a generic skill; git ls-files at 1f725ce lists no sync_public.sh; line added in this diff.",
+  "probe": "PROBE-CODE-STYLE-NIT-186-R1",
+  "script": "code-style-nit-186-r1.sh",
+  "fixture": "fixtures/code-style-nit-186-r1-fail.md",
+  "registry": "registry-code-style-nit-186-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-186-R1 -registry probes/registry-code-style-nit-186-r1.json -> exit 1: skills/feature/fimplement/SKILL.md:62: generic skill asserts a sync_public.sh --exclude unconditionally; no sync_public.sh exists in this repo",
+    "read": [
+      "skills/feature/fimplement/SKILL.md:62 (added in b4981b8..1f725ce): '**When a change relocates a data directory, assert the new path is still matched by a `sync_public.sh` `--exclude`**'",
+      "git grep sync_public at 1f725ce: only fimplement SKILL.md:62 and fimplement changelog.json:30",
+      "known.json: no entry on this file/claim"
+    ],
+    "validity": "Fixture self-run via the script interpreter (/bin/bash <script> <files list>) was denied by tool-policy (candidate rule Bash(/bin/bash *)); an acdsl -root run on a fixture tree failed (fixture dir is not a git repo). Validity is shown by the probe firing RED on the real file instead; the probe is not used for a GREEN verdict."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-186-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-186-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-186-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-186-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-186-r1/files.txt"
+  ]
+}

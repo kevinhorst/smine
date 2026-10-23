@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-NIT-82-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at 1f725ce: _routine_row.html:28 carries the Unscheduled 'not scheduled' arm (and data-reschedule at :14) and no internal/server *_test.go contains 'not scheduled'; only internal/routines tests assert the parsed Unscheduled flag.",
+  "probe": "PROBE-TESTS-NIT-82-R1",
+  "script": "tests-nit-82-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-82-r1/internal/server/templates/_routine_row.html",
+  "registry": "registry-tests-nit-82-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-82-R1 -registry probes/registry-tests-nit-82-r1.json -> exit 1: internal/server/templates/_routine_row.html:28: Unscheduled row arm ('not scheduled', data-reschedule) is asserted by no test in internal/server",
+    "read": [
+      "internal/server/templates/_routine_row.html:14 {{else if .Routine.Unscheduled}}data-reschedule=\"1\"; :28 {{else if .Routine.Unscheduled}}not scheduled{{else}}unsupported schedule{{end}}",
+      "git grep 'not scheduled|Unscheduled|data-reschedule' -- *_test.go: hits only internal/routines/plist_test.go and routines_test.go"
+    ],
+    "validity": "Direct interpreter run of the script over scratch/tests-nit-82-r1/files.txt was denied by tool policy (candidate rule Bash(/bin/bash *)); acdsl check -root on the fixture dir fails (not a git repo, exit 2). Fixture is in place; the real run is RED, so no false-green risk applies to this verdict."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-82-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-82-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-tests-nit-82-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-82-r1/internal/server/templates/_routine_row.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-82-r1/internal/server/other_test.go"
+  ]
+}

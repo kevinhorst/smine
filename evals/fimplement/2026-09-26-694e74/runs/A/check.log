@@ -1,0 +1,93 @@
+go build  -o ./bin/acdsl ./cmd/acdsl
+go build  -o ./bin/verifiers ./cmd/acdsl/verifiers/...
+cargo fmt --manifest-path cmd/agentwt/Cargo.toml -- --check
+cargo clippy --locked --manifest-path cmd/agentwt/Cargo.toml --all-targets --all-features -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.80s
+cargo check --locked --manifest-path cmd/agentwt/Cargo.toml --lib --no-default-features
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.35s
+go mod verify
+all modules verified
+go vet ./...
+./bin/acdsl project -strip
+2026/09/26 16:10:03 shell: git dur=51ms err=false
+acdsl: stripped 1 file(s)
+./bin/acdsl check -report bin/audit-report.md
+2026/09/26 16:10:03 shell: git dur=85ms err=false
+2026/09/26 16:10:03 shell: git dur=95ms err=false
+2026/09/26 16:10:04 shell: git dur=90ms err=true
+2026/09/26 16:10:04 shell: git dur=52ms err=true
+2026/09/26 16:10:04 shell: git dur=47ms err=true
+2026/09/26 16:10:04 shell: git dur=45ms err=true
+2026/09/26 16:10:04 shell: git dur=43ms err=false
+2026/09/26 16:10:04 shell: git dur=42ms err=false
+2026/09/26 16:10:04 shell: git dur=42ms err=true
+2026/09/26 16:10:04 shell: git dur=41ms err=true
+2026/09/26 16:10:04 shell: git dur=44ms err=true
+2026/09/26 16:10:04 shell: git dur=120ms err=true
+2026/09/26 16:10:04 shell: git dur=93ms err=true
+2026/09/26 16:10:04 shell: git dur=45ms err=true
+2026/09/26 16:10:04 shell: git dur=42ms err=false
+2026/09/26 16:10:04 shell: git dur=47ms err=false
+2026/09/26 16:10:04 shell: git dur=41ms err=true
+2026/09/26 16:10:04 shell: git dur=35ms err=true
+2026/09/26 16:10:04 shell: git dur=15ms err=false
+2026/09/26 16:10:04 shell: git dur=10ms err=false
+2026/09/26 16:10:04 shell: git dur=10ms err=false
+2026/09/26 16:10:04 shell: git dur=12ms err=false
+2026/09/26 16:10:05 shell: errorfprefix dur=74ms err=false
+2026/09/26 16:10:05 shell: testschema dur=73ms err=false
+2026/09/26 16:10:05 shell: literalowner dur=79ms err=false
+2026/09/26 16:10:05 shell: forbidcall dur=105ms err=false
+2026/09/26 16:10:05 shell: linttags dur=51ms err=false
+2026/09/26 16:10:05 shell: funcsig dur=93ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=96ms err=false
+2026/09/26 16:10:05 shell: gofmtwrap dur=165ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=66ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=16ms err=false
+2026/09/26 16:10:05 shell: skillcontext dur=70ms err=false
+2026/09/26 16:10:05 shell: skillmap dur=73ms err=false
+2026/09/26 16:10:05 shell: skillentries dur=76ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=6ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=5ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=7ms err=false
+2026/09/26 16:10:05 shell: skillmeta dur=19ms err=false
+2026/09/26 16:10:05 shell: severitytable dur=56ms err=false
+2026/09/26 16:10:05 shell: jsonschemacheck dur=76ms err=false
+2026/09/26 16:10:05 shell: skillmodelcheck dur=93ms err=false
+2026/09/26 16:10:05 shell: skillplantemplate dur=70ms err=false
+2026/09/26 16:10:05 shell: filebaseline dur=56ms err=false
+2026/09/26 16:10:05 shell: jsonschemacheck dur=10ms err=false
+2026/09/26 16:10:05 shell: jsonschemacheck dur=8ms err=false
+2026/09/26 16:10:05 shell: bash32compat dur=79ms err=false
+2026/09/26 16:10:05 shell: jsonschemacheck dur=11ms err=false
+2026/09/26 16:10:05 shell: jsonschemacheck dur=9ms err=false
+2026/09/26 16:10:05 shell: jsonschemacheck dur=12ms err=false
+2026/09/26 16:10:05 shell: rulescheck dur=426ms err=false
+2026/09/26 16:10:05 shell: rulescheck dur=415ms err=true
+2026/09/26 16:10:05 shell: planformat dur=58ms err=false
+2026/09/26 16:10:05 shell: evalgenbounds dur=76ms err=false
+2026/09/26 16:10:06 shell: idgrammar dur=78ms err=false
+2026/09/26 16:10:06 shell: shellcheckwrap dur=720ms err=false
+2026/09/26 16:10:06 shell: forbidphrase dur=60ms err=false
+2026/09/26 16:10:06 shell: forbidphrase dur=64ms err=false
+2026/09/26 16:10:06 shell: exhaustivewrap dur=1833ms err=false
+2026/09/26 16:10:08 shell: golangciwrap dur=2330ms err=false
+2026/09/26 16:10:08 shell: git dur=10ms err=false
+2026/09/26 16:10:05 shell: go dur=353ms err=true
+exit status 1: [ACDSL-SMINE-002] rules-check — context/context.json stays current with its sources via cmd/rules generate -check — only cmd/rules regenerates it (ACDSL-GOLANG-STATE-001); this gate replaces the raw Makefile generate line
+## ACDSL violations report
+
+### ACDSL-SMINE-002 — rules-check
+
+context/context.json stays current with its sources via cmd/rules generate -check — only cmd/rules regenerates it (ACDSL-GOLANG-STATE-001); this gate replaces the raw Makefile generate line
+
+- 2026/09/26 16:10:05 shell: go dur=353ms err=true
+exit status 1
+
+fix: wraps cmd/rules by mode= param: validate (ACTION/FACT contract) or generate-check (rules.json currency); replaces the raw Makefile audit lines
+
+---
+1 violation(s) · 1 rule(s) · 1 file(s)
+
+acdsl: 1 violation(s) across 41 rule(s)
+make: *** [audit-gates] Error 1

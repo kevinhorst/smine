@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-64-r1",
+  "verdict": "confirmed",
+  "reason": "The archive tab GET asserts only \"oldscope\" and \"Unarchive\" (sessions_test.go:216-217); the delete form's hx-post path (sessions_archive.html:24) is never asserted — the delete route is POSTed directly; probe RED on sessions_archive.html:24.",
+  "probe": "PROBE-TESTS-NIT-64-R1",
+  "script": "tests-nit-64-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-64-r1/server/templates/sessions_archive.html",
+  "registry": "registry-tests-nit-64-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-64-R1 -registry probes/registry-tests-nit-64-r1.json -> exit 1: internal/server/templates/sessions_archive.html:24: archive tab's delete form is rendered but never asserted by a test",
+    "read": [
+      "internal/server/sessions_test.go:213-217 — GET /sessions/archive asserts Contains \"oldscope\" and \"Unarchive\" only",
+      "internal/server/sessions_test.go:226,235 — formPost(\"/sessions/archive/oldscope/delete\") exercises the route, not the rendered form",
+      "grep 'oldscope/delete|Delete this folder' internal/server -> only the two formPost calls, i18n.go:30 and the template"
+    ],
+    "validity": "fixture validity run not executable: direct `/bin/bash <script>` denied by tool-policy (candidate Bash(/bin/bash *)); the real RED carries the script's own message on the claimed line, so the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-64-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-64-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-64-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-64-r1/server/templates/sessions_archive.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-64-r1/server/sessions_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/tests-nit-64-r1/files.txt"
+  ]
+}

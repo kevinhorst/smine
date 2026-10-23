@@ -1,0 +1,28 @@
+{
+  "finding_id": "tests-NIT-66-r1",
+  "verdict": "confirmed",
+  "reason": "No _test.go in internal/server asserts the /profile form binding (dev_mode checked/disabled, language/audience selected); TestServer_HandleProfilePage renders only with no profile file and checks two substrings.",
+  "probe": "PROBE-TESTS-NIT-66-R1",
+  "script": "tests-nit-66-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-66-r1/internal/server/profilesettings.go",
+  "registry": "registry-tests-nit-66-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-66-R1 -registry probes/registry-tests-nit-66-r1.json -> exit 1: internal/server/profilesettings.go:158: profilePageData form binding (selected/checked/disabled from the stored profile) has no rendering assertion in any test",
+    "read": [
+      "internal/server/profilesettings.go:158-174 — profilePageData copies Audience/DevMode/Language from the stored profile",
+      "internal/server/templates/profile.html:22 — dev_mode checkbox: {{if .DevMode}}checked{{end}} {{if eq .Audience \"casual\"}}disabled{{end}}",
+      "internal/server/profilesettings_test.go:24-37 — only GET /profile test: empty temp dir, asserts Contains 'Profile' and 'style_content'",
+      "git grep checked|selected over internal/server/*_test.go — only unrelated hits (acdsl reach options, repos remove-selected, sessions)"
+    ],
+    "validity": "fixture run: bin/acdsl check -root scratch/tests-nit-66-r1/root (git-init'd copy of the fixture) -> exit 1 at internal/server/profilesettings.go:3; direct /bin/bash <script> denied by tool-policy, make acdsl ARGS=... denied (undeclared/metachar ARGS), so the verdict ran via the linked prebuilt bin/acdsl -root <wt>",
+    "known_check": "distinct from tests-MIN-15-r1 (styleTestTarget), tests-NIT-16-r1 (profileTestAnswer), tests-MIN-5-r2 (save audience branch)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-66-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-66-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-66-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-66-r1/internal/server/profilesettings.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-66-r1/internal/server/profilesettings_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-66-r1/railroad-probes-r1.acdsl"
+  ]
+}

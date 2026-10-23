@@ -1,0 +1,306 @@
+{
+  "shape": "group-first",
+  "groups": [
+    {
+      "id": "spec-1-concept",
+      "items": [
+        "correctness-1: One presentation profile per install (language, register, audience) is per-install state, never repo content, written by install/sync, and is the single source every presentation surface derives from.",
+        "correctness-2: The profile reaches every Claude session on the machine (interactive sessions and smine skill runs alike) through the global-context hook injection of context/global/presentation-profile.md.",
+        "correctness-3: The profile carries an explicit supersede clause over the global 'handoff/doc artifacts: always English' rule, scoped to end-user-visible text only; the claude-configs repo content, logs, results.jsonl and other operator artifacts stay English.",
+        "correctness-4: The profile doc carries the German semi-casual/semi-professional register directive plus a jargon glossary mapping banned engine/developer terms (worktree, ACDSL gate, transcript mining, consolidate) to plain-German replacements.",
+        "correctness-5: The nightly consolidate stage threads the profile language (`language de`) into `/smine-consolidate proposals`, making consolidate the style-correction gate that rewrites drifted English/jargon prose in the proposal store.",
+        "correctness-6: snippets[].code, ids, dates, tags and gate fields are never translated or reworded by any language pass.",
+        "correctness-7: The config server UI gets a German overlay (message catalog over the pages the non-developer sees, template strings plus Go-originated labels) with English as default and fallback, and the html `lang` attribute is driven by the profile instead of hardcoded `en`.",
+        "correctness-8: For the non-developer audience the navigation hides the engine-internal tabs (Skills, Context, Repos, Tools) and keeps Overview, Proposals and Sessions.",
+        "correctness-9: For the non-developer audience proposal cards hide gate band, tags and target internals; code snippets render collapsed, clearly marked as technical detail, and untranslated.",
+        "correctness-10: Audience gating is a render-time filter over the same data (no forked handlers); switching the profile back to developer/English restores the full UI surface and register."
+      ]
+    },
+    {
+      "id": "spec-2-user_stories",
+      "items": [
+        "correctness-11: For the German non-developer user, proposal titles, change lines and detail fields read in plain German without developer terms.",
+        "correctness-12: Evidence notes are phrased as everyday explanations of what happened in the user's sessions, judgeable without knowing how the mining engine works.",
+        "correctness-13: Engine terms (worktree, gate, transcript mining, consolidation) never appear in text the non-developer user reads.",
+        "correctness-14: Navigation and page headings render in German for the German non-developer user.",
+        "correctness-15: The non-developer user sees only the pages relevant to them (overview, proposals, sessions) and is not shown internals such as skills, context packs or repo-management internals.",
+        "correctness-16: Proposal cards for the non-developer user show no gate bands, tags or target paths — only what is suggested and why."
+      ]
+    },
+    {
+      "id": "spec-2-user_stories#2",
+      "items": [
+        "correctness-17: Nightly runs keep user-visible content German and jargon-free so English developer prose does not leak in over time.",
+        "correctness-18: Technical code blocks are visibly marked as technical detail and left untranslated.",
+        "correctness-19: The operator sets the presentation profile once at install and the machine is then fully configured for its user without ongoing manual styling.",
+        "correctness-20: The operator can switch a machine back to developer/English mode and get the full UI and register.",
+        "correctness-21: Repo content, logs and pipeline results stay English regardless of the profile."
+      ]
+    },
+    {
+      "id": "spec-3-raw",
+      "items": [
+        "correctness-22: The profile lives at `~/.claude/context/global/presentation-profile.md` with a `---`-delimited front matter carrying `language:` and `audience:` and a directive body; the same file is parsed by Go (server) and by `sed` (run.sh), and its body is injected verbatim into sessions.",
+        "correctness-23: Missing, unreadable or malformed profile, missing front matter or missing keys fail open to defaults (language `en`, developer audience); unknown audience values count as developer; empty language defaults to `en`; with no profile file the UI, nav and nightly prompt are byte-identical to pre-change behavior.",
+        "correctness-24: `cmd/hooks/global-context.sh` scans `$HOME/.claude/context/global/*.md` before the repo-local `$DOCS_DIR/global/*.md`, under the existing `GLOBAL_CONTEXT_ENABLED` kill switch, with the GLOBAL CONTEXT header and per-file header format unchanged, bash-3.2 compatible and shellcheck-clean.",
+        "correctness-25: `loadPresentationProfile` (internal/server/presentation.go) reads only the first front-matter block; `DefaultPresentationPath()` is exported and backs a new configserver `-presentation` flag whose value lands in `Options.PresentationPath` (zero value = defaults).",
+        "correctness-26: The template FuncMap provides `t` (translate profile language over English source strings, identity when language is not `de` or the key is missing), `langAttr` (profile language) and `isDeveloperAudience`.",
+        "correctness-27: `internal/server/i18n.go` holds `germanCatalog` keyed by the English source string with identity fallback; the catalog covers every literal the non-developer sees in layout, overview, proposals, sessions_index, sessions_batch, _batch_list, _proposal_card and the sessionTiles/proposalsTile labels (Go fmt.Sprintf composites may stay English per S8).",
+        "correctness-28: layout.html renders `<html lang=\"{{langAttr}}\">`, wraps Overview/Sessions/Proposals nav labels in `t`, and gates Config, Skills, Context, Repos, Routines, Tools, Checklist and Peek anchors on `isDeveloperAudience`; direct URLs to hidden pages stay reachable.",
+        "correctness-29: `handleOverview` for a non-developer audience appends only `sessionTiles` and `proposalsTile` and renders with a translated title; overview.html renders tile labels via `{{t .Label}}`.",
+        "correctness-30: For the non-developer audience `_proposal_card.html` hides the target badge, gate band badges, tag badges and the gate detail row; for developers the card is unchanged."
+      ]
+    },
+    {
+      "id": "spec-3-raw#2",
+      "items": [
+        "correctness-31: The card's comment placeholders (incl. the disabled-form one), postpone button and details/fields/evidence summary labels go through `t`; the snippet summary shows kind/lang/source for developers and `t \"technical detail\"` (Technisches Detail) otherwise; static texts in proposals.html, sessions_index.html, sessions_batch.html and _batch_list.html are wrapped in `t`.",
+        "correctness-32: routines/smine-nightly/run.sh parses `language:` from the profile with `sed`; when set and not `en` the consolidate prompt becomes `/smine-consolidate proposals language <lang>`, otherwise it stays `/smine-consolidate proposals`.",
+        "correctness-33: `settings/claude_code/presentation-profile.de.md` ships in the repo with `language: de` and the directive body (German prose, semi-casual register, banned-term glossary, never translate code/ids/dates/tags/paths/snippets, collapse technical fragments as Technisches Detail).",
+        "correctness-34: install.sh copies `settings/claude_code/presentation-profile.${SMINE_PRESENTATION_PROFILE}.md` to `~/.claude/context/global/presentation-profile.md` (mkdir -p) only when `SMINE_PRESENTATION_PROFILE` is set; a default install never plants a profile.",
+        "correctness-35: configserver gains a `-presentation-profile` flag passed into `runInstall` (Windows and non-Windows stub signatures identical); after `runSyncs` succeeds `installPresentationProfile` copies the repo template to `%USERPROFILE%\\.claude\\context\\global\\presentation-profile.md`, an empty id installs nothing, and errors follow the file's existing error package.",
+        "correctness-36: installer/windows/smine.iss adds a `TInputOptionWizardPage` after RepoPage with the developer/English default checked and a German option, a `ProfileArg` function appending ` -presentation-profile=de` only for the German choice, and the `[Run]` entry uses `-install{code:ProfileArg}`; install.ps1 gains a `-PresentationProfile` parameter forwarded as `-presentation-profile=`.",
+        "correctness-37: settings/claude_code/CLAUDE.md's artifact-language rule gains the supersede clause: an installed presentation profile overrides it for end-user-visible artifacts; code, logs, commits and repo docs stay English.",
+        "correctness-38: Every profile id the Windows wizard maps has a matching `settings/claude_code/presentation-profile.<id>.md` template file."
+      ]
+    },
+    {
+      "id": "spec-4-change-englishness",
+      "items": [
+        "correctness-39: Canonical skills-group titles ('New skills', 'Edits to existing skills', 'Workflows (skill-bundled scripts)', 'Considered, not proposed') stay verbatim in proposal JSON (smine-apply routes on them) and are translated only at render time.",
+        "correctness-40: proposals.html renders the kind heading as `{{t .File.Kind}}`, the 'updated' meta, 'Everything applied, happy' and 'file(s) failed to load:' literals through `t`, and category/group/subgroup section titles as `{{t .Title}}` (identity fallback keeps free-form and path titles intact).",
+        "correctness-41: proposals.go vote tooltips are built from catalog format-string keys via the profile-language translate (`%d of %d accepted`, `%d rejected`, `%d postponed`); category names stay untouched Go keys and translate via the template section-title `t`.",
+        "correctness-42: Remaining Go-composed non-dev-visible overview strings (signalDetail fragments, the `%+d vs batch %d` delta) go through translate, and overview window filter labels render as `{{t .Label}}`.",
+        "correctness-43: germanCatalog gains the D7/P1 entries (New skills→Neue Funktionen, Edits to existing skills→Änderungen an bestehenden Funktionen, Workflows (skill-bundled scripts)→Abläufe (gebündelte Skripte), Considered, not proposed→Geprüft, nicht vorgeschlagen, context, routines, rules, actions, facts, acdsl, updated, empty-state, load-error and the tooltip/delta format strings) with keys byte-identical to the template/Go literals.",
+        "correctness-44: Developer machines (no profile) render every page byte-identically; the proposals/sessions schema, canonical group titles in data, ids, targets, paths, snippets, dates and status enums do not change."
+      ]
+    },
+    {
+      "id": "spec-4-change-englishness#2",
+      "items": [
+        "correctness-45: smine-batch, smine-skills, smine-routines, smine-context and smine-memory SKILL.md each gain a Language contract: read the presentation profile; when `language:` is set and not `en`, author the user-visible prose fields in that language following the profile's register and glossary; never translate ids, targets, paths, code, dates, tags, schema keys, status values or the fixed group titles; absent profile = English; each skill's frontmatter version and changelog.json[0] bump together.",
+        "correctness-46: The user-visible prose field set is: proposals — title change-name part after `<target> — `, change, fields[].label/text, evidence[].title, sessions[].note, free-form group titles; batches — batch title, theme bullets, arc summaries, per-session summaries/notes, finding titles; batch .md reports, ledgers and run reports stay English.",
+        "correctness-47: smine-context and smine-memory group titles (target-surface paths) are excluded from translation; smine-skills keeps its mandated group titles explicitly flagged as verbatim keys.",
+        "correctness-48: smine-consolidate's `language <lang>` makes all user-visible prose of the mutable set end up in `<lang>` — untouched entries not in `<lang>` are translated in place, free-form group titles included — while fixed structural titles and technical identifiers stay verbatim, voted/non-proposed entries stay immutable, the grouping invariant and §4 Presentation are amended accordingly, and the skill version bumps.",
+        "correctness-49: The rollout note documents a one-time `/smine-consolidate proposals language de` run (or next nightly) to translate the already-seeded store; no migration code is added."
+      ]
+    },
+    {
+      "id": "spec-5-change-nondev-automation",
+      "items": [
+        "correctness-50: cmd/sync/sync_hooks.sh's prune prompt reads `read -r answer || answer=n`, so EOF/no stdin never aborts the install and never prunes without an explicit yes.",
+        "correctness-51: internal/shell gains `SyncTimeout = 10 * time.Minute` and `RunSync` mirroring RunDialog (platformArgv, HideWindow, WaitDelay, log line, wrapped error); all four sync-script call sites (install_windows.go x2, contextdocs/sync.go, skills/sync.go) use it, leaving no `shell.Run` on sync_*/ensure_git_repo.",
+        "correctness-52: sync_skills.sh, when the installed profile has the non-developer (casual) audience, jq-merges `skillOverrides: {<leaf>: \"off\"}` for every deployed leaf into `~/.claude/settings.json` preserving foreign keys and writes `~/.config/claude-routine/skill-overrides.json` with the same leaves `\"on\"`; on a developer profile it deletes the overlay and drops the leaf overrides via jq del (idempotent flip).",
+        "correctness-53: Pipeline runs re-enable hidden skills at project/local scope: sync_skills.sh merges the on-map into the repo's `.claude/settings.local.json`, run.sh copies the overlay into each routine worktree's `.claude/settings.local.json`, the file is gitignored so publish never commits it, and no `--settings` injection is used.",
+        "correctness-54: For the non-developer audience /repos renders as Projekte: `{{t \"Projects\"}}` heading, add/remove forms with t-localized labels and confirm text, the additional-dir checkbox only for developers, a table of unlinked project names/labels without Path/Context/ACDSL/Worktrees columns; the non-dev nav gains a Projekte link after Vorschläge; every route stays reachable on every install.",
+        "correctness-55: `handleReposAdd` applies the additionalDirectories grant when the checkbox is set OR the audience is non-developer; developer behavior without the checkbox is unchanged.",
+        "correctness-56: Adding a folder without `.git` (dir or file) runs `git init -b main` there via internal/shell before `registry.Add` (no remote ever configured); an init failure fails the add.",
+        "correctness-57: `repos.Repo` gains optional `Label` (`json:\"label,omitempty\"`, length-capped at 80, display-only, never the URL/dedup key); the add form gets a label input for both audiences; Projekte rows and the dev Name column show the label falling back to the name.",
+        "correctness-58: germanCatalog gains the Projects/Projekte, add/remove/Add/Remove, `label (optional)`, confirm and `No repos registered.` → `Noch keine Projekte.` entries."
+      ]
+    },
+    {
+      "id": "spec-5-change-nondev-automation#2",
+      "items": [
+        "correctness-59: A new `smine-orchestrate` skill (+ changelog.json) with `argument-hint: \"<branch> | bootstrap\"` and an allowed-tools manifest (Read, Write, Edit, Bash(git *), Bash(jq *), Bash(make audit *), Bash(go run ./cmd/acdsl *), Bash(bash cmd/sync/*), ToolSearch) covering every prescribed step.",
+        "correctness-60: orchestrate `<branch>` mode: judge main..<branch> (schema-valid sessions/proposals JSON, `make audit` green, prose vs the profile; auto-applied changes re-judged, a bad one reverted with its proposal set rejected and reasoned; small defects fixed on the branch; hopeless → reject, reason to `.orchestrate-report`, no merge); merge into main after verifying the checkout, `make audit` on main with a red result reverting the merge; then sync settings/hooks/skills, re-run sync_context.sh per repos.json target with its recorded options (per-repo failures non-fatal), append-only additionalDirectories reconciliation, push only when a remote exists, one report line per duty.",
+        "correctness-61: orchestrate `bootstrap` mode judges the working tree with initial-setup framing (lenient on seeding volume, strict on schema/audit/style), commits directly with no branch or merge, and runs the same sync/reconcile/push/report duties.",
+        "correctness-62: run.sh parses `audience:` above stage 1; `ROUTINE_ORCHESTRATE` defaults on and `SMINE_AUTO_APPLY` defaults to `decide` for the non-developer audience (env overrides win); stage 3 runs only when exit and publish status are 0, from repo_root with the captured run branch, via `routine_run_claude 3600` with the `routine_allowed_tools smine-orchestrate` manifest and `--effort medium`; `ROUTINE_ORCHESTRATE=0` skips it.",
+        "correctness-63: Stage-3 wrapper postconditions: a dirty repo_root tree marks the stage failed (70); a run branch that is an ancestor of main is pruned via `routine_prune_merged`, otherwise it is kept and the reason plus `.orchestrate-report` tail are logged; `.orchestrate-report` is always removed; the stage status propagates into the run exit status.",
+        "correctness-64: The Welcome page gets a Bootstrap card mirroring the verify-token control (hx-post `/welcome/bootstrap`, hx-confirm, indicator); the handler refuses a second concurrent run with a conflict, starts the child detached with output to a log under the routine logs dir and a logged pid, and responds started; `GET /welcome/bootstrap/status` resolves the newest running session via the peek client and renders the session id + peek link, else starting.",
+        "correctness-65: The Welcome nav anchor gating reverts to plain `{{if initWelcome}}` (no audience condition).",
+        "correctness-66: Developer machines are unchanged: no skillOverrides written, no stage 3, apply default `never`, full UI; the Windows folder picker change is evidence-first (owner form shown and activated so the dialog opens in front) with no speculative rewrite."
+      ]
+    },
+    {
+      "id": "spec-6-raw",
+      "items": [
+        "correctness-67: `acdsl/policy.json` ships with `mode: free`, `dist_mode: gated`, `base_ref: \"\"`, `editable_scopes: [GOLANG, PYTHON, SHELL, SQL, JSON]`, empty `verifier_allowlist` and `local_overrides`, `allow_task_contracts: true`; `acdsl/policy.schema.json` (draft-07, additionalProperties false, required mode, mode/dist_mode enums free|gated|strict, scope items `^[A-Z]{2,12}$`) validates it.",
+        "correctness-68: New rule `ACDSL-JSON-003` (jsonschema verifier, reach global, anchor `^acdsl/policy\\.json$`, schema acdsl/policy.schema.json, empty ok, needs the schema) gates the policy file.",
+        "correctness-69: `LoadPolicy` returns free mode with AllowTaskContracts true for an absent file, preserves `allow_task_contracts: true` when the key is absent, errors on malformed JSON and on an unknown mode (never a silent free).",
+        "correctness-70: `CheckPolicy` is compiled into `acdsl check` (not a registry verifier): wired in runCheck after LoadRegistry, LoadPolicy/CheckPolicy errors exit 2, policy diagnostics are prepended to Check's and logged through logVerdicts; free mode never diffs; when HEAD is the base tip the check is vacuous.",
+        "correctness-71: policyBase resolves merge-base(HEAD, ref) over candidates `base_ref`, `origin/HEAD`, `origin/main`, `main`, `master`; no resolvable candidate in strict/gated is a hard error (exit 2) naming the remediation, never a pass.",
+        "correctness-72: surfaceDelta flags each of acdsl/policy.json, policy.schema.json, registry.json, evalgen.json whose working content differs from `git show <base>:<path>` (absent on one side is a difference, absent on both is clean).",
+        "correctness-73: overlayViolations reads acdsl/registry.local.json directly (tracked or untracked) and flags every entry name missing from `local_overrides`.",
+        "correctness-74: ruleDelta parses declaration files changed vs base (diff --name-only plus untracked) on both sides and classifies added/removed/changed by trimmed marker-line byte equality; ruleViolations flags every entry in strict, and in gated flags entries whose SCOPE segment (non-matching ids protected) is outside editable_scopes plus added/changed entries binding a verifier outside the allowlist (empty = base-ref registry names); task-lifetime entries are dropped first when allow_task_contracts."
+      ]
+    },
+    {
+      "id": "spec-6-raw#2",
+      "items": [
+        "correctness-75: Policy diagnostics carry Message `<file>:<line>: policy(<mode>): rule <id> added|modified|removed outside <detail>`, RuleId `ACDSL-POLICY`, Verifier `policy`, and a Why naming the fix (sanction on the base ref, or revert).",
+        "correctness-76: internal/acdsl/git.go gains GitMergeBase, GitRevParse, GitChangedFiles (diff --name-only merged with untracked non-ignored) and GitShowFile (absent path → ok=false, never an error), all via internal/shell.Run.",
+        "correctness-77: `Dist` writes the policy into the target with `mode` rewritten from `dist_mode` (falling back to the source mode) and `dist_mode` stripped, ships the schema verbatim, ships nothing when no source policy exists, and prints `acdsl/policy.json -> mode: <mode>`.",
+        "correctness-78: `cmd/hooks/acdsl-policy-guard.sh` fails open (no jq → allow), locates the nearest acdsl/policy.json walking up from cwd, in gated/strict denies writes to policy.json, policy.schema.json, registry.json, registry.local.json and evalgen.json, in strict also denies `*.acdsl` and `acdsl/*`, allows paths outside the policy repo, emits the worktree-write-guard deny JSON shape, and is bash-3.2 and shellcheck clean.",
+        "correctness-79: settings/claude_code/settings.json appends the guard to the PreToolUse `Write|Edit|NotebookEdit` hooks array after worktree-write-guard (`bash ~/.claude/hooks/acdsl-policy-guard.sh`, timeout 10), deployed by sync_hooks.sh unchanged.",
+        "correctness-80: acdsl/README.md gains a Modes section (three modes, base-branch privilege boundary, dist_mode, local_overrides, task-contract exemption, copy-paste permissions.deny snippet) and an amended registry.local.json paragraph; docs/acdsl-spec.md gains a self-management modes paragraph; cmd/acdsl/main.go's doc comment mentions the policy gate.",
+        "correctness-81: smine itself stays in `free` mode so `make audit` and the smine-apply verifier-generation flow keep working; reach/projected semantics and existing verifiers are unchanged."
+      ]
+    },
+    {
+      "id": "spec-7-raw",
+      "items": [
+        "correctness-82: The railroad-review lane prompt invokes the Skill tool with `skill=\"railroad-review\"` and `args=\"--no-context\"`, so lanes receive no doctrine injection; `no-context` appears in railroad-review.js only at that site.",
+        "correctness-83: SKILL.md's CTX-002 parenthetical is corrected from '(they never invoke a skill)' to the real mechanism (lanes invoke the skill with --no-context; the direction's named entries remain the lane's only context).",
+        "correctness-84: railroad-review frontmatter version and changelog.json[0] bump together 8.2 → 8.3 with an entry naming the context fix and the branch rename.",
+        "correctness-85: Branch builders produce `claude-review/{direction}[-{chunkSlug}]-l{i}-r{r}-{hash6}` (lanes), `claude-review/refute-{slug}-r{r}-{hash6}` (refuters) and `claude-review/station-r{r}-{hash6}` (station); the cleanup enumeration derives from the same builders; no `claude/railroad` string remains under skills/quality/railroad-review/ and every 'claude/* namespace' prose mention becomes 'claude-review/*'.",
+        "correctness-86: After a round, cleanup leaves no `claude-review/*` branches behind.",
+        "correctness-87: `plans/railroad-review-observability/runbooks/trace.md` holds disk-only jq recipes (lane roster, per-lane context reads vs direction requirements, injection check, per-agent cost/time rollup, step adherence) plus the before/after v8.2/v8.3 procedure, with no peek-mcp dependency.",
+        "correctness-88: `plans/railroad-review-observability/runbooks/eviction-screen.md` defines candidates as entries never read by a lane whose direction requires them AND never cited AND enforcement not gate/lint across ≥3 traced runs, writing `evals/railroad-review-<date>/eviction-candidates.md` as input to a manual tombstone decision; no confidence/labels/usage counters are added to context entries.",
+        "correctness-89: The peek verbose mode is recorded as a contract only (session_agents, session_agent_events with events_only, session_full include_thinking for main-agent thinking only); peek-mcp stays at v1.2.1 and skill-context.sh/read-gate.sh are unchanged."
+      ]
+    },
+    {
+      "id": "spec-8-change-bootstrap-profile",
+      "items": [
+        "correctness-90: The Welcome Bootstrap card becomes a form (hx-post `/welcome/bootstrap`, hx-confirm kept) with a native `<input type=\"date\" name=\"since\">` prefilled with today−30d and max today, an `extra-prompt` text input (maxlength 500) and a submit button; `BootstrapSinceDefault`/`BootstrapToday` (2006-01-02) are computed in the welcome page handler.",
+        "correctness-91: smine gains `--since <YYYY-MM-DD>` (argument-hint, Args, §1 Resolve, §2 Run) passed verbatim to smine-batch, and session-mine.js forwards `args.since` like `agents`.",
+        "correctness-92: smine-batch `--since` drops sessions whose `last_active` is before the date (inclusive floor) before batching, never listing them as skipped, then orders newest → oldest.",
+        "correctness-93: The audience constant becomes `audienceCasual = \"casual\"` and `isDeveloperAudience()` compares against it (predicate name and template polarity unchanged).",
+        "correctness-94: sync_skills.sh migrates an existing profile in place (`audience: non-developer` → `audience: casual`, tmp + mv) before reading, compares against `casual`, and leaves a file whose audience is neither value untouched; run.sh's orchestrate and auto-apply comparisons use `casual`.",
+        "correctness-95: The German template writes `audience: casual` and 'casual user' prose, and the Windows installer option label reads '(German, casual)'.",
+        "correctness-96: The rename sweep leaves zero `non-developer` mentions outside historical artifacts (plans/, sessions/, evals/, .claude/worktrees/): test fixtures/names, skill prose, CLAUDE.md and Go comments name the mode `casual`.",
+        "correctness-97: smine-apply and skillroutine-create stamp `origin: user` (one line after `author:`) on every skill created from a proposal; shipped skills never get it and it is never removed."
+      ]
+    },
+    {
+      "id": "spec-8-change-bootstrap-profile#2",
+      "items": [
+        "correctness-98: smine-skills reads the profile first; on `audience: casual` skill/workflow edit candidates may only target skills whose frontmatter carries `origin: user` — others are dropped, listed as `dropped: casual lockout — <target>` in the run report and never written to skills.json; new-skill proposals stay allowed.",
+        "correctness-99: smine-apply hard gate: on a casual install a skills-kind proposal targeting an existing skill without `origin: user` is not implemented and gets disposition `casual-locked` with a one-line note, regardless of vote or auto-apply mode.",
+        "correctness-100: smine-orchestrate's judge rejects, on a casual install, any run-branch commit modifying a `skills/*/*/SKILL.md` or its bundled files lacking `origin: user`.",
+        "correctness-101: smine-batch routes each session to `sessions/<roster-name>/` from the `--repos` longest-prefix attribution or to `sessions/default/` when unmatched (or no roster), creating the folder on first use; `.batch.scope` carries the folder name; a batch never spans folders; batch numbers continue per folder from 01.",
+        "correctness-102: Per-folder ledger `sessions/<name>/analyzed-sessions.txt` is appended per batch; the Select skip-list is the union of all `sessions/*/analyzed-sessions.txt` and `sessions/archived/*/analyzed-sessions.txt`, so nothing mined in any live or archived folder re-mines.",
+        "correctness-103: `--scopes` is removed from smine and smine-batch (description, argument-hint, Args, Resolve, Run, workflow args); `--no-batch` cursor resolution covers every folder under sessions/ except archived/; schema.json `batch.scope` keeps the field with the narrowed description.",
+        "correctness-104: The four dimension skills' input glob `sessions/*/*batch-*.md` excludes `archived/`, and the sessions store skips the `sessions/archived/` directory when enumerating scopes.",
+        "correctness-105: Existing `sessions/personal/` and `sessions/work/` are not auto-migrated and keep serving at their URLs until archived; removing a repo from the registry leaves its sessions folder untouched."
+      ]
+    },
+    {
+      "id": "spec-8-change-bootstrap-profile#3",
+      "items": [
+        "correctness-106: Routes `GET /sessions/archive`, `POST /sessions/{scope}/archive`, `POST /sessions/archive/{name}/unarchive` and `POST /sessions/archive/{name}/delete` are registered; the archive/unarchive/delete handlers render the op result with an HX-Redirect (/sessions resp. /sessions/archive); `POST /sessions/reload`, `handleSessionsReload` and the `sessions-reload` HX-Trigger wiring are removed (404).",
+        "correctness-107: Store.ArchiveScope moves `sessions/<name>` to `sessions/archived/<name>` (error when already archived); UnarchiveScope moves it back and errors when a live same-name folder exists (never merges); DeleteScope removes only an archived folder (non-archived name → error); ArchivedFolders lists archived folders with md-report counts (missing dir → empty).",
+        "correctness-108: validateScopeName rejects empty, `archived`, `.`, `..`, any name differing from its filepath.Base, and names containing `/` or `\\`; `default` stays archivable; no operation touches anything outside sessions/.",
+        "correctness-109: Every sessions GET (index, scope, batch, archive tab) and the overview handler call `s.sessions.Reload()` first, logging and still rendering on error, so a batch written while the server runs appears on the next page load without any reload control.",
+        "correctness-110: sessions_index.html gains an archive tab link and an 'Archive folder' form (confirm text naming that analyses disappear and nothing re-mines) in place of the Reload button; the empty-state branch also renders the tabs row; new sessions_archive.html lists archived folders with Unarchive and Delete (confirm naming the re-mining consequence) or 'No archived folders.'; the new strings enter germanCatalog and 'Reload from disk' leaves it.",
+        "correctness-111: Repo add takes an editable `name` field (empty → folder basename); `Repo.Validate` rejects the reserved names `default` and `archived`; duplicate names keep the existing rejection; the name is validated before any `git init` runs on the folder.",
+        "correctness-112: Comments/prose naming scope dirs or work/personal (run.sh comments, smine-orchestrate SKILL.md, README sessions layout) are updated to repo folders + `default` + `archived`."
+      ]
+    },
+    {
+      "id": "spec-9-change-headless-bootstrap",
+      "items": [
+        "correctness-113: New `cmd/bootstrap/run.sh` exports MSYS_NO_PATHCONV=1 and MSYS2_ARG_CONV_EXCL='*', sources routines/_lib/platform.sh and skill.sh, and preflights: not on `main` or dirty tree → exit 64 with the message; missing jq/shellcheck → warning only; outside dry-run an empty/missing BOOTSTRAP_TOKEN_FILE → exit 78, else CLAUDE_CODE_OAUTH_TOKEN exported from it.",
+        "correctness-114: The wrapper reads language/audience/dev-mode from the profile via sed; dev mode = SMINE_DEV_MODE, else profile `dev-mode: true`; a casual audience forces it off; when the skill overlay exists (non-dry) it is copied to the repo's `.claude/settings.local.json`; `--repos` is built from git-dir entries of `permissions.additionalDirectories`.",
+        "correctness-115: Stage prompts: mine = `/smine --nightly` plus `--since <d>` when BOOTSTRAP_SINCE is set else `--last <BOOTSTRAP_N|30>`, `--dev` when dev mode, `--repos`, `--agents ${SMINE_AGENTS:-claude,codex}`, then the extra prompt; consolidate carries `language <lang>` when not en; apply targets a freshly created empty `proposals/votes-processing-<ts>.jsonl` with cap and `auto-apply: decide` rules file; orchestrate = `/smine-orchestrate bootstrap` plus `(since: <d>)` when given.",
+        "correctness-116: Each stage runs as its own `claude -p` with the installed skill's `routine_allowed_tools` manifest as `--allowedTools` (warning when empty), `--add-dir $HOME/.claude/context/global`, model/effort/permission-mode/budget/json output, its envelope logged to the results jsonl; stages run style → mine → consolidate → apply → orchestrate, a failing stage logs and continues, and orchestrate always runs.",
+        "correctness-117: After the stages a dirty tree exits 70 printing `.orchestrate-report`; otherwise `.orchestrate-report` is removed and the run exits with the first non-zero stage status; `BOOTSTRAP_DRY_RUN=1` prints one DRY line per stage and executes nothing (no token, overlay copy or votes file).",
+        "correctness-118: `bootstrapEnv` replaces `bootstrapSkillArgs`: a non-empty since must parse as 2006-01-02 (else 400, no run) → `BOOTSTRAP_SINCE`; an extra prompt with quotes or newlines is rejected → else `BOOTSTRAP_EXTRA_PROMPT`; the launcher runs `exec bash cmd/bootstrap/run.sh` with those env entries plus `BOOTSTRAP_TOKEN_FILE`, keeping the detached 6h child and pid+peek status polling, and exports the routine model.",
+        "correctness-119: `skills/smine/smine-bootstrap/` is deleted and references are swept (README skill map, docs, bootstrap.go comments) outside historical records; the operator entry `bash cmd/bootstrap/run.sh` with BOOTSTRAP_* env is documented in the script header and README.",
+        "correctness-120: smine and smine-batch gain `--last <n>` (since wins; applied after merge/exclusion, keep the newest n, drop the rest silently) and `--dev`, passed through verbatim, with version/changelog bumps."
+      ]
+    },
+    {
+      "id": "spec-9-change-headless-bootstrap#2",
+      "items": [
+        "correctness-121: presentationProfile gains `DevMode` parsed from `dev-mode:` (true only for literal `true`); `saveProfileSelection(audience, language, devMode)` writes a `dev-mode: %t` frontmatter line, deletes the file only when audience is developer, language en and devMode false; the store gains an RLock'd `isDevMode()` accessor.",
+        "correctness-122: The profile save handler stores dev mode only when `dev_mode=on` and the audience is not casual; profile.html shows a Dev mode checkbox under the audience selector, disabled for casual.",
+        "correctness-123: smine-batch Select is default-deny: without `--dev` it drops sessions whose cwd lies inside the run's repo root (incl. .claude/worktrees/) or whose git_branch starts with `claude-routines/`, reporting only `excluded N smine/routine sessions (dev mode off)`; with `--dev` they qualify.",
+        "correctness-124: routines/smine-nightly/run.sh reads `dev-mode:` with the same derivation (SMINE_DEV_MODE, profile true, casual forces off) and appends `--dev` to the `/smine --nightly` prompt when set.",
+        "correctness-125: smine-style writes its directive lines in the presentation-profile language (absent profile: dominant language of sampled user turns), and a write failure on the target path is a reported stage failure, never a silently staged file elsewhere.",
+        "correctness-126: On casual installs user-visible proposal prose (title change-name, change, fields[].label/text, evidence[].title, sessions[].note) carries no file paths, rule/FACT/ACDSL IDs or schema/taxonomy jargon: an authoring line in smine-context/memory/routines/skills, a consolidate §4 sweep that moves such content into technical fields (never deletes), and an orchestrate gate with the concrete field list that also flags mined sessions older than an invocation's `(since: <date>)`; edited skills bump versions.",
+        "correctness-127: install.sh and install.ps1 warn (non-fatal, with brew/winget hint) when shellcheck is missing, next to the existing jq check."
+      ]
+    },
+    {
+      "id": "spec-10-change-viewer-fixes",
+      "items": [
+        "correctness-128: RULE-PLAN-002's canonical order places Open questions directly after Decisions (… Behavior contract → Decisions → Open questions → Baseline (verified) → … → Stop conditions → Changelog), with the rationale bullet extended.",
+        "correctness-129: RULE-PLAN-018 is edited in place (same ID): IDs are plain text, never raw-HTML anchors; every F/D/§ reference is a markdown link to its containing section's heading auto-slug; `<br>` in cells stays the one sanctioned HTML tag.",
+        "correctness-130: context/rules/plan.md gains a `## UI evidence` section at the file tail with RULE-PLAN-069 (actual-UI screenshot from the running app under plans/{slug}/design/ui/, embedded in Hot items; mockup only when the UI does not exist yet, said so) and RULE-PLAN-070 (UI-touching Changes entries carry a `ui:` line linking the screenshot).",
+        "correctness-131: The planformat verifier's `canon` slice moves Open questions after Decisions; TLDR-first, Changelog-exists, relative-order semantics, unknown-heading tolerance and the CLI contract are unchanged.",
+        "correctness-132: ACTION-CONCEPT-HOT-007 requires a screenshot of the actual UI under design captured from the running app, referenced from every Changes entry that alters it (RULE-PLAN-069/070); mockups only when the UI does not exist yet, prose never.",
+        "correctness-133: The fdesign template moves Open questions after Decisions, replaces the `with anchors` wording for D/F IDs with plain text referenced via section-slug links, updates the Hot items and Changes lines for actual-UI screenshots and `ui:` lines, and bumps 3.5 → 3.6 in frontmatter and changelog.json[0].",
+        "correctness-134: The fmt skill's plan-route audit flags raw-HTML anchors and non-section-slug references, migrate strips HTML anchors and re-points references to section slugs, the self-check requires no HTML anchors, and the version bumps 1.12 → 1.13 in frontmatter and changelog.json[0].",
+        "correctness-135: context/context.json is regenerated via `go run ./cmd/rules generate` (never hand-edited) and carries the new RULE-PLAN-002/018/069/070 and HOT-007 statements.",
+        "correctness-136: No mandate for `<a id=` anchors remains in skills/ or context/; RULE-PLAN-020 path:line links and RULE-PLAN-033 `<br>` stacking are unchanged.",
+        "correctness-137: Existing plans/*/design/raw.md files covered by the planformat gate (language_style_setting, welcome-setup-tutorial) have Open questions moved after Decisions with their own Changelog row; other existing plans are not migrated."
+      ]
+    },
+    {
+      "id": "spec-11-change-repos-routines-ui",
+      "items": [
+        "correctness-138: verdict.sh gains `squash_contained` (containment iff `git merge-tree --write-tree <candidate> <branch>` exits 0 and its first-line tree equals `<candidate>^{tree}`) and `hash_explained_anywhere`; no fallback to a working-tree merge probe when merge-tree is unavailable.",
+        "correctness-139: evaluate_branch runs layer 4 after the per-commit loop only for candidates with `+` commits that are not already fully explained, marking every remaining `+` commit explained on a squash hit; layers 1–3 and existing verdicts are unchanged, and a conflicting or tree-differing merge stays unpicked/unsafe.",
+        "correctness-140: The UNPICKED recount counts an unpicked/unpicked-notwin commit explained anywhere as squashed, not unpicked; VERDICTS appends `squashed:<n>`; IN stars come from candidate_fully_explained, and remove_agent_worktrees.sh inherits the gate through the shared evaluate_branch.",
+        "correctness-141: The remote-tracking FROM upgrade also accepts `squash_contained \"$from\" \"$branch\"` as transfer proof (only when from is set; is_candidate check kept).",
+        "correctness-142: print_agent_worktrees_status.sh salts the row-cache key with `|v2` so pre-change cached verdicts for unchanged SHAs are recomputed; its header docs mention the squash layer and `squashed:<n>`; detail mode computes the squash-containing candidates once and annotates unpicked/unpicked-notwin lines with `(content contained in <candidates> via squash — see IN*)`; the _worktree_status.html Verdicts tooltip documents `squashed:n`.",
+        "correctness-143: statusCache gains `Delete(repoName)` and `DropBranches(repoName, branches)` (rebuilds a fresh slice, keeps ScannedAt, unknown repo is a no-op).",
+        "correctness-144: handleRepoRemoveSelected drops the requested branches from the cache when the run was clean (no error, no skip markers) and keeps the `repo-op` → `?refresh=1` path otherwise; handleReposDelete calls `statusCache.Delete(name)` after removing the registry entry.",
+        "correctness-145: `CountWorktrees` is replaced by `WorktreeCounts` returning `[]repos.WorktreeKindCount{Count, Label}` per branch prefix (label = prefix minus `/`, zero counts omitted, prefix order, errors → nil); repoRow.Worktrees takes that type; the index cell renders one `<div>label:count</div>` per kind or `0`, summing to the old total; the CountPoolWorktrees comment names WorktreeCounts.",
+        "correctness-146: The run-history table gets `id=\"run-history\"` and rows `data-stamp=\"{{.Timestamp}}\"`; an inline IIFE groups consecutive rows by ISO week (Monday, UTC) under clickable `.run-band` header rows (colspan 6, `Week <start> – <end> (<n>)`, 'unknown date' for unparseable stamps), newest band expanded and older collapsed, click toggling; empty history inserts nothing; style.css gets the `.run-band` rules; row content and order are unchanged.",
+        "correctness-147: On the routine detail page the status table renders before `#routine-configure` inside `.routines-layout`, so configure sits below status and above run history."
+      ]
+    },
+    {
+      "id": "spec-12-raw",
+      "items": [
+        "correctness-148: New leaf skill `skills/smine/smine-style` (SKILL.md + changelog.json 1.0, versions synced): arg n default 30, peek session_list/session_full tooling; reads the declared profile as binding; samples the last n sessions' USER messages only (skipping sessions with <2 user turns); distills ≤30 directive lines; rewrites `~/.claude/context/global/style-profile.md` wholesale with the generator marker comment as first line; drops lines that conflict with the presentation profile; reports counts.",
+        "correctness-149: smine-style never quotes user messages verbatim, never includes PII/credentials/file contents, never mimics profanity, never changes the declared audience/language, and writes no file other than style-profile.md.",
+        "correctness-150: The declared profile (presentation-profile.md) and the learned style (style-profile.md) stay separate files; install/provisioning never touches style-profile.md; the global-context hook injects it unchanged.",
+        "correctness-151: The server wraps the profile in a mutex-guarded `presentationStore` (path, profile, stylePath) whose accessors back the `t`, language and `isDeveloperAudience` template funcs, and re-reads the file after every save so audience/language edits take effect without a restart.",
+        "correctness-152: saveProfileSelection: developer + en deletes the profile file (no-op when absent); the casual + de combination with no existing body seeds the body from `settings/claude_code/presentation-profile.de.md`; any other combination rewrites only the front matter and keeps (or creates an empty) body; writes are atomic (mkdir -p, tmp + fsx.ReplaceFile) and emit the exact line shape the sed readers extract.",
+        "correctness-153: styleContent reads a missing style file as empty; saveStyle writes atomically; `DefaultStylePath()` returns `~/.claude/context/global/style-profile.md` and backs a configserver `-style` flag threaded into `Options.StylePath`.",
+        "correctness-154: Routes GET /profile, POST /profile, POST /profile/style and POST /profile/test are registered; the nav shows `{{t \"Profile\"}}` in both audience modes and the Welcome setup tab links /profile directly above the bootstrap block."
+      ]
+    },
+    {
+      "id": "spec-12-raw#2",
+      "items": [
+        "correctness-155: profile.html renders the audience select (Developer, Casual, a disabled 'Business (later)' option that never posts a value), the language select (English/Deutsch), the profile path, the style textarea with path and overwrite hint, and the Test button with an hx-confirm for the paid call.",
+        "correctness-156: POST /profile accepts only audience developer (empty) or casual and language en or de (else 400), saves via POST-redirect-GET, and when the audience changed runs `skills.Sync(ctx, prune=false, …)` holding the skills-sync lock directly.",
+        "correctness-157: POST /profile/style rejects content over 64 KiB and otherwise saves it byte-for-byte (an empty textarea saves an empty file).",
+        "correctness-158: POST /profile/test mirrors handleWelcomeVerifyToken: fixed `styleTestPrompt`, bash with the routine token file running `claude -p \"$2\" --max-turns 1 --output-format json`, parses the claudeVerifyResult envelope and renders the answer (or the error tail) in `_profile_test.html`; a missing token renders a message, never a 500.",
+        "correctness-159: germanCatalog gains the new page strings (Profile→Profil, Developer→Entwickler, Casual→Alltag, Business (later)→Business (später), the test-confirm text, section labels and hints)."
+      ]
+    },
+    {
+      "id": "spec-13-change-multi-profile-ports",
+      "items": [
+        "correctness-160: peek-mcp's HTTP transport serves `GET /healthz` on the MCP listener returning `{version, claudeHome, codexHome, controlPort}` JSON (controlPort = bound control port, 0 when disabled), unauthenticated; every other path still reaches the MCP handler.",
+        "correctness-161: peek-mcp binds the control port exactly (error, no walk) when `--control-port` is explicitly set via flag or `PEEK_CONTROL_PORT`; the default invocation keeps the 42442–42499 walk.",
+        "correctness-162: `peek-mcp setup` gains `--control-port` (default controlPortBase) used for the OTLP endpoint in the written settings and in the prompt text instead of the hardcoded base.",
+        "correctness-163: peek-mcp docs/reference.md documents /healthz, exact-bind and `setup --control-port`; Makefile VERSION becomes 1.2.2 and the v1.2.2 tag is released before smine pins it.",
+        "correctness-164: configserver gains `-claude-home`/`-codex-home` flags defaulting from os.UserHomeDir() (fatal on error) and always passes them to the spawned peek as `--claude-home`/`--codex-home` along with `--port` and `--control-port` (when non-zero).",
+        "correctness-165: startPeek reuses a running peek only when its /healthz homes match; a home mismatch or a listener without identifiable healthz logs a loud ERROR naming holder/expected identity and returns false; spawn failure returns false; on false the caller clears the peek endpoint and dashboard URL so the UI degrades instead of serving another profile's sessions.",
+        "correctness-166: With no envs a default install keeps ports 4242/42442 and homes `$HOME/.claude`/`$HOME/.codex`; stdio MCP registrations and the configserver `-peek-*` defaults are unchanged."
+      ]
+    },
+    {
+      "id": "spec-13-change-multi-profile-ports#2",
+      "items": [
+        "correctness-167: install.sh sources `$REPO_DIR/install.env` first, resolves `CONFIGSERVER_PORT`/`PEEK_PORT`/`PEEK_CONTROL_PORT` with precedence env > file > defaults (6001/4242/42442), writes the resolved values (plus CLAUDE_HOME/CODEX_HOME when set) back to install.env, and pins `peek-mcp@v1.2.2` (no `v1.2.0` left).",
+        "correctness-168: The plist template's ProgramArguments gain `-peek-port __PEEK_PORT__ -peek-control-port __PEEK_CONTROL_PORT__` and `__PEEK_HOME_ARGS__`, which install.sh's sed expands to `-claude-home`/`-codex-home` pairs only when set, else to nothing.",
+        "correctness-169: Before `launchctl bootstrap`, install.sh kills same-user listeners on `$PEEK_PORT` and `$PEEK_CONTROL_PORT` (same loop as the :6001 kill), so a reinstall replaces a stale peek with the current binary and flags.",
+        "correctness-170: The settings fragment's OTLP endpoint becomes `http://127.0.0.1:{{PEEK_CONTROL_PORT}}/otlp`; sync_settings.sh sources install.env (default 42442) and expands the marker alongside the existing `{{PEEK_MCP}}`/`{{HOME}}` expansion.",
+        "correctness-171: `config.ExpandInstallMarkers(data []byte) []byte` reads install.env from the working directory (KEY=VALUE, missing file → defaults, unknown markers untouched) and is applied both on the revert copy of the claude fragment and on the fragment loads used by sectionOverridden/handleConfig, so an expanded live file shows no drift and revert writes the expanded port.",
+        "correctness-172: Windows runInstall writes install.env with the same keys into the repo dir; `/install.env` is gitignored; README gains a multi-profile section (per-profile env example, identity-check behavior, reinstall as the peek update vector)."
+      ]
+    },
+    {
+      "id": "spec-14-change-repo-cache",
+      "items": [
+        "correctness-173: `Registry` records the loaded file identity (mtime + size); `readRegistrySnapshot` stats before reading, treats a missing file as an empty registry, and fails on parse errors, invalid entries or duplicate names.",
+        "correctness-174: `Find` and `Repos` first call `refreshIfChanged`, which reloads when the file's mtime/size differ from the loaded identity, does nothing for a still-missing never-loaded file, and on a failed re-read keeps the last good state and logs; the startup `Reload` still fails loudly.",
+        "correctness-175: `Add` and `Remove` re-read the file under the write lock, apply their delta to that fresh snapshot (duplicate/unknown-name errors evaluated against it) and save; `save` stats the written file and applies the new identity so a self-write does not trigger a reload — a stale in-memory slice can never be written back.",
+        "correctness-176: `repos.Fingerprint(ctx, repoPath)` concatenates `git for-each-ref --format='%(refname) %(objectname)' refs/heads/claude/ refs/heads/claude-routines/` and `git worktree list --porcelain` via shell.Run, returning wrapped errors.",
+        "correctness-177: `statusEntry` gains `Fingerprint` and `statusCache.Store(repoName, fingerprint, statuses)` stores it; no old-arity Store calls remain.",
+        "correctness-178: handleRepoWorktreeStatus computes the fingerprint on every load and serves the cache only when an entry exists, `refresh` is unset, the fingerprint computed without error and equals the entry's; otherwise it re-scans and stores the new fingerprint; `?refresh=1` always re-scans and the logged status timing includes the fingerprint cost.",
+        "correctness-179: `DropBranches` keeps the entry's pre-removal fingerprint, so the next plain load after a clean optimistic removal re-scans and converges to scan truth; the optimistic delete UX (instant hide, silent clean run, skip markers, `repo-op` restore, removalNeedsRefresh) is unchanged.",
+        "correctness-180: `handleRepoRemove` and the `POST /repos/{name}/branches/{branch}/remove` route are deleted (404); `repos.Remove`, `handleRepoRemoveSelected` and the remove/status scripts stay untouched.",
+        "correctness-181: Deleting repos.json while the server runs renders an empty registry without a 500, and restoring it brings the repos back on the next load; hand edits to repos.json show up without a restart and survive the next UI write."
+      ]
+    }
+  ]
+}

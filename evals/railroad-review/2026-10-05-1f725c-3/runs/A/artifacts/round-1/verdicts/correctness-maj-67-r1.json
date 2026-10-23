@@ -1,0 +1,29 @@
+{
+  "finding_id": "correctness-MAJ-67-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on internal/server/i18n.go:8 — germanCatalog has no \"permissions\" or \"Allowlist additions\" key, so translate() returns them unchanged and proposals.html:30/:60 render English headings on a German profile.",
+  "probe": "PROBE-CORRECTNESS-MAJ-67-R1",
+  "script": "correctness-maj-67-r1-catalog-keys.sh",
+  "fixture": "probes/fixtures/correctness-maj-67-r1-fail.go",
+  "registry": "registry-correctness-maj-67-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-MAJ-67-R1 -registry probes/registry-correctness-maj-67-r1.json -> exit 1: internal/server/i18n.go:8: germanCatalog has no entry for \"permissions\" / \"Allowlist additions\"",
+    "validity_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-MAJ-67-R1-VALID (target= fail fixture) -> exit 1, 2 violations on fixtures/correctness-maj-67-r1-fail.go:3. The direct /bin/bash interpreter run over the scratch files list was denied by tool policy, so validity ran through the engine with a target= parameter instead.",
+    "read": [
+      "internal/server/i18n.go:8-132 — catalog translates sibling kinds (skills, workflows, context, routines, rules, actions, facts, acdsl) and the skills group titles; no permissions or Allowlist additions key; translate() falls back to identity at :131",
+      "internal/server/proposals.go:39 — \"permissions\": \"harness-friction\" added to kindDimension (votable kind)",
+      "internal/server/templates/proposals.html:30 <h2>{{t .File.Kind}}; :54/:60/:79 {{t .Title}}",
+      "skills/smine/smine-permissions/SKILL.md:62 — single group title 'Allowlist additions', written verbatim in English as a machine-read key",
+      "manifest walk item correctness-11: Navigation and page headings render in German for the casual German user",
+      "known.json: tests-MIN-7-r1 (missing template-key coverage test) and tests-NIT-53-r1 (dimension assertion) differ in substance; no match"
+    ],
+    "cells": "agree with incorrect/rare: needs language: de plus a run where smine-permissions emits at least one proposal"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-67-r1-catalog-keys.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-67-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-maj-67-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-67-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-maj-67-r1/files.txt"
+  ]
+}

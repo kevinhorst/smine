@@ -1,0 +1,73 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "server",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "notes": "Server chunk, 36 files read in full. Drafted and dropped as known-ledger matches: profile save before skills-sync lock (profilesettings.go:88), duplicate-name git init (repos.go:585), /sessions/archive shadowing a scope named archive (server.go:319), HX-Redirect hiding archive/delete/unarchive errors (sessions.go:177). Cross-chunk, not verified here: config.LoadFragment / ExpandInstallMarkers semantics (internal/config), Fingerprint and registry refresh (internal/repos), sessions store archive ops (internal/sessions), cmd/bootstrap/run.sh behaviour relied on by handleWelcomeBootstrap (relative script path and repo-root cwd for resolveBootstrapSession).",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "server side: profile is per-install file read via presentationStore (presentation.go); lang attr from langAttr (layout.html:3); casual nav/card/overview gating is template/handler render-time over the same data; developer = absent/other audience. Hook/nightly/consolidate items out of chunk."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "casual nav hides internals (layout.html:29-42), cards hide band/tags/target (_proposal_card.html:6-13,61), snippets labelled 'technical detail' untranslated code (_proposal_card.html:81, _session_list.html:35); headings via t. Store-prose/nightly stories out of chunk."},
+    {"group": "spec-3-raw/profile-hook-nightly-install", "hits": [], "note": "items 17-25 are template/hook/run.sh/installer/CLAUDE.md work outside the server chunk; loadPresentationProfile fail-open defaults verified (presentation.go:135-172)."},
+    {"group": "spec-3-raw/server-ui", "hits": [], "note": "t/langAttr/isDeveloperAudience FuncMap (server.go:163-169), translate identity fallback (i18n.go:124-132), nav gating (layout.html), handleOverview casual branch (overview.go:89-95), card hiding and t-wrapping verified. -presentation flag in main.go out of chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "canonical group titles translated at render only ({{t .Title}} proposals.html:54,60,79), kind heading/updated/happy/load-error wrapped; tooltips via translate format keys (proposals.go:451-454); overview signalDetail/delta translated (overview.go:283,379), window labels {{t .Label}}; catalog entries present. Known: English tooltip suffix in stateNoteFor, _batch_list period change, missing permissions-kind entries. SKILL.md items out of chunk."},
+    {"group": "spec-5-change-nondev-automation/install-visibility-projects", "hits": [], "note": "Projects nav/heading/rows/label/checkbox gating (layout.html:33, repos_index.html), grant on casual (repos.go:570), git init before Add (repos.go:583-589), Label display; known: duplicate-name init, op-result jargon, _repo_path literals. Sync/run.sh/overlay items out of chunk."},
+    {"group": "spec-5-change-nondev-automation/orchestrator-welcome-picker", "hits": [], "note": "Bootstrap card, conflict on second POST, detached spawn, status endpoint verified (bootstrap.go); Welcome nav gated only by initWelcome (layout.html:28). Known: log path/pid. Orchestrator skill/run.sh and Windows picker out of chunk."},
+    {"group": "spec-6-raw/policy-engine", "hits": [], "note": "acdsl policy engine — no server-chunk code; out of chunk."},
+    {"group": "spec-6-raw/dist-hook-docs", "hits": [], "note": "acdsl dist/hook/docs — no server-chunk code; out of chunk."},
+    {"group": "spec-7-raw", "hits": [], "note": "railroad-review skill/plans runbooks — no server-chunk code; out of chunk."},
+    {"group": "spec-8-change-bootstrap-profile/bootstrap-casual", "hits": [], "note": "date input prefill/max computed in handleWelcome (welcome.go:291-293), extra-prompt maxlength, hx-confirm, hx-disabled-elt (welcome.html:18-28); bootstrapEnv rejects bad since and quotes/newlines with 400 before spawn (bootstrap.go:52-56,169-190); audienceCasual rename (presentation.go:14,27). Skill/sync/installer items out of chunk."},
+    {"group": "spec-8-change-bootstrap-profile/folders-reload", "hits": [], "note": "archive routes registered (server.go:319-322), Reload route/button/trigger/catalog entry removed, reloadSessions on every sessions GET + overview, archive tab/button/empty-state tabs row. Known: HX-Redirect hides op errors, /sessions/archive shadows a scope named archive, duplicate-name git init. Untranslated archive-tab <title> folded into correctness-NIT-3. Store ops (internal/sessions) and skill items out of chunk."},
+    {"group": "spec-9-change-headless-bootstrap/wrapper-launcher", "hits": [], "note": "handleWelcomeBootstrap spawns exec bash \"$1\" cmd/bootstrap/run.sh with bootstrapEnv + BOOTSTRAP_TOKEN_FILE + ROUTINE_MODEL (bootstrap.go:80-84); no bootstrapSkillArgs/smine-bootstrap reference left in server code. Wrapper script itself out of chunk."},
+    {"group": "spec-9-change-headless-bootstrap/devmode-presentation", "hits": [], "note": "DevMode parse (literal true only, presentation.go:164-166), saveProfileSelection delete rule and dev-mode line (88-112), RLock'd isDevMode (63-67), handler forces dev mode off for casual (profilesettings.go:86), checkbox disabled for casual (profile.html:22). run.sh/skill items out of chunk."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "plan rules, planformat verifier, fdesign/fmt skills, context.json — no server-chunk code; out of chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": ["correctness-MAJ-1", "correctness-NIT-2"], "note": "DropBranches/Delete (statuscache.go:32-59) called on clean remove-selected and repo delete (repos.go:510-514,621); WorktreeCounts cell (repos_index.html:48); squashed:n tooltip (_worktree_status.html:87); run-history data-stamp, colspan-6 week bands, newest expanded (routine_detail.html:28-106); status table above #routine-configure. The behavior contract keeps filter chips unchanged, but the client-side filter now lets select-all/Remove act on filtered-out rows (MAJ-1) and shows a false filter message after optimistic removal (NIT-2). verdict.sh items out of chunk."},
+    {"group": "spec-12-raw/style-store-routes", "hits": [], "note": "mutex-guarded presentationStore with reload after save and FuncMap delegation (presentation.go:34-112, server.go:163-169); saveProfileSelection delete/seed/frontmatter-only rewrite via writeFileAtomic; styleContent/saveStyle/DefaultStylePath; /profile routes with POST-redirect-GET; audience/language validation 400; 64 KiB style cap; /profile/test claude -p --max-turns 1 json envelope, missing token renders message. Known: save-before-lock sync skip. -style flag in main.go out of chunk."},
+    {"group": "spec-12-raw/nav-i18n-files", "hits": ["correctness-NIT-3"], "note": "Profile nav link for both audiences (layout.html:30), Welcome setup tab links /profile above Bootstrap (welcome.html:14-17), profile catalog entries present (i18n.go:108-121); the Profile page <title> bypasses translate (NIT-3). Install/hook items out of chunk."},
+    {"group": "spec-13-change-multi-profile-ports/peek-mcp", "hits": [], "note": "peek-mcp healthz/control-port — no server-chunk code; out of chunk."},
+    {"group": "spec-13-change-multi-profile-ports/smine", "hits": [], "note": "server side of correctness-160: compare loads switched to config.LoadFragment (config.go:101, config_sync.go:100, hooks.go:193, permissions.go:200) and revert copy expands markers for claude (config_sync.go:50,121-123). Known: apply-overrides direction copies the literal port back. configserver flags/startPeek/install.sh/plist out of chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "statusEntry.Fingerprint, Store(repo, fingerprint, statuses), DropBranches keeps pre-removal fingerprint (statuscache.go); handleRepoWorktreeStatus computes fingerprint every load inside the status timing, serves cache only when !refresh && no error && equal, else re-scans and stores (repos.go:352-368); handleRepoRemove and its route deleted (server.go route list). Registry/Fingerprint internals (internal/repos) out of chunk."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "internal/server/templates/repo_detail.html",
+      "line": 67,
+      "checklist": "ACTION-REVIEW-SPEC-004",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "Moving the worktree-table kind/base filter client-side made the header select-all checkbox (and any row checked before a filter change) select rows the active filter hides, so Remove / Remove Worktree acts on worktrees and branches the user filtered out of view. At base the filter was server-side (rows outside the filter were never rendered), so select-all could only ever pick visible rows.",
+      "evidence": "Re-read at 1f725ce: repo_detail.html:65-72 — the select-all change handler runs document.querySelectorAll('input[name=\"branch\"]').forEach(box.checked = e.target.checked) over every row; applyFilter (repo_detail.html:100-118) only sets row.hidden and never unchecks; the remove forms post hx-include=\"#op-force, input[name=branch]:checked\" (_worktree_status.html:65-75), which serializes checked boxes regardless of row visibility; handleRepoRemoveSelected (repos.go:470-494) removes every posted branch. Base b4981b8 repos.go:376-380 filtered data.Statuses by matchesBase && matchesKind server-side, so hidden rows did not exist in the DOM. Sequence: open /repos/x?kind=claude-routines, tick select-all, click Remove → every claude/* row that is safe (or every row with force) is removed and its branch deleted although only claude-routines/* rows were shown. Mitigation only: refresh() builds the hx-confirm text from all checked rows, so the count/branch list in the dialog exceeds the visible rows. No spec item introduces the client-side filter; spec-11 lists filter chips under 'Must not change'.",
+      "fix": "Scope select-all to visible rows (document.querySelectorAll('tr[data-kind]:not([hidden]) input[name=\"branch\"]')) and have applyFilter uncheck the box of every row it hides, then call refresh()."
+    },
+    {
+      "finding_id": "correctness-NIT-2",
+      "file": "internal/server/templates/repo_detail.html",
+      "line": 117,
+      "checklist": "ACTION-REVIEW-SPEC-003",
+      "severity": "NIT",
+      "effect": "cosmetic",
+      "exposure": "rare",
+      "claim": "After an optimistic removal empties the table with no filter active, the page shows 'No agent branches matching the active filter.' although no filter is set.",
+      "evidence": "Re-read at 1f725ce: repo_detail.html:80-90 marks removed rows data-removed and hidden; applyFilter (100-118) runs on htmx:afterSettle (the op-result swap) and counts data-removed rows as hidden, so visible == 0 while tr[data-kind] still exists → wt-filter-empty is unhidden; its text (_worktree_status.html:150) asserts an active filter. Sequence: no ?kind/?base, select all safe rows, Remove, clean run (no repo-op re-scan) → the filter message appears.",
+      "fix": "Unhide wt-filter-empty only when kind or base is set (empty.hidden = visible > 0 || !(kind || base) || !document.querySelector('tr[data-kind]'))."
+    },
+    {
+      "finding_id": "correctness-NIT-3",
+      "file": "internal/server/profilesettings.go",
+      "line": 168,
+      "checklist": "correctness-148",
+      "severity": "NIT",
+      "effect": "cosmetic",
+      "exposure": "often",
+      "claim": "The two new pages set their browser <title> from untranslated literals — the Profile page ('Profile') and the sessions archive tab ('Sessions — archive', sessions.go:137) — so a German profile shows English tab titles while sibling handlers (handleProposals, handleSessionsScope) translate theirs.",
+      "evidence": "Re-read at 1f725ce: profilePageData sets Title: \"Profile\" (profilesettings.go:168) and handleSessionsArchiveTab sets Title: \"Sessions — archive\" (sessions.go:137); layout.html:7 renders <title>{{.Title}}</title> without t; germanCatalog carries \"Profile\" and \"archive\"; handleProposals (proposals.go:186) and handleSessionsScope (sessions.go:172) pass their titles through translate. Exposure: every page view on a language: de install.",
+      "fix": "Title: translate(s.presentation.language(), \"Profile\") in profilePageData, and translate(lang, \"Sessions\") + \" — \" + translate(lang, \"archive\") in handleSessionsArchiveTab."
+    }
+  ],
+  "walk_complete": true
+}

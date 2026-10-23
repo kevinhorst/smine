@@ -1,0 +1,60 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "MAJOR",
+      "claim": "CheckPolicy's unresolvable-base fallback trusts the unverified working-copy policy's Mode, so a deleted/absent policy.json plus a base-resolution failure yields a silent pass instead of the hard error required by the plan's D10 and the code's own invariant.",
+      "fix": "Fail closed on an unresolvable base — treat it as gated/strict (or always hard-error) regardless of the local file's claimed mode, add a TestCheckPolicyUnresolvableBaseWithDeletedWorkingFile case, or explicitly document the accepted risk."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/acdsl/git.go",
+      "line": 57,
+      "severity": "MAJOR",
+      "claim": "GitChangedFiles splits git diff --name-only / git ls-files output with strings.Fields, so filenames containing spaces are broken into bogus fragments and their rule-delta checks are silently dropped.",
+      "fix": "Split on newlines instead (git outputs one path per line), e.g. strings.Split with TrimSuffix and an empty-string filter."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "settings/claude_code/settings.json",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The four default 'ask' gate entries for Edit/Write on **/*.acdsl and acdsl/** were removed from smine's own settings.json without any plan calling for it, stripping the only guard on ACDSL rule-file edits in a repo the new policy hook leaves ungated (mode free).",
+      "fix": "Get an explicit confirm-or-revert: restore the four Edit/Write entries, or durably record the deliberate decision to drop them (plan Changelog row, context fact, or explanatory commit message)."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "plans/v1-2-1/2026-08-26-railroad-review-observability-wip-5158764/design/raw.md",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "Railroad-review's lane-context model was reversed from the approved plan (v8.3's --no-context opt-out replaced by v8.4's forced full doctrine injection via skill-invoke-gate.sh) without any entry in the plan document's own Changelog, leaving the plan misrepresenting the shipped design.",
+      "fix": "Update the plan's Changelog with the v8.4 pivot and its rationale, or note in the plan that it was superseded by a later decision."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/git.go",
+      "line": 78,
+      "severity": "MINOR",
+      "claim": "GitRevParse is exported but has no production caller — it is only used from its own test file.",
+      "fix": "Use it where GitMergeBase/manual git rev-parse calls are duplicated, or drop the export and inline the one test call site."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "classViolations rebuilds a fresh editable map from policy.EditableScopes on every call (three times per CheckPolicy invocation), a needless O(n) rebuild if ever called from a hot path.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "routines/smine-nightly/run.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The dev_mode/orchestrate/auto_apply derivation block reads the presentation profile three separate times via sed with precedence rules threaded through shell variables, forcing future readers to re-derive env > profile > default precedence from the code.",
+      "fix": "Add a short 'precedence: env > profile > default' table comment."
+    }
+  ]
+}

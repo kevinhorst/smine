@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-240-r1",
+  "verdict": "confirmed",
+  "reason": "EVID-002 (L40) and EVID-005 (L46) open with italic section labels, EVID-003 (L42) and EVID-004 (L44) with bare 'Validated (feeds ...)' / 'Tested (feeds ...)'; the diff shows both were italic (*How validated*/*How tested*) before this change.",
+  "probe": "manual: command output — ACDSL probe unrunnable: /bin/bash validity run and bin/acdsl denied by tool-policy, Makefile has no acdsl target (make acdsl ARGS= denied)",
+  "evidence": {
+    "read": [
+      "grep -n SKILL-DODREPORT-EVID-00[2-5] skills/quality/dod-report/SKILL.md at 1f725ce -> L40 '— *Why this solution*:', L42 '— Validated (feeds `## Validation & testing`):', L44 '— Tested (feeds `## Validation & testing`):', L46 '— *State*:' (expected one label shape across the four siblings)",
+      "git diff b4981b8..1f725ce -- skills/quality/dod-report/SKILL.md: '-... — *How validated*:' / '-... — *How tested*:' replaced by the bare forms",
+      "known.json rows for this file (NIT-135 L64 bare ids, NIT-183 L13 four questions) do not cover the label shape"
+    ],
+    "attempts": [
+      "attempt 1: /bin/bash probes/code-style-nit-240-r1.sh <fixture files list> -> tool-policy denied, candidate Bash(/bin/bash *)",
+      "attempt 2: bin/acdsl -h and make -C <wt> acdsl ARGS=... -> both denied; Makefile declares no acdsl target"
+    ],
+    "refutation_tried": "Considered that the bare form deliberately marks 'feeds part of a section' vs 'is a section'; the italic convention could carry that equally (*Validation & testing* (validated half)), and the change broke a previously uniform shape — the inconsistency stands."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-240-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-240-r1-fail.md"
+  ]
+}

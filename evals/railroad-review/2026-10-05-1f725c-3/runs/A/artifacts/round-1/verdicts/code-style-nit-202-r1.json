@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-202-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: statuscache_test.go:61 (new file) passes []repos.WorktreeStatus{{Branch: \"claude/alpha\"}} inline to cache.Store, against RULE-GOLANG-CALL-005; the file's other Store calls (lines 18, 28, 41) bind the literal first.",
+  "probe": "PROBE-CODE-STYLE-NIT-202-R1",
+  "script": "code-style-nit-202-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-202-r1/fail_test.go",
+  "registry": "registry-code-style-nit-202-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-202-R1 -registry probes/registry-code-style-nit-202-r1.json at 1f725ce -> exit 1: internal/server/statuscache_test.go:61: composite literal []repos.WorktreeStatus{...} passed inline to Store (RULE-GOLANG-CALL-005)",
+    "validity": "bin/acdsl check -root scratch/code-style-nit-202-r1/repo (git-initialised copy of the fixture) -> exit 1: fail_test.go:4",
+    "read": [
+      "internal/server/statuscache_test.go:61 at 1f725ce: cache.Store(\"demo\", \"fp-1\", []repos.WorktreeStatus{{Branch: \"claude/alpha\"}})",
+      "internal/server/statuscache_test.go:17-18, 27-28, 36-41: literals bound to first/second/statuses before Store"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-202-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-202-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-202-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-202-r1/fail_test.go"
+  ]
+}

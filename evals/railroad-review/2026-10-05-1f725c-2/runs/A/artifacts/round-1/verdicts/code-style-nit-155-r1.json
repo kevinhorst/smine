@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-155-r1",
+  "verdict": "confirmed",
+  "reason": "The added nested-run scan in LoadForSkill wraps its whole success path (range loop plus inner if) in `if err == nil {` at 251, giving if -> for -> if three levels in new code where RULE-GOLANG-ERR-002 demands early-return handling and RULE-GOLANG-NEST-001 caps new code at 2; the early return is unavailable in place (sort follows), so extraction is the fix; not covered by known NIT-78 (duplicated loop body) or NIT-8-r2 (regexp compile).",
+  "probe": "manual: command output — probe path blocked by tool policy (Bash(/bin/bash *) and Bash(<worktree>/bin/acdsl *) both denied, so neither the fixture self-check nor acdsl check could run)",
+  "evidence": {
+    "read": [
+      "grep -n at 1f725ce internal/evals/evals.go -> 250:\tnestedEntries, err := os.ReadDir(skillRoot)  251:\tif err == nil {  252:\t\tfor _, entry := range nestedEntries {  — expected: ReadDir error handled by an early return (extracted helper), success path unindented",
+      "git diff b4981b8..1f725ce -- internal/evals/evals.go: lines 248-264 are wholly added by this diff",
+      "context/rules/go.md RULE-GOLANG-ERR-002 (478-486), RULE-GOLANG-NEST-001 (358-366)",
+      "known.json: code-style-NIT-78-r1 (duplicated loop body), code-style-NIT-8-r2 (in-function regexp) — neither names the nesting"
+    ],
+    "probe_attempts": [
+      "attempt 1: /bin/bash <probes>/code-style-nit-155-r1.sh <scratch>/code-style-nit-155-r1/files.txt -> tool-policy denied, candidate Bash(/bin/bash *)",
+      "attempt 2: <worktree>/bin/acdsl -h -> tool-policy denied, candidate Bash(<worktree>/bin/acdsl *); Makefile has no acdsl target"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-155-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-155-r1/fail/evals.go.txt"
+  ],
+  "notes": "the probe script and fixture are unvalidated (never run) — not registered, no .acdsl mirror written"
+}

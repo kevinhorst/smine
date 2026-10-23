@@ -1,0 +1,85 @@
+{
+  "ranking": ["F", "D", "C", "H", "E", "B", "A", "G"],
+  "arms": [
+    {
+      "label": "F",
+      "summary": "All ten plan sections implemented; the code matches the reference apart from test fixture naming and comment wrapping. The scenario test mirrors the reference shape (separate dirty worktree, locked session worktree). Committed in 6 package commits with a green audit and a plan Changelog row.",
+      "defects": []
+    },
+    {
+      "label": "D",
+      "summary": "Complete and matches the reference. It places afterClose before afterDelivery and records that in the plan Changelog as a deviation. Committed in 6 package commits with a green audit.",
+      "defects": []
+    },
+    {
+      "label": "C",
+      "summary": "Complete and matches the reference. The scenario test dirties and then restores the session worktree instead of using a second dirty worktree, and it drops the lock. Committed in 6 package commits with a green audit and a plan Changelog row.",
+      "defects": []
+    },
+    {
+      "label": "H",
+      "summary": "Complete and matches the reference. Committed in 6 package commits with a green audit. The scenario test's final real remove passes --force, which weakens the proof that the dry run changed nothing.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/agentwt/tests/scenarios/mod.rs:533",
+          "claim": "The 'real remove afterwards' step runs with --force because the worktree is left dirty. A forced remove succeeds whatever state the dry run left, so the plan's check 'real remove afterwards: removed, proving the dry run changed nothing' becomes vacuous. The dirty edit should be restored and the remove run unforced (as C and D do)."
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "summary": "Code matches the reference and the post-run check (make audit) is green. The session ended while 'waiting on make audit', with nothing committed and no plan Changelog entry.",
+      "defects": [
+        {
+          "severity": "MAJOR",
+          "file": "(worktree HEAD 694e7466)",
+          "claim": "The run ended with every change uncommitted: HEAD is still the base commit and no /package-commit ran. The fimplement deliverable (committed code) and the plan's Changelog persistence are missing."
+        },
+        {
+          "severity": "MINOR",
+          "file": "cmd/agentwt/tests/scenarios/mod.rs:494",
+          "claim": "ops_remove_dry_run drops the f.lock(&session_wt) the reference fixture uses. The /close shape with a locked Desktop worktree (the unlock step in the real remove) is no longer exercised."
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "summary": "Closest code match to the reference (ops.rs is byte-identical). The session ended with 'audit still running', nothing committed, and the post-run check was blocked by a parallel golangci-lint lock after rust-lint passed.",
+      "defects": [
+        {
+          "severity": "MAJOR",
+          "file": "(worktree HEAD 694e7466)",
+          "claim": "The run ended with every change uncommitted and verification unfinished ('The audit is still running in the background'). No commits and no plan Changelog entry."
+        }
+      ]
+    },
+    {
+      "label": "A",
+      "summary": "Code matches the reference. The session ended while 'still compiling dependencies for clippy', with nothing committed; the post-run check passed rust-lint and was then blocked by a parallel golangci-lint lock.",
+      "defects": [
+        {
+          "severity": "MAJOR",
+          "file": "(worktree HEAD 694e7466)",
+          "claim": "The run ended mid-verification with every change uncommitted. No /package-commit and no plan Changelog entry."
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "summary": "Logic matches the reference, but the scenario test is not rustfmt-clean, so rust-lint and make audit are red. The session ended with 'audit still running' and nothing committed.",
+      "defects": [
+        {
+          "severity": "MAJOR",
+          "file": "cmd/agentwt/tests/scenarios/mod.rs:499",
+          "claim": "`let dry_run = [...]` is split across lines where rustfmt wants a single line. The post-run check fails at `cargo fmt -- --check` ('Diff in …/scenarios/mod.rs:499', make rust-lint Error 1), so make audit is red, which violates S5 and V1."
+        },
+        {
+          "severity": "MAJOR",
+          "file": "(worktree HEAD 694e7466)",
+          "claim": "The run ended with every change uncommitted ('The audit is still running… after that come the live dry-run checks and /package-commit'). No commits and no plan Changelog entry."
+        }
+      ]
+    }
+  ]
+}

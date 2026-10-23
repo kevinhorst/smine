@@ -1,0 +1,60 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "BLOCKER",
+      "claim": "policyBase resolves the trust boundary from the working tree's own agent-committed acdsl/policy.json base_ref, so an agent branch can set base_ref to its own branch name, making CheckPolicy return nil before any surface-delta check and disabling the entire self-management gate.",
+      "fix": "Never derive the trust boundary from the working tree's policy — resolve base once from the fixed candidate chain (or an operator-configured base_ref living only on the base branch, read via git show <resolved-base>:acdsl/policy.json), compare HEAD against that independently-resolved commit; at minimum refuse any base_ref that resolves to the current HEAD's own branch."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "plans/v1-2-1/2026-08-26-railroad-review-observability-wip-5158764/design/raw.md",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The railroad-review lane-context design was reversed post-approval (v8.4 forces full doctrine injection instead of the plan's --no-context lanes) but the bound plan document was never updated — D1, Changes §1 and the Changelog still describe the superseded v8.3 design as final.",
+      "fix": "Append a Changelog row to the plan documenting the v8.4 reversal and its rationale, and correct D1/Changes §1 to match, or explicitly supersede this plan with a follow-up."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "skills/smine/smine-permissions/SKILL.md",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The new smine-permissions dimension and --subagents mining feature (new skills, schema additions, pipeline wiring) ship with no corresponding plan anywhere in plans/v1-2-1/, making the feature untraceable to any approved spec.",
+      "fix": "Either point to the plan that authorized this (if it exists outside plans/v1-2-1/), or treat this as needing the same plan-then-implement pass the rest of the release got."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/worktrees/_lib/verdict.sh",
+      "line": 95,
+      "severity": "MAJOR",
+      "claim": "The filter_untracked refactor and new .serena//.DS_Store untracked-file exclusions in verdict.sh are untraced to any plan and touch the worktree-removal safety gate, where under-counting untracked files could let a dirty worktree be force-removed.",
+      "fix": "Confirm intent; if intentional, a one-line note in the repos-routines-ui plan's Changelog (or a new small plan) would close the traceability gap."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/policy.go",
+      "line": 190,
+      "severity": "MINOR",
+      "claim": "policyBase's boundary detection (branch != baseName) is subtle enough to have produced the Critical finding and lacks a code comment stating the invariant it must never violate.",
+      "fix": "Add an explicit code comment stating the invariant (\"base must never be resolvable to a ref an agent branch controls\")."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/server/i18n.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The catalog completeness sweep promised in the language-style-setting plan's Phase P1 was not verified as completed, so English literals may still leak into the non-dev UI.",
+      "fix": "Run a targeted grep for remaining English literals in the non-dev UI before shipping to the non-dev machine this plan was written for."
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 65,
+      "severity": "MINOR",
+      "claim": "The Bash-command tokenizers in skill-invoke-gate.sh and read-gate.sh are deliberately conservative and fail open on quoting/metacharacters, carrying the same conservative-parsing tradeoff as the rest of the hook suite.",
+      "fix": ""
+    }
+  ]
+}

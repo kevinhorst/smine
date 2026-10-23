@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-192-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at 1f725ce: internal/config/installenv.go:9 DefaultPeekControlPort \"42442\" and cmd/configserver/main.go:52 flag.Int(\"peek-control-port\", 42442, ...) are two independent declarations of one default; main.go already imports internal/config, so the single-declaration fix is feasible.",
+  "probe": "PROBE-CODE-STYLE-NIT-192-R1",
+  "script": "code-style-nit-192-r1.sh",
+  "registry": "registry-code-style-nit-192-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-192-R1 -registry probes/registry-code-style-nit-192-r1.json -root <worktree> -> exit 1: internal/config/installenv.go:9: DefaultPeekControlPort \"42442\" restates the -peek-control-port flag default literal 42442 at cmd/configserver/main.go:52",
+    "read": [
+      "internal/config/installenv.go:8-12 (new file in range) declares DefaultPeekControlPort = \"42442\"",
+      "git grep 42442 over *.go: cmd/configserver/main.go:52 flag default and installenv.go:9 only (plus tests)",
+      "cmd/configserver/main.go:21 imports github.com/kevinhorst/smine/internal/config"
+    ],
+    "validity": "Direct fixture run (/bin/bash <script> <files list>) was denied by tool policy (candidate rule Bash(/bin/bash *)); the fixture and files list were authored but not executed. The real run going RED on the claimed line shows the probe is not blind to the pattern.",
+    "known_ledger": "code-style-NIT-71-r1 (installenv.go:20) concerns the PEEK_CONTROL_PORT key literal, not the default value - distinct."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-192-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-192-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-192-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-192-r1/internal/config/installenv.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-192-r1/cmd/configserver/main.go"
+  ]
+}

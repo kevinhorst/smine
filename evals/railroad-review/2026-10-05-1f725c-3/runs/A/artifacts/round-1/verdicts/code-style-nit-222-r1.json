@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-NIT-222-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at 1f725ce: smine-orchestrate SKILL.md L24 states seeding-volume leniency twice in one bullet — '(lenient on seeding volume, ...)' and 'large output volume is expected and acceptable'.",
+  "probe": "PROBE-CODE-STYLE-NIT-222-R1",
+  "script": "code-style-nit-222-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-222-r1/skills/smine/smine-orchestrate/SKILL.md",
+  "registry": "registry-code-style-nit-222-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-222-R1 -registry probes/registry-code-style-nit-222-r1.json -> skills/smine/smine-orchestrate/SKILL.md:24: bootstrap bullet restates seeding-volume leniency in a second sentence (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/code-style-nit-222-r1 -rule PROBE-CODE-STYLE-NIT-222-R1 -> skills/smine/smine-orchestrate/SKILL.md:1 hit (exit 1)",
+    "read": [
+      "skills/smine/smine-orchestrate/SKILL.md L24 (file added in this diff): '... with initial-setup framing (lenient on seeding volume, strict on schema, audit, and style) ... You are the initial setup agent: the machine is being seeded, large output volume is expected and acceptable.'",
+      "No other line of the file depends on the persona sentence; 'initial-setup framing' already names the mode.",
+      "known.json smine-orchestrate rows (L18, L19, L57, L61) cover other claims; no match"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-222-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-222-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-222-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-222-r1/skills/smine/smine-orchestrate/SKILL.md"
+  ]
+}

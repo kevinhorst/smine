@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-54-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at cmd/hooks/skill-invoke-gate.sh:29 — the only test driving the hook (cmd/tests/test_skill_invoke_gate.sh) builds every user line via user_line with array content; the string-content branch is unexercised.",
+  "probe": "PROBE-TESTS-NIT-54-R1",
+  "script": "tests-nit-54-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-54-r1/cmd/hooks/skill-invoke-gate.sh",
+  "registry": "registry-tests-nit-54-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-54-R1 -registry registry-tests-nit-54-r1.json -> exit 1: cmd/hooks/skill-invoke-gate.sh:29: string-content first-user-message branch is exercised by no cmd/tests script driving skill-invoke-gate.sh",
+    "read": [
+      "cmd/hooks/skill-invoke-gate.sh:27-31 if type == \"array\" then map(.text) | join else (. // \"\") end, then sed for REQUIRE-SKILL",
+      "cmd/tests/test_skill_invoke_gate.sh:33 user_line emits content:[{type:\"text\", text:$t}]; lines 40-44, 92-93 all use user_line",
+      "git grep skill-invoke-gate cmd/tests internal routines -> only test_skill_invoke_gate.sh"
+    ],
+    "validity": "Direct interpreter run on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails (fixture is no git repo). The real run going RED shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-54-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-54-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-54-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-54-r1/cmd/hooks/skill-invoke-gate.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-54-r1/cmd/tests/test_skill_invoke_gate.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-nit-54-r1/files.txt"
+  ]
+}

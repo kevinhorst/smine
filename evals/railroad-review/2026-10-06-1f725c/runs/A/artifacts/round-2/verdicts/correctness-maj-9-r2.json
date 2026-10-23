@@ -1,0 +1,17 @@
+{
+  "finding_id": "correctness-MAJ-9-r2",
+  "verdict": "confirmed",
+  "reason": "stateNoteFor (internal/server/proposals.go:581-605) builds the accepted/rejected/postponed state-note tooltip's action suffix from two bare Go string literals, \"click to filter this set\" and \"click to clear the filter\", with no translate() call anywhere in the function; groupViews already carries a `language string` parameter in scope (proposals.go:399) and uses it for the sibling count-tooltip text three lines above the stateNoteFor calls (lines 451-454), so the omission is a real gap, not an intentional exception. Neither literal string appears anywhere in i18n.go (confirmed by direct grep), so germanCatalog has no entry for either — on a German-language install (presentation-profile audience with language=de) these tooltips render as mixed German+English text. This is exactly the defect class correctness-33 names: \"vote-tooltip format strings\" must be wrapped through the t/translate overlay. The lane's effect (incorrect) and exposure (rare) cells both hold: incorrect because required translation is absent for an existing, reachable code path, not a hypothetical; rare because it is gated behind an explicit, non-default presentation-profile language=de install — within such an install the tooltip is reachable on nearly every normal view (whenever any group has a nonzero accepted/rejected/postponed count or an active state filter), but the lane's \"rare\" grading tracks the precondition (opted-into German profile), the same convention used elsewhere in this run's confirmed findings for profile-gated defects, so it is not lowered further.",
+  "probe": "none: bin/acdsl and bin/verifiers are both present and prebuilt in this worktree but every direct invocation of either binary is denied by this sandbox's tool-policy gate (candidate rule Bash(<abs-path>/bin/acdsl *) / Bash(<abs-path>/bin/verifiers *), no allow rule matches, two separate attempts on the two binaries); the only Makefile path that reaches `./bin/acdsl check` is the `audit` target, which depends on `build-audit` and would rebuild the acdsl runner and verifier binaries — forbidden under this task's 'never run a build' constraint. No registry-scoped, no-build route to the verdict command exists in this sandbox, so the claim went the manual path instead.",
+  "evidence": {
+    "read": [
+      "internal/server/proposals.go:581-605 (stateNoteFor): `action := \"click to filter this set\"` / `action = \"click to clear the filter\"`, no translate() call in the function",
+      "internal/server/proposals.go:399 (groupViews signature): `language string` parameter in scope, used at lines 451/453/454 via translate(language, ...) for the sibling tooltips passed into the same stateNoteFor calls",
+      "internal/server/i18n.go: germanCatalog map and translate(language, text) function; grep for the two literal strings across proposals.go and i18n.go finds them only as the bare literals in proposals.go, absent from the catalog"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-maj-9-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-maj-9-r2-r2/railroad-probes-r2.acdsl"
+  ]
+}

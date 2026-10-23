@@ -1,0 +1,8 @@
+- Recall 13.6% against the 352-entry g2 v1 golden: 48 matched, 304 missed, 11 false positives, 6 uncataloged genuine defects. Review score −0% (threshold 0.5).
+- 41 of 61 fixes applied, 18 wrong or incomplete: 1 broke `make test` (code-style-MIN-9, head red, CONDITIONAL), 10 left the golden defect in place.
+- 7 fixes changed code for findings the judge rejected: 4 non-defects or pre-existing code, 3 reworking the run's own round-1 fixes.
+- Hit the session limit after round 1, resumed 4 h later via `arm -resume`: 6h 16m wall, 23m active, $326.36, 452 permission denials.
+- Step misses 11%; the one that matters: `--fix-state fixed` never ran although a dozen applied fixes had no probe.
+- Sonnet 5 lanes found 61 candidates against the unseeded opus run's 151 (`2026-10-04-1f725c`) at similar cost; as fixer and checker it passed all 18 bad fixes.
+- Sonnet 5 is unusable for this task; Sonnet 5.5 test pending, expected similar. Opus is far more efficient here, Opus 5.5 extremely so.
+- Worker pins: lanes `1[sonnet:medium]`, station `opus:medium`, root opus/high, judges `opus`.

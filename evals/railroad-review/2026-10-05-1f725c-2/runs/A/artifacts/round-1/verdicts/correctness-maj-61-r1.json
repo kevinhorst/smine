@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-MAJ-61-r1",
+  "verdict": "confirmed",
+  "reason": "The smine-apply step-4 casual lockout applies only to a skills-kind proposal targeting an existing skill. The same step's context-kind routes edit shipped skills: the eviction route rewrites a skill's context: frontmatter, and smine-context/smine-memory declaration amendments edit skills/<path>/SKILL.md acdsl-context:. Neither route is gated, while smine-orchestrate L41 treats any edit to a non-origin: user SKILL.md on a casual install as a hard breach. Spec item correctness-97 requires that no run-branch commit touch a non-origin: user skill on casual installs.",
+  "probe": "PROBE-CORRECTNESS-MAJ-61-R1",
+  "script": "correctness-maj-61-r1-casual-lockout-scope.sh",
+  "fixture": "probes/fixtures/correctness-maj-61-r1/fail/SKILL.md",
+  "registry": "registry-correctness-maj-61-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-MAJ-61-R1 -registry probes/registry-correctness-maj-61-r1.json -> exit 1: skills/smine/smine-apply/SKILL.md:31: casual lockout is scoped to skills-kind proposals only, but context-kind routes in the same file edit skill frontmatter (eviction 'remove <ID> from <skill> context:') with no lockout",
+    "validity": "Same probe run against a scratch git repo (scratch/correctness-maj-61-r1/fixture-root, holding a copy of the fail fixture at skills/smine/smine-apply/SKILL.md) -> exit 1 with the hit at line 1. A direct /bin/bash run of the script was denied by tool policy, and acdsl -root needs a git repo, so the fixture was copied into a git-initialized scratch root.",
+    "read": [
+      "skills/smine/smine-apply/SKILL.md:31: 'before implementing a skills-kind proposal targeting an existing skill, read the target's frontmatter; without origin: user, do not touch the skill'. Same line, context route (d): 'remove <ID> from <skill> context: -> edit that skill's frontmatter line, two version surfaces'",
+      "skills/smine/smine-context/SKILL.md:48,70 and skills/smine/smine-memory/SKILL.md:58: proposals carry 'declare <entry-ID> in skills/<path>/SKILL.md acdsl-context:', with no casual guard",
+      "skills/smine/smine-orchestrate/SKILL.md:41: on a casual install, any commit modifying a skills/*/*/SKILL.md that lacks origin: user is a hard invariant breach, so the commit is reverted or the run rejected",
+      "spec item correctness-97 (lane manifest walk): smine-orchestrate rejects any run-branch commit touching a non-origin: user skill on casual installs"
+    ],
+    "notes": "The make -C <wt> acdsl ARGS=... form was denied by tool policy (ARGS value carries a path), so the verdict came from the linked prebuilt bin/acdsl. The cells are kept: exposure rare needs a casual install plus a voted or auto-applied context proposal that declares or evicts on a shipped skill."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-61-r1-casual-lockout-scope.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-maj-61-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-61-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-61-r1/fail/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-61-r1/pass/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-61-r1/fail-root/skills/smine/smine-apply/SKILL.md"
+  ]
+}

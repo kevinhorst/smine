@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-190-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at 1f725ce: the listItem->Session literal is spelled twice in internal/peek/peek.go (SessionIndex :109-116, SessionsById :144-150); the change added GitBranch to the SessionIndex copy only, so SessionsById returns Sessions with empty GitBranch - drift introduced by this range.",
+  "probe": "PROBE-CODE-STYLE-NIT-190-R1",
+  "script": "code-style-nit-190-r1.sh",
+  "registry": "registry-code-style-nit-190-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-190-R1 -registry probes/registry-code-style-nit-190-r1.json -root <worktree> -> exit 1: internal/peek/peek.go:145: listItem->Session literal repeated (also at line 110)",
+    "read": [
+      "git diff b4981b8..1f725ce internal/peek/peek.go: GitBranch added to Session and to the SessionIndex literal; SessionsById literal untouched",
+      "SessionsById callers internal/server/welcome.go:190,383; no .GitBranch read outside peek.go/peek_test.go - no live consumer, hence debt/eventually"
+    ],
+    "validity": "Direct fixture run was denied by tool policy (candidate rule Bash(/bin/bash *)); fixture authored, not executed. Real run RED on the claimed site.",
+    "scope_note": "The two-copy literal predates the range (SessionsByCwd vs SessionsById), but the range edited one copy and extended the Session type, creating the drift; in scope under the go.md touched-code rule."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-190-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-190-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-190-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-190-r1/peek.go"
+  ]
+}

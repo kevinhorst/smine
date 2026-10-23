@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-158-r1",
+  "verdict": "confirmed",
+  "reason": "TestLoadPolicy's unknown-mode (L117) and malformed-json (L124) literals omit the declared _shouldPass meta field (outcome left to the zero value), against RULE-GOLANG-TEST-011's 'every meta field is set explicitly, including zero values' clause for pass/fail tables; the probe is red at both lines. The proposed fix overreaches: the rule names meta fields only, so absent and content need no explicit zero values.",
+  "probe": "PROBE-CODE-STYLE-NIT-158-R1",
+  "script": "code-style-nit-158-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-158-r1/fail/policy_test.go",
+  "registry": "registry-code-style-nit-158-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-158-R1 -registry .../probes/registry-code-style-nit-158-r1.json -> exit 1: internal/acdsl/policy_test.go:117: case \"unknown-mode\", omits the _shouldPass meta field; internal/acdsl/policy_test.go:124: case \"malformed-json\", omits the _shouldPass meta field",
+    "validity": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-158-R1-FIXFAIL (same verifier, anchor on a worktree copy of the fail fixture) -> exit 1 at fail/policy_test.go:14; -FIXPASS on the corrected fixture -> '1 rule(s) OK'. The direct /bin/bash verifier run was denied by tool policy, so validity ran through acdsl check over the fixture copies under railroad-fixtures/ in the disposable worktree.",
+    "read": [
+      "internal/acdsl/policy_test.go L74-146 at 1f725ce: testCase declares _expected, _shouldPass, _taskExempt; L117-121 and L124-128 set only _id and content; L108-114 also omits _taskExempt (false)",
+      "context/rules/go.md RULE-GOLANG-TEST-011: validation-style tables -> 'Every meta field is set explicitly, including zero values'",
+      "known.json: code-style-NIT-68-r1 (conditional t.Run body) and code-style-NIT-12-r2 (boolean field names) cover different defects in this file"
+    ],
+    "commits": "file added in 22f663c, inside b4981b8..1f725ce"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-158-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-158-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-158-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-158-r1/fail/policy_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-158-r1/pass/policy_test.go"
+  ]
+}

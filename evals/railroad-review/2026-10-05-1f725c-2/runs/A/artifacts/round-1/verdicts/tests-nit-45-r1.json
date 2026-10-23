@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-45-r1",
+  "verdict": "confirmed",
+  "reason": "cmd/acdsl has no test files and no shell test (cmd/tests) mentions ACDSL-POLICY, policy or gated; the real acdsl/policy.json is mode free, so nothing exercises runCheck's policy-diagnostic merge at main.go:137",
+  "probe": "PROBE-TESTS-NIT-45-R1",
+  "script": "tests-nit-45-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-45-r1/cmd/acdsl/main.go",
+  "registry": "registry-tests-nit-45-r1.json",
+  "evidence": {
+    "probe_run": "cmd/acdsl/main.go:137: runCheck merges policy diagnostics into output and exit code, but no test expects an ACDSL-POLICY line from acdsl check: [PROBE-TESTS-NIT-45-R1]",
+    "validity_run": "bin/acdsl check -rule PROBE-TESTS-NIT-45-R1 anchored on an in-worktree fixture copy (no cmd/tests beside it) -> exit 1 (direct interpreter run denied by tool policy; copy removed afterwards)",
+    "read": [
+      "cmd/acdsl/main.go:122-151 — LoadPolicy/CheckPolicy, merge at 137 feeds output and exitViolations",
+      "git ls-files cmd/acdsl: only verifier subpackages carry tests; main package has none",
+      "grep policy|gated cmd/tests/test_acdsl.sh -> no match; ACDSL-POLICY appears only in main.go, policy.go, dist.go, the hook and internal/acdsl tests",
+      "acdsl/policy.json:2 mode free"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-45-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-45-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-45-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-45-r1/cmd/acdsl/main.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-nit-45-r1/files.txt"
+  ]
+}

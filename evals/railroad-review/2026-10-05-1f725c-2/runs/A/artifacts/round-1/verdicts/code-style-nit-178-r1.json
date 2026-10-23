@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-178-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at verdict.sh:511: squash_contained \"$from\" \"$branch\" (git merge-tree) is evaluated before the candidate loop, and the block acts only when is_candidate stays 0, so for a local FROM the merge-tree is dead work.",
+  "probe": "PROBE-CODE-STYLE-NIT-178-R1",
+  "script": "code-style-nit-178-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-178-r1/cmd/worktrees/_lib/verdict.sh",
+  "registry": "registry-code-style-nit-178-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-178-R1 -registry registry-code-style-nit-178-r1.json -> exit 1: cmd/worktrees/_lib/verdict.sh:511: squash_contained \"$from\" runs before the candidate check that alone decides whether the block acts",
+    "read": [
+      "cmd/worktrees/_lib/verdict.sh:511-518 — `if [ \"$all_transferred\" -eq 1 ] || squash_contained \"$from\" \"$branch\"; then` loop sets is_candidate=1 for a local FROM; only `[ \"$is_candidate\" -eq 0 ]` acts",
+      "cmd/worktrees/_lib/verdict.sh:104-109 — squash_contained runs git merge-tree --write-tree and git rev-parse; no side effects beyond its exit status",
+      "cmd/worktrees/_lib/verdict.sh:453-463 — layer-4 loop runs squash_contained per candidate only when not fully explained, so the lane's 'already computed' sub-claim holds only in that case; the dead-work claim does not depend on it"
+    ],
+    "validity": "Direct interpreter run of the script on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails because the fixture dir is no git repo (FileUniverse exit 128). The real run going RED with the exact message on the claimed line shows the probe is not blind.",
+    "known_ledger": "tests-NIT-34-r1 covers the same clause's missing test coverage — different substance, not a duplicate"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-178-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-178-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-178-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-178-r1/cmd/worktrees/_lib/verdict.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-178-r1/files.txt"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy reads the untrusted working-tree policy's mode when the base fails to resolve, so an agent in a gated/strict target repo can bypass the entire ACDSL self-management gate by writing acdsl/policy.json as {\"mode\":\"free\",\"base_ref\":\"nosuchref\"}, making acdsl check return zero diagnostics despite the committed base policy being authoritative.",
+      "fix": "In CheckPolicy's baseErr branch, decide free-vs-hard-error from a value the edit under test cannot forge: either attempt basePolicy via resolvable fallback paths (treating only the no-base-and-no-committed-policy case as free), or hard-error whenever base_ref is explicitly set in the working policy but fails to resolve, falling back to free only when base_ref is unset and no default candidates exist; add a test combining attacker-set mode \"free\" with an unresolvable base_ref against a committed gated base, expecting a hard error."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The new 85-line skill-invoke-gate.sh PreToolUse hook, which can deny any tool call session-wide, is shipped, tested, and registered in settings.json without any governing plan entry in plans/v1-2-1/, violating the repo doctrine that new guard/validation logic needs an approved plan example, and its Bash detection only catches the exact two-word 'cat <path>' shape.",
+      "fix": "Confirm with the implementer whether it was scoped under a plan not included in plans/v1-2-1/, or file the missing plan/Changes entry retroactively so the design intent (which sessions it applies to, what it catches vs. not) is recorded somewhere other than the hook's own comments."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "install.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The peek-port stale-kill loop passes lsof's potentially multi-line PID output as a single non-numeric argument to kill, which is silently swallowed by || true, leaving the stale peek process running and the fresh-respawn guarantee unmet with no operator signal.",
+      "fix": "Iterate over the PIDs (for p in $pid; do kill \"$p\"; done) or use xargs kill, drop the || true swallow, or echo-log when the previous listener is still up after the wait."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/bootstrap/run.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "cp of the skill-overrides overlay unconditionally overwrites .claude/settings.local.json in the main checkout with no backup whenever the overlay file exists, silently destroying a developer's hand-edited local settings on the next bootstrap run.",
+      "fix": "Back up an existing file before overwrite, or merge the skill-overlay keys into the existing JSON instead of a blind cp."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "cmd/configserver/main.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "startPeek/peekIdentity added a backLink parameter and --back-link peek argument not present in the peek-multiple-profiles plan's pseudocode, a silent signature deviation from a plan that is supposed to be a binding contract.",
+      "fix": "Add a one-line Changelog entry on the peek-multiple-profiles plan recording the backLink addition."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

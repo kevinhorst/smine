@@ -1,0 +1,32 @@
+{
+  "finding_id": "correctness-MAJ-52-r1",
+  "verdict": "confirmed",
+  "reason": "policyBase only strips a literal origin/ prefix: reproduced on main with base_ref refs/heads/main, where an uncommitted registry.json edit exits 1 (ACDSL-POLICY); the same tree with base_ref main exits 0.",
+  "probe": "PROBE-CORRECTNESS-MAJ-52-R1",
+  "script": "correctness-maj-52-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-52-r1-fail.go",
+  "registry": "registry-correctness-maj-52-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-52-R1 -registry probes/registry-correctness-maj-52-r1.json at 1f725ce -> exit 1: internal/acdsl/policy.go:215: base branch recognized only by trimming a literal origin/ prefix",
+    "read": [
+      "internal/acdsl/policy.go:209-216 — baseName := candidate; only origin/HEAD is resolved via abbrev-ref; baseName = strings.TrimPrefix(baseName, \"origin/\"); isBoundary = branch != baseName",
+      "manifest walk correctness-71: HEAD equal to the base tip is a vacuous pass; spec-6 D4: on the base branch the diff is vacuous by construction"
+    ],
+    "validity": "acdsl check -root scratch/correctness-maj-52-r1/fixroot (fixture copied to internal/acdsl/policy.go) -rule PROBE-CORRECTNESS-MAJ-52-R1 -> exit 1 at policy.go:7",
+    "reproduction": [
+      "git init -b main scratch/correctness-maj-52-r1/repo; acdsl/policy.json {\"mode\":\"gated\",\"base_ref\":\"refs/heads/main\"}, acdsl/registry.json {}; commit on main",
+      "edit acdsl/registry.json to '{ }' (uncommitted, on main, HEAD == base tip)",
+      "bin/acdsl check -root repo -> exit 1: acdsl/registry.json:1: policy(gated): acdsl/registry.json differs from the policy base [ACDSL-POLICY] (expected: vacuous pass on the base branch)",
+      "control: policy.json base_ref \"main\", same edit -> exit 0, 'acdsl: 0 rule(s) OK'"
+    ],
+    "cells": "agree with incorrect/rare — reachable only with a non-default base_ref naming a full ref or a non-origin remote"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-52-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-52-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-maj-52-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-52-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-maj-52-r1/repo",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-maj-52-r1/fixroot"
+  ]
+}

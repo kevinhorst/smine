@@ -1,0 +1,48 @@
+{
+  "round": 1,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "source": "git diff --numstat (names and counts only)",
+  "high": {
+    "reason": "permission grants and guards, persisted data, concurrency, destructive worktree operations, install surfaces",
+    "files": [
+      "internal/acdsl/policy.go",
+      "acdsl/policy.json",
+      "acdsl/policy.schema.json",
+      "cmd/hooks/acdsl-policy-guard.sh",
+      "cmd/hooks/read-gate.sh",
+      "cmd/hooks/skill-invoke-gate.sh",
+      "cmd/hooks/worktree-sessionstart.sh",
+      "settings/claude_code/settings.json",
+      "cmd/sync/sync_hooks.sh",
+      "cmd/sync/sync_settings.sh",
+      "cmd/sync/sync_skills.sh",
+      "internal/repos/registry.go",
+      "internal/server/profilesettings.go",
+      "internal/server/config_sync.go",
+      "internal/server/statuscache.go",
+      "internal/server/repos.go",
+      "internal/server/bootstrap.go",
+      "internal/config/installenv.go",
+      "internal/sessions/sessions.go",
+      "internal/routines/plist.go",
+      "internal/routines/routines.go",
+      "cmd/bootstrap/run.sh",
+      "cmd/worktrees/_lib/verdict.sh",
+      "cmd/worktrees/remove_agent_worktrees.sh",
+      "install.sh",
+      "install.ps1",
+      "routines/_lib/worktree.sh",
+      "routines/smine-nightly/run.sh"
+    ]
+  },
+  "medium": {
+    "reason": "business logic and error handling",
+    "files": "every other non-test Go, shell and JavaScript file of the diff"
+  },
+  "low": {
+    "reason": "tests, templates, styles, docs, changelogs, skill prose",
+    "files": "test files, internal/server/templates/**, internal/server/assets/**, docs/**, *.md, changelog.json"
+  },
+  "directionSelection": "explicit directions arg binds: code-style correctness tests security — security also implied by high-tier permission and persisted-data files"
+}

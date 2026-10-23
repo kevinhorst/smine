@@ -1,0 +1,40 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "BLOCKER",
+      "claim": "The base_ref field in acdsl/policy.json is read from the attacker-controlled working-tree policy in policyBase, so a branch that commits base_ref pointing at its own branch name makes isBoundary false and CheckPolicy return zero diagnostics, fully bypassing gated/strict enforcement (confirmed exploitable).",
+      "fix": "Derive isBoundary/base without trusting any field from the working policy: resolve the default base once using only the fixed candidate chain (origin/HEAD, origin/main, main, master), locate the authoritative base policy from that, and honor a BaseRef override only when it comes from the base-committed policy, re-deriving isBoundary from it."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The new mandatory-skill-invocation enforcement hook skill-invoke-gate.sh, the narrowed read-gate.sh subagent exemption, and the v8.4 reversal of the plan-documented v8.3 --no-context decision all shipped with no plan document under plans/v1-2-1/, leaving a security/session-behavior-affecting change untraceable.",
+      "fix": "Backfill a change plan or append the reversal and new-hook rationale to the observability plan's Changelog per RULE-PLAN-049, or confirm with the author this was deliberately fast-followed outside the plan process."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "settings/claude_code/settings.json",
+      "line": 105,
+      "severity": "MINOR",
+      "claim": "The four Edit(acdsl/**)/Write(acdsl/**) permissions.ask entries were removed with no mention in the acdsl-policy-modes plan, whose scope explicitly framed settings enforcement as additive documentation only.",
+      "fix": "Add a one-line Changelog note tying the removal to acdsl-policy-guard.sh replacing the ask entries."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/acdsl",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "TestDistShipsReachCoveredSliceWithBinaries fails in this review checkout because the harness's context-deployment step overwrote acdsl/ files with dist-target content not part of the reviewed commits — an environment artifact, not a PR regression, flagged so it is not misattributed by the next make audit run in a similarly-prepared worktree.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

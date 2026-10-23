@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-164-r1",
+  "verdict": "confirmed",
+  "reason": "Package doc (evals.go:1-5) still names only flat evals/<skill>-<date>/ and evals/<skill>-<hex>/ while this diff adds the nested evals/<skill>/<date>-<hash>/ loader (L248-264) and makes ManifestStub emit it (L285); probe RED at evals.go:1.",
+  "probe": "PROBE-CODE-STYLE-NIT-164-R1",
+  "script": "code-style-nit-164-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-164-r1/fail.go",
+  "registry": "registry-code-style-nit-164-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-164-R1 -registry probes/registry-code-style-nit-164-r1.json at 1f725ce -> exit 1: internal/evals/evals.go:1: package doc names only the flat evals/<skill>-<date|hex>/ layouts; nested evals/<skill>/<date>-<hash>/ (loaded and emitted by ManifestStub) is missing",
+    "read": [
+      "internal/evals/evals.go:1-5 — package doc: 'from evals/<skill>-<date>/ (nightly routine) or evals/<skill>-<hex>/ (matrix mode) directories'; untouched by the diff",
+      "git diff b4981b8..1f725ce internal/evals/evals.go — EvalDir doc (L33-34) and LoadForSkill doc (L217-222) updated for the nested layout, ManifestStub Output changed to filepath.Join(evalsDir, skillName, \"<date>-<hash>\", \"eval.json\"); package doc not",
+      "git grep '^// Package evals' internal/evals -> only evals.go:1, so no other file carries the package doc",
+      "known.json rows on evals.go: code-style-NIT-77-r1 (EvalDir.Dir field comment L37), NIT-78-r1 (duplicated loop), NIT-8-r2 (regexp compiled per call) — none is the package doc"
+    ],
+    "validity": "acdsl check -root scratch/code-style-nit-164-r1/fixroot (fixture at internal/evals/evals.go, git init) -rule PROBE-CODE-STYLE-NIT-164-R1 -> exit 1 at evals.go:1",
+    "cells": "agree with cosmetic/always — every reader of the package doc sees the stale layout list"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-164-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-164-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-164-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-164-r1/fail.go"
+  ]
+}

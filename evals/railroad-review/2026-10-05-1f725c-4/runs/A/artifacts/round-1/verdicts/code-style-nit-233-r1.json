@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-233-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at launchctl_darwin_test.go:26 and :47 — the renamed case \"probe fixture: enabled and disabled labels both captured\" and the added case \"unknown state ignored\" are space/colon ids passed to t.Run, against RULE-GOLANG-TEST-006 kebab-case ids.",
+  "probe": "PROBE-CODE-STYLE-NIT-233-R1",
+  "script": "code-style-nit-233-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-233-r1-fail_test.go",
+  "registry": "registry-code-style-nit-233-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-233-R1 -registry registry-code-style-nit-233-r1.json -> exit 1: internal/routines/launchctl_darwin_test.go:26 and :47: test case id is not kebab-case",
+    "read": [
+      "internal/routines/launchctl_darwin_test.go:26 name: \"probe fixture: enabled and disabled labels both captured\" (renamed in diff)",
+      "internal/routines/launchctl_darwin_test.go:47 name: \"unknown state ignored\" (added in diff); :58 t.Run(tc.name, ...)",
+      "context/rules/go.md:950-952 Test case IDs MUST use kebab-case"
+    ],
+    "validity": "Direct /bin/bash run denied by tool policy; the script's exact grep -nE pattern over the fail fixture hit line 5.",
+    "notes": "Untouched pre-existing cases (\"empty output\", etc.) share the style but are outside the diff. Known NIT-85 (anonymous struct table shape) is a different rule."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-233-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-233-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-code-style-nit-233-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-233-r1-fail_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/code-style-nit-233-r1/files.txt"
+  ]
+}

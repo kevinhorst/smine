@@ -1,0 +1,48 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "settings/claude_code/settings.json",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The ask permission entries for acdsl/** and **/*.acdsl were deleted without replacement, so with defaultMode acceptEdits ACDSL rule/registry edits in this repo need no confirmation while the new acdsl-policy-guard.sh hook is a no-op under smine's own free policy mode, and no plan, commit message, or README documents the removal as deliberate.",
+      "fix": "Confirm whether the removal was the deliberate unattended-routine fix; if so add a one-line comment/commit note so the next person doesn't restore it, and if not restore the ask (or a deny) entries."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/shell/shell.go",
+      "line": 19,
+      "severity": "MAJOR",
+      "claim": "RunSync duplicates Run's entire ~20-line body verbatim (only the timeout constant and error-message prefix differ), so a future fix to one entry point can silently miss the other.",
+      "fix": "Extract a private run(ctx, dir, timeout, name, args...) (string, error) and have both exported functions call it with their own timeout and message prefix."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The post-invocation context-read denial only inspects the Read tool and a literal two-token cat command, skipping any Bash command with quotes or shell metacharacters and tools like grep/head/sed/less, so the eval-lane context isolation is a nudge, not a wall.",
+      "fix": "Know that the isolation is best-effort if that assumption is ever load-bearing for eval validity; widen the hook's Bash-command matching (e.g., strip a matched pair of quotes before the safe-skip) if a hard guarantee is needed."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "install.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The lsof -tiTCP:<port> | kill pattern, now duplicated for PEEK_PORT and PEEK_CONTROL_PORT, silently no-ops when lsof returns multiple PID lines because kill gets one malformed multi-line argument swallowed by || true and the kill -0 wait-loop falls through as if the process were gone.",
+      "fix": "Replace the three copies of the latent multi-pid pattern with a shared helper that handles multiple PIDs."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "CheckPolicy's basePolicy() re-resolution step deviates from the plan's Changes-section pseudocode — named for the record as a sanctioned improvement exercised by a regression test, not a problem.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

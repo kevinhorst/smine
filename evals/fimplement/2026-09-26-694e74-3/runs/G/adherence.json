@@ -1,0 +1,424 @@
+{
+  "entries": [
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-002b",
+      "title": "Runbook opt-in",
+      "verdict": "not-applicable",
+      "evidence": "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:631",
+      "note": "Plan's Test runbook is N/A and no runbook arg; nothing to opt into, none run."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-002c",
+      "title": "Findings doc units",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "Input is a change plan, not a review-findings doc."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-003",
+      "title": "Open rows OK",
+      "verdict": "not-applicable",
+      "evidence": "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:140",
+      "note": "Open questions: None."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-004",
+      "title": "Errata supersede plan",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No errata supplied with the invocation."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-007",
+      "title": "Handoff rendering input",
+      "verdict": "not-applicable",
+      "evidence": "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:3",
+      "note": "Change-route plan, not an fdesign handoff rendering."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-001",
+      "title": "Any input accepted",
+      "verdict": "followed",
+      "evidence": "trace.md:2",
+      "note": "Took the plan path, resolved it to the worktree copy and read it (trace.md:3)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "title": "Read whole plan",
+      "verdict": "followed",
+      "evidence": "trace.md:3",
+      "note": "Full-file Read of the plan before any edit; Contracts & sweeps later executed at trace.md:80."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-005",
+      "title": "Caveman requires skill",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "caveman not requested."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "title": "Target-tier proceed",
+      "verdict": "followed",
+      "evidence": "trace.md:3",
+      "note": "Plan target opus; session model claude-opus-5-5 (result.json) is at target, so proceeding silently is the stated behavior."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-006b",
+      "title": "Target-tier stop",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No tier gap."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-005b",
+      "title": "Route around denials",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:83",
+      "note": "No permission denials in the run (result.json permissionDenials empty)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-001",
+      "title": "Re-verify against tree",
+      "verdict": "followed",
+      "evidence": "trace.md:8",
+      "note": "Read ops.rs/error.rs/main.rs/wire.rs and grepped usages (trace.md:8-12) before Rust edits; read Go sources (38-40), settings (61-63), close skill (68-70), fact (76-77) before each area's edits."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-002a",
+      "title": "Verify touch points",
+      "verdict": "followed",
+      "evidence": "trace.md:11",
+      "note": "Grepped OpOutcome/enum_wire_strings_are_pinned, read wire.rs at the cited offset (12), located ops_remove/from_inside_worktree fixtures (31-33), settings line 79 and hook group (61-63), fact sentence (76)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-002c",
+      "title": "Touch-point defect stop",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No plan claim failed during grounding."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-002b",
+      "title": "Ground w/o plan",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "A plan was provided."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-003",
+      "title": "Prerequisites present",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "Plan assumes no generated code, migrations or running infra before implementation."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-004",
+      "title": "Exemplar per unit",
+      "verdict": "followed",
+      "evidence": "trace.md:31",
+      "note": "Located ops_remove/from_inside_worktree siblings for ops_remove_dry_run (31-33) and read prompts.go holding commitPattern (40) before adding closeCheckPattern."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-005a",
+      "title": "Apply permissions once",
+      "verdict": "not-applicable",
+      "evidence": "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:154",
+      "note": "Only Permissions row targets the global template layer, no settings.local.json rows; implemented as a settings.json edit (trace.md:64)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-005c",
+      "title": "Permission gap",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:83",
+      "note": "No unit was blocked by permissions."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-003b",
+      "title": "Test spec honored",
+      "verdict": "followed",
+      "evidence": "trace.md:56",
+      "note": "Plan's case tables implemented: _expectedClose in TestState_Transitions, close/echo TestRun cases, steps_follow_the_plan, ops_remove_dry_run (diff.patch:285,403,588-716,793-824)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-005b",
+      "title": "No pre-enumeration theater",
+      "verdict": "followed",
+      "evidence": "trace.md:44",
+      "note": "DecideCommit rename done directly, no up-front touch-list enumeration; residual check was the plan's own sweep (trace.md:80)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-001",
+      "title": "One unit only",
+      "verdict": "followed",
+      "evidence": "trace.md:13",
+      "note": "Dependency order: agentwt Rust (14-34), sessiontitle Go (41-59), settings wiring (64-65), close skill (72-74), fact + context.json (78-79)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-002",
+      "title": "Write to contract",
+      "verdict": "followed",
+      "evidence": "trace.md:71",
+      "note": "Edits mirror plan §1-§10 signatures; skill step written per the plan's clauses as stated."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-003a",
+      "title": "Gate before advance",
+      "verdict": "violated",
+      "evidence": "trace.md:37",
+      "note": "Rust gate (make rust-test, trace.md:36) still running when the run moved on to the Go unit (38-50); green only confirmed at 51-53. Rust lint/fmt never gated per unit (check.log rust-lint red). Settings/skill/fact units had no gate before advancing."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-004",
+      "title": "Advance",
+      "verdict": "followed",
+      "evidence": "trace.md:53",
+      "note": "Advanced through units in dependency order."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-005a",
+      "title": "Compiler-driven cascades",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:44",
+      "note": "Only a single-file DecideCommit rename with in-file call sites; no multi-site cascade to drive."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-006a",
+      "title": "Two-attempt ceiling",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:53",
+      "note": "No rejected attempts on any unit."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-006b",
+      "title": "Reverse-pass review",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:86",
+      "note": "No human-written version to review."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-002b",
+      "title": "Capture replaces targets",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No UI change."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "title": "No proxy claim",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:86",
+      "note": "Run made no Definition-of-Done claim at all, proxy or otherwise."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "title": "Verify observable path",
+      "verdict": "skipped",
+      "evidence": "trace.md:86",
+      "note": "Live checks (V4 dry-run in a clean worktree; V5-V8 /close behavior) never run; run ended waiting on audit."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-002a",
+      "title": "UI capture required",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No UI-touching change."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-003",
+      "title": "Delegate running-app check",
+      "verdict": "skipped",
+      "evidence": "trace.md:86",
+      "note": "Running-app check required by V4-V8; /verify never invoked."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-004",
+      "title": "Data-dir exclude",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No data directory relocated."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-005a",
+      "title": "Export must listen",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No env var exporting to a host:port."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-005b",
+      "title": "Probe the port",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No exported endpoint."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "title": "Report checklist gap",
+      "verdict": "skipped",
+      "evidence": "trace.md:86",
+      "note": "V2 ran (trace.md:60) and V1 was started (83) but never read; V4-V8 not exercised and no gap enumerated in the final message."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "title": "Gap not done",
+      "verdict": "followed",
+      "evidence": "trace.md:86",
+      "note": "Checklist gap existed; run did not mark done ('audit is still running … after that come the live dry-run checks')."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "title": "Unreachable risk locus",
+      "verdict": "skipped",
+      "evidence": "trace.md:86",
+      "note": "Hook routing on exit 3 vs PostToolUse (V5) and the ~-path if rule firing (V6) never executed."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-001",
+      "title": "Stop background processes",
+      "verdict": "skipped",
+      "evidence": "trace.md:83",
+      "note": "make audit started in background (83-84) and still running when the run ended (86); never stopped or awaited."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-002",
+      "title": "Hand off commit",
+      "verdict": "skipped",
+      "evidence": "trace.md:86",
+      "note": "/package-commit named as next step but never invoked; worktree left uncommitted."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-003",
+      "title": "Report against plan",
+      "verdict": "skipped",
+      "evidence": "trace.md:86",
+      "note": "Final message is a one-line status; no per-unit gate results or verification outcome."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "title": "Never self-delegate",
+      "verdict": "followed",
+      "evidence": "trace.md:13",
+      "note": "All work in the root loop; no Agent/delegate spawn (result.json toolCalls)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-002",
+      "title": "Spawn prompt order",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No delegation."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-004a",
+      "title": "Discipline by mode",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No delegated runner."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-004b",
+      "title": "Ceiling either way",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No delegated runner."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-005b",
+      "title": "Not a gate",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No delegated runner; input was a full plan."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "title": "Chained skills direct",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:86",
+      "note": "No chained skill invoked."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-009a",
+      "title": "Attempt-ceiling relay semantics",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No delegated runner."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-009b",
+      "title": "Continue closes counter",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "No delegated runner."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-005a",
+      "title": "Gate instruction",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:13",
+      "note": "Not a delegated run; no relay-class gate fired."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-001a",
+      "title": "External stop gates",
+      "verdict": "partial",
+      "evidence": "trace.md:1",
+      "note": "Implementing gate entries loaded; but the audit-green gate (plan S5) was left unresolved: audit backgrounded and never read (83-86), and it is red (check.log rust-lint fmt diff)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-002",
+      "title": "Missing input",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "Full plan provided."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-003b",
+      "title": "No substitution",
+      "verdict": "followed",
+      "evidence": "trace.md:71",
+      "note": "No mechanism substituted or [USER] D1 demoted; plan clauses followed as written."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-004b",
+      "title": "No-plan scope",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "Plan provided."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-003a",
+      "title": "Unhonorable contract",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:53",
+      "note": "Contract held; no signature the tree refused."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-004a",
+      "title": "Scope creep",
+      "verdict": "followed",
+      "evidence": "trace.md:80",
+      "note": "git status sweep: changed files match the plan's Changes table exactly (15 files)."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-004c",
+      "title": "Rework stops",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:80",
+      "note": "No architecture rework arose."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-005",
+      "title": "User override",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "No driver or discovery contradicted [USER] decision D1."
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-006",
+      "title": "Escalation trigger",
+      "verdict": "not-applicable",
+      "evidence": "trace.md:3",
+      "note": "Not a handoff rendering."
+    }
+  ]
+}

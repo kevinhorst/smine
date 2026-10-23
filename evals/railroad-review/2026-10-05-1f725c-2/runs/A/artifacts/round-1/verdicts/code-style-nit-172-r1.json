@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-172-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: _session_list.html:35 carries the snippet <summary> expression byte-identical to _proposal_card.html:81; git grep finds no shared partial.",
+  "probe": "PROBE-CODE-STYLE-NIT-172-R1",
+  "script": "code-style-nit-172-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-172-r1/templates/_session_list.html",
+  "registry": "registry-code-style-nit-172-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-172-R1 -registry probes/registry-code-style-nit-172-r1.json -root <worktree> -> exit 1: internal/server/templates/_session_list.html:35: snippet <summary> expression duplicated verbatim from _proposal_card.html — no shared partial; 1 violation(s)",
+    "read": [
+      "git grep 'technical detail' -- internal cmd at 1f725ce: only i18n.go:21 (catalog), _proposal_card.html:81 and _session_list.html:35 — the two template lines are identical",
+      "templates already compose partials ({{template \"_repo_path.html\"}}, {{template \"_proposal_card.html\"}}), so a {{define}} partial is the in-repo pattern"
+    ],
+    "validity": "Direct interpreter run of the script over scratch/code-style-nit-172-r1/files.txt was denied by tool policy (candidate Bash(/bin/bash *)); fixture is in place. The real run went RED with the expected message on the claimed file, so no GREEN verdict depends on the unexecuted self-check."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-172-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-172-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-172-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-172-r1/templates/_session_list.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-172-r1/templates/_proposal_card.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-172-r1/files.txt"
+  ]
+}

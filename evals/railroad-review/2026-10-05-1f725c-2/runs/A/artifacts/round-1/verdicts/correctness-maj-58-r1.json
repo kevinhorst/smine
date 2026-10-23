@@ -1,0 +1,29 @@
+{
+  "finding_id": "correctness-MAJ-58-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at skills/smine/smine-orchestrate/SKILL.md:61: duty 5 assumes the invoking wrapper appended registry paths, and bootstrap mode claims duties 3-7 are identical, but cmd/bootstrap/run.sh only reads permissions.additionalDirectories (L79-84) and never writes it. The only writer is routines/smine-nightly/run.sh L298-308, so the reconcile that spec item correctness-60 requires never happens in bootstrap.",
+  "probe": "PROBE-CORRECTNESS-MAJ-58-R1",
+  "script": "correctness-maj-58-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-58-r1",
+  "registry": "registry-correctness-maj-58-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-MAJ-58-R1 -registry probes/registry-correctness-maj-58-r1.json -> exit 1: skills/smine/smine-orchestrate/SKILL.md:61: duty 5 says the invoking wrapper appends registry paths to additionalDirectories and bootstrap mode runs the same duties, but bootstrap wrapper cmd/bootstrap/run.sh never writes .permissions.additionalDirectories",
+    "validity": "bin/acdsl check -root probes/fixtures/correctness-maj-58-r1 (git-initialised mini-root holding the SKILL.md claim and a read-only wrapper) -> exit 1, SKILL.md:5 hit. The first attempt went GREEN because a byte-wise '.' failed to match the en dash in '3–7'; the pattern was fixed to 'below are identical'. The probe's assignment regex matches nightly run.sh:304, so the proposed fix would turn it green.",
+    "read": [
+      "skills/smine/smine-orchestrate/SKILL.md:24 'duties 3–7 below are identical'; :61 'The invoking wrapper appends registry paths to permissions.additionalDirectories before this stage ... never attempt the write yourself'",
+      "cmd/bootstrap/run.sh:77-85 reads additionalDirectories only; :110,161 runs '/smine-orchestrate bootstrap' with no reconcile before it",
+      "routines/smine-nightly/run.sh:298-308 is the only append-only writer (nightly stage 3 only)",
+      "internal/server/repos.go:596 grants additionalDirectories only when the add-dir checkbox is set, so a repos.json entry can lack the grant at bootstrap time (exposure rare)",
+      "manifest walk item correctness-60: bootstrap mode 'runs the same sync/context-pack/reconcile duties'",
+      "known.json: no entry matches this claim (the smine-orchestrate rows cover the clean-tree precondition and the skill-map link)"
+    ],
+    "notes": "The make-acdsl form was denied by tool policy (an undeclared NAME= value), so the run used the repo's linked bin/acdsl directly."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-58-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-58-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-maj-58-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-58-r1",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-maj-58-r1/files.txt"
+  ]
+}

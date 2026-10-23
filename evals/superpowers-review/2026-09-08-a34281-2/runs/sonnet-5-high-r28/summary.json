@@ -1,0 +1,48 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "BLOCKER",
+      "claim": "The ACDSL self-management gate in gated/strict mode can be trivially bypassed because CheckPolicy resolves the authoritative base commit from the agent-editable working-copy acdsl/policy.json base_ref, so pointing base_ref at a pre-policy commit makes basePolicy fall back to the working policy and mode \"free\" short-circuits before surfaceDelta runs.",
+      "fix": "Resolve the base commit only from fixed, non-agent-controlled candidates (origin/HEAD, origin/main, main, master); if base_ref remains an override it must come from outside the working tree (e.g. a harness-supplied environment variable) or the resolved base must be validated as an ancestor of a fixed candidate ref, and basePolicy's no-policy-at-base fallback to the working copy must never apply when base_ref came from the working copy."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "acdsl/policy.json",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The shipped acdsl/policy.json sets mode \"gated\" with no dist_mode field, contradicting the approved plan's D11/D8 decision (mode \"free\" for smine plus dist_mode \"gated\" for targets) and risking gated mode flagging smine's own sanctioned generation-flow commits.",
+      "fix": "Confirm whether this was a deliberate late decision (and if so update the plan's Changelog and D11/D8) or a rollout gap to be corrected back to the free/dist_mode split."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/server/config_sync.go",
+      "line": 37,
+      "severity": "MAJOR",
+      "claim": "The \"Apply overrides\" direction of handleConfigSyncOp copies the live settings file's raw bytes into the repo-tracked fragment without re-templating, baking a literal machine-specific port over the {{PEEK_CONTROL_PORT}} marker and breaking multi-profile port isolation for later syncs.",
+      "fix": "Either re-collapse the live port back to the marker before writing into the fragment (the inverse of ExpandInstallMarkers), or block/warn when \"Apply overrides\" would write a marker-bearing section."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 64,
+      "severity": "MINOR",
+      "claim": "The Bash-read detection only recognizes an unquoted two-token cat invocation, so a quoted command like cat \"docs/rules/go.md\" bypasses the don't-re-read-injected-context nudge.",
+      "fix": "Tighten the pattern match (e.g. case \"$command\" in \"cat \"*) after stripping matched quotes) so the common quoted case is caught."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "plans/v1-2-1/session-context-report/",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The session-context-report plan is present but none of its files (sessionreport.go, session_report.html, contextRecord) exist at either endpoint of the diff, so it may be a dropped deliverable rather than deliberately out of scope.",
+      "fix": "Confirm the plan is deliberately out of scope for 1.2.1 rather than a dropped deliverable."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

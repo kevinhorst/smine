@@ -1,0 +1,26 @@
+{
+  "finding_id": "correctness-INF-64-r1",
+  "verdict": "confirmed",
+  "reason": "policy.go:216 returns isBoundary = branch != baseName with no HEAD-vs-base-tip comparison anywhere in the file, while spec-6 (correctness-57; sketch L226-227 'isBoundary is false when HEAD == base tip') states the base-tip rule; the code comment at L189-192 records the deviation as deliberate. The probe goes RED at policy.go:216. INFO stands — a recorded deviation for the spec owner, no fix.",
+  "probe": "PROBE-CORRECTNESS-INF-64-R1",
+  "script": "correctness-inf-64-r1.sh",
+  "fixture": "probes/fixtures/correctness-inf-64-r1/internal/acdsl/policy.go",
+  "registry": "registry-correctness-inf-64-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-INF-64-R1 -registry probes/registry-correctness-inf-64-r1.json -> exit 1: internal/acdsl/policy.go:216: isBoundary decided by branch name, not by HEAD == base tip",
+    "read": [
+      "internal/acdsl/policy.go:189-219 — comment 'isBoundary is false only when the checked-out branch IS the base branch … a fresh agent branch at the base tip is a boundary'; L216 return base, branch != baseName, nil",
+      "spec-6-raw.md:226-227 — '// policyBase resolves merge-base(HEAD, base ref). isBoundary is false when HEAD == base tip (running on the base branch itself)'",
+      "spec-6-raw.md:74 (D4) — agent worktrees on claude/* can never self-escalate; on the base branch the diff is vacuous by construction",
+      "correctness-57: HEAD at the base tip passes vacuously"
+    ],
+    "validity": "fixture validity run not executable here: direct `/bin/bash <script>` / `bash <script>` are denied by tool-policy and `acdsl check -root <fixture dir>` needs a git repo; the real run's RED with the script's own message shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-inf-64-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-inf-64-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-inf-64-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-inf-64-r1/internal/acdsl/policy.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-inf-64-r1/files.txt"
+  ]
+}

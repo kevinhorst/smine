@@ -1,0 +1,90 @@
+{
+  "round": 1,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "source": "git diff --numstat names + ACTION-REVIEW-RISK-001..003 tiers; directions bound by explicit arg",
+  "tiers": {
+    "high": {
+      "reason": "permission gates and grants, persisted settings/registries, process launch, worktree removal, policy enforcement, concurrency (cache)",
+      "paths": [
+        "cmd/hooks/acdsl-policy-guard.sh",
+        "cmd/hooks/read-gate.sh",
+        "cmd/hooks/skill-invoke-gate.sh",
+        "cmd/hooks/worktree-sessionstart.sh",
+        "settings/claude_code/settings.json",
+        "cmd/sync/sync_settings.sh",
+        "cmd/sync/sync_skills.sh",
+        "cmd/sync/sync_hooks.sh",
+        "internal/acdsl/policy.go",
+        "acdsl/policy.json",
+        "acdsl/policy.schema.json",
+        "internal/repos/registry.go",
+        "internal/server/profilesettings.go",
+        "internal/server/bootstrap.go",
+        "internal/server/statuscache.go",
+        "internal/server/repos.go",
+        "internal/server/presentation.go",
+        "internal/sessions/sessions.go",
+        "internal/config/installenv.go",
+        "internal/shell/shell.go",
+        "cmd/bootstrap/run.sh",
+        "install.sh",
+        "install.ps1",
+        "cmd/worktrees/remove_agent_worktrees.sh",
+        "cmd/worktrees/_lib/verdict.sh",
+        "routines/smine-nightly/run.sh",
+        "routines/_lib/worktree.sh",
+        "cmd/configserver/main.go",
+        "cmd/configserver/install_windows.go"
+      ]
+    },
+    "medium": {
+      "reason": "business logic, error handling, skill protocols and workflow scripts",
+      "paths": [
+        "internal/acdsl/dist.go",
+        "internal/acdsl/git.go",
+        "internal/config/config.go",
+        "internal/contextdocs/sync.go",
+        "internal/evals/evals.go",
+        "internal/peek/peek.go",
+        "internal/routines/",
+        "internal/skills/sync.go",
+        "internal/server/*.go (non-test, not listed high)",
+        "internal/server/templates/",
+        "cmd/acdsl/",
+        "cmd/worktrees/print_agent_worktrees_status.sh",
+        "routines/ (other)",
+        "skills/**/workflows/*.js",
+        "skills/**/SKILL.md",
+        "skills/smine/smine-batch/reference/schema.json",
+        "Makefile",
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "low": {
+      "reason": "tests, fixtures, docs, changelogs, styles, version bumps",
+      "paths": [
+        "**/*_test.go",
+        "cmd/tests/",
+        "acdsl/testdata/",
+        "acdsl/README.md",
+        "acdsl/rules.acdsl",
+        "docs/",
+        "README.md",
+        "routines/README.md",
+        "skills/README.md",
+        "skills/**/changelog.json",
+        "context/",
+        "internal/server/assets/style.css",
+        "cmd/configserver/version.go",
+        "installer/windows/smine.iss",
+        "settings/claude_code/presentation-profile.de.md",
+        ".gitignore",
+        "cmd/configserver/com.smine.configserver.plist.template",
+        "routines/**/*.plist.template",
+        "routines/skill-eval/default-disabled"
+      ]
+    }
+  },
+  "directionSelection": "explicit directions arg binds: code-style, correctness, tests, security; high tier on gates/persisted data would add security — already present"
+}

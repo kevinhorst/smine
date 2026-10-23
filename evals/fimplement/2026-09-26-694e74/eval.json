@@ -1,0 +1,1715 @@
+{
+  "eval": {
+    "date": "2026-09-26",
+    "notes": "",
+    "notesBullets": [
+      "arms: opus-high-no-serena, sonnet-high-no-serena",
+      "start commit 694e7466",
+      "judge: opus"
+    ],
+    "skill": "fimplement",
+    "skillMdPath": "evals/fimplement/2026-09-26-694e74/SKILL.md"
+  },
+  "metrics": [
+    {
+      "id": "smoke_pass",
+      "direction": "higher",
+      "label": "Smoke pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "wall_seconds",
+      "direction": "lower",
+      "label": "Wall time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "active_seconds",
+      "direction": "lower",
+      "label": "Active time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "output_tokens",
+      "direction": "lower",
+      "label": "Output tokens",
+      "source": "telemetry",
+      "unit": "tokens"
+    },
+    {
+      "id": "cost_usd",
+      "direction": "lower",
+      "label": "Cost",
+      "source": "telemetry",
+      "unit": "usd"
+    },
+    {
+      "id": "permission_denials",
+      "direction": "lower",
+      "label": "Permission denials",
+      "source": "telemetry",
+      "unit": "count"
+    },
+    {
+      "id": "check_pass",
+      "direction": "higher",
+      "label": "Check pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "step_miss_pct",
+      "direction": "lower",
+      "label": "Step misses",
+      "source": "judge",
+      "unit": "%"
+    },
+    {
+      "id": "defects_major",
+      "direction": "lower",
+      "label": "Major+ defects",
+      "source": "judge",
+      "unit": "count"
+    },
+    {
+      "id": "quality_rank",
+      "direction": "lower",
+      "label": "Quality rank",
+      "source": "judge",
+      "unit": "rank"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 721
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 721
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 33860
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 5.296387400000001
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "opus-high-no-serena-r1",
+      "value": 1
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 11.11111111111111
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "opus-high-no-serena-r1",
+      "value": 1
+    },
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 984
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 984
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 36774
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 1.1356198
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "opus-high-no-serena-r2",
+      "value": 3
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 15.384615384615385
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "opus-high-no-serena-r2",
+      "value": 2
+    },
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": false
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": false
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 1099
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 1099
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 56453
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 2.3708367999999997
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 5
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 40
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 2
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r1",
+      "value": 4
+    },
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": true
+    },
+    {
+      "metricId": "check_pass",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 1214
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 1214
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 61452
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 2.3783846
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "stream envelope permission_denials count; peek telemetry partial",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 5
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 25.925925925925927
+    },
+    {
+      "metricId": "defects_major",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 0
+    },
+    {
+      "metricId": "quality_rank",
+      "note": "",
+      "runId": "sonnet-high-no-serena-r2",
+      "value": 3
+    }
+  ],
+  "probes": [
+    {
+      "name": "smoke",
+      "result": "check exited 2",
+      "ruleIds": [],
+      "runId": "sonnet-high-no-serena-r1"
+    }
+  ],
+  "rubric": [
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Any input accepted",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-intake-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Read whole plan",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-intake-002a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Target-tier proceed",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-intake-006a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Route around denials",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-ground-005b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Re-verify against tree",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-ground-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verify touch points",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-ground-002a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-GROUND-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Exemplar per unit",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-ground-004"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Test spec honored",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-003b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No pre-enumeration theater",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-005b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "One unit only",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-001"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Write to contract",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-002"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-003a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Gate before advance",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-003a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Advance",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-004"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-IMPL-005a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Compiler-driven cascades",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-impl-005a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No proxy claim",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-verify-007b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verify observable path",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-verify-001a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Delegate running-app check",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-verify-003"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Report checklist gap",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-verify-006a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Gap not done",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-verify-006b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Unreachable risk locus",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-verify-007a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Hand off commit",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-commit-002"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-COMMIT-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Report against plan",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-commit-003"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Never self-delegate",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-delegate-001a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Chained skills direct",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-delegate-007"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "External stop gates",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-stop-001a"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "No substitution",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-stop-003b"
+    },
+    {
+      "id": "SKILL-FIMPLEMENT-STOP-004a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Scope creep",
+      "source": "evals/fimplement/2026-09-26-694e74/SKILL.md#skill-fimplement-stop-004a"
+    }
+  ],
+  "runs": [
+    {
+      "id": "opus-high-no-serena-r1",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-opus-5-5",
+        "effort": "high",
+        "mode": ""
+      },
+      "output": "runs/C/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-694e74/SKILL.md",
+      "transcript": "7f639f9c-fddd-4a16-9d73-989d5434bad5",
+      "variant": {
+        "disable": [],
+        "name": "opus-high-no-serena"
+      }
+    },
+    {
+      "id": "opus-high-no-serena-r2",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-opus-5-5",
+        "effort": "high",
+        "mode": ""
+      },
+      "output": "runs/D/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-694e74/SKILL.md",
+      "transcript": "dc0fe39e-0235-4a2f-8df1-6cd5a325aa87",
+      "variant": {
+        "disable": [],
+        "name": "opus-high-no-serena"
+      }
+    },
+    {
+      "id": "sonnet-high-no-serena-r1",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-sonnet-5",
+        "effort": "high",
+        "mode": ""
+      },
+      "output": "runs/A/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-694e74/SKILL.md",
+      "transcript": "c8cf1ade-8efd-4081-aea2-846c38b692ba",
+      "variant": {
+        "disable": [],
+        "name": "sonnet-high-no-serena"
+      }
+    },
+    {
+      "id": "sonnet-high-no-serena-r2",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-sonnet-5",
+        "effort": "high",
+        "mode": ""
+      },
+      "output": "runs/B/diff.patch",
+      "skillMd": "evals/fimplement/2026-09-26-694e74/SKILL.md",
+      "transcript": "df80fdad-37fa-40af-a6ce-6bc33cd69f0d",
+      "variant": {
+        "disable": [],
+        "name": "sonnet-high-no-serena"
+      }
+    }
+  ],
+  "schemaVersion": "2.7",
+  "scores": [
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Took the /fdesign change plan as the binding input.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Full plan read with no offset/limit before any edit.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:3"
+      ],
+      "justification": "followed: Target opus, session model claude-opus-5-5 (result.json); at target, proceeded silently.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:78"
+      ],
+      "justification": "followed: Read-gate denial on the close SKILL.md satisfied by reading context/rules/skills.md in full (trace.md:79), then the retry succeeded (trace.md:80); no gate defeat.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:4"
+      ],
+      "justification": "followed: Grepped plan symbols, checked git log, then read ops.rs, error.rs, wire.rs, main.rs, scenarios, sessiontitle sources (trace.md:5-19) before the first edit; no subagents used.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:20"
+      ],
+      "justification": "followed: Touch points read at trace.md:10-19; settings.json and facts line checked before their edits (trace.md:70-72, 87-88).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:14"
+      ],
+      "justification": "followed: Plan names ops_remove and from_inside_worktree as the new scenario test's siblings; both read (trace.md:15-16) plus fixture helpers (trace.md:34) before writing ops_remove_dry_run.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: _expectedClose added to the transition table, TestRun cases per plan list (trace.md:61-66), steps_follow_the_plan case table and ops_remove_dry_run written as specified.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:21"
+      ],
+      "justification": "followed: Edited the Rust files straight through and let make rust-test/lint report; no manual touch-list enumeration.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:20"
+      ],
+      "justification": "followed: Rust crate unit (trace.md:20-46), then sessiontitle (trace.md:46-68), settings (trace.md:73-74), close skill (trace.md:75-86), fact (trace.md:87-90), in dependency order.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:31"
+      ],
+      "justification": "followed: RemovePlan::steps/preview, RemoveStep, Refusal NoWorktree/UnsafeBranch, DecideBash(ctx, input, pattern, transition), closeCheckPattern match plan signatures verbatim (diff.patch:190,221,248,505,758).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed: Rust unit gated on rust-test and rust-lint green (trace.md:36-45) before Go; Go gated on go test (trace.md:68) before settings/skill units.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:75"
+      ],
+      "justification": "followed: Advanced unit by unit after each gate.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:68"
+      ],
+      "justification": "followed: DecideCommit to DecideBash signature change driven through go test, then residual-reference grep (trace.md:69).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "followed: Report lists V3-V8 as not verified; explicitly says the scenario test covers V4 on a throwaway repo but not with the installed binary, not claimed green.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:36"
+      ],
+      "justification": "partial: Built agentwt binary exercised end-to-end by scenario tests and sessiontitle via TestRun stdin (trace.md:68, 94); the live Desktop/hook path (V3-V8) was not run and was reported unverified.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "skipped: Running-app checks V3-V8 existed but no /verify invocation appears; the run deferred them to the user instead (no /verify skill is installed, and the checks need install into ~/.claude).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "opus-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "followed: V1/V2 exercised (trace.md:94, 68) and ticked (trace.md:99); gap V3-V8 reported item by item with the stop condition each would trigger.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "followed: Report states the work is not marked done; only V1/V2 checkboxes ticked.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "skipped: Risk loci (exit 3 routing to PostToolUseFailure, the ~-path if rule firing) were never executed once; reported unverified with S7/S8 pointers instead.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "opus-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:100"
+      ],
+      "justification": "followed: Skill package-commit invoked; six per-package commits followed (trace.md:105-118).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:121"
+      ],
+      "justification": "followed: Report walks sections 1-10, gate results (V1 audit, V2 go test), verification outcome and unverified items; no plan defect to surface.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:1"
+      ],
+      "justification": "followed: No /delegate or runner spawn anywhere in the trace.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:100"
+      ],
+      "justification": "followed: /package-commit invoked directly via the Skill tool, not through /delegate.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:40"
+      ],
+      "justification": "followed: Implementing gates injected (trace.md:1); red rust-lint fixed to green in-session (trace.md:41-45) per S5, audit green before commit (trace.md:94-97).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:31"
+      ],
+      "justification": "followed: Mechanisms and signatures as planned; D1 [USER] check-rename-execute order implemented in the close skill (trace.md:84).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:91"
+      ],
+      "justification": "followed: Contract sweeps run (trace.md:69, 91); committed files match the plan's Changes table exactly (git log of commits 71979ad0..21388db1).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "opus-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Took the fdesign change plan as the binding input.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Full-file Read of the plan (no offset/limit) before any edit; later conduct tracks Decisions, Tests, Contracts & sweeps, Verification and Stop conditions (trace.md:80, 99, 110-111).",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Plan target is opus; session model claude-opus-5-5 (result.json), at target, so proceeding silently is the stated behavior.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:109"
+      ],
+      "justification": "followed: Read-gate denials (trace.md:5, 10) resolved by reading the required guides and retrying (trace.md:6-7, 11-12); tool-policy denial of ./bin/agentwt was not bypassed, the behavior was covered by the scenario test and the gap reported (trace.md:110, 134).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:4"
+      ],
+      "justification": "followed: Checked git log and grepped for plan symbols to confirm tree state (trace.md:3, 7-8) and read each target file before editing (trace.md:14-22).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:14"
+      ],
+      "justification": "followed: Read error.rs, ops.rs, main.rs, wire.rs ranges, scenarios mod.rs (trace.md:14-22), sessiontitle files (trace.md:56-58), settings.json at the planned lines (trace.md:82-84), close skill (trace.md:88), fact sentence (trace.md:95) before editing each.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:21"
+      ],
+      "justification": "followed: Located ops_remove/from_inside_worktree fixtures the new scenario test mirrors (trace.md:21-22, 46) and read prompts.go containing commitPattern before adding closeCheckPattern (trace.md:57).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:74"
+      ],
+      "justification": "followed: Tests table implemented: steps_follow_the_plan five labeled cases, wire pin array 8->10 (trace.md:30), ops_remove_dry_run (trace.md:45), TestRun close/echo cases (trace.md:75-78), _expectedClose column (trace.md:74).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:80"
+      ],
+      "justification": "followed: No up-front touch-list enumeration; only the plan-mandated post-change DecideCommit sweep.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:23"
+      ],
+      "justification": "followed: Dependency order error.rs -> wire.rs -> ops.rs -> main.rs -> scenario test -> Go title/prompts/main -> tests -> settings -> skill -> fact (trace.md:23, 33, 41, 44, 55, 62, 81, 93).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: Signatures match the plan (DecideBash, isAwaitingAi, closeCheckPattern, RemoveStep, Refusal variants); the two small layout deviations (afterClose ordering, struct-update test cases) were recorded in the plan Changelog (trace.md:111).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:48"
+      ],
+      "justification": "partial: No build/test between the five Rust units (trace.md:24-45) or between the Go units (trace.md:59-78); gates ran once per language batch (trace.md:48, 54, 79).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: Advanced unit by unit in dependency order.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "followed: V3, V5-V8 reported not run and not done; S7/S8 risk loci named as untested; V4 claim rests on a real-binary scenario test, not a proxy.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:108"
+      ],
+      "justification": "partial: Attempted a live dry-run (denied, trace.md:109); the hook-to-rename and /close path in a running Desktop was never exercised, only unit/scenario tests.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:112"
+      ],
+      "justification": "skipped: Running-app checks V5-V8 were needed, yet /verify was never invoked; the run went straight from the denied live call to /package-commit and left them to the user.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "opus-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "followed: Final report and the plan Changelog row (trace.md:111) list each V item's status and the V3, V5-V8 gap.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "followed: Explicitly 'not calling it done'; only V1 ticked in the plan (trace.md:110).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "skipped: Risk loci S7 (exit 3 routes to PostToolUseFailure) and S8 ('~'-path if-rule match) were named but never executed with real inputs before commit.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "opus-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:113"
+      ],
+      "justification": "followed: Invoked /package-commit; six per-package commits (trace.md:118-131).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "followed: Per-area changes, V-item gate results, running-app outcome (not run), and deviations reported.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:113"
+      ],
+      "justification": "followed: No Agent spawn or /delegate in the run; all work in [root].",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:113"
+      ],
+      "justification": "followed: /package-commit invoked directly via Skill, not via /delegate.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:54"
+      ],
+      "justification": "followed: Red rust-lint fixed to green in-session (trace.md:51-54); full make audit green before commit (trace.md:102-106).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: Planned mechanisms kept (dry-run exit 3, DecideBash, second PostToolUse hook); D1 [USER] check-rename-execute ordering implemented in the close skill (trace.md:90).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:117"
+      ],
+      "justification": "followed: Changed files match the plan's Changes table exactly (trace.md:118-129).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "opus-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Took the given change plan as the contract and proceeded.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Full plan file read before any grounding or edit.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "skipped: Plan line 3 declares target opus; session model was claude-sonnet-5 (result.json), one tier below, which requires a one-time warning. No trace line checks the tier or warns.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:8"
+      ],
+      "justification": "followed: Every denial was routed around with admitted means: read-gate on sed (7) led to reading rust.md, then Read (8, 10); compound command denied (69), so it retried as a single command (70); golangci-lint denied (131), so it used make audit (134). The gate was never defeated.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:5"
+      ],
+      "justification": "followed: States intent to verify plan claims; reads every touched file (10-45) before the first edit at 47.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:10"
+      ],
+      "justification": "followed: Checked the touched files before editing: error.rs, wire.rs, ops.rs, main.rs, the sessiontitle files and tests, settings.json:79 (lines 70-89) and the hook region, close SKILL/changelog, FACT-REPO-ARCH-022, mod.rs fixtures and ops.go (10-42).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:38"
+      ],
+      "justification": "followed: Checked the ops_remove/from_inside_worktree fixtures the new scenario test mirrors (38-41) and the status.rs safety_matrix table as the unit-test shape (77-79). The commitPattern sibling in prompts.go was read at 20.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:80"
+      ],
+      "justification": "followed: steps_follow_the_plan has the 5 labeled cases (80). Wire pins grew 8 to 10 (53-55). ops_remove_dry_run covers all 4 plan cases (82-83). TestRun has all 10 new cases with closeArgs (115-119). TestState_Transitions has _expectedClose (113). funcorder config checked (43-45).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed: Went from grounding straight into edits; no manual touch-list enumeration where the compiler would find it.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed: Rust units error.rs→wire.rs→ops.rs→main.rs (46-65), gated, then Go title/prompts/main (97-109), then tests, settings, skill, facts in sequence.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: steps/preview/RemoveStep, the DecideBash signature, closeCheckPattern, isAwaitingAi and the dispatch switch match the plan verbatim, including the Changelog's #[error(transparent)] and funcorder placement (diff.patch:19, 550, 826).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:70"
+      ],
+      "justification": "followed: Rust gates were rust-build (70), rust-test (73, 85) and rust-lint green after fmt (88-95), all before the Go side. Go gates were go build (111), go test (121-123), gofmt (125) and go vet (127). JSON was validated after the settings and changelog edits (138, 144).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:155"
+      ],
+      "justification": "partial: Advanced through every hand-edited unit, but the generated context/context.json unit (make rules ARGS=\"generate\") was deferred behind the audit and never run. The run ended at 159, and the post-run audit is red on ACDSL-SMINE-002 (check.log:77).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:111"
+      ],
+      "justification": "followed: The DecideCommit→DecideBash rename was driven by go build (111) and confirmed by the grep sweep (153). Rust signature changes were built via make rust-build (70).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:159"
+      ],
+      "justification": "skipped: Only unit and scenario tests ran. The built binary's dry-run was never exercised live (V4), and the run ended without verifying the observable path or reporting it unverified.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:159"
+      ],
+      "justification": "skipped: Plan V4-V8 are running-system checks; /verify was never invoked and no handoff was stated.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "partial: V2 was exercised (121-123) and the Contracts sweeps ran (152-154). V1 was started without the prescribed make acdsl project -strip, and its result was never read (151 denied, then 159 waited). V3-V8 were neither exercised nor reported as gaps.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:159"
+      ],
+      "justification": "followed: The checklist had open gaps (V1 unconfirmed, V3-V8 unaddressed), and the run never marked the work done.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:159"
+      ],
+      "justification": "skipped: The plan names the risk loci: exit 3 routing to PostToolUseFailure and the ~-path if rule firing (S7, S8). Neither path was executed or flagged.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:159"
+      ],
+      "justification": "skipped: The run ended while waiting on the audit. /package-commit was never invoked, and the worktree is left uncommitted (14 modified files plus an untracked sessiontitle binary).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:159"
+      ],
+      "justification": "skipped: Final text is a wait statement; there is no per-unit gate report, verification outcome or plan-defect report.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:46"
+      ],
+      "justification": "followed: All work ran in [root]; no delegate or subagent spawn.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:155"
+      ],
+      "justification": "partial: Read gates were honored (8, 17, 32). The audit-green gate (plan S5, fix red to green in-session) was not carried through: audit was launched (134) but never read, and the session ended. The post-run audit is red on the stale context.json (check.log:77-93).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: Implemented the plan's mechanisms (steps/preview, DecideBash, second PostToolUse hook) without substitution or [USER] demotion; check-rename-execute order kept in the close skill (140).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:111"
+      ],
+      "justification": "partial: All edits fall within the Changes table. But `go build ./cmd/sessiontitle/...` (111) left an untracked `sessiontitle` binary at the repo root (diff.patch:897), which was neither noticed nor removed. No scope check appears in the trace.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "sonnet-high-no-serena-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Took the provided change plan as the binding input.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-001",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:3"
+      ],
+      "justification": "followed: Whole plan read up front in one Read. The Contracts & sweeps grep sweeps (DecideCommit -> 0, shared 'remove --dry-run' literal prefix) were never run as such; only make audit covered them implicitly.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-002a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md:3"
+      ],
+      "justification": "skipped: Plan targets opus; the run was claude-sonnet-5 (result.json model), one step below per RULE-PLAN-081, which requires one warning then proceed. No warning appears in any trace text line.",
+      "ruleId": "SKILL-FIMPLEMENT-INTAKE-006a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:143"
+      ],
+      "justification": "followed: Every denial was routed around with admitted means: read-gate denials cleared by reading the guides (trace.md:7-9, 28-29), compound commands reissued as single commands (trace.md:67-68, 138-139), and the tool-policy denial of ./bin/agentwt answered with cargo run (trace.md:140-143). The gate was never defeated.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-005b",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:11"
+      ],
+      "justification": "followed: Every touch-point file was read in the real tree before any edit (trace.md:11-39). No subagent or Explore findings were involved.",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-001",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:5"
+      ],
+      "justification": "followed: Stated intent to verify touch points, then read error.rs/wire.rs/ops.rs/main.rs/scenarios, the sessiontitle files, settings.json lines, the close skill, the FACT-REPO-ARCH-022 location and the fixture helpers (trace.md:11-39).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-002a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:63"
+      ],
+      "justification": "followed: Read the named siblings before the new units: commitPattern in prompts.go (trace.md:18), the ops_remove/from_inside_worktree fixtures in scenarios/mod.rs (trace.md:15) and the Fixture helpers (trace.md:39, 63).",
+      "ruleId": "SKILL-FIMPLEMENT-GROUND-004",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "diff.patch:277"
+      ],
+      "justification": "followed: Every plan test case is present: steps_follow_the_plan, ops_remove_dry_run (diff.patch:430), the pinned array at 10, the 8 close-* cases plus 2 echo-title cases in TestRun (diff.patch:649-777), and _expectedClose on TestState_Transitions (diff.patch:854-885).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003b",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:88"
+      ],
+      "justification": "followed: No manual call-site enumeration of DecideCommit before the edit. A build confirmed the rename.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005b",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:41"
+      ],
+      "justification": "followed: Dependency order: Rust error->wire->ops->main->tests (trace.md:41-64), Go title->prompts->main->tests (trace.md:76-94), then settings, close skill, facts (trace.md:107-117).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-001",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:134"
+      ],
+      "justification": "followed: Diffs checked against the plan's sections (trace.md:133-135). The Changelog-sanctioned deviations (transparent Refused, isAwaitingAi placement) were applied.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-002",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:68"
+      ],
+      "justification": "followed: Rust gated by rust-test and rust-lint (trace.md:68-72) before Go. Go gated by build and test (trace.md:88, 96-100) before settings. settings.json checked with jq (trace.md:109). Final make audit (trace.md:123).",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-003a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:75"
+      ],
+      "justification": "followed: Moved to the next unit only after each gate passed.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-004",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:88"
+      ],
+      "justification": "followed: After the DecideCommit->DecideBash signature change, go build was the check, then tests.",
+      "ruleId": "SKILL-FIMPLEMENT-IMPL-005a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:173"
+      ],
+      "justification": "violated: The report claims 'V4-equivalent and V5-equivalent are done' through the cargo scenario test. The plan says the exit-3 -> PostToolUseFailure routing is harness behavior 'checked live in V5' (plan:627). A proxy was presented as satisfying the risk-locus check instead of being reported unverified.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007b",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:143"
+      ],
+      "justification": "partial: The binary was exercised (cargo run --help, and scenario tests against the built binary). The hook/rename observable path in a running session was never exercised; V3/V6-V8 were deferred.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-001a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:147"
+      ],
+      "justification": "skipped: /verify was never invoked for the live hook/session checks. The only Skill call was package-commit.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-003",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:173"
+      ],
+      "justification": "partial: V1/V2 were run (trace.md:96, 123) and V3/V6/V7/V8 were reported as not exercised. V4 and V5 were marked done via proxy equivalents, which hides those gaps. The report also frames the unexercised items as 'not a gap'.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:173"
+      ],
+      "justification": "violated: V3 and V5-V8 were not exercised, yet the run declared 'Implementation done and committed' and committed (trace.md:157-169).",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-006b",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:173"
+      ],
+      "justification": "skipped: Two risk loci were never executed before done: exit-3 routing to PostToolUseFailure (S7) and the ~-path if-rule firing (S8). Both were deferred to the user.",
+      "ruleId": "SKILL-FIMPLEMENT-VERIFY-007a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:147"
+      ],
+      "justification": "followed: Invoked /package-commit, which committed per package (trace.md:156-169).",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-002",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:173"
+      ],
+      "justification": "followed: Per-unit build and gate results, verification outcome, and a 'no plan defects' statement. The report misattributes the transparent-Refused fix as 'found during grounding' when it came from the plan's Changelog.",
+      "ruleId": "SKILL-FIMPLEMENT-COMMIT-003",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:147"
+      ],
+      "justification": "followed: No /delegate or runner spawn. Implemented in the root loop.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-001a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:147"
+      ],
+      "justification": "followed: /package-commit was invoked directly via the Skill tool.",
+      "ruleId": "SKILL-FIMPLEMENT-DELEGATE-007",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:123"
+      ],
+      "justification": "followed: Implementing-chapter gates held: make audit green before done (S5), no scope or architecture gate tripped.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-001a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:135"
+      ],
+      "justification": "followed: Implemented the planned mechanisms (RemovePlan::steps, DecideBash, -close hook) with no substitute or invented architecture.",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-003b",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:145"
+      ],
+      "justification": "followed: Changed files match the plan's Changes table exactly (diff.patch:1-979). The stray sessiontitle build artifact was removed (trace.md:131).",
+      "ruleId": "SKILL-FIMPLEMENT-STOP-004a",
+      "runId": "sonnet-high-no-serena-r2",
+      "score": 1,
+      "source": "agent"
+    }
+  ],
+  "setup": null,
+  "sharedTotals": [],
+  "totals": [
+    {
+      "axis": "self",
+      "max": 27,
+      "pct": 88.88888888888889,
+      "raw": 24,
+      "runId": "opus-high-no-serena-r1"
+    },
+    {
+      "axis": "self",
+      "max": 26,
+      "pct": 84.61538461538461,
+      "raw": 22,
+      "runId": "opus-high-no-serena-r2"
+    },
+    {
+      "axis": "self",
+      "max": 25,
+      "pct": 60,
+      "raw": 15,
+      "runId": "sonnet-high-no-serena-r1"
+    },
+    {
+      "axis": "self",
+      "max": 27,
+      "pct": 74.07407407407408,
+      "raw": 20,
+      "runId": "sonnet-high-no-serena-r2"
+    }
+  ],
+  "verdict": {
+    "bestArm": "opus-high-no-serena-r1",
+    "perRun": [
+      {
+        "failedThresholds": [],
+        "pass": true,
+        "runId": "opus-high-no-serena-r1"
+      },
+      {
+        "failedThresholds": [],
+        "pass": true,
+        "runId": "opus-high-no-serena-r2"
+      },
+      {
+        "failedThresholds": [
+          "smoke_pass",
+          "check_pass"
+        ],
+        "pass": false,
+        "runId": "sonnet-high-no-serena-r1"
+      },
+      {
+        "failedThresholds": [],
+        "pass": true,
+        "runId": "sonnet-high-no-serena-r2"
+      }
+    ],
+    "reason": "threshold, smoke or variant failures 25% (1)",
+    "status": "mixed",
+    "thresholds": {
+      "check_pass": 1,
+      "smoke_pass": 1
+    }
+  }
+}

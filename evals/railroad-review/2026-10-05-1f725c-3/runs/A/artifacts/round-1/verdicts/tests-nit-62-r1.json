@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-62-r1",
+  "verdict": "confirmed",
+  "reason": "bootstrapEnv rejects the single quote (bootstrap.go:183) but TestBootstrapEnv only feeds double-quote and newline fail cases, and no other test reaches bootstrapEnv with a quote; probe RED on bootstrap.go:183.",
+  "probe": "PROBE-TESTS-NIT-62-R1",
+  "script": "tests-nit-62-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-62-r1/server/bootstrap.go",
+  "registry": "registry-tests-nit-62-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-62-R1 -registry probes/registry-tests-nit-62-r1.json -> exit 1: internal/server/bootstrap.go:183: single-quote rejection in bootstrapEnv has no test case",
+    "read": [
+      "internal/server/bootstrap.go:183 — strings.ContainsAny(extraPrompt, \"\\\"'\\n\")",
+      "internal/server/bootstrap_test.go:71-89 — fail cases `say \"hi\"` and \"line one\\nline two\" only",
+      "grep extra-prompt|extraPrompt|bootstrapEnv over welcome_test.go/server_test.go -> no hits"
+    ],
+    "validity": "fixture validity run not executable: direct `/bin/bash <script>` denied by tool-policy (candidate Bash(/bin/bash *)); the real RED carries the script's own message on the claimed line, so the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-62-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-62-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-62-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-62-r1/server/bootstrap.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-62-r1/server/bootstrap_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/tests-nit-62-r1/files.txt"
+  ]
+}

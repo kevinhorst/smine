@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-154-r1",
+  "verdict": "confirmed",
+  "reason": "LoadFragment, added in this diff, returns fmt.Errorf(\"reading %s: %w\") at 218 and fmt.Errorf(\"parsing %s: %w\") at 222 with no LoadFragment: prefix; RULE-GOLANG-ERR-001 binds new code (go.md ENFORCEMENT: the enforcement unit is the code you add), so the unprefixed legacy Load at 201/205 does not excuse it; distinct from known code-style-NIT-70-r1 (body duplication).",
+  "probe": "manual: command output — probe path blocked by tool policy (Bash(/bin/bash *) and Bash(<worktree>/bin/acdsl *) both denied, so neither the fixture self-check nor acdsl check could run)",
+  "evidence": {
+    "read": [
+      "grep -n at 1f725ce internal/config/config.go -> 212:func LoadFragment(path string) (*Settings, error) {  218:\t\treturn nil, fmt.Errorf(\"reading %s: %w\", path, err)  222:\t\treturn nil, fmt.Errorf(\"parsing %s: %w\", path, err)  — expected per RULE-GOLANG-ERR-001: \"LoadFragment: Failed to read %s: %w\" / \"LoadFragment: Failed to parse %s: %w\"",
+      "git diff b4981b8..1f725ce -- internal/config/config.go: LoadFragment (lines 210-225) is wholly added by this diff",
+      "context/rules/go.md RULE-GOLANG-ERR-001 (466-476) and ENFORCEMENT (765-772)",
+      "known.json: code-style-NIT-70-r1 covers LoadFragment duplicating Load, not the error prefix"
+    ],
+    "probe_attempts": [
+      "attempt 1: /bin/bash <probes>/code-style-nit-154-r1.sh <scratch>/code-style-nit-154-r1/files.txt -> tool-policy denied, candidate Bash(/bin/bash *)",
+      "attempt 2: <worktree>/bin/acdsl -h (prerequisite of the acdsl check verdict) -> tool-policy denied, candidate Bash(<worktree>/bin/acdsl *); Makefile has no acdsl target"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-154-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-154-r1/fail/config.go.txt"
+  ],
+  "notes": "the probe script and fixture are unvalidated (never run) — not registered, no .acdsl mirror written"
+}

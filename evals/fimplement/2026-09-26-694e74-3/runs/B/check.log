@@ -1,0 +1,82 @@
+go build  -o ./bin/acdsl ./cmd/acdsl
+go build  -o ./bin/verifiers ./cmd/acdsl/verifiers/...
+cargo fmt --manifest-path cmd/agentwt/Cargo.toml -- --check
+cargo clippy --locked --manifest-path cmd/agentwt/Cargo.toml --all-targets --all-features -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.66s
+cargo check --locked --manifest-path cmd/agentwt/Cargo.toml --lib --no-default-features
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.42s
+go mod verify
+all modules verified
+go vet ./...
+./bin/acdsl project -strip
+2026/09/26 17:11:48 shell: git dur=77ms err=false
+acdsl: stripped 0 file(s)
+./bin/acdsl check -report bin/audit-report.md
+2026/09/26 17:11:49 shell: git dur=35ms err=false
+2026/09/26 17:11:49 shell: git dur=32ms err=false
+2026/09/26 17:11:49 shell: git dur=43ms err=true
+2026/09/26 17:11:49 shell: git dur=46ms err=true
+2026/09/26 17:11:49 shell: git dur=48ms err=true
+2026/09/26 17:11:49 shell: git dur=57ms err=true
+2026/09/26 17:11:49 shell: git dur=62ms err=false
+2026/09/26 17:11:49 shell: git dur=59ms err=false
+2026/09/26 17:11:49 shell: git dur=50ms err=true
+2026/09/26 17:11:49 shell: git dur=122ms err=true
+2026/09/26 17:11:49 shell: git dur=101ms err=true
+2026/09/26 17:11:49 shell: git dur=40ms err=true
+2026/09/26 17:11:49 shell: git dur=38ms err=true
+2026/09/26 17:11:49 shell: git dur=37ms err=true
+2026/09/26 17:11:49 shell: git dur=37ms err=false
+2026/09/26 17:11:49 shell: git dur=35ms err=false
+2026/09/26 17:11:49 shell: git dur=40ms err=true
+2026/09/26 17:11:50 shell: git dur=90ms err=true
+2026/09/26 17:11:50 shell: git dur=12ms err=false
+2026/09/26 17:11:50 shell: git dur=9ms err=false
+2026/09/26 17:11:50 shell: git dur=9ms err=false
+2026/09/26 17:11:50 shell: git dur=10ms err=false
+2026/09/26 17:11:51 shell: errorfprefix dur=1744ms err=false
+2026/09/26 17:11:52 shell: testschema dur=2013ms err=false
+2026/09/26 17:11:52 shell: literalowner dur=2307ms err=false
+2026/09/26 17:11:52 shell: forbidcall dur=2683ms err=false
+2026/09/26 17:11:53 shell: linttags dur=2093ms err=false
+2026/09/26 17:11:54 shell: gofmtwrap dur=2572ms err=false
+2026/09/26 17:11:54 shell: funcsig dur=2432ms err=false
+2026/09/26 17:11:55 shell: skillmeta dur=1029ms err=false
+2026/09/26 17:11:55 shell: skillmeta dur=876ms err=false
+2026/09/26 17:11:55 shell: skillmeta dur=1788ms err=false
+2026/09/26 17:11:56 shell: skillcontext dur=1069ms err=false
+2026/09/26 17:11:57 shell: skillentries dur=1492ms err=false
+2026/09/26 17:11:57 shell: skillmeta dur=11ms err=false
+2026/09/26 17:11:57 shell: skillmeta dur=19ms err=false
+2026/09/26 17:11:57 shell: skillmeta dur=20ms err=false
+2026/09/26 17:11:57 shell: skillmeta dur=47ms err=false
+2026/09/26 17:11:57 shell: skillmap dur=1723ms err=false
+2026/09/26 17:11:57 shell: exhaustivewrap dur=4951ms err=false
+2026/09/26 17:11:58 shell: severitytable dur=1417ms err=false
+2026/09/26 17:11:58 shell: jsonschemacheck dur=1283ms err=false
+2026/09/26 17:11:59 shell: skillmodelcheck dur=1621ms err=false
+2026/09/26 17:11:59 shell: skillplantemplate dur=1506ms err=false
+2026/09/26 17:11:59 shell: jsonschemacheck dur=22ms err=false
+2026/09/26 17:11:59 shell: jsonschemacheck dur=30ms err=false
+2026/09/26 17:11:59 shell: jsonschemacheck dur=17ms err=false
+2026/09/26 17:11:59 shell: jsonschemacheck dur=13ms err=false
+2026/09/26 17:11:59 shell: jsonschemacheck dur=16ms err=false
+2026/09/26 17:12:00 shell: bash32compat dur=1740ms err=false
+2026/09/26 17:12:00 shell: filebaseline dur=1481ms err=false
+2026/09/26 17:12:01 shell: evalgenbounds dur=975ms err=false
+2026/09/26 17:12:02 shell: rulescheck dur=2659ms err=false
+2026/09/26 17:12:02 shell: rulescheck dur=1674ms err=false
+2026/09/26 17:12:02 shell: planformat dur=785ms err=false
+2026/09/26 17:12:02 shell: idgrammar dur=756ms err=false
+2026/09/26 17:12:02 shell: shellcheckwrap dur=4607ms err=false
+2026/09/26 17:12:03 shell: forbidphrase dur=1059ms err=false
+2026/09/26 17:12:03 shell: forbidphrase dur=639ms err=false
+2026/09/26 17:12:08 shell: golangciwrap dur=6166ms err=true
+acdsl: runVerifier: ACDSL-GOLANG-LINT-001: verifier golangci failed: Run: bin/verifiers/golangciwrap in .: exit status 2
+2026/09/26 17:12:08 shell: golangci-lint dur=5122ms err=true
+golangciwrap: Run: golangci-lint in .: exit status 3
+Error: parallel golangci-lint is running
+The command is terminated due to an error: parallel golangci-lint is running
+
+
+make: *** [audit-gates] Error 2

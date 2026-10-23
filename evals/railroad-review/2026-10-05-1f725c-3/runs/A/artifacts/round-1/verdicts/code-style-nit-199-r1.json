@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-199-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: profilesettings.go:194 (new in this diff) repeats welcome.go checkNightlyRoutine's routines.Scan(s.routinesDir) + slices.IndexFunc(routine.Name == nightlyRoutineName) + index<0 lookup; not covered by known code-style-NIT-28-r1 (envelope parse).",
+  "probe": "PROBE-CODE-STYLE-NIT-199-R1",
+  "script": "code-style-nit-199-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-199-r1/a.go",
+  "registry": "registry-code-style-nit-199-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-199-R1 -registry probes/registry-code-style-nit-199-r1.json at 1f725ce -> exit 1: internal/server/profilesettings.go:194: nightly-routine lookup (routines.Scan + IndexFunc on nightlyRoutineName) duplicated in welcome.go",
+    "validity": "bin/acdsl check -root scratch/code-style-nit-199-r1/repo (git-initialised copy of probes/fixtures/code-style-nit-199-r1/{a,b}.go) -> exit 1: a.go:6 duplicated in b.go. Direct /bin/bash run was denied by tool policy, so the fixture was checked through acdsl itself.",
+    "read": [
+      "internal/server/profilesettings.go:189-198 at 1f725ce: list, err := routines.Scan(s.routinesDir) / index := slices.IndexFunc(... routine.Name == nightlyRoutineName) / if index < 0 { return target }",
+      "internal/server/welcome.go:116-128 at 1f725ce: identical Scan + IndexFunc + index < 0 sequence in checkNightlyRoutine",
+      "git diff --stat b4981b8..1f725ce: profilesettings.go is +243 new; welcome.go +15/-? only"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-199-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-199-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-199-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-199-r1/a.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-199-r1/b.go"
+  ]
+}

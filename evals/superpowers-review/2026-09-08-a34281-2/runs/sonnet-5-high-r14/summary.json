@@ -1,0 +1,64 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "A working-copy edit of acdsl/policy.json setting mode free plus an unresolvable base_ref makes policyBase fail before the authoritative base policy is read, so CheckPolicy returns nil,nil and fully bypasses gated/strict enforcement.",
+      "fix": "When policy.BaseRef fails to resolve, fall back to the default candidate chain (origin/HEAD, origin/main, main, master) instead of only the override; and/or never let the baseErr fallback consult the working copy's Mode — an unresolvable base with any acdsl/policy.json on disk should hard-error, matching D10's 'never a silent pass'."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "settings/claude_code/settings.json",
+      "line": null,
+      "severity": "BLOCKER",
+      "claim": "The commit registering acdsl-policy-guard.sh also deleted the four pre-existing permissions.ask entries for Edit/Write on acdsl/** and **/*.acdsl with no plan-recorded decision, leaving smine's own free-mode repo with zero confirmation prompt on edits to its rule and verifier definitions.",
+      "fix": "Restore the ask entries for smine's own settings (defense-in-depth even in free mode, since the hook/binary gate only fire in strict/gated), or make the removal an explicit, plan-recorded decision if intentional."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 38,
+      "severity": "MAJOR",
+      "claim": "The unanchored prefix match \"/$required\"* lets any skill whose name is a prefix-extension of the required one (e.g. /smine-batch for required smine) silently satisfy the gate.",
+      "fix": "Require a word boundary after the required name — match only \"/$required\" exact or \"/$required\" followed by whitespace or newline, never a bare prefix."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/server/repos.go",
+      "line": 345,
+      "severity": "MAJOR",
+      "claim": "On a cache-miss fresh scan that errors, entry keeps the previous stale cache value and data.ScannedAt is set unconditionally, so the fragment shows the error banner alongside a stale 'as of HH:MM:SS' timestamp from a scan that never ran for this render.",
+      "fix": "Only set data.ScannedAt when data.Cached is true or err == nil; leave it zero otherwise (the template already handles .ScannedAt.IsZero)."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "GitShowFile's 'absent path means ok=false, never an error' contract implicitly depends on the underlying git failure being an *exec.ExitError from the current shell.Run implementation.",
+      "fix": "Add a one-line comment at the call site noting the coupling in case shell.Run's error wrapping ever changes."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The Bash-command target extraction only catches the single-word 'cat file' shape, so head, sed -n, less, or a quoted cat \"$file\" all bypass the post-invocation context-read deterrent.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "internal/acdsl/policy.go",
+      "line": 143,
+      "severity": "MINOR",
+      "claim": "overlayViolations and the Registry/Policy struct field orderings mirror the approved plan verbatim, including field groupings that don't sort alphabetically within their group per RULE-GOLANG-STRUCT-002 — a deviation introduced by the plan itself.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

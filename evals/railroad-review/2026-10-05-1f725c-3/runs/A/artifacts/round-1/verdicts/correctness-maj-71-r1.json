@@ -1,0 +1,29 @@
+{
+  "finding_id": "correctness-MAJ-71-r1",
+  "verdict": "confirmed",
+  "reason": "Real cmd/sync/sync_settings.sh at 1f725ce, run by the probe against a sandbox HOME whose ~/.claude/settings.json held skillOverrides {demo-leaf: off}, exits 0 and leaves the override absent — sync_file copies the expanded template (no skillOverrides key) over the live file.",
+  "probe": "PROBE-CORRECTNESS-MAJ-71-R1",
+  "script": "correctness-maj-71-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-71-r1/cmd/sync/sync_settings.sh",
+  "registry": "registry-correctness-maj-71-r1.json",
+  "evidence": {
+    "probe_run": "cmd/sync/sync_settings.sh:69: settings sync dropped skillOverrides[demo-leaf]=off from ~/.claude/settings.json (now: absent, script exit 0): [PROBE-CORRECTNESS-MAJ-71-R1] — acdsl: 1 violation(s) across 1 rule(s)",
+    "command": "<wt>/bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-MAJ-71-R1 -registry <round-1>/probes/registry-correctness-maj-71-r1.json (exit 1)",
+    "validity": "Direct interpreter run of the probe over scratch/correctness-maj-71-r1/fixture-files.txt was denied by tool policy (candidate rule Bash(/bin/bash *)); the probe is behavioural, not pattern-based — it executes the anchored script and reads the resulting settings.json, and it exits 2 (not 1) when it cannot locate or run the script, so the RED is an observed effect, not a blind match.",
+    "read": [
+      "cmd/sync/sync_settings.sh:52-72 sync_file: sed-expand template to tmp, diff against dst, cp \"$tmp\" \"$dst\" on any difference (line 69); line 169 sync_file \"$CLAUDE_SRC\" \"$CLAUDE_DST\"",
+      "cmd/sync/sync_skills.sh:263-269 casual profile jq-merges skillOverrides {leaf: off} into ~/.claude/settings.json",
+      "git grep skillOverrides: no occurrence in settings/claude_code/settings.json or sync_settings.sh",
+      "callers: install.sh:85-92 and cmd/configserver/install_windows.go:386 run sync_skills.sh after sync_settings.sh (overrides restored); standalone runs come from the Welcome fix hint internal/server/welcome_darwin.go:12 / welcome_other.go:9 and manual operator syncs"
+    ],
+    "cells": "agree: effect incorrect (casual skill hiding lifted, skills visible and invocable), exposure rare (only a sync_settings.sh run not followed by sync_skills.sh — every automated flow re-runs sync_skills.sh)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-71-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-71-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-maj-71-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-71-r1/cmd/sync/sync_settings.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-71-r1/settings/claude_code/settings.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-maj-71-r1/fixture-files.txt"
+  ]
+}

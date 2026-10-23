@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-208-r1",
+  "verdict": "confirmed",
+  "reason": "run.sh:75 comment still says '$2: stage (smine|apply)' while callers pass smine-consolidate (193) and, newly added by this diff, orchestrate (325).",
+  "probe": "PROBE-CODE-STYLE-NIT-208-R1",
+  "script": "code-style-nit-208-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-208-r1-fail.sh",
+  "registry": "registry-code-style-nit-208-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-208-R1 -registry probes/registry-code-style-nit-208-r1.json -> exit 1: routines/smine-nightly/run.sh:75: append_result comment lists stage (smine|apply) but callers also pass smine-consolidate/orchestrate",
+    "read": [
+      "routines/smine-nightly/run.sh:75 '# stdin: claude JSON envelope ...; $1: exit status; $2: stage (smine|apply)'",
+      "git grep append_result at 1f725ce: callers smine (113,125,134,169), smine-consolidate (193), apply (236,263), orchestrate (325)",
+      "git diff b4981b8..1f725ce -U0: orchestrate caller added in the new Stage 3 block; line 75 untouched",
+      "known.json: code-style-NIT-32-r2 (header 'Two stages', line 3) is a different comment, not a variant"
+    ],
+    "validity": "fixture run not executable here: direct /bin/bash <script> is denied by tool-policy (no Bash(/bin/bash *) rule); the real run's RED at the claimed line with the probe's own message shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-208-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-208-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-208-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-208-r1-fail.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-208-r1/files.txt"
+  ]
+}

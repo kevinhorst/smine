@@ -1,0 +1,28 @@
+{
+  "finding_id": "tests-MIN-59-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at presentation.go:99: no _test.go in internal/server provides presentation-profile.de.md, so the casual+de template-seeding branch (97-103) is never exercised; de-casual-creates explicitly asserts the frontmatter-only fallback. Exposure lowered: the branch fires only on the first casual-German activation per install, and the claim's stripFrontMatter-returns-input mutation would actually be caught by frontmatter-rewrite-keeps-body (profileBody path).",
+  "probe": "PROBE-TESTS-MIN-59-R1",
+  "script": "tests-min-59-r1.sh",
+  "fixture": "probes/fixtures/tests-min-59-r1/fail/internal/server/presentation.go",
+  "registry": "registry-tests-min-59-r1.json",
+  "effect": "debt",
+  "exposure": "rare",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-MIN-59-R1 -registry probes/registry-tests-min-59-r1.json -> internal/server/presentation.go:99: casual+de template seeding branch has no test providing presentation-profile.de.md (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/tests-min-59-r1/fail -rule PROBE-TESTS-MIN-59-R1 -> internal/server/presentation.go:4 hit (exit 1)",
+    "read": [
+      "internal/server/presentation.go:97-103 seeds body from filepath.Join(\"settings\",\"claude_code\",\"presentation-profile.de.md\") relative to cwd only when body empty && casual && de",
+      "internal/server/presentation_test.go:318-331 de-casual-creates comment: 'The repo template is not readable from the test cwd, so the body falls back to empty' and expects frontmatter-only content",
+      "internal/server/presentation_test.go:333-344 frontmatter-rewrite-keeps-body exercises stripFrontMatter through profileBody, so stripFrontMatter itself is indirectly covered for the normal case",
+      "git grep stripFrontMatter|presentation-profile.de|Chdir over internal and cmd: no server test chdirs to a dir holding the template"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-min-59-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-min-59-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-min-59-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-min-59-r1/fail/internal/server/presentation.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-min-59-r1/fail/internal/server/presentation_test.go"
+  ]
+}

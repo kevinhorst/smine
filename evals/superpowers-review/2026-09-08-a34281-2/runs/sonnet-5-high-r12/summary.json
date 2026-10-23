@@ -1,0 +1,64 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy's baseErr branch trusts the attacker-controlled working-tree policy.Mode, so an agent branch that sets policy.json to {\"mode\":\"free\",\"base_ref\":\"no-such-ref\"} makes policyBase fail and CheckPolicy return clean, deterministically bypassing gated/strict self-management mode before the authoritative basePolicy re-read ever runs.",
+      "fix": "In policyBase, always try the well-known fallback candidates (origin/HEAD, origin/main, main, master) in addition to policy.BaseRef so a bogus BaseRef alone cannot force baseErr; and stop letting the unauthoritated working-tree policy.Mode decide whether an unresolvable base is fatal — make it a hard error in every mode (or gate the free special-case on a non-attacker-writable fact like the absence of acdsl/policy.json). Add a regression test: gated/strict base, branch sets base_ref to a nonexistent ref and mode to free, assert CheckPolicy errors or still detects violations."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/server/repos.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "handleRepoRemove and its route were deleted outright, deviating from plan D4 (which said to keep the handler and add the statusCache drop) and from the plan's explicit deferral of route deletion, without a Changelog entry recording the deviation.",
+      "fix": "Flag for confirmation; if the deletion is intentional, update the now-stale D4 decision and Deferred-findings bullet with a Changelog row recording the deviation."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "skills/smine/smine-skills/SKILL.md",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The casual-lockout ownership gate the plan describes as a hard gate is implemented entirely as prose in the smine-skills, smine-apply, and smine-orchestrate SKILL.md files with no Go-level check reading a skill's origin frontmatter, a softer guarantee than the plan's language implies that can degrade silently if a future skill edit drops the paragraph.",
+      "fix": "Add at minimum a one-line acknowledgment in the plan of what \"hard gate\" means here."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 64,
+      "severity": "MAJOR",
+      "claim": "The Bash-command context-read guard's case matcher skips target extraction for any command containing a quote, parenthesis, or several other common characters, so the quoted form of the very cat invocation it guards against (plus head, less, sed -n, awk, python -c, etc.) trivially bypasses the denial.",
+      "fix": "Tighten the command matcher (tokenize with shell-words or match on the resolved absolute path via realpath/readlink regardless of quoting), or drop the Bash-command branch entirely and rely on the Read-tool guard, which is not quote-bypassable."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/repos.go",
+      "line": 363,
+      "severity": "MINOR",
+      "claim": "In handleRepoWorktreeStatus, when a fresh repos.Status call errors after a fingerprint mismatch or ?refresh=1, entry is never reassigned from the cache store, so data.ScannedAt renders the previous successful scan's timestamp next to StatusErr and an empty table, implying the empty result is current.",
+      "fix": "Clear data.ScannedAt (zero value) on the error path so the template does not imply the empty result is fresh."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "install.sh",
+      "line": 172,
+      "severity": "MINOR",
+      "claim": "kill \"$pid\" after lsof -tiTCP will pass a multi-line string as a single argument if lsof ever reports more than one PID on the port (possible under SO_REUSEPORT).",
+      "fix": "Use `for pid in $pid; do kill \"$pid\"; done` for robustness."
+    },
+    {
+      "finding_id": "SP-007",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "overlayViolations reads acdsl/registry.local.json straight off disk rather than via the base-commit diff machinery, so a pre-existing unsanctioned overlay entry from before the policy was enabled flags on every acdsl check in that repo forever, making gated-mode adoption in a repo with a legacy local overlay a hard stop.",
+      "fix": "Add a one-line note about this nuance in acdsl/README.md's Modes section if not already there."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

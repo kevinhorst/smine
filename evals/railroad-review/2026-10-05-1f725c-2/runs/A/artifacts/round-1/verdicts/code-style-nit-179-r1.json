@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-179-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at main.go:223: peekIdentity(addr string) has no ctx and calls client.Get, while its sole caller startPeek(ctx, ...) holds a ctx — the chain breaks against RULE-GOLANG-CTX-001.",
+  "probe": "PROBE-CODE-STYLE-NIT-179-R1",
+  "script": "code-style-nit-179-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-179-r1/cmd/configserver/main.go",
+  "registry": "registry-code-style-nit-179-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-179-R1 -registry registry-code-style-nit-179-r1.json -> exit 1: cmd/configserver/main.go:223: peekIdentity has no ctx parameter and uses client.Get — context not passed through the call chain",
+    "read": [
+      "cmd/configserver/main.go:223-225 — `func peekIdentity(addr string) (*peekID, error)`, `client.Get(\"http://\" + addr + \"/healthz\")`",
+      "cmd/configserver/main.go:245-247 — `func startPeek(ctx context.Context, ...)` calls `peekIdentity(addr)` without ctx",
+      "context/rules/go.md:342-347 — RULE-GOLANG-CTX-001: context.Context MUST be passed through the call chain"
+    ],
+    "validity": "Direct interpreter run of the script on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails because the fixture dir is no git repo (FileUniverse exit 128). The real run going RED on the claimed line shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-179-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-179-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-179-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-179-r1/cmd/configserver/main.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/code-style-nit-179-r1/files.txt"
+  ]
+}

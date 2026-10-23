@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 42,
+      "severity": "MAJOR",
+      "claim": "The invoked-via-prompt-start check uses a bare glob prefix match (case \"$first_user\" in \"/$required\"*), so a required skill name that is a prefix of another skill (e.g. REQUIRE-SKILL:smine matched by /smine-batch) incorrectly passes the gate as invoked.",
+      "fix": "Require a word boundary after the name, e.g. case \"$first_user\" in \"/$required\" | \"/$required \"*) invoked=1 ;; esac, and add a regression case to cmd/tests/test_skill_invoke_gate.sh for a required name that is a prefix of another skill's name."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/server/repos.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "handleReposAdd grants permissions.additionalDirectories but handleReposDelete never revokes it, leaving a deleted repo's directory grantable/readable indefinitely, with the gap tracked only in a plan's Deferred findings bullet.",
+      "fix": "Track the revoke-on-delete gap as a durable open item (an issue or TODO with an owner) that outlives the plan directory once it is archived."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "routines/smine-orchestrate",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The smine-orchestrate skill, which merges and pushes to origin/main unattended while judging content it doesn't fully control, is granted unrestricted Bash(git *) in its frontmatter — a wider blast radius than its documented duties need.",
+      "fix": "Narrow the allowlist to the specific git subcommands actually used (merge --no-edit, push origin main, status, merge-base --is-ancestor, log, remote get-url), consistent with the file's other deliberately narrowed allowlists."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "Makefile",
+      "line": 81,
+      "severity": "MINOR",
+      "claim": "The new build-install target's doc-comment is copy-pasted verbatim from build (## build: build all binaries and install), so make help prints two entries both labeled build, one describing the wrong target.",
+      "fix": "Rename the doc-comment to the target's own name (## build-install: ...)."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/profilesettings.go",
+      "line": 209,
+      "severity": "MINOR",
+      "claim": "styleTestTarget joins an admin-configured ROUTINE_TOKEN env value directly into filepath.Join(s.tokenDir, label) with no validation that label stays within tokenDir before reading it and feeding its contents to claude -p as an OAuth token.",
+      "fix": "Add a filepath.Clean plus prefix check if that env ever becomes reachable from a less-trusted input path."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": ".gitignore",
+      "line": null,
+      "severity": "MINOR",
+      "claim": ".gitignore still ends without a trailing newline (pre-existing, but the diff touches the same lines and could have fixed it in passing).",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

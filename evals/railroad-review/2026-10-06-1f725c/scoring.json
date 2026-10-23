@@ -1,0 +1,29 @@
+{
+  "judgeGuide": "A run finding and a golden entry are the SAME defect when they share the same consequence, the same triggering input, and the same violated assumption — regardless of file or line; file identity is evidence for a match, never the criterion. Same root cause worded differently, cited at a nearby line, or surfacing in a different file along the same defect chain still matches. A defect may span multiple files: a golden entry (or finding) may carry a files array alongside file — the first entry mirrors file — and matches against ANY listed file. Severity may differ — a matched pair with a different severity is a misclassification, not a miss. Missed = golden entries with no matching run finding. A survivor finding matching no golden entry is NOT automatically a false positive: adjudicate it against the code and the reviewed diff. It is a false positive only when the claim is factually wrong, matches a known human-ruled false positive, or the defect is not part of the reviewed range; a genuine in-range defect the golden does not catalog is uncataloged and never counts against the run. An unmatched finding that restates a defect another run finding already matched is a duplicate and is a false positive, never uncataloged.",
+  "minutes": {
+    "BLOCKER": 120,
+    "MAJOR": 90,
+    "MINOR": 30,
+    "NIT": 10,
+    "INFO": 2
+  },
+  "escapeMultiplier": {
+    "BLOCKER": 5,
+    "MAJOR": 3,
+    "MINOR": 2,
+    "NIT": 1,
+    "INFO": 1
+  },
+  "triageLine": "MINOR",
+  "fixFactor": {
+    "BLOCKER": 0.5,
+    "MAJOR": 0.4,
+    "MINOR": 0.25,
+    "NIT": 0.1,
+    "INFO": 0.1
+  },
+  "thresholds": {
+    "false_positive_minutes": 60,
+    "review_score": 0.5
+  }
+}

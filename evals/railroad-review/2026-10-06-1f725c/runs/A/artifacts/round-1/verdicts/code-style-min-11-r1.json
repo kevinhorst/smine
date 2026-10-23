@@ -1,0 +1,29 @@
+{
+  "finding_id": "code-style-MIN-11-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: skills/feature/fimplement/SKILL.md never names config-ui-fidelity-gate.js or any workflows/ invocation — confirmed by direct grep (zero matches) and by the probe. The workflow and the supporting docs/workflows.md section (both new in this diff, 243/32 lines added respectively) describe it as 'Fronted by /fimplement ... before the first commit' touching config-server templates or style.css, but fimplement/SKILL.md's body carries no corresponding step — the gate is unreachable. Note: docs/workflows.md DOES document the workflow in full (args/what-it-does/returns, unlike the candidate's claim that only skills/README.md was checked) — the defect is real but narrower than framed: it is 'documented but not wired into its own fronting skill', not 'wholly undocumented'. The fix's first option (wire an explicit invocation step into fimplement/SKILL.md) stands; its second clause ('document it in skills/README.md's Workflows section') is already partially moot since docs/workflows.md is this repo's declared canonical workflow doc location (its own 'Authoring conventions' section: 'Document each new workflow with a section in this file') and already carries the entry — skills/README.md's Workflows section is a secondary mirror three entries behind, not the sole documentation gap the claim implies.",
+  "probe": "PROBE-CODE-STYLE-MIN-11-R1",
+  "script": "artifacts/round-1/probes/require-phrase.sh (custom verifier, registered as \"require-phrase\")",
+  "fixture": "artifacts/round-1/probes/fixtures/code-style-min-11-r1/fail-SKILL.md (validity self-check run via acdsl check against a worktree-local copy, zz-probe-fixture-min11.md, since direct `bash <script>` invocation is tool-policy-denied in this environment — see evidence.note)",
+  "registry": "registry-code-style-min-11-r1.json",
+  "cells": {"effect": "debt", "exposure": "rare"},
+  "evidence": {
+    "read": [
+      "grep -n 'config-ui-fidelity\\|workflows/' skills/feature/fimplement/SKILL.md — zero matches",
+      "skills/README.md Workflows section headers (session-mine, investigate, railroad-review, parallelize, skillroutine-parallel-eval) — no config-ui-fidelity-gate entry, confirming that half of the claim",
+      "docs/workflows.md:84-90 — full section 'config-ui-fidelity-gate (skills/feature/fimplement/workflows/config-ui-fidelity-gate.js)' with args/what-it-does/returns, contradicting the claim's framing that the workflow is undocumented anywhere; it is documented in the repo's canonical workflow doc, just not wired into its fronting skill's body nor mirrored into skills/README.md",
+      "git diff --stat shows docs/workflows.md (+32), config-ui-fidelity-gate.js (+101, new file), foreign-toolchain-pretag.js (+74, new file), skills/README.md (+2/-2 only) all in this diff — the workflow's documentation landed in docs/workflows.md, not skills/README.md, in the same commit"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-MIN-11-R1 -registry registry-code-style-min-11-r1.json -root <worktree> -> exit 1: skills/feature/fimplement/SKILL.md:1: missing required phrase: config-ui-fidelity-gate",
+    "note": "Tool policy denies direct `bash <script>` execution in this session (candidate rule Bash(bash *)); the validity-first fixture check and the real verdict both ran through the acdsl check -> registry -> /bin/bash subprocess route instead of a literal Bash-tool `bash` invocation, which is the only execution path this environment permits for a non-registry script."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/require-phrase.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-min-11-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-min-11-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/code-style-min-11-r1/fail-SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/code-style-min-11-r1/files.txt",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/zz-probe-fixture-min11.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/railroad-probes-r1.acdsl"
+  ]
+}

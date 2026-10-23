@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-MAJ-51-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at internal/acdsl/git.go:57: GitChangedFiles tokenizes non -z `git diff --name-only` / `git ls-files --others` output with strings.Fields, so a space-containing or quotePath-quoted declaration path reaches ruleDelta (policy.go:244-257) under a wrong name, ReadFile fails silently and GitShowFile reports absent, dropping its rules from the delta; cells incorrect/rare stand.",
+  "probe": "PROBE-CORRECTNESS-MAJ-51-R1",
+  "script": "forbid-call (repo registry verifier, params pkg=strings func=Fields)",
+  "fixture": "probes/fixtures/correctness-maj-51-r1/git_fields.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-MAJ-51-R1 -> exit 1: internal/acdsl/git.go:57: call to strings.Fields is forbidden here: [PROBE-CORRECTNESS-MAJ-51-R1] forbid-call",
+    "validity": "bin/verifiers/forbidcall scratch/correctness-maj-51-r1/files.txt pkg=strings func=Fields -> exit 1: probes/fixtures/correctness-maj-51-r1/git_fields.go:6: call to strings.Fields is forbidden here",
+    "read": [
+      "internal/acdsl/git.go:46-66 — git diff --name-only <base> and git ls-files --others --exclude-standard without -z; strings.Fields(diffed + \"\\n\" + untracked) at line 57",
+      "internal/acdsl/git.go:89-99 — GitShowFile maps any ExitError to exists=false",
+      "internal/acdsl/policy.go:237-280 — ruleDelta fills workLines only when os.ReadFile succeeds (248) and baseLines only when GitShowFile exists (251-257); a mangled path contributes no rules on either side",
+      "checklist correctness-74 — rule delta over declaration files changed vs base (diff --name-only plus untracked), parsed on both sides",
+      "known.json security-MAJ-2-r1 (git.go:47) is rename detection, a different mechanism — not a variant"
+    ],
+    "notes": "No Makefile acdsl target exists in this repo; the repo ships bin/acdsl (prebuilt), so the verdict ran it directly with -root pointing at the worktree (without -root the rule file was not discovered from the session cwd). Lexical probe pins the root cause; the downstream consequence follows deterministically from strings.Fields splitting on spaces and git's default core.quotePath=true C-quoting non-ASCII paths."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-51-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-51-r1/git_fields.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-maj-51-r1/files.txt"
+  ]
+}

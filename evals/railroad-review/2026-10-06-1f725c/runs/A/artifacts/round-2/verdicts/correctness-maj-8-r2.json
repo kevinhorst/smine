@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-MAJ-8-r2",
+  "verdict": "confirmed",
+  "reason": "Diff and current head both verified directly: the Welcome nav anchor's guard was changed from `{{if and initWelcome isDeveloperAudience}}` to `{{if initWelcome}}`, dropping the audience check the checklist item correctness-25 requires (Welcome nav anchor hidden for non-developer audience). initWelcome in server.go is a static per-install flag (opts.InitWelcome, the --init-welcome flag) independent of audience, so any casual-audience install started with that flag now shows the Welcome/setup nav entry. The only test touching this path, TestWelcomeNavGatedByInitWelcome, never sets a casual audience, so the regression is uncaught — consistent with the candidate's own effect=incorrect, exposure=rare cells, which stand.",
+  "probe": "none: tool-policy denies every executable form available in this worktree for a custom (non-repo-registry) verifier script on an HTML template — direct `bin/acdsl` (absolute and relative path) is denied with 'no allow rule matches', direct `bash <script>` is denied the same way, and the repo's Makefile has no `acdsl` target accepting ARGS (only `audit`/`build-audit`, neither parameterized) so `make -C <worktree> acdsl ARGS=...` has no target to call. Two distinct executable forms (bin/acdsl, bash script) were attempted and both denied, per the protocol's two-attempt cap before declaring unprobeable. Settled via the manual path instead: direct reads of the committed diff and the current head file, plus the Go source backing initWelcome/isDeveloperAudience and the one touching test.",
+  "script": "probes/correctness-maj-8-r2.sh",
+  "fixture": "probes/fixtures/correctness-maj-8-r2-fail.html",
+  "registry": "registry-correctness-maj-8-r2.json",
+  "evidence": {
+    "read": [
+      "git -C <worktree> diff b4981b88d52deaa69d6ed1d60eb51b57ead47ba0 e5245d08d2fe5c05f67742fd8ec5a67b759ca316 -- internal/server/templates/layout.html: '-  {{if and initWelcome isDeveloperAudience}}<a href=\"/welcome\" ...>Welcome</a>{{end}}' / '+  {{if initWelcome}}<a href=\"/welcome\" ...>Welcome</a>{{end}}'",
+      "internal/server/templates/layout.html:28 at headCommit (Read tool): '{{if initWelcome}}<a href=\"/welcome\" {{if eq .Page \"welcome\"}}class=\"active\"{{end}}>Welcome</a>{{end}}' — no isDeveloperAudience anywhere on the line, unlike every sibling internals-exposing anchor (lines 29, 33, 34-42)",
+      "internal/server/server.go:154-157: 'initWelcome gates the Welcome nav entry: hidden once setup is done' / '\"initWelcome\": func() bool { return opts.InitWelcome }' — a static per-install flag, independent of audience",
+      "internal/server/welcome_test.go:206-218 TestWelcomeNavGatedByInitWelcome: asserts InitWelcome=false hides the anchor and InitWelcome=true shows it, but never sets a casual/non-developer audience option — the audience-gate regression is untested"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-maj-8-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-maj-8-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-correctness-maj-8-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-maj-8-r2-fail.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/correctness-maj-8-r2/fail.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/correctness-maj-8-r2/pass.html"
+  ]
+}

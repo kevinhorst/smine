@@ -1,0 +1,19 @@
+{
+  "finding_id": "security-MAJ-13-r1",
+  "verdict": "debunked",
+  "reason": "The attack needs branch write access to bin/, where it can just as easily replace bin/acdsl, the binary that runs CheckPolicy. acdsl/README.md Modes puts binaries outside the policy on purpose: verifier binaries are 'never a mode question', and in the registry 'the name is the contract, the binary one implementation'. The proposed digest pin would be checked by that same replaceable binary, so it closes nothing. The registry bindings that main.go calls 'verifiers' are already gated (registry.json is on the frozen surface and classViolations checks the verifier allowlist).",
+  "probe": "manual: code-and-doc read — the claim depends on what the threat model covers, not on a code pattern; an acdsl pattern probe could only re-confirm the undisputed fact that policySurface lists four JSON files",
+  "evidence": {
+    "read": [
+      "acdsl/README.md:49-51 — policy 'enforced by acdsl check (compiled into bin/acdsl, so no data file can neuter it)': the trust boundary is data files vs the compiled runner, and binaries are trusted",
+      "acdsl/README.md:70-71 — 'New verifier *binaries* are never a mode question: they go through the evalgen proposal flow'",
+      "acdsl/README.md:31-35 — overlay: 'the registry name is the contract, the binary one implementation'; the policy gates overlay entry names via local_overrides, by design",
+      "acdsl/README.md:24-27,44-45 — dist ships bin/acdsl beside bin/verifiers/<name> in the same bin/ dir; whether bin/ is committed is the target's choice",
+      "internal/acdsl/policy.go:31-36,300-321,82-109 — registry.json (the verifier bindings) is on the frozen surface, and classViolations rejects bindings outside the allowlist, so the 'rules or verifiers' contract in cmd/acdsl/main.go:13-14 holds for bindings",
+      "cmd/acdsl/main.go:122-137 — CheckPolicy runs inside the branch-local bin/acdsl, so a sha256 pin checked there is undone by the same one-file write to bin/acdsl (the lane admits this in its own caveat)",
+      "acdsl/policy.json — this repo runs mode free (dist_mode gated affects only targets), so the path cannot be reached in the reviewed repo"
+    ],
+    "probe_run": "none — manual path; no acdsl probe can separate what the design intends from the structural absence"
+  },
+  "artifacts": []
+}

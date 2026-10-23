@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-182-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at head: the failed-gate result literal (template, new_selectors, unstyled_input_types, save_button_count: 0, pass: false, violations) appears at L64-71 and again at L88-95 of config-ui-fidelity-gate.js, both added by this diff.",
+  "probe": "PROBE-CODE-STYLE-NIT-182-R1",
+  "script": "code-style-nit-182-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-182-r1/skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+  "registry": "registry-code-style-nit-182-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-NIT-182-R1 -registry registry-code-style-nit-182-r1.json -> exit 1: skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:92: failed-gate result literal (save_button_count: 0) repeated; first copy at line 68",
+    "fixture_run": "bin/acdsl check -root probes/fixtures/code-style-nit-182-r1 -rule PROBE-CODE-STYLE-NIT-182-R1 -> exit 1 (config-ui-fidelity-gate.js:8, first copy line 3)",
+    "read": [
+      "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js L62-72 and L88-95 at 1f725ce: identical six-field object differing only in template source and violation text",
+      "known.json: correctness-MAJ-39-r1 (gate never invoked) and correctness-MIN-43-r1 (save_button_count===1 semantics) are different substance"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-182-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-182-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-182-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-182-r1"
+  ]
+}

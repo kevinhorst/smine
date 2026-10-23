@@ -1,0 +1,54 @@
+{
+  "artifact": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/correctness-go-core-lane1.json",
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "go-core",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "aborted": false,
+  "walk_complete": true,
+  "walk": [
+    {"group": "spec-1-concept", "hits": []},
+    {"group": "spec-2-user_stories", "hits": []},
+    {"group": "spec-3-raw", "hits": []},
+    {"group": "spec-4-change-englishness", "hits": []},
+    {"group": "spec-5-change-nondev-automation", "hits": []},
+    {"group": "spec-6-raw", "hits": []},
+    {"group": "spec-7-raw", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile", "hits": []},
+    {"group": "spec-9-change-headless-bootstrap", "hits": []},
+    {"group": "spec-10-change-viewer-fixes", "hits": []},
+    {"group": "spec-11-change-repos-routines-ui", "hits": []},
+    {"group": "spec-12-raw", "hits": []},
+    {"group": "spec-13-change-multi-profile-ports", "hits": ["correctness-BLK-1", "correctness-MAJ-1"]},
+    {"group": "spec-14-change-repo-cache", "hits": []}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-BLK-1",
+      "file": "cmd/configserver/install_windows.go",
+      "line": 139,
+      "checklist": "correctness-115",
+      "effect": "incorrect",
+      "exposure": "often",
+      "severity": "BLOCKER",
+      "claim": "writeInstallEnv (install_windows.go:139-149), called from runInstall (line 97) with the raw -addr/-peek-port/-peek-control-port flag values, never reads any pre-existing install.env before writing — it always overwrites install.env with whatever the current flags resolve to (the hardcoded defaults 127.0.0.1:6001 / 4242 / 42442 unless the invoker re-passes custom values, cmd/configserver/main.go:34,51-52). Spec correctness-115 requires: 're-running the install with no overrides must preserve a profile's previously resolved values rather than resetting them to shared defaults.' The macOS counterpart (install.sh) explicitly implements this preserve-on-reinstall semantics by sourcing the existing install.env first (ENV_CONFIGSERVER_PORT/ENV_PEEK_PORT/ENV_PEEK_CONTROL_PORT, falling back to env vars, falling back to the hardcoded defaults) before writing a new one; install_windows.go has no equivalent read-before-write step anywhere in runInstall or writeInstallEnv.",
+      "fix": "In writeInstallEnv (or before calling it), read the existing install.env first (mirroring install.sh's ENV_CONFIGSERVER_PORT/ENV_PEEK_PORT/ENV_PEEK_CONTROL_PORT fallback chain) and only fall back to the passed-in flag defaults when no prior value exists, so a reinstall without explicit overrides preserves the profile's previously resolved ports.",
+      "evidence": "Re-read cmd/configserver/install_windows.go lines 72-149 and cmd/configserver/main.go lines 28-67 and 116-118 in full via git show at head 1f725cedc5c8b092c8a3d7e408793ef72840ec7e: confirmed addr/peekPort/peekControlPort flow straight from flag.String/flag.Int defaults (hardcoded literals) through runInstall into writeInstallEnv with no intervening read of install.env. Cross-checked install.sh (not in this chunk but read for comparison) at lines 6-21, which sources install.env first (`. \"$REPO_DIR/install.env\"`) before resolving ADDR_PORT/PEEK_PORT/PEEK_CONTROL_PORT — confirming the intended pattern this Windows path is missing. The claim survives: for any profile that has customized its ports (the entire premise of the multi-profile-ports feature), a re-run of `configserver.exe -install` without re-specifying the same -addr/-peek-port/-peek-control-port flags silently resets install.env (and therefore the plist/task port wiring and the {{PEEK_CONTROL_PORT}} expansion sync_settings.sh performs) back to the shared defaults, which is exactly the collision scenario this feature set exists to prevent."
+    },
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "cmd/configserver/main.go",
+      "line": 248,
+      "checklist": "correctness-110",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "severity": "MAJOR",
+      "claim": "startPeek's reuse check (main.go:245-258) decodes a peekID struct that includes ControlPort (line 220) from the running instance's /healthz response, but the match condition at line 248 (`id.ClaudeHome == claudeHome && id.CodexHome == codexHome`) never compares id.ControlPort against the currently-configured controlPort. Spec correctness-110 requires the identity check to expose 'the home directories and ports it is actually serving' and to reuse 'only on an exact match,' otherwise log a loud error and disable the integration. As written, a pre-existing peek-mcp process with the same claude-home/codex-home but a different (e.g. stale, pre-reconfiguration) control port is silently treated as 'already serving ... for this profile' and reused, while the caller's dashboardURL (main.go:124-126) is built from the newly-configured *peekControlPort flag — producing a dashboard link that points at a port the reused process is not actually listening its control UI on.",
+      "fix": "Add `&& id.ControlPort == controlPort` (or 0-vs-0 handling for a disabled dashboard) to the match condition at main.go:248 so a control-port mismatch is treated the same as a home-dir mismatch — logged loudly and the integration disabled rather than silently reused.",
+      "evidence": "Re-read cmd/configserver/main.go lines 216-281 in full at head 1f725cedc5c8b092c8a3d7e408793ef72840ec7e. Confirmed peekID has a ControlPort field (decoded from JSON, line 220), confirmed it is never referenced again anywhere in the file after being decoded in peekIdentity (lines 223-238), and confirmed the sole reuse-match condition at line 248 checks only ClaudeHome/CodexHome. The claim survives: the main port match is implicit (healthz was dialed on that exact port), but the control-port dimension named in the struct and the spec's 'ports it is actually serving' is collected and then dropped, so a stale listener from before a control-port reconfiguration passes the identity check and a wrong dashboard URL is handed to the operator."
+    }
+  ],
+  "notes": "Cross-chunk, unconfirmed (flagged for station, not chased): (1) correctness-39's 'hooks prune prompt gets an EOF guard' requirement is not visible anywhere in this chunk's files (skills/sync.go and contextdocs/sync.go only cover the skills/context sync timeouts, both correctly widened to shell.RunSync's 10m SyncTimeout); the hooks-sync script and its prune-prompt EOF guard, and the 'settings' sync script's timeout, live outside go-core (likely cmd/sync/*.sh or an internal/hooks-style package) — another chunk/lane should confirm. (2) correctness-69's claim that archived sessions' dedup ledgers 'remain consulted by the miner's union skip-list' is only asserted in a comment (internal/sessions/sessions.go:147-148, 298-300) — the actual miner/union-skip-list logic that must honor this is not in this chunk's Go files (likely a skill/workflow script), so I could not verify the ledger-union behavior itself, only that Store.Reload() correctly excludes sessions/archived/ from the live scope set. (3) correctness-92/93/97 (worktree content-containment check, status-cache invalidation on delete, dead single-branch removal endpoint) concern internal/server HTTP handlers and a worktree-safety file not present in this chunk's file list (only internal/repos/registry.go is in scope here, which supplies Fingerprint/WorktreeCounts correctly per correctness-94/120 but does not itself implement the containment test or the HTTP route deletion) — another chunk should own these."
+}

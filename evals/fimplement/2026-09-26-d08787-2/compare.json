@@ -1,0 +1,21 @@
+{
+  "ranking": ["B", "A"],
+  "arms": [
+    {
+      "label": "A",
+      "summary": "Complete, plan-faithful implementation matching the reference (step plan, dry-run preview with transparent refusal, would_* outcomes, DecideBash with isAwaitingAi, -close hook wiring, allow rule, close skill Check/Report-refusal, fact update, all planned tests), but it places afterClose after afterDelivery as the plan sketch does instead of alphabetically.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:40",
+          "claim": "State.afterClose is placed after afterDelivery, following the plan's placement rather than RULE-GOLANG-FILE-001 alphabetical order of private methods (afterClose < afterDelivery)."
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "summary": "Complete, plan-faithful implementation equivalent to the reference across agentwt, sessiontitle, settings, close skill and facts, with all planned tests, and it orders State.afterClose alphabetically before afterDelivery per the Go file-order rule (recorded in the plan changelog).",
+      "defects": []
+    }
+  ]
+}

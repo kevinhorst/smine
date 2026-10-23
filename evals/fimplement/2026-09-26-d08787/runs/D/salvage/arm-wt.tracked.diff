@@ -1,0 +1,118 @@
+diff --git a/cmd/agentwt/src/error.rs b/cmd/agentwt/src/error.rs
+index eee3e7bbc..9e8d8506f 100644
+--- a/cmd/agentwt/src/error.rs
++++ b/cmd/agentwt/src/error.rs
+@@ -1,6 +1,7 @@
+ //! Error model: one `Error` enum for the library, converted to `anyhow` by the binary.
+ //! `Refusal` is a business-rule refusal (unknown branch, unsafe removal): the operation did not
+-//! run, the message is the operator-facing output line, and the binary exits 3.
++//! run, the message is the operator-facing output line — a `skipped` line in `remove`, exit 3 as an
++//! error (unknown or non-agent branch, any refusal under `--dry-run`).
+ //!
+ //! gix 0.87 returns one typed error per operation (`gix::open::Error`, `gix::revision::walk::Error`, …);
+ //! the `GitExt::git()` adapter lifts any of them into `gix::Error` so every gix call reads `call().git()?`.
+@@ -32,7 +33,7 @@ pub enum Error {
+     #[error("path is not valid UTF-8: {0}")]
+     NonUtf8Path(PathBuf),
+     /// A business-rule refusal; the operation did not happen.
+-    #[error("{0}")]
++    #[error(transparent)]
+     Refused(#[from] Refusal),
+     /// A `git` child exited non-zero.
+     #[error("git {command} exited {status}: {stderr}")]
+@@ -56,7 +57,7 @@ pub enum Error {
+ }
+ 
+ /// Business-rule refusals. `Display` is the operator-facing line the remove script printed.
+-#[derive(Debug, thiserror::Error)]
++#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+ pub enum Refusal {
+     /// The branch does not exist as a local ref.
+     #[error("unknown branch {0}")]
+@@ -74,6 +75,17 @@ pub enum Refusal {
+         /// Comma-joined unsafe reasons, e.g. `dirty(2), unpicked(1)`.
+         reasons: String,
+     },
++    /// `remove` without `--delete-branch` on a branch that has no worktree.
++    #[error("no worktree checked out for {0}")]
++    NoWorktree(String),
++    /// Branch deletion refused by the safety predicate.
++    #[error("skipped branch: {branch}: {reasons}")]
++    UnsafeBranch {
++        /// The branch.
++        branch: String,
++        /// Comma-joined unsafe reasons.
++        reasons: String,
++    },
+ }
+ 
+ impl Error {
+diff --git a/cmd/agentwt/src/wire.rs b/cmd/agentwt/src/wire.rs
+index 8af874173..94978dc80 100644
+--- a/cmd/agentwt/src/wire.rs
++++ b/cmd/agentwt/src/wire.rs
+@@ -382,7 +382,8 @@ pub struct ConflictPair {
+ /// Outcome of the one state-mutating command.
+ #[derive(Debug, Clone, Serialize, JsonSchema)]
+ pub struct OpResult {
+-    /// Always `remove` today; the field stays so the Go decoder has one shape.
++    /// Always `remove` today (`--dry-run` included; its lines carry the `would_*` outcomes); the field stays so the
++    /// Go decoder has one shape.
+     pub operation: String,
+     /// One line per acted-on subject, in order; the text mode prints these verbatim.
+     pub lines: Vec<OpLine>,
+@@ -409,6 +410,10 @@ pub enum OpOutcome {
+     BranchDeleted,
+     /// Refused by the safety predicate.
+     Skipped,
++    /// `--dry-run`: the worktree would be removed.
++    WouldRemove,
++    /// `--dry-run`: the branch would be deleted.
++    WouldDeleteBranch,
+ }
+ 
+ #[cfg(test)]
+@@ -417,7 +422,7 @@ mod tests {
+ 
+     #[test]
+     fn enum_wire_strings_are_pinned() {
+-        let cases: [(&str, String); 8] = [
++        let cases: [(&str, String); 10] = [
+             (
+                 "rank",
+                 serde_json::to_string(&ContainmentRank::Other).unwrap_or_default(),
+@@ -446,6 +451,14 @@ mod tests {
+                 "outcome",
+                 serde_json::to_string(&OpOutcome::BranchDeleted).unwrap_or_default(),
+             ),
++            (
++                "would_remove",
++                serde_json::to_string(&OpOutcome::WouldRemove).unwrap_or_default(),
++            ),
++            (
++                "would_delete_branch",
++                serde_json::to_string(&OpOutcome::WouldDeleteBranch).unwrap_or_default(),
++            ),
+             (
+                 "train",
+                 serde_json::to_string(&TrainOutcome::Blocked {
+@@ -463,6 +476,8 @@ mod tests {
+             "\"merge_adds_nothing\"",
+             "\"codex\"",
+             "\"branch_deleted\"",
++            "\"would_remove\"",
++            "\"would_delete_branch\"",
+             "{\"state\":\"blocked\",\"blocked_by\":[],\"paths\":[]}",
+         ];
+         for ((label, actual), want) in cases.iter().zip(expected) {
+diff --git a/plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md b/plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md
+index f24589f3f..813f6f752 100644
+--- a/plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md
++++ b/plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md
+@@ -1,3 +1,6 @@
++<!-- [ACDSL-PROJECTION] 1 rule(s) govern this file — working-copy view, stripped before commit -->
++<!-- - [ACDSL-PLAN-001] Persisted plans under a plan dir's design/ follow rules/plan.md — TLDR is the first section, catalog sections keep RULE-PLAN-002 order, and a Changelog section exists -->
++
+ # Session title hook: DONE on /close, provisional-title wait — Change Plan
+ 
+ route: `change` — target: `opus`

@@ -1,0 +1,52 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 3068,
+      "severity": "BLOCKER",
+      "claim": "The ACDSL policy self-management gate is fully bypassable in one commit: because base_ref inside the attacker-editable acdsl/policy.json is used verbatim as the only candidate ref, an agent can set base_ref to HEAD (or its own branch), making basePolicy read the attacker's own malicious policy as ground truth and defeating gated/strict enforcement entirely.",
+      "fix": "Don't let the file under test choose its own authoritative ref: resolve the base only from hardcoded upstream candidates (origin/HEAD, origin/main, main, master), or if an override is needed, source base_ref from outside policySurface's attacker-reachable scope and verify the candidate ref is reachable from an origin/* tracking ref (e.g. git merge-base --is-ancestor) before trusting anything read from it; add a fail-base-ref-self-reference test alongside TestCheckPolicyUnresolvableBase."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/server/repos.go",
+      "line": 346,
+      "severity": "MAJOR",
+      "claim": "handleRepoWorktreeStatus reads the status-cache entry once up front and never reassigns it when a fresh scan fails, so a stale ScannedAt (or zero time on a first-ever failed scan) is rendered next to the fresh-scan error banner.",
+      "fix": "Only set data.ScannedAt from entry.ScannedAt when data.Cached is true or the fresh scan succeeded; otherwise leave it zero and have the template treat zero as \"no successful scan yet\"."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "routines/smine-nightly/run.sh",
+      "line": 10036,
+      "severity": "MAJOR",
+      "claim": "The unattended nightly orchestrate stage rewrites the operator's live ~/.claude/settings.json via jq + mv with no pre-write validation of the tmp file and no backup, so a logically bad write (e.g. from a malformed repos.json jq tolerates) silently degrades every future session's permissions.",
+      "fix": "Validate the tmp file parses and that .permissions.additionalDirectories is still an array of strings before the mv, and keep one rotated backup (settings.json.bak), following the repo's existing pattern (check sync_settings.sh) rather than inventing a new one."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/acdsl/dist.go",
+      "line": 2678,
+      "severity": "MAJOR",
+      "claim": "Because the smine repo's own committed acdsl/policy.json sets mode \"free\", the gated/strict CheckPolicy code paths are never exercised by make audit's acdsl check step, leaving the feature's only automated coverage in unit tests and the plan's gated/strict verification scenario a manual step, so a regression like finding #1 would ship silently.",
+      "fix": "Either add a dedicated CI step that runs acdsl dist into a scratch repo and asserts a known-bad gated/strict scenario is caught (automating the plan's manual verification scenarios), or record this as a tracked gap per ACTION-REVIEW-DOCS-004 rather than leaving it implicit."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 1044,
+      "severity": "MINOR",
+      "claim": "The Bash branch of the context-read denial only recognizes a bare two-token cat command, so head/less/command-substitution variants sail through unexamined — trivially bypassable if ever treated as a real boundary rather than an advisory nudge.",
+      "fix": "None required; consider tightening the top-of-file comment to state explicitly that this is a UX nudge only, not a boundary, matching the wording of acdsl-policy-guard.sh's doc comment."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/server/bootstrap.go",
+      "line": 3629,
+      "severity": "MINOR",
+      "claim": "bootstrapEnv's extra-prompt validation blocks quotes and newlines but not all shell-meaningful characters, which is safe today (env var / argv only, never eval'd) but would become insufficient if a future refactor interpolated the prompt into a script.",
+      "fix": "No fix needed now; just don't let a future refactor move this into an eval-based path without re-deriving the validation."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-MIN-4-r1",
+  "verdict": "confirmed",
+  "reason": "internal/routines/sched_windows.go's SyncAll gained a NotFound+DefaultDisabled skip branch at line 157, but internal/routines has no *_windows_test.go file at all (git ls-files shows only taskxml_test.go among windows-adjacent names, and it never references SyncAll, taskState or DefaultDisabled), so the new branch lands on an already-zero-coverage file.",
+  "probe": "PROBE-TESTS-MIN-4-R1",
+  "script": "tests-min-4-r1-syncall-windows.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-4-r1",
+  "registry": "registry-tests-min-4-r1.json",
+  "evidence": {
+    "read": [
+      "git ls-files internal/routines | grep -i windows — only sched_windows.go itself; no sched_windows_test.go or any *_windows_test.go",
+      "internal/routines/sched_windows.go:120-175 — the new `if state == \"NotFound\" && routine.DefaultDisabled { ... continue }` branch at line 157"
+    ],
+    "probe_run": "internal/routines/sched_windows.go:1: no *_windows_test.go file exists in internal/routines — SyncAll's new NotFound+DefaultDisabled skip branch (and every other sched_windows.go function) ships with zero test coverage: [PROBE-TESTS-MIN-4-R1] tests-min-4-r1-syncall-windows (acdsl check -root <worktree> -rule PROBE-TESTS-MIN-4-R1 -registry registry-tests-min-4-r1.json -lifetime task, exit 1)"
+    ,
+    "fixture_validity": "same probe run against probes/fixtures/tests-min-4-r1 (a windows-build-tagged sched_windows.go stub with no sibling *_windows_test.go) exits 1 with the identical message"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-4-r1-syncall-windows.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-4-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-tests-min-4-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-4-r1"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "finding_id": "security-MAJ-12-r1",
+  "verdict": "confirmed",
+  "reason": "Probe PROBE-SECURITY-MAJ-12-R1 is RED at 1f725ce on internal/server/server.go:398: sameOriginGuard, the only middleware in front of the new POST /profile/style, /welcome/bootstrap and /sessions/archive/{name}/delete routes, has no loopback Host allowlist, and sameOriginRequest short-circuits to true on Sec-Fetch-Site same-origin before any Host/Origin comparison; cells kept (destructive/eventually) since the browser leg (local-network-access blocking of rebound loopback requests) is unproven here.",
+  "probe": "PROBE-SECURITY-MAJ-12-R1",
+  "script": "security-maj-12-r1-host-guard.sh",
+  "fixture": "probes/fixtures/security-maj-12-r1-fail/internal/server/server.go",
+  "registry": "registry-security-maj-12-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-SECURITY-MAJ-12-R1 -root <worktree> -registry probes/registry-security-maj-12-r1.json -> exit 1: internal/server/server.go:398: sameOriginGuard has no loopback Host allowlist",
+    "validity_run": "bin/acdsl check -rule PROBE-SECURITY-MAJ-12-R1 -root scratch/security-maj-12-r1/root (git-initialised copy of the fail fixture) -> exit 1 on internal/server/server.go:5; a direct /bin/bash run and the make acdsl wrapper were both denied by tool policy, so the fixture was checked through acdsl -root",
+    "read": [
+      "internal/server/server.go:300-390 — Handler() registers POST /profile/style (338), POST /welcome/bootstrap (343), POST /sessions/archive/{name}/delete (322) and returns sameOriginGuard(mux) (389)",
+      "internal/server/server.go:422-438 — sameOriginRequest returns true for Sec-Fetch-Site same-origin|none (423-425) before the Origin==r.Host comparison (437); no Host allowlist anywhere",
+      "git grep 127.0.0.1|r.Host|ListenAndServe over cmd/configserver internal/server — only r.Host use is server.go:437; cmd/configserver/main.go:34 default listen 127.0.0.1:6001, no Host-checking middleware"
+    ],
+    "not_demonstrated": "End-to-end browser exploit: needs a DNS-rebinding domain and a browser that does not block public-to-loopback requests after rebinding (Chrome Local Network Access / Private Network Access may prompt or block); hence exposure stays 'eventually'. The guard itself predates this diff; the diff adds the new sinks behind it."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/security-maj-12-r1-host-guard.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-security-maj-12-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/security-maj-12-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/security-maj-12-r1-fail/internal/server/server.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/security-maj-12-r1-pass/server.go"
+  ]
+}

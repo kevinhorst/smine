@@ -1,0 +1,14 @@
+=== RUN   TestReproDeleteErrorHXRedirectSwallowsError
+    sessions_repro_test.go:32: 
+        	Error Trace:	/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skillroutine-eval-aqms-review-3f52bb/evals/aqms-review-wip/2026-09-09-a34281/runs/sonnet-5-high-r1/artifacts/arm-wt/internal/server/sessions_repro_test.go:32
+        	Error:      	Should be empty, but was /sessions/archive
+        	Test:       	TestReproDeleteErrorHXRedirectSwallowsError
+        	Messages:   	BUG: HX-Redirect="/sessions/archive" is set even though the delete failed — a real htmx client navigates to that URL and discards the response body, so the just-asserted error card is never seen by the user
+--- FAIL: TestReproDeleteErrorHXRedirectSwallowsError (0.00s)
+FAIL
+FAIL	github.com/kevinhorst/smine/internal/server	0.384s
+testing: warning: no tests to run
+PASS
+ok  	github.com/kevinhorst/smine/internal/server/catalog	0.642s [no tests to run]
+?   	github.com/kevinhorst/smine/internal/server/respond	[no test files]
+FAIL

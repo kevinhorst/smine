@@ -1,0 +1,14 @@
+{
+  "finding_id": "tests-MIN-10-r2",
+  "verdict": "confirmed",
+  "reason": "Repo.Validate (registry.go:35) already contains the traversal guard for Name \".\"/\"..\" (added by a prior round's applied fix, security-NIT-2-r1), but TestRepoValidate (registry_test.go:53) only has a \"reserved-name-fails\" subtest; no case passes \".\" or \"..\". Validate sits at 90.9% function coverage — the one branch a traversal-name-fails case would add is the gap. Not a re-report of the known security-NIT-2-r1 ledger row, which was the code fix, not a test.",
+  "probe": "PROBE-TESTS-MIN-10-R2",
+  "script": "bin/verifiers/symbolcoverage (repo-registry verifier \"symbol-coverage\", reused — no custom script)",
+  "fixture": "artifacts/round-2/scratch/tests-min-10-r2/files.txt",
+  "evidence": "acdsl check -rule PROBE-TESTS-MIN-10-R2 -> github.com/kevinhorst/smine/internal/repos/registry.go:35: coverage of Validate is 90.9% < planned 95.0%",
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b5-r2/railroad-probes-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/tests-min-10-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/tests-min-10-r2/files.txt"
+  ]
+}

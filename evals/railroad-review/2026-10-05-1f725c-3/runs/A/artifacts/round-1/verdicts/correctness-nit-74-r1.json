@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-NIT-74-r1",
+  "verdict": "confirmed",
+  "reason": "docs/workflows.md:65 still names the lane, refuter and station branches and the cleanup filter as claude/railroad-*, while skills/quality/railroad-review/workflows/railroad-review.js:81-82,129,367,535-537 build claude-review/*; the probe goes RED at docs/workflows.md:65.",
+  "probe": "PROBE-CORRECTNESS-NIT-74-R1",
+  "script": "correctness-nit-74-r1.sh",
+  "fixture": "probes/fixtures/correctness-nit-74-r1/docs/workflows.md",
+  "registry": "registry-correctness-nit-74-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-NIT-74-R1 -registry probes/registry-correctness-nit-74-r1.json -> exit 1: docs/workflows.md:65: stale claude/railroad-* branch name (workflow builds claude-review/*)",
+    "read": [
+      "docs/workflows.md:65 — `claude/railroad-{direction}-l{i}-r{round}-{hash6}`, `claude/railroad-refute-{finding-id}-r{round}-{hash6}`, `claude/railroad-station-r{round}-{hash6}`, 'per expected `claude/railroad-*` branch'",
+      "git grep over railroad-review.js: lines 81-82 claude-review/${d}-l${i}-r${r}-${hash6}, 129 claude-review/station-r${r}-${hash6}, 367 claude-review/refute-..., 10 cleanup of claude-review/*",
+      "both files changed in b4981b8..1f725ce (diff --stat: docs/workflows.md 32 lines, railroad-review.js 25 lines)"
+    ],
+    "validity": "fixture validity run not executable here: direct `/bin/bash <script>` / `bash <script>` are denied by tool-policy and `acdsl check -root <fixture dir>` needs a git repo; the real run's RED with the script's own message shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-nit-74-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-nit-74-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-nit-74-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-nit-74-r1/docs/workflows.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-nit-74-r1/files.txt"
+  ]
+}

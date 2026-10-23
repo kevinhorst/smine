@@ -1,0 +1,30 @@
+{
+  "finding_id": "correctness-BLK-57-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on install.ps1:64 — `-presentation-profile $PresentationProfile` is two argv words; default value is \"\" (L8), install.bat L4 runs Windows PowerShell 5.1 (`powershell -File`), which omits empty-string arguments to native commands, leaving a value-less final string flag that cmd/configserver/main.go flag.Parse (L59/L67, ExitOnError) rejects with exit 2, and L66 throws; correctness-34 requires the single-token `-presentation-profile=` form.",
+  "probe": "PROBE-CORRECTNESS-BLK-57-R1",
+  "script": "correctness-blk-57-r1.sh",
+  "fixture": "probes/fixtures/correctness-blk-57-r1-fail.ps1",
+  "registry": "registry-correctness-blk-57-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-BLK-57-R1 -registry probes/registry-correctness-blk-57-r1.json -> exit 1: install.ps1:64: -presentation-profile forwarded as two words with a variable value",
+    "read": [
+      "install.ps1:8 [string]$PresentationProfile = \"\"",
+      "install.ps1:64 & bin\\configserver.exe -install ... -presentation-profile $PresentationProfile 2>&1",
+      "install.ps1:66 if ($LASTEXITCODE -ne 0) { throw \"configserver -install failed (exit $LASTEXITCODE)\" }",
+      "install.bat:4 powershell -NoProfile -ExecutionPolicy Bypass -File \"%~dp0install.ps1\" %*",
+      "cmd/configserver/main.go:59 presentationProfile := flag.String(\"presentation-profile\", \"\", ...)",
+      "cmd/configserver/main.go:67 flag.Parse()",
+      "checklist correctness-34: install.ps1 gains a -PresentationProfile parameter forwarded as `-presentation-profile=` to configserver -install"
+    ],
+    "validity": "Direct interpreter run of the probe script over scratch/correctness-blk-57-r1/files.txt was denied by tool policy (candidate rule Bash(/bin/bash *)); the real acdsl run going RED on the claimed line shows the probe is not blind. The PS 5.1 empty-argument drop and Go flag 'flag needs an argument' exit 2 are platform behavior not reproducible on this macOS host.",
+    "notes": "Line 64 is unchanged in b4981b8..1f725ce (pre-existing, introduced before the base); the defect still fails checklist item correctness-34 at head. Not in known.json (only install.ps1 row is the shellcheck prerequisite finding, different substance). Cells effect=incorrect, exposure=often agreed: default from-source Windows install path without -PresentationProfile."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-blk-57-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-blk-57-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-blk-57-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-blk-57-r1-fail.ps1",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/correctness-blk-57-r1/files.txt"
+  ]
+}

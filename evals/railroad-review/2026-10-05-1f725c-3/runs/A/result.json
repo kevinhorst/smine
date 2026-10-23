@@ -1,0 +1,66 @@
+{
+  "allowedTools": "Edit, Read, Skill(railroad-review), ToolSearch, Workflow, Write, Bash(*/bin/acdsl check *), Bash(*/bin/verifiers/*), Bash(./bin/acdsl check *), Bash(bin/acdsl check *), Bash(cp *), Bash(git add*), Bash(git apply *), Bash(git branch*), Bash(git checkout -B *), Bash(git diff*), Bash(git format-patch *), Bash(git init *), Bash(git log*), Bash(git merge-base*), Bash(git rev-list*), Bash(git rev-parse*), Bash(git show *), Bash(git status*), Bash(git worktree add*), Bash(git worktree list*), Bash(git worktree remove*), Bash(go * build *), Bash(go * test *), Bash(go * vet *), Bash(go run *), Bash(go tool cover *), Bash(jq *), Bash(make *), Bash(mkdir *), Bash(mv *), Bash(smine-rules base *), Bash(smine-rules buildtest *), Bash(smine-rules cleanup *), Bash(smine-rules entries *), Bash(smine-rules lanes *), Bash(smine-rules ledger *), Bash(smine-rules pairs *), Bash(smine-rules present *), Bash(smine-rules probe-replay *), Bash(smine-rules provision *), Bash(smine-rules prune *), Bash(smine-rules reset-round *), Bash(smine-rules snapshot *), Bash(smine-rules walk *), Workflow, Skill",
+  "auth": "token Max-Private",
+  "candidateCount": 51,
+  "checkExit": null,
+  "costUsd": 230.0967622000004,
+  "endedAt": "2026-10-05T22:21:56.200697+02:00",
+  "exitStatus": 0,
+  "golden": "produce",
+  "invalidReasons": null,
+  "isError": false,
+  "layer": "eval",
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "connected"
+    }
+  ],
+  "mode": "nightly",
+  "model": "claude-opus-5-5",
+  "outputTokens": 1908029,
+  "permissionDenials": 148,
+  "resultText": "Round 1 is done and the round cap of 1 is reached. The recommendation is **CONDITIONAL**: base and head both build and test green, but 52 findings are confirmed, one of them a blocker and nine major (including two security findings). Nothing was auto-fixed because `autofix-level: none`, so all of th…",
+  "sessionId": "b26f7f7c-513d-46b4-b52b-db7811fd96eb",
+  "skill": "railroad-review",
+  "skillVersion": "24.1.0",
+  "startedAt": "2026-10-05T21:34:50.823777+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 42,
+      "errors": 2,
+      "name": "Bash"
+    },
+    {
+      "calls": 3,
+      "errors": 0,
+      "name": "Read"
+    },
+    {
+      "calls": 3,
+      "errors": 0,
+      "name": "Workflow"
+    },
+    {
+      "calls": 2,
+      "errors": 0,
+      "name": "Write"
+    }
+  ],
+  "toolErrors": 2,
+  "unparsedLines": 0
+}

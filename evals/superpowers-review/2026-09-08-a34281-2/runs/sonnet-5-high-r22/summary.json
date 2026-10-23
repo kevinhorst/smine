@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "BLOCKER",
+      "claim": "The ACDSL self-management gate is fully bypassable by setting base_ref in the working-tree acdsl/policy.json to the current branch's own name: policyBase resolves the attacker-controlled base_ref, isBoundary becomes false, and CheckPolicy takes the not-a-boundary early-out, returning zero diagnostics for every violation class (surface tamper, protected-scope rule changes, unsanctioned overlay entries) in every mode — verified by reproduction on a clean checkout of the reviewed commit.",
+      "fix": "Do not derive isBoundary from a value that lives on the gated surface: either resolve the base independently of any working-tree-supplied base_ref (hardcode the trunk-candidate list or source base_ref only from the base-ref-committed policy, as basePolicy already does for Mode/EditableScopes), or after resolving base, verify base is a proper ancestor of HEAD and the resolved ref is not the currently checked-out branch, treating a self-referential resolution as the same unresolvable-base hard error as D10; add a regression test for base_ref == own branch name."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/bootstrap/run.sh",
+      "line": 54,
+      "severity": "MAJOR",
+      "claim": "Presentation-profile parsing (sed extraction of language/audience/dev-mode plus the dev_mode override chain) is duplicated verbatim between cmd/bootstrap/run.sh (~54-66) and routines/smine-nightly/run.sh (~25-37), and the skill_overlay copy-into-settings.local.json block is likewise duplicated, so a future profile-format change must be kept in sync by hand in multiple places with no test tying them together.",
+      "fix": "Factor the presentation-profile parsing and the skill-overlay copy into shared helpers under routines/_lib/, matching the existing shared-helper pattern (platform.sh, skill.sh) both scripts already source."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "routines/smine-nightly/run.sh",
+      "line": 296,
+      "severity": "MAJOR",
+      "claim": "The orchestrate-stage additionalDirectories reconciliation mutates the user's global ~/.claude/settings.json unconditionally whenever orchestrate=1 and both files exist, with no guard for jq being absent and no lock against a concurrent writer (the config server writes the same settings file via a different code path), risking a lost update via last-writer-wins on mv.",
+      "fix": "Guard for jq presence in this script (not only in cmd/bootstrap/run.sh) and either add locking against concurrent writers or at minimum flag the concurrent-write race as an accepted risk in the plan, as was done for the Registry.save cross-process race."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/server/presentation.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "saveProfileSelection resolves the German onboarding template via a bare relative literal filepath.Join(\"settings\", \"claude_code\", \"presentation-profile.de.md\") instead of any repo-root resolution, which only works because the launchd plist sets WorkingDirectory to the repo root; the casual+German first-activation seeding path is untested and silently falls back to an empty body from any other cwd.",
+      "fix": "Add a unit test exercising the seeding path with a temp cwd, or thread the repo root through like the settings fragment (claudeFragment flag pattern)."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 62,
+      "severity": "MINOR",
+      "claim": "The Bash-target detection for the don't-read-context-files-directly rule only recognizes a literal two-word 'cat <file>' command, so head, less, sed -n, python -c and similar pass through unexamined, and unlike the ACDSL guard the hook's comment never documents this as an accepted advisory gap with an authoritative layer behind it.",
+      "fix": "Confirm the narrow net is an accepted gap and document it in the hook's comment the way the ACDSL guard does, or broaden the command detection."
+    },
+    {
+      "finding_id": "SP-006",
+      "file": null,
+      "line": null,
+      "severity": "MINOR",
+      "claim": "Given the diff's scope, the skills/*/SKILL.md and changelog.json prose edits, the Windows-specific paths (install_windows.go, sched_windows.go, installer/windows/smine.iss), and the bulk of internal/server/templates/*.html diffs were not reviewed line-by-line beyond a targeted grep for unescaped-output patterns, so they are not verified to the same depth as the ACDSL/registry/peek/bootstrap areas.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

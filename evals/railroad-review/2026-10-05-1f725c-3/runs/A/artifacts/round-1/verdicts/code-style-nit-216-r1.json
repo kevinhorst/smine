@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-216-r1",
+  "verdict": "confirmed",
+  "reason": "README.md:224 still labels dod-report '4 questions + [DoD] walk' (and L295 'why/validated/tested'), while dod-report 1.1 in this diff replaced the template with State / Why this solution / Validation & testing / Definition of Done; probe RED on README.md:224.",
+  "probe": "PROBE-CODE-STYLE-NIT-216-R1",
+  "fixture": "probes/fixtures/code-style-nit-216-r1/README.md",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-216-R1 -> exit 1: README.md:224: literal \"4 questions + [DoD] walk\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-216-r1/files.txt literal=\"4 questions + [DoD] walk\" allowed=^$ -> exit 1 on fixture README.md:3",
+    "read": [
+      "git grep README.md:224 'DODR[\"dod-report<br>4 questions + [DoD] walk\"]'; README.md:295 'why/validated/tested plus a [DoD]-marked entry walk'",
+      "git diff b4981b8..1f725ce skills/quality/dod-report/SKILL.md: version 1.0 -> 1.1; template sections '## Blockers & gaps / ## How validated / ## How tested' replaced by '## State / ## Validation & testing'; DOD-001 reviewed mode now a summary line, not a walk",
+      "known.json: no README.md row; code-style-NIT-183-r1 covers the four-questions wording inside dod-report/SKILL.md only (different surface)"
+    ],
+    "attack": "Considered debunking because dod-report's own frontmatter description (L3) still lists why/validated/tested/DoD; rejected — the README Skill map is the declared hand-off map and the v1.1 output shape (State section, merged Validation & testing, summary-only DoD in reviewed mode) no longer matches its label. Cells debt/rare hold: only a reader relying on the map is misled."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-216-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-216-r1/README.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-216-r1/files.txt"
+  ]
+}

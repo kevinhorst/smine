@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-NIT-74-r1",
+  "verdict": "confirmed",
+  "reason": "git grep finds writeInstallEnv only in cmd/configserver/install_windows.go (definition + caller at :97); no _test.go calls it, and the reader tests (internal/config/installenv_test.go, internal/server/config_sync_test.go) build install.env from hand-written strings, so writer/reader key agreement is unpinned.",
+  "probe": "none: probe script authored (tests-nit-74-r1.sh) but its validity run was denied by tool policy (candidate rule Bash(/bin/bash *)); without a validated fixture run the acdsl verdict is not admissible — settled on the manual path",
+  "evidence": {
+    "read": [
+      "git grep -n -e writeInstallEnv -e PEEK_CONTROL_PORT -- '*.go' '*.sh' -> writeInstallEnv only at cmd/configserver/install_windows.go:97,136-146; no *_test.go hit; installenv_test.go:27,54 and config_sync_test.go:122,143 write install.env literals by hand",
+      "cmd/configserver/install_windows.go:139-149 — writes CONFIGSERVER_PORT/PEEK_PORT/PEEK_CONTROL_PORT lines; //go:build windows file",
+      "internal/config/installenv.go:20-25 — reader keyed on literal PEEK_CONTROL_PORT, default DefaultPeekControlPort"
+    ],
+    "probe_attempts": [
+      "attempt 1: /bin/bash probes/tests-nit-74-r1.sh scratch/tests-nit-74-r1/files.txt -> tool-policy denied, candidate Bash(/bin/bash *); not reshuffled per policy",
+      "no mutation run possible on darwin: file is windows-tagged and GOOS env prefixes are forbidden in this shell"
+    ],
+    "note": "probes/tests-nit-74-r1.sh, probes/registry-tests-nit-74-r1.json and probes/fixtures/tests-nit-74-r1/ are an unvalidated attempt with no .acdsl mirror, so probe replay does not pick them up"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/tests-nit-74-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/tests-nit-74-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-tests-nit-74-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/tests-nit-74-r1/install_windows.go"
+  ]
+}

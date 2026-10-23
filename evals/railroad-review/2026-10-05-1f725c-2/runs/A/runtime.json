@@ -1,0 +1,116 @@
+{
+  "findings": [],
+  "runs": [
+    {
+      "id": 1,
+      "anchors": [
+        {
+          "id": "base",
+          "seq": 54
+        },
+        {
+          "id": "hunk_read",
+          "seq": 58
+        },
+        {
+          "id": "lanes",
+          "seq": 60
+        },
+        {
+          "id": "base_health",
+          "seq": 140
+        },
+        {
+          "id": "base_health",
+          "seq": 167
+        },
+        {
+          "id": "head_buildtest",
+          "seq": 177
+        },
+        {
+          "id": "checklist",
+          "seq": 183
+        },
+        {
+          "id": "lanes",
+          "seq": 463
+        },
+        {
+          "id": "round",
+          "seq": 583
+        },
+        {
+          "id": "ledger",
+          "seq": 9185
+        },
+        {
+          "id": "cleanup",
+          "seq": 9262
+        }
+      ],
+      "failures": [],
+      "findings": 0,
+      "passes": [
+        {
+          "check": "cleanup_before_end",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_fix_check",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_ledger",
+          "count": 1
+        },
+        {
+          "check": "next_round_after_replay",
+          "count": 1
+        },
+        {
+          "check": "no_hunks",
+          "count": 1
+        },
+        {
+          "check": "round_after_lanes",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_build",
+          "count": 1
+        },
+        {
+          "check": "round_base_health_tests",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_build",
+          "count": 1
+        },
+        {
+          "check": "round_buildtest_tests",
+          "count": 1
+        },
+        {
+          "check": "round_id_floor",
+          "count": 1
+        },
+        {
+          "check": "round_known_path",
+          "count": 1
+        },
+        {
+          "check": "round_lane_plan",
+          "count": 1
+        }
+      ],
+      "reason": "session_ended",
+      "session": "ca8dab5f-07f2-430d-87c5-68f7f15d94fc",
+      "skill": "railroad-review",
+      "state": "ended",
+      "title": "run-2026-10-05-1f725c-2-a-4c",
+      "version": "24.1.0"
+    }
+  ]
+}

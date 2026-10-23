@@ -1,0 +1,278 @@
+{
+  "baseline": "opus-high-no-serena",
+  "comparisons": [
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": -0.5,
+      "df": 1,
+      "metricId": "smoke_pass",
+      "note": "",
+      "significant": false,
+      "welchT": -1
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": -0.5,
+      "df": 1,
+      "metricId": "check_pass",
+      "note": "",
+      "significant": false,
+      "welchT": -1
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 304,
+      "df": 1.368910543423319,
+      "metricId": "wall_seconds",
+      "note": "",
+      "significant": false,
+      "welchT": 2.1181454817975496
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 304,
+      "df": 1.368910543423319,
+      "metricId": "active_seconds",
+      "note": "",
+      "significant": false,
+      "welchT": 2.1181454817975496
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 23635.5,
+      "df": 1.6092414282203995,
+      "metricId": "output_tokens",
+      "note": "",
+      "significant": true,
+      "welchT": 8.169453487753968
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": -0.8413929000000007,
+      "df": 1.0000065814842365,
+      "metricId": "cost_usd",
+      "note": "",
+      "significant": false,
+      "welchT": -0.4044405246762112
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 3,
+      "df": 1,
+      "metricId": "permission_denials",
+      "note": "",
+      "significant": false,
+      "welchT": 3
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 19.715099715099715,
+      "df": 1.1828447059735223,
+      "metricId": "step_miss_pct",
+      "note": "",
+      "significant": false,
+      "welchT": 2.6807613425805323
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 1,
+      "df": 1,
+      "metricId": "defects_major",
+      "note": "",
+      "significant": false,
+      "welchT": 1
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "deltaMean": 2,
+      "df": 2,
+      "metricId": "quality_rank",
+      "note": "",
+      "significant": false,
+      "welchT": 2.82842712474619
+    }
+  ],
+  "groups": [
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 1,
+      "metricId": "smoke_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 1,
+      "metricId": "check_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 852.5,
+      "metricId": "wall_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 185.969083452062,
+      "variance": 34584.5
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 852.5,
+      "metricId": "active_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 185.969083452062,
+      "variance": 34584.5
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 35317,
+      "metricId": "output_tokens",
+      "n": 2,
+      "note": "",
+      "stddev": 2060.5091603775995,
+      "variance": 4245698
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 3.2160036000000005,
+      "metricId": "cost_usd",
+      "n": 2,
+      "note": "",
+      "stddev": 2.9421069849012778,
+      "variance": 8.655993510604887
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 2,
+      "metricId": "permission_denials",
+      "n": 2,
+      "note": "",
+      "stddev": 1.4142135623730951,
+      "variance": 2
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 13.247863247863247,
+      "metricId": "step_miss_pct",
+      "n": 2,
+      "note": "",
+      "stddev": 3.0218238512245623,
+      "variance": 9.131419387829647
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 0,
+      "metricId": "defects_major",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "opus-high-no-serena",
+      "mean": 1.5,
+      "metricId": "quality_rank",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7071067811865476,
+      "variance": 0.5
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 0.5,
+      "metricId": "smoke_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7071067811865476,
+      "variance": 0.5
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 0.5,
+      "metricId": "check_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7071067811865476,
+      "variance": 0.5
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 1156.5,
+      "metricId": "wall_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 81.31727983645297,
+      "variance": 6612.5
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 1156.5,
+      "metricId": "active_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 81.31727983645297,
+      "variance": 6612.5
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 58952.5,
+      "metricId": "output_tokens",
+      "n": 2,
+      "note": "",
+      "stddev": 3534.826799151551,
+      "variance": 12495000.5
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 2.3746107,
+      "metricId": "cost_usd",
+      "n": 2,
+      "note": "",
+      "stddev": 0.005337100563039976,
+      "variance": 0.000028484642420001626
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 5,
+      "metricId": "permission_denials",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 32.96296296296296,
+      "metricId": "step_miss_pct",
+      "n": 2,
+      "note": "",
+      "stddev": 9.951873216699557,
+      "variance": 99.03978052126199
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 1,
+      "metricId": "defects_major",
+      "n": 2,
+      "note": "",
+      "stddev": 1.4142135623730951,
+      "variance": 2
+    },
+    {
+      "arm": "sonnet-high-no-serena",
+      "mean": 3.5,
+      "metricId": "quality_rank",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7071067811865476,
+      "variance": 0.5
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-MIN-5-r1",
+  "verdict": "confirmed",
+  "reason": "internal/shell/shell.go's RunSync (new in this diff) duplicates Run's body verbatim aside from the timeout constant (Timeout vs SyncTimeout) and the error-message prefix — reproduced by a deterministic ACDSL probe that normalizes those two tokens and diffs the bodies, RED on the real file.",
+  "probe": "PROBE-CODE-STYLE-MIN-5-R1",
+  "script": "probe-shell-dup.sh",
+  "fixture": "round-1/probes/fixtures/min5-fail.go",
+  "registry": "registry-code-style-min-5-r1.json",
+  "evidence": {
+    "read": [
+      "internal/shell/shell.go:26-67 — Run (26-46) and RunSync (50-67) share every statement verbatim (platformArgv, exec.CommandContext, cmd.Dir, HideWindow, WaitDelay, timing log, CombinedOutput, error wrap) aside from the Timeout/SyncTimeout constant and the \"Run:\"/\"RunSync:\" error prefix; RunSync is wholly new in this diff"
+    ],
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-MIN-5-R1 -registry registry-code-style-min-5-r1.json -lifetime task => exit 1: internal/shell/shell.go:50: RunSync duplicates Run's body verbatim modulo timeout constant and error prefix (ACTION-REVIEW-QUALITY-005)",
+    "validity_check": "probe exits 1 on the duplicated-body fixture (round-1/probes/fixtures/min5-fail.go, staged untracked in the pinned worktree) and exits 0 (acdsl: 1 rule(s) OK) once RunSync is rewritten to delegate to a shared runWithTimeout helper instead of repeating the body, both via bin/acdsl check; direct-interpreter self-check substituted with the acdsl mechanism since this environment's tool policy denies invoking /bin/bash on a script directly. First attempt's probe had a normalization bug (bare 's/Timeout/TIMEOUTCONST/' also corrupted context.WithTimeout in Run's body, producing a false non-match) caught by the debug dump and fixed before the validity run that is reported here."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/probe-shell-dup.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/min5-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-min-5-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-min-5-r1.acdsl"
+  ]
+}

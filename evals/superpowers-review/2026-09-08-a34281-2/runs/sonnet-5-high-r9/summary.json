@@ -1,0 +1,32 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy trusts the working-tree policy.json's mode when policyBase fails, so editing acdsl/policy.json to {\"mode\":\"free\",\"base_ref\":\"no-such-ref\"} makes the gate silently pass with zero diagnostics, defeating the base-ref-authoritative self-management policy engine in strict/gated repos.",
+      "fix": "Resolve the base using a fixed, non-tamperable candidate chain (origin/HEAD, origin/main, main, master) regardless of policy.BaseRef — use BaseRef only as an additional first-try, never the sole candidate — and gate the unresolvable-base-is-an-error decision on whether any base resolves, never on the mode field of the working-tree policy file."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/server/profilesettings.go",
+      "line": 26,
+      "severity": "MINOR",
+      "claim": "styleTestPrompt deviates from the approved plan text (2026-08-27-smine-profile-settings D9) without the post-approval adjustment being recorded in the plan's Changelog as RULE-PLAN-049 requires.",
+      "fix": "Backfill a one-line Changelog row in the plan documenting the prompt change and its error_max_turns rationale."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/policy.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "No test exercises the free mode + unresolvable base_ref combination from SP-001; TestCheckPolicyUnresolvableBase only covers gated mode with a bad base_ref.",
+      "fix": "After fixing SP-001, add an explicit test case for free mode with an unresolvable base_ref so the bypass cannot regress silently."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

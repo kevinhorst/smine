@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-197-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at config_sync_test.go:127 (subtest re-inlines newSectionServer's TempDir/settings/fragment/newTestServer body) and :143 (install.env + t.Chdir fixture duplicated); Server.settingsPath (server.go:83) is reachable from the same-package test.",
+  "probe": "PROBE-CODE-STYLE-NIT-197-R1",
+  "script": "code-style-nit-197-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-197-r1/fail/internal/server/config_sync_test.go",
+  "registry": "registry-code-style-nit-197-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-197-R1 -registry probes/registry-code-style-nit-197-r1.json -> internal/server/config_sync_test.go:143: install.env + t.Chdir fixture duplicated (occurrence 2); internal/server/config_sync_test.go:127: subtest re-inlines newSectionServer's settings/fragment setup (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/code-style-nit-197-r1/fail -rule PROBE-CODE-STYLE-NIT-197-R1 -> config_sync_test.go:18 and :14 hits (exit 1)",
+    "read": [
+      "config_sync_test.go:28-36 newSectionServer: TempDir, settings.json/fragment.json joins, two WriteFile, newTestServer",
+      "config_sync_test.go:125-130 same six statements inline in revert-expands-install-markers",
+      "config_sync_test.go:121-123 and 142-144 identical install.env WriteFile + t.Chdir; both subtests added by this diff",
+      "server.go:83 settingsPath string, set from opts.SettingsPath at :258"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-197-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-197-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-197-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-197-r1/fail/internal/server/config_sync_test.go"
+  ]
+}

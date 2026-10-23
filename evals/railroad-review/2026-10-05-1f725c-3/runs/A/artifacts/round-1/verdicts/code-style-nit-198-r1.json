@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-198-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at presentation.go:88 (audience, language, devMode) and :200 (path, content) — both functions new in this diff, parameters not alphabetical per RULE-GOLANG-CALL-003.",
+  "probe": "PROBE-CODE-STYLE-NIT-198-R1",
+  "script": "code-style-nit-198-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-198-r1/fail/internal/server/presentation.go",
+  "registry": "registry-code-style-nit-198-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-198-R1 -registry probes/registry-code-style-nit-198-r1.json -> internal/server/presentation.go:88: parameters not alphabetical: audience language devMode; internal/server/presentation.go:200: parameters not alphabetical: path content (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/code-style-nit-198-r1/fail -rule PROBE-CODE-STYLE-NIT-198-R1 -> presentation.go:3 and :7 hits (exit 1)",
+    "read": [
+      "presentation.go:88 func (st *presentationStore) saveProfileSelection(audience, language string, devMode bool) error",
+      "presentation.go:200 func writeFileAtomic(path, content string) error",
+      "git grep at base b4981b8: neither function exists — new code, so the legacy exemption does not apply",
+      "Known ledger: NIT-11-r1 on writeFileAtomic is duplication, NIT-13-r1 is bootstrapEnv param order — not these signatures"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-198-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-198-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-198-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-198-r1/fail/internal/server/presentation.go"
+  ]
+}

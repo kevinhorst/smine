@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-209-r1",
+  "verdict": "confirmed",
+  "reason": "t_slash is assigned at test_skill_invoke_gate.sh:42 and neither $t_slash nor slash.jsonl is read anywhere else; test_prompt_start_slash_counts builds its own slash_marker.jsonl.",
+  "probe": "PROBE-CODE-STYLE-NIT-209-R1",
+  "script": "code-style-nit-209-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-209-r1-fail.sh",
+  "registry": "registry-code-style-nit-209-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-209-R1 -registry probes/registry-code-style-nit-209-r1.json -> exit 1: cmd/tests/test_skill_invoke_gate.sh:42: t_slash fixture assigned but never used by any test",
+    "read": [
+      "cmd/tests/test_skill_invoke_gate.sh read in full: line 42 assigns t_slash; lines 89-96 test_prompt_start_slash_counts uses its own $TMP/slash_marker.jsonl; no other $t_slash reference",
+      "grep -n t_slash on the file: 42, 89, 132 — 89/132 are the substring in the function name test_prompt_start_slash_counts, not variable uses"
+    ],
+    "attempts": "attempt 1 matched bare 't_slash' and went GREEN because 'test_prompt_start_slash_counts' contains that substring (debug run printed all=3 lines); attempt 2 matches only $t_slash / ${t_slash} / slash.jsonl references and went RED.",
+    "validity": "fixture run not executable here: direct /bin/bash <script> is denied by tool-policy; the attempt-1 false negative and attempt-2 RED at the claimed line show the probe discriminates."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-209-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-209-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-209-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-209-r1-fail.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-209-r1/files.txt"
+  ]
+}

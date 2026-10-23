@@ -1,0 +1,61 @@
+{
+  "allowedTools": "Glob, Grep, Read, Workflow, Skill",
+  "candidateCount": null,
+  "checkExit": null,
+  "endedAt": "2026-09-26T13:35:59.153844+02:00",
+  "exitStatus": 0,
+  "invalidReasons": [
+    "server serena not connected (pending) — comparison void"
+  ],
+  "isError": false,
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "pending"
+    },
+    {
+      "name": "claude.ai Claude Docs",
+      "status": "connected"
+    },
+    {
+      "name": "claude.ai ClickUp",
+      "status": "needs-auth"
+    },
+    {
+      "name": "claude.ai Figma",
+      "status": "needs-auth"
+    },
+    {
+      "name": "claude.ai Sentry",
+      "status": "needs-auth"
+    }
+  ],
+  "model": "claude-sonnet-5",
+  "permissionDenials": [],
+  "resultText": "`make audit` runs `audit-gates` first, then `go test -vet=off ./...`, then `make rust-test`. So it's the gate checks plus a vetless Go test pass plus the Rust test suite — no race detector, no shell tests (those are `audit-full`).",
+  "sessionId": "7a743c19-db1b-4573-9f1f-2dfff60aa2bb",
+  "startedAt": "2026-09-26T13:35:41.758916+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 1,
+      "errors": 0,
+      "name": "Bash"
+    }
+  ],
+  "toolErrors": 0,
+  "unparsedLines": 0
+}

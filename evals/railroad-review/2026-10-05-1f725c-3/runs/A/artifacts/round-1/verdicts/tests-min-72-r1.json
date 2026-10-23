@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-MIN-72-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at config-ui-fidelity-gate.js:99: gate.pass = violations.length === 0 where violations only flattens r.violations of !r.pass rows; GATE_SCHEMA allows an empty violations array, so {pass:false, violations:[]} yields gate.pass=true. No JS workflow test pins the aggregation. Exposure eventually stands (workflow uninvoked per known correctness-MAJ-39-r1).",
+  "probe": "PROBE-TESTS-MIN-72-R1",
+  "script": "tests-min-72-r1.sh",
+  "fixture": "probes/fixtures/tests-min-72-r1/fail/skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+  "registry": "registry-tests-min-72-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-MIN-72-R1 -registry probes/registry-tests-min-72-r1.json -> skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:99: gate.pass derives from violations.length only; a failed row with empty violations passes the gate (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/tests-min-72-r1/fail -rule PROBE-TESTS-MIN-72-R1 -> config-ui-fidelity-gate.js:4 hit (exit 1)",
+    "read": [
+      "config-ui-fidelity-gate.js:37-48 GATE_SCHEMA: violations required array, no minItems",
+      "config-ui-fidelity-gate.js:96 const violations = gated.filter(r => !r.pass).flatMap(r => r.violations.map(...))",
+      "config-ui-fidelity-gate.js:99 gate: { pass: violations.length === 0, violations }"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-min-72-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-min-72-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-min-72-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-min-72-r1/fail/skills/feature/fimplement/workflows/config-ui-fidelity-gate.js"
+  ]
+}

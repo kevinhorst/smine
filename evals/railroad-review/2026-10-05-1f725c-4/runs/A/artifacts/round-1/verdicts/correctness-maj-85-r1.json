@@ -1,0 +1,26 @@
+{
+  "finding_id": "correctness-MAJ-85-r1",
+  "verdict": "confirmed",
+  "reason": "smine-consolidate L51 (added in this range) directs displaced technical prose into `target`/`anchor` fields; the proposal schema's only anchor key is Gate.Anchor (internal/proposals/proposals.go:46-53), the regex smine-apply step 4(a)/(b) turns into a rule line and dry-run, so the sweep instructs rewriting a gate field that correctness-5 says is never reworded.",
+  "probe": "manual: source read — probe authored but unrunnable: tool policy denies `/bin/bash <script>` (fixture validity run) and `<wt>/bin/acdsl` direct; the Makefile has no `acdsl` target",
+  "evidence": {
+    "read": [
+      "skills/smine/smine-consolidate/SKILL.md:51 (at 1f725ce, + line in b4981b8..1f725ce): \"the technical content moves into `target`/`anchor`/`code`/snippet fields, never deleted.\"",
+      "internal/proposals/proposals.go:31-53: Proposal has no top-level anchor/code; `Gate{Anchor string json:\"anchor\"; Band; Verifier}` — 'the anchor the rule would govern'; Snippet{Code} lives under evidence[].snippets",
+      "skills/smine/smine-apply/SKILL.md:31 step 4(a)/(b): gate route appends the rule line and runs a repo-wide dry-run; 'a hit on a file the rule should not govern means the anchor is wrong'",
+      "skills/smine/smine-context/SKILL.md:60: F/A/D context proposals carry gate.anchor regex — the target of the sweep's `anchor` sink",
+      "sibling wording: smine-context/SKILL.md:33 and smine-orchestrate/SKILL.md:40 'technical anchors belong in `target`/`anchor`/`code`/snippet fields'",
+      "checklist correctness-5 (spec-1-concept): 'code snippets, ids, dates, tags and gate fields are never translated or reworded'",
+      "known.json: no entry on this file/claim (smine-context NIT-129 is the duplication debt, distinct)"
+    ],
+    "probe_attempts": [
+      "attempt 1: `/bin/bash probes/correctness-maj-85-r1.sh scratch/correctness-maj-85-r1/files.txt` → tool-policy denied (candidate Bash(/bin/bash *))",
+      "attempt 2: `<wt>/bin/acdsl -h` → tool-policy denied; `make acdsl` target absent from Makefile (grep: only build-audit/audit reference ./bin/acdsl)"
+    ],
+    "cells": "effect incorrect / exposure rare upheld — requires audience: casual plus a mutable F/A/D context proposal whose prose carries a path or ID; the instruction then names gate.anchor as the sink"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-maj-85-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-maj-85-r1/fail/SKILL.md"
+  ]
+}

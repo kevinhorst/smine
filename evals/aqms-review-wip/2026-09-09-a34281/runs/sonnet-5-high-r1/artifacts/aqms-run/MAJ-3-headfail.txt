@@ -1,0 +1,16 @@
+=== RUN   TestDistShipsReachCoveredSliceWithBinaries
+2026/09/09 11:53:47 shell: git dur=19ms err=false
+2026/09/09 11:53:47 shell: git dur=10ms err=false
+2026/09/09 11:53:47 shell: git dur=21ms err=false
+2026/09/09 11:53:47 shell: git dur=20ms err=false
+2026/09/09 11:53:47 shell: git dur=10ms err=false
+2026/09/09 11:53:47 shell: go dur=229ms err=false
+    dist_test.go:76: 
+        	Error Trace:	/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skillroutine-eval-aqms-review-3f52bb/evals/aqms-review-wip/2026-09-09-a34281/runs/sonnet-5-high-r1/artifacts/arm-wt/internal/acdsl/dist_test.go:76
+        	Error:      	Received unexpected error:
+        	            	stat /var/folders/tv/xn4t8qt15bv9fjbb6jdtbqv00000gp/T/TestDistShipsReachCoveredSliceWithBinaries3876571516/001/bin/verifiers/gofmt: no such file or directory
+        	Test:       	TestDistShipsReachCoveredSliceWithBinaries
+--- FAIL: TestDistShipsReachCoveredSliceWithBinaries (0.35s)
+FAIL
+FAIL	github.com/kevinhorst/smine/internal/acdsl	0.656s
+FAIL

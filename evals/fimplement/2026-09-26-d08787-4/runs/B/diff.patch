@@ -1,0 +1,942 @@
+diff --git a/cmd/agentwt/src/error.rs b/cmd/agentwt/src/error.rs
+index eee3e7bbc..9e8d8506f 100644
+--- a/cmd/agentwt/src/error.rs
++++ b/cmd/agentwt/src/error.rs
+@@ -1,6 +1,7 @@
+ //! Error model: one `Error` enum for the library, converted to `anyhow` by the binary.
+ //! `Refusal` is a business-rule refusal (unknown branch, unsafe removal): the operation did not
+-//! run, the message is the operator-facing output line, and the binary exits 3.
++//! run, the message is the operator-facing output line — a `skipped` line in `remove`, exit 3 as an
++//! error (unknown or non-agent branch, any refusal under `--dry-run`).
+ //!
+ //! gix 0.87 returns one typed error per operation (`gix::open::Error`, `gix::revision::walk::Error`, …);
+ //! the `GitExt::git()` adapter lifts any of them into `gix::Error` so every gix call reads `call().git()?`.
+@@ -32,7 +33,7 @@ pub enum Error {
+     #[error("path is not valid UTF-8: {0}")]
+     NonUtf8Path(PathBuf),
+     /// A business-rule refusal; the operation did not happen.
+-    #[error("{0}")]
++    #[error(transparent)]
+     Refused(#[from] Refusal),
+     /// A `git` child exited non-zero.
+     #[error("git {command} exited {status}: {stderr}")]
+@@ -56,7 +57,7 @@ pub enum Error {
+ }
+ 
+ /// Business-rule refusals. `Display` is the operator-facing line the remove script printed.
+-#[derive(Debug, thiserror::Error)]
++#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+ pub enum Refusal {
+     /// The branch does not exist as a local ref.
+     #[error("unknown branch {0}")]
+@@ -74,6 +75,17 @@ pub enum Refusal {
+         /// Comma-joined unsafe reasons, e.g. `dirty(2), unpicked(1)`.
+         reasons: String,
+     },
++    /// `remove` without `--delete-branch` on a branch that has no worktree.
++    #[error("no worktree checked out for {0}")]
++    NoWorktree(String),
++    /// Branch deletion refused by the safety predicate.
++    #[error("skipped branch: {branch}: {reasons}")]
++    UnsafeBranch {
++        /// The branch.
++        branch: String,
++        /// Comma-joined unsafe reasons.
++        reasons: String,
++    },
+ }
+ 
+ impl Error {
+diff --git a/cmd/agentwt/src/main.rs b/cmd/agentwt/src/main.rs
+index 652291b7e..e1f11f7e5 100644
+--- a/cmd/agentwt/src/main.rs
++++ b/cmd/agentwt/src/main.rs
+@@ -63,6 +63,9 @@ struct RemoveArgs {
+     /// Also delete the branch, under the same safety rule.
+     #[arg(long)]
+     delete_branch: bool,
++    /// Report what would be removed without changing anything; exit 3 when anything would be skipped.
++    #[arg(long)]
++    dry_run: bool,
+     /// Override the safety predicate.
+     #[arg(long)]
+     force: bool,
+@@ -158,7 +161,12 @@ fn run(cli: Cli, interrupted: Arc<AtomicBool>) -> anyhow::Result<Rendered> {
+                     force: args.force,
+                     delete_branch: args.delete_branch,
+                 };
+-                lines.extend(git.remove(&main_checkout, &plan)?.lines);
++                let result = if args.dry_run {
++                    plan.preview()?
++                } else {
++                    git.remove(&main_checkout, &plan)?
++                };
++                lines.extend(result.lines);
+             }
+             Rendered::Op(OpResult {
+                 operation: "remove".to_owned(),
+diff --git a/cmd/agentwt/src/ops.rs b/cmd/agentwt/src/ops.rs
+index 36ff075a9..e904d2135 100644
+--- a/cmd/agentwt/src/ops.rs
++++ b/cmd/agentwt/src/ops.rs
+@@ -1,8 +1,10 @@
+-//! `remove`, plan-then-execute: `git worktree unlock` (best effort), `git worktree remove --force`
+-//! and optionally `git branch -D`, each only when the plan says safe or forced.
++//! `remove`, plan-then-execute: [`RemovePlan::steps`] decides every step before anything runs; [`Git::remove`]
++//! executes them (`git worktree unlock` best effort, `git worktree remove --force`, optionally `git branch -D`) and
++//! [`RemovePlan::preview`] renders them for `--dry-run`.
+ //! Every git child runs in the main checkout (`Document.repo.path`), never in the worktree being removed.
+ //!
+-//! Every refusal is a `Refusal` (exit 3); every unexpected git failure a `GitCommand` (its status forwarded).
++//! A refused step is a `skipped` line in `remove` (exit 0, a batch continues) and a `Refusal` under `--dry-run`
++//! (exit 3); every unexpected git failure a `GitCommand` (its status forwarded).
+ //! There is deliberately no merge, cherry-pick or sync here — the binary is an overview, not a git client.
+ 
+ use std::path::{Path, PathBuf};
+@@ -67,62 +69,34 @@ impl Git {
+         })
+     }
+ 
+-    /// Executes a removal plan: unlock + remove the worktree, optionally delete the branch, each only when
+-    /// safe or forced; refusals are `skipped` lines so a batch continues. `main_checkout` is the status
+-    /// document's `repo.path`.
++    /// Executes a removal plan's steps; refusals are `skipped` lines so a batch continues. `main_checkout` is the
++    /// status document's `repo.path`.
+     pub fn remove(&self, main_checkout: &Path, plan: &RemovePlan) -> Result<OpResult> {
+         let branch = &plan.branch;
+         let mut lines = Vec::new();
+-        let allowed = plan.safe || plan.force;
+-        let reasons = plan.unsafe_reasons.join(", ");
+-        match &plan.worktree {
+-            Some(path) if allowed => {
+-                let _ = self.run(
+-                    main_checkout,
+-                    &["worktree", "unlock", &path.display().to_string()],
+-                );
+-                self.must(
+-                    main_checkout,
+-                    &["worktree", "remove", "--force", &path.display().to_string()],
+-                )?;
+-                lines.push(line(
+-                    branch,
+-                    OpOutcome::Removed,
+-                    format!("removed {} ({branch})", path.display()),
+-                ));
+-            }
+-            Some(path) => {
+-                let text = Refusal::Unsafe {
+-                    branch: branch.clone(),
+-                    path: path.display().to_string(),
+-                    reasons: reasons.clone(),
++        for step in plan.steps() {
++            match step {
++                RemoveStep::RemoveWorktree(path) => {
++                    let path = path.display().to_string();
++                    let _ = self.run(main_checkout, &["worktree", "unlock", &path]);
++                    self.must(main_checkout, &["worktree", "remove", "--force", &path])?;
++                    lines.push(line(
++                        branch,
++                        OpOutcome::Removed,
++                        format!("removed {path} ({branch})"),
++                    ));
++                }
++                RemoveStep::DeleteBranch => {
++                    self.must(main_checkout, &["branch", "-D", branch])?;
++                    lines.push(line(
++                        branch,
++                        OpOutcome::BranchDeleted,
++                        format!("deleted branch {branch}"),
++                    ));
++                }
++                RemoveStep::Skip(refusal) => {
++                    lines.push(line(branch, OpOutcome::Skipped, refusal.to_string()));
+                 }
+-                .to_string();
+-                lines.push(line(branch, OpOutcome::Skipped, text));
+-            }
+-            None if !plan.delete_branch => {
+-                lines.push(line(
+-                    branch,
+-                    OpOutcome::Skipped,
+-                    format!("no worktree checked out for {branch}"),
+-                ));
+-            }
+-            None => {}
+-        }
+-        if plan.delete_branch {
+-            if allowed {
+-                self.must(main_checkout, &["branch", "-D", branch])?;
+-                lines.push(line(
+-                    branch,
+-                    OpOutcome::BranchDeleted,
+-                    format!("deleted branch {branch}"),
+-                ));
+-            } else {
+-                lines.push(line(
+-                    branch,
+-                    OpOutcome::Skipped,
+-                    format!("skipped branch: {branch}: {reasons}"),
+-                ));
+             }
+         }
+         Ok(OpResult {
+@@ -149,6 +123,76 @@ pub struct RemovePlan {
+     pub delete_branch: bool,
+ }
+ 
++impl RemovePlan {
++    /// Every step `remove` takes for this plan, in order — the one decision `remove` and `--dry-run` share.
++    #[must_use]
++    pub fn steps(&self) -> Vec<RemoveStep> {
++        let allowed = self.safe || self.force;
++        let reasons = self.unsafe_reasons.join(", ");
++        let mut steps = Vec::new();
++        match &self.worktree {
++            Some(path) if allowed => steps.push(RemoveStep::RemoveWorktree(path.clone())),
++            Some(path) => steps.push(RemoveStep::Skip(Refusal::Unsafe {
++                branch: self.branch.clone(),
++                path: path.display().to_string(),
++                reasons: reasons.clone(),
++            })),
++            None if !self.delete_branch => {
++                steps.push(RemoveStep::Skip(Refusal::NoWorktree(self.branch.clone())));
++            }
++            None => {}
++        }
++        if self.delete_branch {
++            if allowed {
++                steps.push(RemoveStep::DeleteBranch);
++            } else {
++                steps.push(RemoveStep::Skip(Refusal::UnsafeBranch {
++                    branch: self.branch.clone(),
++                    reasons,
++                }));
++            }
++        }
++        steps
++    }
++
++    /// `--dry-run`: the lines `remove` would print, touching nothing; the first step that would be skipped is the
++    /// refusal instead.
++    pub fn preview(&self) -> Result<OpResult> {
++        let branch = &self.branch;
++        let mut lines = Vec::new();
++        for step in self.steps() {
++            match step {
++                RemoveStep::RemoveWorktree(path) => lines.push(line(
++                    branch,
++                    OpOutcome::WouldRemove,
++                    format!("would remove {} ({branch})", path.display()),
++                )),
++                RemoveStep::DeleteBranch => lines.push(line(
++                    branch,
++                    OpOutcome::WouldDeleteBranch,
++                    format!("would delete branch {branch}"),
++                )),
++                RemoveStep::Skip(refusal) => return Err(refusal.into()),
++            }
++        }
++        Ok(OpResult {
++            operation: "remove".to_owned(),
++            lines,
++        })
++    }
++}
++
++/// One step of a removal, decided before anything runs.
++#[derive(Debug, PartialEq, Eq)]
++pub enum RemoveStep {
++    /// Unlock (best effort) and remove this worktree.
++    RemoveWorktree(PathBuf),
++    /// Delete the branch.
++    DeleteBranch,
++    /// A refused step; its `Display` is the skip line.
++    Skip(Refusal),
++}
++
+ fn line(subject: &str, outcome: OpOutcome, text: String) -> OpLine {
+     OpLine {
+         subject: subject.to_owned(),
+@@ -156,3 +200,75 @@ fn line(subject: &str, outcome: OpOutcome, text: String) -> OpLine {
+         text,
+     }
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn steps_follow_the_plan() {
++        let safe = RemovePlan {
++            branch: "claude/x".to_owned(),
++            worktree: Some(PathBuf::from("/wt/x")),
++            safe: true,
++            unsafe_reasons: vec![],
++            force: false,
++            delete_branch: true,
++        };
++        let unsafe_plan = RemovePlan {
++            safe: false,
++            unsafe_reasons: vec!["dirty(1)".to_owned()],
++            ..safe.clone()
++        };
++        let unsafe_worktree = RemoveStep::Skip(Refusal::Unsafe {
++            branch: "claude/x".to_owned(),
++            path: "/wt/x".to_owned(),
++            reasons: "dirty(1)".to_owned(),
++        });
++        let unsafe_branch = RemoveStep::Skip(Refusal::UnsafeBranch {
++            branch: "claude/x".to_owned(),
++            reasons: "dirty(1)".to_owned(),
++        });
++        let remove_worktree = || RemoveStep::RemoveWorktree(PathBuf::from("/wt/x"));
++        let cases = [
++            (
++                "safe-worktree-delete",
++                safe.clone(),
++                vec![remove_worktree(), RemoveStep::DeleteBranch],
++            ),
++            (
++                "unsafe-worktree-delete",
++                unsafe_plan.clone(),
++                vec![unsafe_worktree, unsafe_branch],
++            ),
++            (
++                "forced-unsafe",
++                RemovePlan {
++                    force: true,
++                    ..unsafe_plan
++                },
++                vec![remove_worktree(), RemoveStep::DeleteBranch],
++            ),
++            (
++                "no-worktree-no-delete",
++                RemovePlan {
++                    worktree: None,
++                    delete_branch: false,
++                    ..safe.clone()
++                },
++                vec![RemoveStep::Skip(Refusal::NoWorktree("claude/x".to_owned()))],
++            ),
++            (
++                "no-worktree-delete-safe",
++                RemovePlan {
++                    worktree: None,
++                    ..safe
++                },
++                vec![RemoveStep::DeleteBranch],
++            ),
++        ];
++        for (label, plan, want) in cases {
++            assert_eq!(plan.steps(), want, "{label}");
++        }
++    }
++}
+diff --git a/cmd/agentwt/src/wire.rs b/cmd/agentwt/src/wire.rs
+index 8af874173..c4a9f457a 100644
+--- a/cmd/agentwt/src/wire.rs
++++ b/cmd/agentwt/src/wire.rs
+@@ -382,7 +382,8 @@ pub struct ConflictPair {
+ /// Outcome of the one state-mutating command.
+ #[derive(Debug, Clone, Serialize, JsonSchema)]
+ pub struct OpResult {
+-    /// Always `remove` today; the field stays so the Go decoder has one shape.
++    /// Always `remove` today (`--dry-run` included; its lines carry the `would_*` outcomes); the field stays so the
++    /// Go decoder has one shape.
+     pub operation: String,
+     /// One line per acted-on subject, in order; the text mode prints these verbatim.
+     pub lines: Vec<OpLine>,
+@@ -409,6 +410,10 @@ pub enum OpOutcome {
+     BranchDeleted,
+     /// Refused by the safety predicate.
+     Skipped,
++    /// `--dry-run`: the worktree would be removed.
++    WouldRemove,
++    /// `--dry-run`: the branch would be deleted.
++    WouldDeleteBranch,
+ }
+ 
+ #[cfg(test)]
+@@ -417,7 +422,7 @@ mod tests {
+ 
+     #[test]
+     fn enum_wire_strings_are_pinned() {
+-        let cases: [(&str, String); 8] = [
++        let cases: [(&str, String); 10] = [
+             (
+                 "rank",
+                 serde_json::to_string(&ContainmentRank::Other).unwrap_or_default(),
+@@ -454,6 +459,14 @@ mod tests {
+                 })
+                 .unwrap_or_default(),
+             ),
++            (
++                "would_remove",
++                serde_json::to_string(&OpOutcome::WouldRemove).unwrap_or_default(),
++            ),
++            (
++                "would_delete_branch",
++                serde_json::to_string(&OpOutcome::WouldDeleteBranch).unwrap_or_default(),
++            ),
+         ];
+         let expected = [
+             "\"other\"",
+@@ -464,6 +477,8 @@ mod tests {
+             "\"codex\"",
+             "\"branch_deleted\"",
+             "{\"state\":\"blocked\",\"blocked_by\":[],\"paths\":[]}",
++            "\"would_remove\"",
++            "\"would_delete_branch\"",
+         ];
+         for ((label, actual), want) in cases.iter().zip(expected) {
+             assert_eq!(actual, want, "{label}");
+diff --git a/cmd/agentwt/tests/scenarios/mod.rs b/cmd/agentwt/tests/scenarios/mod.rs
+index b952a3a9d..ef2e3e06c 100644
+--- a/cmd/agentwt/tests/scenarios/mod.rs
++++ b/cmd/agentwt/tests/scenarios/mod.rs
+@@ -494,6 +494,83 @@ fn from_inside_worktree() {
+     assert!(f.git(&["branch", "--list", "claude/session"]).is_empty());
+ }
+ 
++#[test]
++fn ops_remove_dry_run() {
++    fn check<'a>(branch: &'a str, format: &'a str) -> [&'a str; 6] {
++        [
++            "--format",
++            format,
++            "remove",
++            "--dry-run",
++            "--delete-branch",
++            branch,
++        ]
++    }
++
++    let mut f = Fixture::new();
++    f.branch("claude/session", "main");
++    f.branch("claude/dirty", "main");
++    let session_wt = f.worktree("claude/session", "session");
++    let dirty_wt = f.worktree("claude/dirty", "dirty");
++    write_at(&dirty_wt, "base.txt", "edited\n");
++
++    // /close shape from inside a clean worktree: would remove + would delete, nothing touched.
++    let out = f.run_in(&session_wt, &check("claude/session", "text"));
++    assert!(
++        out.status.success(),
++        "{}",
++        String::from_utf8_lossy(&out.stderr)
++    );
++    let text = String::from_utf8_lossy(&out.stdout).into_owned();
++    assert!(text.contains("would remove"), "{text}");
++    assert!(
++        text.contains("would delete branch claude/session"),
++        "{text}"
++    );
++    assert!(session_wt.exists());
++    assert!(
++        f.git(&["branch", "--list", "claude/session"])
++            .contains("claude/session")
++    );
++
++    // json: the would_* outcomes.
++    let out = f.run_in(&session_wt, &check("claude/session", "json"));
++    assert!(out.status.success());
++    let result: Value = serde_json::from_slice(&out.stdout).expect("json");
++    assert_eq!(result["lines"][0]["outcome"], "would_remove");
++    assert_eq!(result["lines"][1]["outcome"], "would_delete_branch");
++
++    // dirty → exit 3, one refusal on stderr, stdout empty, worktree kept.
++    let out = f.run(&check("claude/dirty", "text"));
++    assert_eq!(out.status.code(), Some(3));
++    let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
++    assert!(stderr.contains("skipped:"), "{stderr}");
++    assert!(stderr.contains("dirty(1)"), "{stderr}");
++    assert_eq!(stderr.matches("dirty(1)").count(), 1, "{stderr}");
++    assert!(out.stdout.is_empty());
++    assert!(dirty_wt.exists());
++
++    // real remove afterwards: the dry run changed nothing.
++    let out = f.run_in(
++        &session_wt,
++        &[
++            "--format",
++            "json",
++            "remove",
++            "--delete-branch",
++            "claude/session",
++        ],
++    );
++    assert!(
++        out.status.success(),
++        "{}",
++        String::from_utf8_lossy(&out.stderr)
++    );
++    let result: Value = serde_json::from_slice(&out.stdout).expect("json");
++    assert_eq!(result["lines"][0]["outcome"], "removed");
++    assert!(!session_wt.exists());
++}
++
+ /// A pick of a file inside a directory main also changed elsewhere: the directory's tree differs on both sides, the
+ /// twin must still match on the file change alone.
+ #[test]
+diff --git a/cmd/sessiontitle/main.go b/cmd/sessiontitle/main.go
+index eb70cf18a..8bfa05dd6 100644
+--- a/cmd/sessiontitle/main.go
++++ b/cmd/sessiontitle/main.go
+@@ -1,7 +1,7 @@
+ // sessiontitle keeps the Desktop session title in the shape
+-// "<RepoId>,<SkillId> - <AI title> - <FleetId>[STATE]" at two points: the
+-// first rename (WIP) once per session, and after every successful git commit
+-// (REVIEW). SessionStart only arms a per-session marker; a shell guard on
++// "<RepoId>,<SkillId> - <AI title> - <FleetId>[STATE]" at three points: the
++// first rename (WIP) once per session, every successful git commit (REVIEW),
++// and a passing /close removal check (DONE). SessionStart only arms a per-session marker; a shell guard on
+ // PostToolUse starts the binary with -first only while that marker exists,
+ // and the binary disarms it once the first rename is out. A hook cannot
+ // rename a Desktop session itself, so it instructs the main agent to call
+@@ -89,10 +89,11 @@ func (h *Hook) Arm(input *HookInput) error {
+ 	return nil
+ }
+ 
+-// DecideCommit renders the REVIEW title after a successful commit; nil when
+-// the command was no commit or the title needs no change.
+-func (h *Hook) DecideCommit(ctx context.Context, input *HookInput) (*HookOutput, error) {
+-	if !commitPattern.MatchString(input.ToolInput.Command) {
++// DecideBash renders the title a successful Bash trigger moves to — REVIEW
++// after a git commit, DONE after a passing /close removal check; nil when the
++// command does not match or the title needs no change.
++func (h *Hook) DecideBash(ctx context.Context, input *HookInput, pattern *regexp.Regexp, transition func(State) State) (*HookOutput, error) {
++	if !pattern.MatchString(input.ToolInput.Command) {
+ 		return nil, nil
+ 	}
+ 
+@@ -106,7 +107,7 @@ func (h *Hook) DecideCommit(ctx context.Context, input *HookInput) (*HookOutput,
+ 		return nil, nil
+ 	}
+ 	title := ParseTitle(session.Title)
+-	if title.Ai == "" {
++	if title.isAwaitingAi() {
+ 		return nil, nil
+ 	}
+ 
+@@ -117,7 +118,7 @@ func (h *Hook) DecideCommit(ctx context.Context, input *HookInput) (*HookOutput,
+ 	if err := h.fillIds(ctx, candidates, input.Cwd, title); err != nil {
+ 		return nil, err
+ 	}
+-	title.State = title.State.afterDelivery()
++	title.State = transition(title.State)
+ 	target := title.String()
+ 	if target == session.Title {
+ 		return nil, nil
+@@ -134,7 +135,7 @@ func (h *Hook) DecideCommit(ctx context.Context, input *HookInput) (*HookOutput,
+ 
+ // DecideFirst renders the first WIP rename. It disarms the marker once the
+ // instruction is out or no rename is needed (formatted or user-set title),
+-// and keeps it while the Desktop title or the first prompt line is missing,
++// and keeps it while the Desktop's AI title (not its prompt echo) or the first prompt line is missing,
+ // so the next tool call retries.
+ func (h *Hook) DecideFirst(ctx context.Context, input *HookInput) (*HookOutput, error) {
+ 	target, isPending, err := h.firstTitle(ctx, input)
+@@ -243,7 +244,7 @@ func (h *Hook) firstTitle(ctx context.Context, input *HookInput) (string, bool,
+ 		return "", false, nil
+ 	}
+ 	title := ParseTitle(session.Title)
+-	if title.Ai == "" {
++	if title.isAwaitingAi() {
+ 		return "", true, nil
+ 	}
+ 	if title.State != StateNone {
+@@ -382,6 +383,7 @@ func renameInstruction(target string) string {
+ func run(ctx context.Context, args []string, environment *Environment, stderr io.Writer, stdin io.Reader, stdout io.Writer) int {
+ 	flags := flag.NewFlagSet("sessiontitle", flag.ContinueOnError)
+ 	flags.SetOutput(stderr)
++	isClose := flags.Bool("close", false, "PostToolUse: the /close removal-check trigger (DONE), not the commit trigger")
+ 	isFirst := flags.Bool("first", false, "PostToolUse: the marker-guarded first rename, not the commit trigger")
+ 	reposPath := flags.String("repos", "", "repo registry (repos.json)")
+ 	skillsDir := flags.String("skills", "", "deployed skills directory")
+@@ -436,11 +438,15 @@ func run(ctx context.Context, args []string, environment *Environment, stderr io
+ 		output, err := hook.decideRename(input)
+ 		return writeOutput(output, err, stderr, stdout)
+ 	case eventPostToolUse:
+-		if *isFirst {
++		switch {
++		case *isFirst:
+ 			output, err := hook.DecideFirst(ctx, input)
+ 			return writeOutput(output, err, stderr, stdout)
++		case *isClose:
++			output, err := hook.DecideBash(ctx, input, closeCheckPattern, State.afterClose)
++			return writeOutput(output, err, stderr, stdout)
+ 		}
+-		output, err := hook.DecideCommit(ctx, input)
++		output, err := hook.DecideBash(ctx, input, commitPattern, State.afterDelivery)
+ 		return writeOutput(output, err, stderr, stdout)
+ 	}
+ 	return 0
+diff --git a/cmd/sessiontitle/main_test.go b/cmd/sessiontitle/main_test.go
+index ef03e4936..43632cd74 100644
+--- a/cmd/sessiontitle/main_test.go
++++ b/cmd/sessiontitle/main_test.go
+@@ -48,6 +48,7 @@ func TestRun(t *testing.T) {
+ 	writeSkillMd(t, skillsDir, "fdesign", "---\nname: fdesign\ntitle-code: FD\nversion: 1.0.0\n---\n")
+ 	writeSkillMd(t, skillsDir, "qq", "---\nname: qq\nversion: 1.0.0\n---\n")
+ 	commitArgs := []string{"-repos", reposPath, "-skills", skillsDir}
++	closeArgs := append([]string{"-close"}, commitArgs...)
+ 	firstArgs := []string{"-first", "-repos", reposPath, "-skills", skillsDir}
+ 
+ 	desktopWithSource := func(hostId string, title string, titleSource string) *Environment {
+@@ -99,6 +100,7 @@ func TestRun(t *testing.T) {
+ 	}
+ 	renameAllow := `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"sessiontitle: hook-instructed rename of this session"}}` + "\n"
+ 	commit := `git commit -q -m "cmd.sessiontitle: Added hook"`
++	closeCheck := "~/go/bin/smine-agentwt remove --dry-run --delete-branch claude/x"
+ 
+ 	tests := make([]*testCase, 0)
+ 
+@@ -382,6 +384,146 @@ func TestRun(t *testing.T) {
+ 		stdin:       toolCall(repo, "a0000020", "git log --oneline -1", "prompts-fdesign.jsonl"),
+ 	})
+ 
++	// close-wip-to-done
++	tests = append(tests, &testCase{
++		_id:             "close-wip-to-done",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: renameContext("CC,FD - Session title state structure - [DONE]"),
++
++		args:        closeArgs,
++		environment: desktop("local_0030", "CC,FD - Session title state structure - [WIP]"),
++		marker:      "a0000030",
++		stdin:       toolCall(repo, "a0000030", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-review-to-done
++	tests = append(tests, &testCase{
++		_id:             "close-review-to-done",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: renameContext("CC,FD - Session title state structure - T1-MA[DONE]"),
++
++		args:        closeArgs,
++		environment: desktop("local_0031", "CC,FD - Session title state structure - T1-MA[REVIEW]"),
++		marker:      "a0000031",
++		stdin:       toolCall(repo, "a0000031", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-testing-to-done
++	tests = append(tests, &testCase{
++		_id:             "close-testing-to-done",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: renameContext("CC,FD - Session title state structure - [DONE]"),
++
++		args:        closeArgs,
++		environment: desktop("local_0032", "CC,FD - Session title state structure - [TESTING]"),
++		marker:      "a0000032",
++		stdin:       toolCall(repo, "a0000032", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-done-stays
++	tests = append(tests, &testCase{
++		_id:             "close-done-stays",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: "",
++
++		args:        closeArgs,
++		environment: desktop("local_0033", "CC,FD - Session title state structure - [DONE]"),
++		marker:      "a0000033",
++		stdin:       toolCall(repo, "a0000033", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-unformatted-auto
++	tests = append(tests, &testCase{
++		_id:             "close-unformatted-auto",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: renameContext("CC,FD - Session title state structure - [DONE]"),
++
++		args:        closeArgs,
++		environment: desktopWithSource("local_0034", "Session title state structure", "auto"),
++		marker:      "a0000034",
++		stdin:       toolCall(repo, "a0000034", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-user-title
++	tests = append(tests, &testCase{
++		_id:             "close-user-title",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: "",
++
++		args:        closeArgs,
++		environment: desktopWithSource("local_0035", "My own title", "user"),
++		marker:      "a0000035",
++		stdin:       toolCall(repo, "a0000035", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-echo-title-waits
++	tests = append(tests, &testCase{
++		_id:             "close-echo-title-waits",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: "",
++
++		args:        closeArgs,
++		environment: desktopWithSource("local_0036", "/fdesign change: x", "auto"),
++		marker:      "a0000036",
++		stdin:       toolCall(repo, "a0000036", closeCheck, "prompts-fdesign.jsonl"),
++	})
++
++	// close-non-check-bash
++	tests = append(tests, &testCase{
++		_id:             "close-non-check-bash",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: "",
++
++		args:        closeArgs,
++		environment: desktop("local_0037", "CC,FD - Session title state structure - [WIP]"),
++		marker:      "a0000037",
++		stdin:       toolCall(repo, "a0000037", "~/go/bin/smine-agentwt remove --delete-branch claude/x", "prompts-fdesign.jsonl"),
++	})
++
++	// first-echo-title-keeps-marker
++	tests = append(tests, &testCase{
++		_id:             "first-echo-title-keeps-marker",
++		_expectedExit:   0,
++		_expectedMarker: true,
++		_expectedStderr: "",
++		_expectedStdout: "",
++
++		args:        firstArgs,
++		environment: desktopWithSource("local_0038", "/fdesign change: x", "auto"),
++		marker:      armed("a0000038"),
++		stdin:       toolCall(repo, "a0000038", "ls", "prompts-fdesign.jsonl"),
++	})
++
++	// commit-echo-title-waits
++	tests = append(tests, &testCase{
++		_id:             "commit-echo-title-waits",
++		_expectedExit:   0,
++		_expectedMarker: false,
++		_expectedStderr: "",
++		_expectedStdout: "",
++
++		args:        commitArgs,
++		environment: desktopWithSource("local_0039", "/fdesign change: x", "auto"),
++		marker:      "a0000039",
++		stdin:       toolCall(repo, "a0000039", commit, "prompts-fdesign.jsonl"),
++	})
++
+ 	// pretooluse-allow-instructed-rename
+ 	tests = append(tests, &testCase{
+ 		_id:             "pretooluse-allow-instructed-rename",
+diff --git a/cmd/sessiontitle/prompts.go b/cmd/sessiontitle/prompts.go
+index 96dfc1fe1..ad40b4cc9 100644
+--- a/cmd/sessiontitle/prompts.go
++++ b/cmd/sessiontitle/prompts.go
+@@ -14,6 +14,10 @@ import (
+ // --work-tree options, then the commit subcommand.
+ var commitPattern = regexp.MustCompile(`(^|[;&|\s])git\s+((-C|-c|--git-dir=\S+|--work-tree=\S+)\s+(\S+\s+)?)*commit(\s|$)`)
+ 
++// closeCheckPattern matches /close's removal check: the agentwt binary's
++// remove subcommand under --dry-run, from any install path.
++var closeCheckPattern = regexp.MustCompile(`(^|[;&|\s])(\S*/)?smine-agentwt\s+remove\s+--dry-run(\s|$)`)
++
+ // promptSkills returns every skill the session's human prompts invoked, in
+ // order (the caller takes the first deployed one), and whether any human
+ // prompt line exists yet. The Desktop titles a session from the typed prompt
+diff --git a/cmd/sessiontitle/title.go b/cmd/sessiontitle/title.go
+index 3b85b1bff..1193b33db 100644
+--- a/cmd/sessiontitle/title.go
++++ b/cmd/sessiontitle/title.go
+@@ -25,6 +25,12 @@ const (
+ // part is greedy so it may itself contain " - ".
+ var titlePattern = regexp.MustCompile(`^([^\s,]+)(?:, ?([^\s,]+))? - (.+) - ([A-Za-z0-9-]*)\[([A-Z_]+)\]$`)
+ 
++// afterClose is the state once /close's removal check passed: every state
++// ends in DONE.
++func (s State) afterClose() State {
++	return StateDone
++}
++
+ // afterDelivery is the state once a commit landed; REVIEW, TESTING and DONE
+ // are never left automatically.
+ func (s State) afterDelivery() State {
+@@ -77,6 +83,17 @@ func (t *Title) String() string {
+ 	return prefix + shortenAi(t.Ai, budget) + suffix
+ }
+ 
++// isAwaitingAi reports whether the Desktop has not generated the AI title
++// yet: the title is empty, or an unformatted title still echoes the typed
++// prompt — a slash-command echo starts with "/", a generated title never does.
++func (t *Title) isAwaitingAi() bool {
++	if t.Ai == "" {
++		return true
++	}
++	isUnformatted := t.Repo == ""
++	return isUnformatted && strings.HasPrefix(t.Ai, "/")
++}
++
+ // parseState maps an unknown bracket token (legacy ACTIVE, HAS_PLAN) to
+ // StateNone, which the next transition replaces.
+ func parseState(token string) State {
+diff --git a/cmd/sessiontitle/title_test.go b/cmd/sessiontitle/title_test.go
+index c24d6193c..7d5c3c37b 100644
+--- a/cmd/sessiontitle/title_test.go
++++ b/cmd/sessiontitle/title_test.go
+@@ -160,8 +160,9 @@ func TestTitle_String(t *testing.T) {
+ 
+ func TestState_Transitions(t *testing.T) {
+ 	type testCase struct {
+-		_id       string
+-		_expected State
++		_id            string
++		_expected      State
++		_expectedClose State
+ 
+ 		state State
+ 	}
+@@ -169,24 +170,25 @@ func TestState_Transitions(t *testing.T) {
+ 	tests := make([]*testCase, 0)
+ 
+ 	// none
+-	tests = append(tests, &testCase{_id: "none", _expected: StateReview, state: StateNone})
++	tests = append(tests, &testCase{_id: "none", _expected: StateReview, _expectedClose: StateDone, state: StateNone})
+ 
+ 	// wip
+-	tests = append(tests, &testCase{_id: "wip", _expected: StateReview, state: StateWip})
++	tests = append(tests, &testCase{_id: "wip", _expected: StateReview, _expectedClose: StateDone, state: StateWip})
+ 
+ 	// review
+-	tests = append(tests, &testCase{_id: "review", _expected: StateReview, state: StateReview})
++	tests = append(tests, &testCase{_id: "review", _expected: StateReview, _expectedClose: StateDone, state: StateReview})
+ 
+ 	// testing
+-	tests = append(tests, &testCase{_id: "testing", _expected: StateTesting, state: StateTesting})
++	tests = append(tests, &testCase{_id: "testing", _expected: StateTesting, _expectedClose: StateDone, state: StateTesting})
+ 
+ 	// done
+-	tests = append(tests, &testCase{_id: "done", _expected: StateDone, state: StateDone})
++	tests = append(tests, &testCase{_id: "done", _expected: StateDone, _expectedClose: StateDone, state: StateDone})
+ 
+ 	// Run tests
+ 	for _, test := range tests {
+ 		t.Run(test._id, func(t *testing.T) {
+ 			assert.Equal(t, test._expected, test.state.afterDelivery())
++			assert.Equal(t, test._expectedClose, test.state.afterClose())
+ 		})
+ 	}
+ }
+diff --git a/context/context.json b/context/context.json
+index 1900d8016..f25b8e588 100644
+--- a/context/context.json
++++ b/context/context.json
+@@ -7961,7 +7961,7 @@
+       "id": "FACT-REPO-ARCH-022",
+       "content": {
+         "location": "cmd/agentwt/; internal/repos/status.go; internal/repos/ops.go; Makefile rust-* targets; install.sh",
+-        "statement": "Agent-worktree state comes from the Rust binary `agentwt` (`cmd/agentwt`, built to `bin/agentwt`, installed as `~/go/bin/smine-agentwt`): one JSON document per repo (`agentwt status --format json -C \u003crepo\u003e`, schema 1, committed at `cmd/agentwt/schema/status-v1.json`) carrying rows, base resolution, ahead/behind, one `containment` per row, sessions, merge order and per-phase timings. Everything is computed in process with gix in object-memory mode — inventory from refs and `.git/worktrees`, containment from an ancestor test, per own commit a no-op re-apply, replay (pick trailer, or the same author, author time and subject committed no earlier — conflict-resolved picks count) or patch-id twin among the candidate's commits after the branch's fork points, and a net check (merging the tip adds nothing); no worktrunk, no probe worktrees, no `git cherry` (worktrunk was measured against the gix inventory on 2026-09-25 and dropped: its one unique output duplicated the gix containment, see `plans/2026-09-25-rust-worktree-binary-wip-0abee699/verification/measurement.md`). `containment` names ONE branch in preference order base → default → any other candidate (`rank`), with `reason` `ancestor`, `all_commits_placed` or `merge_adds_nothing`; `null` means no single branch holds all of it, and `unpicked_commits` then lists the own commits no candidate holds. The base is the reflog's creation line unless a later rebase, reset or `branch -f` moved the branch onto another candidate (`reanchored`); a worktree mid-rebase or mid-bisect stays attached to its branch, and any operation in progress blocks `remove`. `cmd/agentwt/tests/scenarios/history.rs` is the history-shape catalog (rebase, pick, merge, base, worktree families) every containment change is checked against. The binary is a read-only overview plus one mutating command, `remove` (safety-gated, exit 3 on refusal); merge, cherry-pick and sync are deliberately absent. The shell scripts under `cmd/worktrees/` that did this (`print_agent_worktrees_status.sh`, `_lib/verdict.sh`, `merge_worktree.sh`, `cherry_pick_worktree.sh`, `sync_worktrees.sh`, `remove_agent_worktrees.sh`) and the `~/.claude/agents/tools` copy are gone; the config server decodes the JSON (`internal/repos/status.go`) and `/close` and the railroad cleanup call `smine-agentwt remove --delete-branch`. Entry points: `make rust-build`, `make rust-test`, `make rust-lint`, `make rust-load REPO=\u003cclone\u003e OLD=\u003ccheckout\u003e`; the crate needs a rustup toolchain (`rust-version` 1.88 floor) that `make build` requires."
++        "statement": "Agent-worktree state comes from the Rust binary `agentwt` (`cmd/agentwt`, built to `bin/agentwt`, installed as `~/go/bin/smine-agentwt`): one JSON document per repo (`agentwt status --format json -C \u003crepo\u003e`, schema 1, committed at `cmd/agentwt/schema/status-v1.json`) carrying rows, base resolution, ahead/behind, one `containment` per row, sessions, merge order and per-phase timings. Everything is computed in process with gix in object-memory mode — inventory from refs and `.git/worktrees`, containment from an ancestor test, per own commit a no-op re-apply, replay (pick trailer, or the same author, author time and subject committed no earlier — conflict-resolved picks count) or patch-id twin among the candidate's commits after the branch's fork points, and a net check (merging the tip adds nothing); no worktrunk, no probe worktrees, no `git cherry` (worktrunk was measured against the gix inventory on 2026-09-25 and dropped: its one unique output duplicated the gix containment, see `plans/2026-09-25-rust-worktree-binary-wip-0abee699/verification/measurement.md`). `containment` names ONE branch in preference order base → default → any other candidate (`rank`), with `reason` `ancestor`, `all_commits_placed` or `merge_adds_nothing`; `null` means no single branch holds all of it, and `unpicked_commits` then lists the own commits no candidate holds. The base is the reflog's creation line unless a later rebase, reset or `branch -f` moved the branch onto another candidate (`reanchored`); a worktree mid-rebase or mid-bisect stays attached to its branch, and any operation in progress blocks `remove`. `cmd/agentwt/tests/scenarios/history.rs` is the history-shape catalog (rebase, pick, merge, base, worktree families) every containment change is checked against. The binary is a read-only overview plus one mutating command, `remove` (safety-gated: an unsafe row prints a `skipped` line and exits 0, an unknown or non-agent branch exits 3; `remove --dry-run` previews the same steps without touching anything and exits 3 on the first step that would be skipped — `/close` runs it before removing so the session title can move to DONE first); merge, cherry-pick and sync are deliberately absent. The shell scripts under `cmd/worktrees/` that did this (`print_agent_worktrees_status.sh`, `_lib/verdict.sh`, `merge_worktree.sh`, `cherry_pick_worktree.sh`, `sync_worktrees.sh`, `remove_agent_worktrees.sh`) and the `~/.claude/agents/tools` copy are gone; the config server decodes the JSON (`internal/repos/status.go`) and `/close` and the railroad cleanup call `smine-agentwt remove --delete-branch`. Entry points: `make rust-build`, `make rust-test`, `make rust-lint`, `make rust-load REPO=\u003cclone\u003e OLD=\u003ccheckout\u003e`; the crate needs a rustup toolchain (`rust-version` 1.88 floor) that `make build` requires."
+       },
+       "kind": "fact",
+       "origin": "overlay",
+diff --git a/context/facts/claude-configs.md b/context/facts/claude-configs.md
+index a71319b3c..e34d5c553 100644
+--- a/context/facts/claude-configs.md
++++ b/context/facts/claude-configs.md
+@@ -70,7 +70,7 @@
+ * Location: skills/feature/fdesign/scripts/capture-ui.sh
+ * Reach: smine
+ 
+-**FACT-REPO-ARCH-022** — Agent-worktree state comes from the Rust binary `agentwt` (`cmd/agentwt`, built to `bin/agentwt`, installed as `~/go/bin/smine-agentwt`): one JSON document per repo (`agentwt status --format json -C <repo>`, schema 1, committed at `cmd/agentwt/schema/status-v1.json`) carrying rows, base resolution, ahead/behind, one `containment` per row, sessions, merge order and per-phase timings. Everything is computed in process with gix in object-memory mode — inventory from refs and `.git/worktrees`, containment from an ancestor test, per own commit a no-op re-apply, replay (pick trailer, or the same author, author time and subject committed no earlier — conflict-resolved picks count) or patch-id twin among the candidate's commits after the branch's fork points, and a net check (merging the tip adds nothing); no worktrunk, no probe worktrees, no `git cherry` (worktrunk was measured against the gix inventory on 2026-09-25 and dropped: its one unique output duplicated the gix containment, see `plans/2026-09-25-rust-worktree-binary-wip-0abee699/verification/measurement.md`). `containment` names ONE branch in preference order base → default → any other candidate (`rank`), with `reason` `ancestor`, `all_commits_placed` or `merge_adds_nothing`; `null` means no single branch holds all of it, and `unpicked_commits` then lists the own commits no candidate holds. The base is the reflog's creation line unless a later rebase, reset or `branch -f` moved the branch onto another candidate (`reanchored`); a worktree mid-rebase or mid-bisect stays attached to its branch, and any operation in progress blocks `remove`. `cmd/agentwt/tests/scenarios/history.rs` is the history-shape catalog (rebase, pick, merge, base, worktree families) every containment change is checked against. The binary is a read-only overview plus one mutating command, `remove` (safety-gated, exit 3 on refusal); merge, cherry-pick and sync are deliberately absent. The shell scripts under `cmd/worktrees/` that did this (`print_agent_worktrees_status.sh`, `_lib/verdict.sh`, `merge_worktree.sh`, `cherry_pick_worktree.sh`, `sync_worktrees.sh`, `remove_agent_worktrees.sh`) and the `~/.claude/agents/tools` copy are gone; the config server decodes the JSON (`internal/repos/status.go`) and `/close` and the railroad cleanup call `smine-agentwt remove --delete-branch`. Entry points: `make rust-build`, `make rust-test`, `make rust-lint`, `make rust-load REPO=<clone> OLD=<checkout>`; the crate needs a rustup toolchain (`rust-version` 1.88 floor) that `make build` requires.
++**FACT-REPO-ARCH-022** — Agent-worktree state comes from the Rust binary `agentwt` (`cmd/agentwt`, built to `bin/agentwt`, installed as `~/go/bin/smine-agentwt`): one JSON document per repo (`agentwt status --format json -C <repo>`, schema 1, committed at `cmd/agentwt/schema/status-v1.json`) carrying rows, base resolution, ahead/behind, one `containment` per row, sessions, merge order and per-phase timings. Everything is computed in process with gix in object-memory mode — inventory from refs and `.git/worktrees`, containment from an ancestor test, per own commit a no-op re-apply, replay (pick trailer, or the same author, author time and subject committed no earlier — conflict-resolved picks count) or patch-id twin among the candidate's commits after the branch's fork points, and a net check (merging the tip adds nothing); no worktrunk, no probe worktrees, no `git cherry` (worktrunk was measured against the gix inventory on 2026-09-25 and dropped: its one unique output duplicated the gix containment, see `plans/2026-09-25-rust-worktree-binary-wip-0abee699/verification/measurement.md`). `containment` names ONE branch in preference order base → default → any other candidate (`rank`), with `reason` `ancestor`, `all_commits_placed` or `merge_adds_nothing`; `null` means no single branch holds all of it, and `unpicked_commits` then lists the own commits no candidate holds. The base is the reflog's creation line unless a later rebase, reset or `branch -f` moved the branch onto another candidate (`reanchored`); a worktree mid-rebase or mid-bisect stays attached to its branch, and any operation in progress blocks `remove`. `cmd/agentwt/tests/scenarios/history.rs` is the history-shape catalog (rebase, pick, merge, base, worktree families) every containment change is checked against. The binary is a read-only overview plus one mutating command, `remove` (safety-gated: an unsafe row prints a `skipped` line and exits 0, an unknown or non-agent branch exits 3; `remove --dry-run` previews the same steps without touching anything and exits 3 on the first step that would be skipped — `/close` runs it before removing so the session title can move to DONE first); merge, cherry-pick and sync are deliberately absent. The shell scripts under `cmd/worktrees/` that did this (`print_agent_worktrees_status.sh`, `_lib/verdict.sh`, `merge_worktree.sh`, `cherry_pick_worktree.sh`, `sync_worktrees.sh`, `remove_agent_worktrees.sh`) and the `~/.claude/agents/tools` copy are gone; the config server decodes the JSON (`internal/repos/status.go`) and `/close` and the railroad cleanup call `smine-agentwt remove --delete-branch`. Entry points: `make rust-build`, `make rust-test`, `make rust-lint`, `make rust-load REPO=<clone> OLD=<checkout>`; the crate needs a rustup toolchain (`rust-version` 1.88 floor) that `make build` requires.
+ 
+ * Location: cmd/agentwt/; internal/repos/status.go; internal/repos/ops.go; Makefile rust-* targets; install.sh
+ * Reach: smine
+diff --git a/settings/claude_code/settings.json b/settings/claude_code/settings.json
+index 006fdf2dd..92cff96b8 100644
+--- a/settings/claude_code/settings.json
++++ b/settings/claude_code/settings.json
+@@ -77,6 +77,7 @@
+       "Bash(wc *)",
+       "Bash(which *)",
+       "Bash(~/go/bin/smine-agentwt remove --delete-branch claude*)",
++      "Bash(~/go/bin/smine-agentwt remove --dry-run --delete-branch claude*)",
+       "Bash(~/go/bin/smine-agentwt status *)",
+       "Bash(~/.claude/hooks/play-sound.sh *)",
+       "Bash(~/.claude/skills/fdesign/scripts/capture-ui.sh *)",
+@@ -299,6 +300,12 @@
+             "if": "Bash(git commit *)",
+             "command": "~/.claude/hooks/bin/sessiontitle -repos {{HOME}}/GolandProjects/claude-configs/repos.json -skills ~/.claude/skills",
+             "timeout": 5
++          },
++          {
++            "type": "command",
++            "if": "Bash(~/go/bin/smine-agentwt remove --dry-run *)",
++            "command": "~/.claude/hooks/bin/sessiontitle -close -repos {{HOME}}/GolandProjects/claude-configs/repos.json -skills ~/.claude/skills",
++            "timeout": 5
+           }
+         ]
+       }
+diff --git a/skills/orchestration/close/SKILL.md b/skills/orchestration/close/SKILL.md
+index 0d8c5e0f8..acf3eed65 100644
+--- a/skills/orchestration/close/SKILL.md
++++ b/skills/orchestration/close/SKILL.md
+@@ -2,7 +2,7 @@
+ name: close
+ description: Remove the done session's worktree and claude/* branch, safety-gated; the session stays open unless terminal. Trigger on /close or "this session is done, clean up the worktree". Args — --terminal: also archive the Desktop session.
+ author: Kevin Horst
+-version: 4.1.2
++version: 4.2.0
+ argument-hint: --terminal
+ format: 2
+ acdsl-context: RULE-SKILL-012, RULE-SKILL-013, RULE-SKILL-014
+@@ -98,6 +98,25 @@ STATE worktree path, branch, main checkout, whether uncommitted changes exist (`
+ question — invoking /close is confirmation.
+ 
+ `{pred: preflight_reported}`\
++`{post: removal_checked}`\
++**SKILL-CLOSE-PROC-008a** `[step]` **Check**
++
++RUN removal check, Remove's command plus `--dry-run`, one command; a passing check yields a session-title rename to
++DONE — carry it out before Remove:
++
++```
++~/go/bin/smine-agentwt remove --dry-run --delete-branch claude/<branch>
++```
++
++* param: rename instruction comes from sessiontitle hook binary (`cmd/sessiontitle`, PostToolUse `-close`).
++
++`{pred: removal_checked and check_refused}`\
++**SKILL-CLOSE-PROC-008b** `[stop]` **Report refusal**
++
++If check exits 3 ⇒ STOP: relay stderr verbatim, reasons and fix path as in [Report skip](#skill-close-proc-005a); nothing
++removed, title unchanged.
++
++`{pred: removal_checked and not check_refused}`\
+ `{post: script_run}`\
+ **SKILL-CLOSE-PROC-004** `[step]` **Remove**
+ 
+diff --git a/skills/orchestration/close/changelog.json b/skills/orchestration/close/changelog.json
+index 2aea0672b..3b3e7a381 100644
+--- a/skills/orchestration/close/changelog.json
++++ b/skills/orchestration/close/changelog.json
+@@ -1,4 +1,9 @@
+ [
++  {
++    "version": "4.2.0",
++    "date": "2026-09-26",
++    "text": "Check step: remove --dry-run before removal; a refusal (exit 3) stops before anything changes; a passing check renames the session to DONE via the sessiontitle hook before Remove runs."
++  },
+   {
+     "version": "4.1.2",
+     "date": "2026-09-25",

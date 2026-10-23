@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-MIN-12-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: skills/git/package-commit/SKILL.md never names foreign-toolchain-pretag.js or any workflows/ invocation — confirmed by direct grep (zero matches) and by the probe. The workflow and docs/workflows.md's new section describe it as 'Fronted by /package-commit (or any release-tag step)', but package-commit/SKILL.md's body carries no corresponding step. Same caveat as code-style-MIN-11-r1: docs/workflows.md already documents this workflow in full (args/what-it-does/returns) as part of this same diff — the gap is 'not wired into its fronting skill and not mirrored into skills/README.md's shorter index', not 'undocumented anywhere'.",
+  "probe": "PROBE-CODE-STYLE-MIN-12-R1",
+  "script": "artifacts/round-1/probes/require-phrase.sh (custom verifier, registered as \"require-phrase\")",
+  "fixture": "artifacts/round-1/probes/fixtures/code-style-min-12-r1/fail-SKILL.md (validity self-check run via acdsl check against a worktree-local copy, zz-probe-fixture-min12.md, since direct `bash <script>` invocation is tool-policy-denied in this environment)",
+  "registry": "registry-code-style-min-12-r1.json",
+  "cells": {"effect": "debt", "exposure": "rare"},
+  "evidence": {
+    "read": [
+      "grep -n 'foreign-toolchain\\|workflows/' skills/git/package-commit/SKILL.md — zero matches",
+      "skills/README.md Workflows section headers — no foreign-toolchain-pretag entry",
+      "docs/workflows.md's new 'foreign-toolchain-pretag (skills/git/package-commit/workflows/foreign-toolchain-pretag.js)' section — fully documents args/what-it-does/returns, 'Fronted by /package-commit'",
+      "git diff --stat confirms foreign-toolchain-pretag.js (+74, new) and docs/workflows.md (+32) land in this diff; skills/README.md only +2/-2"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-MIN-12-R1 -registry registry-code-style-min-12-r1.json -root <worktree> -> exit 1: skills/git/package-commit/SKILL.md:1: missing required phrase: foreign-toolchain-pretag"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/require-phrase.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-min-12-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-min-12-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/zz-probe-fixture-min12.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/railroad-probes-r1.acdsl"
+  ]
+}

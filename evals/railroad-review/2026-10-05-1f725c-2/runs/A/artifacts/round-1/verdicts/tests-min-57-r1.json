@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-MIN-57-r1",
+  "verdict": "confirmed",
+  "reason": "test_steady_state_runs_no_probes' first run (556) writes the verdict cache; the traced runs at 557/560 carry no WORKTREE_STATUS_NO_CACHE=1 and nothing clears the cache, so print_row takes the cache-hit branch (print_agent_worktrees_status.sh:268-272), evaluate_branch never runs and probe_count stays 0",
+  "probe": "PROBE-TESTS-MIN-57-R1",
+  "script": "tests-min-57-r1.sh",
+  "fixture": "probes/fixtures/tests-min-57-r1/test_status.sh",
+  "registry": "registry-tests-min-57-r1.json",
+  "evidence": {
+    "probe_run": "cmd/tests/test_print_agent_worktrees_status.sh:560: traced run in test_steady_state_runs_no_probes hits the verdict cache written by the first run — evaluate_branch never runs, the no-probe assertion is vacuous: [PROBE-TESTS-MIN-57-R1]",
+    "validity_run": "bin/acdsl check -rule PROBE-TESTS-MIN-57-R1 anchored on an in-worktree fixture copy -> exit 1 at test_status.sh:5 (direct interpreter run denied by tool policy; copy removed afterwards)",
+    "read": [
+      "cmd/worktrees/print_agent_worktrees_status.sh:266-285 — cache key tip|from|from_tip|candidates digest|v2; hit reads 5 cached lines and skips evaluate_branch; trace line only when probe_count > 0",
+      "cmd/tests/test_print_agent_worktrees_status.sh:556-562 — plain run, then two WORKTREE_STATUS_TRACE=1 runs with no ref movement and no NO_CACHE",
+      "git grep at b4981b8: the test existed at base (line 461) and no agent-status-cache existed — the cache is new in this diff, the test was not adapted",
+      "Mutation run not executed: the shell suite has no single-test make target and direct bash runs are denied by policy"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-min-57-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-min-57-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-min-57-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-min-57-r1/test_status.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-min-57-r1/files.txt"
+  ]
+}

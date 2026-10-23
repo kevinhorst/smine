@@ -1,0 +1,27 @@
+{
+  "finding_id": "tests-NIT-65-r1",
+  "verdict": "debunked",
+  "reason": "The 'archived' rejection is pinned: internal/repos/registry_test.go:90-93 loops {\"default\",\"archived\"} through Registry.Add -> Repo.Validate, the same Validate handleReposAdd calls (repos.go:575) with no name-specific handler code, so no mutation exists that the proposed handler case would catch; probe GREEN.",
+  "probe": "PROBE-TESTS-NIT-65-R1",
+  "script": "tests-nit-65-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-65-r1/internal/server/repos_test.go",
+  "registry": "registry-tests-nit-65-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-65-R1 -registry probes/registry-tests-nit-65-r1.json -> exit 0: acdsl: 1 rule(s) OK",
+    "read": [
+      "internal/repos/registry_test.go:87-95 — reserved-name-fails loops over {\"default\", \"archived\"}, asserts \"is reserved\"",
+      "internal/repos/registry.go:48-49 — Validate rejects default|archived; registry.go:133 Add calls Validate",
+      "internal/server/repos.go:572-578 — handleReposAdd calls repo.Validate() before the git-init op; no per-name branching",
+      "grep on repos_test.go confirms the probe anchor pattern matches line 670, so GREEN is a real pass of the coverage check, not a blind skip"
+    ],
+    "validity": "fixture validity run not executable: direct `/bin/bash <script>` denied by tool-policy (candidate Bash(/bin/bash *)); anchor-pattern match on repos_test.go:670 verified by grep, and the registry_test.go hit that turns it green read directly."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-65-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-65-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-65-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-65-r1/internal/server/repos_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-65-r1/internal/repos/registry_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/tests-nit-65-r1/files.txt"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-MAJ-7-r1",
+  "verdict": "confirmed",
+  "reason": "The Trim stage's hardcoded agent prompt at session-mine.js:176 names only proposals/{routines,context,skills}.json; PROPOSAL_DIMENSIONS (line 45) was extended by this diff to include smine-permissions, whose SKILL.md declares proposals/permissions.json as its own distinct output file (never folded into context.json the way smine-memory's output is). A deterministic probe confirms the omission on the real head at the exact cited line.",
+  "probe": "PROBE-CORRECTNESS-MAJ-7-R1",
+  "script": "correctness-maj-7-r1-probe.sh",
+  "fixture": "fixtures/correctness-maj-7-r1/fail-root",
+  "registry": "registry-correctness-maj-7-r1.json",
+  "evidence": {
+    "read": [
+      "skills/smine/smine/workflows/session-mine.js:40-45 — PROPOSAL_DIMENSIONS = new Set(['smine-context','smine-memory','smine-permissions','smine-routines','smine-skills']), added by this diff",
+      "skills/smine/smine/workflows/session-mine.js:171-182 — Trim stage prompt: 'Across proposals/{routines,context,skills}.json, count proposals with status \"proposed\" and proposed = today' — permissions.json not named",
+      "skills/smine/smine-permissions/SKILL.md:31 — 'Output: proposals/permissions.json — the single authoritative artifact ... There is no md form.' confirms it is a distinct file, not folded into context.json",
+      "skills/smine/smine-memory/SKILL.md:31 — smine-memory's output is proposals/context.json (shared with smine-context), confirming the lane's claim that memory is correctly covered by the 'context' name while permissions is not",
+      "git diff b4981b88..1f725ced -- skills/smine/smine/workflows/session-mine.js — confirms smine-permissions was newly added to DIMENSIONS/PROPOSAL_DIMENSIONS in this diff, while the Trim prompt's file-set string itself was untouched (only trailing ...tier opts added to that call site)"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CORRECTNESS-MAJ-7-R1 -registry registry-correctness-maj-7-r1.json -root <head worktree> -> exit 1: \"skills/smine/smine/workflows/session-mine.js:176: Trim stage file set omits permissions.json although PROPOSAL_DIMENSIONS (line 45) includes smine-permissions\" — RED on the claimed file at the claimed line"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-maj-7-r1-probe.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-maj-7-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-maj-7-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/correctness-maj-7-r1/fail-root"
+  ]
+}

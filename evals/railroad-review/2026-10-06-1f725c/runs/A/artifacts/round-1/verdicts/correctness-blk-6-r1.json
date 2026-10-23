@@ -1,0 +1,26 @@
+{
+  "finding_id": "correctness-BLK-6-r1",
+  "verdict": "confirmed",
+  "reason": "spec-7's correctness-58 (checklist item, sourced from spec-7-raw.md lines 7/17/28/48/90/105/121/126/198/231) requires the lane Skill invocation to carry --no-context, restoring CTX-002's documented 'lanes get no injection' contract. At head commit 1f725cedc5c8b092c8a3d7e408793ef72840ec7e, skills/quality/railroad-review/SKILL.md's CTX-002 (line ~115 in the reviewed worktree's current line numbering, originally cited at line 159 in the candidate's pre-amendment copy) instead reads 'every lane invokes the Skill tool bare (no args) and receives the full doctrine injection', and workflows/railroad-review.js's lanePrompt (line 202) builds the invocation text 'Invoke the Skill tool with skill=\"railroad-review\" — bare, no args; the hook injects your full review context'. No '--no-context' token exists anywhere in either file. The changelog (skills/quality/railroad-review/changelog.json v8.3 then v8.4) confirms this is an explicit reversal of the v8.3 fix that implemented correctness-58, but the v8.4 entry narrates only an engineering rationale ('zero agent discretion') and never references spec-7 or records an explicit decision superseding correctness-58; none of the round's other 13 specs (checked spec-8 through spec-14) mention CTX-002, v8.3/v8.4, or supersede correctness-58 either. The defect is real and undocumented against the spec it contradicts.",
+  "probe": "PROBE-CORRECTNESS-BLK-6-R1",
+  "script": "correctness-blk-6-r1-check.sh",
+  "fixture": "fixtures/correctness-blk-6-r1-fail.md",
+  "registry": "registry-correctness-blk-6-r1.json",
+  "evidence": {
+    "read": [
+      "spec-7-raw.md:7,17,28,48,90,105,121,126,198,231 — explicit --no-context requirement, promoted from experiment arm to direct spec restoration",
+      "skills/quality/railroad-review/SKILL.md CTX-002 — 'every lane invokes the Skill tool bare (no args) and receives the full doctrine injection'; no '--no-context' token in the file",
+      "skills/quality/railroad-review/workflows/railroad-review.js:202 — lanePrompt builds 'Invoke the Skill tool with skill=\"railroad-review\" — bare, no args'",
+      "skills/quality/railroad-review/changelog.json v8.3 ('lane prompt's Skill invocation now carries --no-context') and v8.4 ('the v8.3 --no-context suppression is removed ... every lane gets all the review context')",
+      "spec-8 through spec-14 — no mention of CTX-002, v8.3/v8.4, or an explicit supersession of correctness-58"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CORRECTNESS-BLK-6-R1 -registry registry-correctness-blk-6-r1.json -lifetime task -root <review worktree> -json => RED: \"skills/quality/railroad-review/SKILL.md:115: lane invocation documented bare (no args, full injection) with no --no-context token in this file\" (acdsl: 1 violation(s) across 1 rule(s), exit 1)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-blk-6-r1-check.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/correctness-blk-6-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-correctness-blk-6-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/correctness-blk-6-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/correctness-blk-6-r1/skills/quality/railroad-review/SKILL.md"
+  ]
+}

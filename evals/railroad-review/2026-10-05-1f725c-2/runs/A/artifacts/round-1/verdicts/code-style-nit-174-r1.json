@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-174-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at repos_index.html:3: the h1 re-derives the isDeveloperAudience/Projects branch that handleReposIndex (repos.go:532-536, added in this diff) already computes into .Title; welcome.html and checklist.html already render <h1>{{.Title}}</h1>.",
+  "probe": "PROBE-CODE-STYLE-NIT-174-R1",
+  "script": "code-style-nit-174-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-174-r1/templates/repos_index.html",
+  "registry": "registry-code-style-nit-174-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-174-R1 -root <worktree> -registry probes/registry-code-style-nit-174-r1.json -> exit 1: internal/server/templates/repos_index.html:3: <h1> re-derives the isDeveloperAudience/Projects title that handleReposIndex already sets as .Title; 1 violation(s)",
+    "read": [
+      "internal/server/repos.go:532-536 at 1f725ce: title := \"Repos\"; if !s.presentation.isDeveloperAudience() { title = translate(s.presentation.language(), \"Projects\") } — both '+' lines of the diff",
+      "internal/server/templates/repos_index.html:3: <h1>{{if isDeveloperAudience}}Repos{{else}}{{t \"Projects\"}}{{end}}</h1> — '+' line of the diff (was <h1>Repos</h1>)",
+      "internal/server/templates/layout.html:7 renders <title>{{.Title}}</title>; welcome.html:3 and checklist.html:3 render <h1>{{.Title}}</h1> — in-repo precedent for the proposed fix",
+      "known.json: no row on repos_index.html"
+    ],
+    "validity": "Direct interpreter self-check over scratch/code-style-nit-174-r1/files.txt denied by tool policy (Bash(/bin/bash *), Bash(bash *)); acdsl -root on the fixture dir fails (not a git repo). The fixture is in place; the real run went RED on the claimed file and line, so the probe demonstrably fires and no GREEN verdict depends on the unexecuted self-check."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-174-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-174-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-174-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-174-r1/templates/repos_index.html",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-174-r1/repos.go"
+  ]
+}

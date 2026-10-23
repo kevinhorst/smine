@@ -1,0 +1,8 @@
+
+---
+
+Dispatch note:
+- Invocation arguments: base branch = b4981b88d52deaa69d6ed1d60eb51b57ead47ba0; specification = the plan documents under plans/v1-2-1/ in this checkout; no focus.
+- You review this checkout (a disposable eval worktree, detached at a342811b4cf7b8bb2b54359ced6c786d3b5f349b); you did not write this code, so review directly — do not delegate again.
+- The uncommitted working-tree state is harness-provided review context (golden-input plans and a frozen context index), NOT part of the change. The change under review is exactly the committed range, inspected via: git diff b4981b88d52deaa69d6ed1d60eb51b57ead47ba0 a342811b4cf7b8bb2b54359ced6c786d3b5f349b -- :(exclude)sessions/ :(exclude)evals/ :(exclude)proposals/ :(exclude)plans/. smine release 1.1.4 -> 1.2.1: config server, routines, railroad-review and ACDSL changes.
+- Use /Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skillroutine-eval-aqms-review-3f52bb/evals/aqms-review-wip/2026-09-09-a34281/runs/sonnet-5-high-r1/artifacts/aqms-run as your run folder ($RUN).

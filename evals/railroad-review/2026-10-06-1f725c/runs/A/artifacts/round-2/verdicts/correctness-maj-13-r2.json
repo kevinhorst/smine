@@ -1,0 +1,33 @@
+{
+  "finding_id": "correctness-MAJ-13-r2",
+  "verdict": "confirmed",
+  "reason": "ACDSL-JSON-002's anchor (acdsl/rules.acdsl:32) is untouched by this diff and still matches only sessions/(personal|work)/json/*.json; this change retires the --scopes work/personal concept and reroutes new batch JSON to sessions/<repo-name>/json/ and sessions/default/json/ (skills/smine/smine-batch/SKILL.md), so the schema gate matches zero new files and empty=\"ok\" suppresses the anchor-empty typo guard (docs/acdsl-spec.md:68,177) instead of flagging it.",
+  "probe": "PROBE-CORRECTNESS-MAJ-13-R2",
+  "script": "correctness-maj-13-r2.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-maj-13-r2-fail.acdsl",
+  "registry": "registry-correctness-maj-13-r2.json",
+  "evidence": {
+    "read": [
+      "acdsl/rules.acdsl:32 (head e5245d08d2fe5c05f67742fd8ec5a67b759ca316): //acdsl:ACDSL-JSON-002 jsonschema anchor=\"^sessions/(personal|work)/json/.*\\.json$\" ... empty=\"ok\"",
+      "git diff b4981b88..e5245d08 -- acdsl/rules.acdsl: only ACDSL-JSON-003 added; ACDSL-JSON-002's line is byte-identical to base",
+      "skills/smine/smine-batch/SKILL.md diff: 'Output routing: one folder per session, derived from --repos attribution ... Folder = sessions/<name>/ ... Per-batch JSON to sessions/<name>/json/<batch-stem>.json', example 'sessions/claude-configs/json/sessions-batch-19.json'",
+      "docs/acdsl-spec.md:177: 'An anchor resolving to zero files is an authoring error — the typo guard ... The single exception: for lifetime=\"task\" rules' — ACDSL-JSON-002 is doctrine lifetime, not task, so without empty=\"ok\" a zero-match would hard-fail; with it, it silently passes",
+      "spec-8-change-bootstrap-profile.md:10: 'Kill the work/personal scope concept: mining routes each session into sessions/<repo-name>/ ... --scopes is retired' — confirms correctness-63 requires exactly this rerouting"
+    ],
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-13-R2 -registry probes/registry-correctness-maj-13-r2.json -root <refuter worktree @ e5245d08d2fe5c05f67742fd8ec5a67b759ca316>: exit 1 — \"acdsl/rules.acdsl:32: ACDSL-JSON-002 still anchors only sessions/(personal|work)/json/*.json; the per-repo session folders (sessions/<repo>/json/, sessions/default/json/) this change introduces are ungated\""
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-maj-13-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-maj-13-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-correctness-maj-13-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-maj-13-r2-fail.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/correctness-maj-13-r2/files.txt",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/correctness-maj-13-r2/fixture-root/",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-correctness-maj-13-r2-r2/railroad-probes-r2.acdsl"
+  ],
+  "notes": "Validity check: the probe exited 1 on the minimal fail fixture (stale anchor, under probes/fixtures/) and exited 0 once the fixture's anchor was edited to the proposed fix pattern ^sessions/(?!archived/)[^/]+/json/.*\\.json$ — both directions of the fix check confirmed in the disposable scratch fixture-root, never touching the real repo file. The real run against the pinned head reproduces the same hit at the claimed location. Cells (effect=degraded, exposure=always) hold: every future batch JSON write now lands under sessions/<repo>|default/json/, none of which the unmodified anchor matches, and empty=\"ok\" makes that silent rather than a hard failure — no narrower exposure claim (e.g. 'only some repos') is supported; degraded (not destructive) because the schema itself is still enforced wherever the anchor happens to match, it just stops matching anything going forward.",
+  "cells": {
+    "effect": "degraded",
+    "exposure": "always"
+  }
+}

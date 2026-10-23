@@ -1,0 +1,30 @@
+{
+  "finding_id": "correctness-MAJ-62-r1",
+  "verdict": "confirmed",
+  "reason": "At 1f725ce the Drift prompt (session-mine.js L100) discovers ledgers by the glob sessions/<scope>/analyzed-*.txt and never names analyzed-sessions.txt, while smine-batch SKILL.md L36 now writes sessions/<name>/analyzed-sessions.txt holding every mined id incl. skipped ones that smine SKILL.md L44 keeps out of the dimension ledgers; probe RED on the claimed file.",
+  "probe": "PROBE-CORRECTNESS-MAJ-62-R1",
+  "script": "correctness-maj-62-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-62-r1/skills/smine/smine/workflows/session-mine.js",
+  "registry": "registry-correctness-maj-62-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CORRECTNESS-MAJ-62-R1 -registry probes/registry-correctness-maj-62-r1.json -> exit 1: skills/smine/smine/workflows/session-mine.js:52: Drift ledger glob analyzed-*.txt also matches smine-batch's sessions/<name>/analyzed-sessions.txt (never excluded)",
+    "validity_run": "bin/acdsl check -root probes/fixtures/correctness-maj-62-r1 -rule PROBE-CORRECTNESS-MAJ-62-R1 -registry ... -> exit 1 on the fail fixture (fixture root git-initialized because acdsl FileUniverse requires a git repo; first attempt without it exited 2)",
+    "read": [
+      "git grep analyzed- at 1f725ce: skills/smine/smine-batch/SKILL.md:36 'Ledger: sessions/<name>/analyzed-sessions.txt, one full session ID per line, appended after each batch'",
+      "git grep analyzed- at b4981b8: skills/smine/smine-batch/SKILL.md:32 'Ledger: sessions/analyzed-sessions.txt' (sessions root, outside any per-scope glob); session-mine.js had no Drift glob at base",
+      "skills/smine/smine/workflows/session-mine.js:99-104 'find its per-dimension ledgers — the sessions/<scope>/analyzed-*.txt files ... compute the symmetric difference of the id sets across those ledgers'",
+      "skills/smine/smine/SKILL.md:44 'sessions a batch marked skipped or unretrievable stay out of the ledgers deliberately'",
+      "skills/smine/smine-batch/SKILL.md:96,103 skipped no-signal sessions listed in the batch; IDs appended to the ledger"
+    ],
+    "notes": "Mitigation considered and rejected as a refutation: the prompt calls them 'per-dimension ledgers' and asks for a ghost-skip vs partial-failure classification, so an agent may label the noise, but the literal discovery glob includes analyzed-sessions.txt and nothing excludes it; the diagnostic still emits one diverging row per skipped session per run. Effect degraded (informational, non-gating stage) and exposure often (most batches carry skipped ghosts) both hold."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-62-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/correctness-maj-62-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-correctness-maj-62-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-62-r1/skills/smine/smine/workflows/session-mine.js",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-62-r1/railroad-probes-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-62-r1-fail.js",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/correctness-maj-62-r1-pass.js"
+  ]
+}

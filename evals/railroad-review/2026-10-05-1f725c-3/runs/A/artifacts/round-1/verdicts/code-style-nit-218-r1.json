@@ -1,0 +1,20 @@
+{
+  "finding_id": "code-style-NIT-218-r1",
+  "verdict": "confirmed",
+  "reason": "smine-apply SKILL.md:31 permissions branch says 'never touch `deny`/`ask`' and then again '— allow-rules only, never a deny/ask edit' in the same clause; probe RED on L31.",
+  "probe": "PROBE-CODE-STYLE-NIT-218-R1",
+  "fixture": "probes/fixtures/code-style-nit-218-r1/SKILL.md",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-218-R1 -> exit 1: skills/smine/smine-apply/SKILL.md:31: literal \"allow-rules only, never a deny/ask edit\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-218-r1/files.txt literal=\"allow-rules only, never a deny/ask edit\" allowed=^$ -> exit 1 on fixture SKILL.md:1",
+    "read": [
+      "smine-apply/SKILL.md L31 **permissions** branch: '... keeping the array's existing sort order; never touch `deny`/`ask`; if the rule is already present in `allow` (a race), archive to `done.md` ... — allow-rules only, never a deny/ask edit;'",
+      "known.json smine-apply rows (security-MAJ-8, NIT-137, MIN-13-r2, MAJ-61, NIT-185) — none on this duplicate clause"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-218-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-218-r1/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-218-r1/files.txt"
+  ]
+}

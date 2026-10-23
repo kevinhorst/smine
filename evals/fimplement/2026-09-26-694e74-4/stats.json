@@ -1,0 +1,251 @@
+{
+  "baseline": "claude-opus-5-5[1m]-medium-no-serena",
+  "comparisons": [
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 0,
+      "metricId": "smoke_pass",
+      "note": "insufficient replicas for significance (need \u003e=2 per arm)",
+      "significant": false,
+      "welchT": 0
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 0,
+      "metricId": "check_pass",
+      "note": "insufficient replicas for significance (need \u003e=2 per arm)",
+      "significant": false,
+      "welchT": 0
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 196,
+      "df": 1.9950186818887445,
+      "metricId": "wall_seconds",
+      "note": "",
+      "significant": true,
+      "welchT": 6.927481955667311
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 196,
+      "df": 1.9950186818887445,
+      "metricId": "active_seconds",
+      "note": "",
+      "significant": true,
+      "welchT": 6.927481955667311
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 4352.5,
+      "df": 1.6043174145669423,
+      "metricId": "output_tokens",
+      "note": "",
+      "significant": false,
+      "welchT": 3.871601298273921
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 9.344623349999997,
+      "df": 1.5059336047364553,
+      "metricId": "cost_usd",
+      "note": "",
+      "significant": true,
+      "welchT": 10.355409065515902
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": -2.383583849101086,
+      "df": 1.9583187060217304,
+      "metricId": "step_miss_pct",
+      "note": "",
+      "significant": false,
+      "welchT": -0.6254595110990768
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 0,
+      "metricId": "defects_major",
+      "note": "insufficient replicas for significance (need \u003e=2 per arm)",
+      "significant": false,
+      "welchT": 0
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "deltaMean": 0,
+      "df": 1.2195121951219512,
+      "metricId": "quality_rank",
+      "note": "",
+      "significant": false,
+      "welchT": 0
+    }
+  ],
+  "groups": [
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 0,
+      "metricId": "smoke_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 1,
+      "metricId": "check_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 574.5,
+      "metricId": "wall_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 28.991378028648448,
+      "variance": 840.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 574.5,
+      "metricId": "active_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 28.991378028648448,
+      "variance": 840.5
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 31629,
+      "metricId": "output_tokens",
+      "n": 2,
+      "note": "",
+      "stddev": 797.6164491784256,
+      "variance": 636192
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 4.732813900000002,
+      "metricId": "cost_usd",
+      "n": 2,
+      "note": "",
+      "stddev": 0.5898194036552041,
+      "variance": 0.3478869289281807
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 22.115384615384613,
+      "metricId": "step_miss_pct",
+      "n": 2,
+      "note": "",
+      "stddev": 4.079462199153159,
+      "variance": 16.642011834319533
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 0,
+      "metricId": "defects_major",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-medium-no-serena",
+      "mean": 2.5,
+      "metricId": "quality_rank",
+      "n": 2,
+      "note": "",
+      "stddev": 0.7071067811865476,
+      "variance": 0.5
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 0,
+      "metricId": "smoke_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 1,
+      "metricId": "check_pass",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 770.5,
+      "metricId": "wall_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 27.577164466275352,
+      "variance": 760.5
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 770.5,
+      "metricId": "active_seconds",
+      "n": 2,
+      "note": "",
+      "stddev": 27.577164466275352,
+      "variance": 760.5
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 35981.5,
+      "metricId": "output_tokens",
+      "n": 2,
+      "note": "",
+      "stddev": 1375.322689407835,
+      "variance": 1891512.5
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 14.07743725,
+      "metricId": "cost_usd",
+      "n": 2,
+      "note": "",
+      "stddev": 1.1316936441440888,
+      "variance": 1.2807305041961277
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 19.731800766283527,
+      "metricId": "step_miss_pct",
+      "n": 2,
+      "note": "",
+      "stddev": 3.5219877990134534,
+      "variance": 12.40439805639963
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 0,
+      "metricId": "defects_major",
+      "n": 2,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5[1m]-medium-no-serena",
+      "mean": 2.5,
+      "metricId": "quality_rank",
+      "n": 2,
+      "note": "",
+      "stddev": 2.1213203435596424,
+      "variance": 4.5
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

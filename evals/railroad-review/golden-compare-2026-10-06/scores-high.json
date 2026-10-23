@@ -1,0 +1,90 @@
+{
+  "mode": "high",
+  "pairs": 175,
+  "newAsRunVsOldGolden": {
+    "golden": 347,
+    "found": 172,
+    "missed": 175,
+    "recall": 0.5,
+    "misclassified": 52,
+    "triageEscapes": 39,
+    "bySeverity": {
+      "BLOCKER": {
+        "total": 21,
+        "found": 8,
+        "triageEscape": 2
+      },
+      "INFO": {
+        "total": 54,
+        "found": 24,
+        "triageEscape": 0
+      },
+      "MAJOR": {
+        "total": 55,
+        "found": 24,
+        "triageEscape": 5
+      },
+      "MINOR": {
+        "total": 107,
+        "found": 49,
+        "triageEscape": 32
+      },
+      "NIT": {
+        "total": 110,
+        "found": 67,
+        "triageEscape": 0
+      }
+    },
+    "oracleMinutes": 11888,
+    "nullMinutes": 35078,
+    "runMinutes": 30200,
+    "lostMinutes": 18312,
+    "reviewScore": 0.21,
+    "runEntries": 352,
+    "runEntriesMatched": 157,
+    "runEntriesUncataloged": 195
+  },
+  "oldAsRunVsNewGolden": {
+    "golden": 352,
+    "found": 157,
+    "missed": 195,
+    "recall": 0.45,
+    "misclassified": 70,
+    "triageEscapes": 11,
+    "bySeverity": {
+      "BLOCKER": {
+        "total": 8,
+        "found": 4,
+        "triageEscape": 1
+      },
+      "INFO": {
+        "total": 5,
+        "found": 1,
+        "triageEscape": 0
+      },
+      "MAJOR": {
+        "total": 41,
+        "found": 20,
+        "triageEscape": 3
+      },
+      "MINOR": {
+        "total": 45,
+        "found": 24,
+        "triageEscape": 7
+      },
+      "NIT": {
+        "total": 253,
+        "found": 108,
+        "triageEscape": 0
+      }
+    },
+    "oracleMinutes": 8540,
+    "nullMinutes": 21110,
+    "runMinutes": 18574,
+    "lostMinutes": 10034,
+    "reviewScore": 0.202,
+    "runEntries": 347,
+    "runEntriesMatched": 172,
+    "runEntriesUncataloged": 175
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-MIN-239-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: the literal 'no matching style.css rule' sits at config-ui-fidelity-gate.js:43 (GATE_SCHEMA) and :78 (DIFF+GATE prompt) while L23 makes the stylesheet the cssPath arg and L76-77 interpolate ${cssPath}; a non-default cssPath gets two stylesheets in one gate. Cells kept: no caller exists yet (known correctness-MAJ-39-r1), so exposure eventually.",
+  "probe": "PROBE-CODE-STYLE-MIN-239-R1",
+  "script": "literal-owner (repo registry verifier, literal=\"no matching style.css rule\" allowed=\"^NO-OWNER$\")",
+  "fixture": "probes/fixtures/code-style-min-239-r1-fail.js",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-MIN-239-R1 -> exit 1: skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:43 and :78: literal \"no matching style.css rule\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-min-239-r1/files.txt literal=... allowed=^NO-OWNER$ -> exit 1 on fixtures/code-style-min-239-r1-fail.js:2",
+    "read": [
+      "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:23 cssPath = args.cssPath || 'internal/server/assets/style.css'",
+      "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:77 (1) ... no matching rule in ${cssPath}",
+      "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js:78 (2) unstyled_input_types — every input type rendered with no matching style.css rule"
+    ],
+    "note": "Make form `make -C <wt> acdsl ARGS=...` was denied by tool policy; the repo ships bin/acdsl, so the direct form with -root was used. Not a trivial variant of known rows on this file (MAJ-39 uninvoked, MIN-43 save count, NIT-181 phase, NIT-182 literal dup, MIN-72 pass aggregation)."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-min-239-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-min-239-r1-fail.js"
+  ]
+}

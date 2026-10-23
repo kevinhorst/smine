@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-213-r1",
+  "verdict": "confirmed",
+  "reason": "docs/workflows.md:106 documents foreign-toolchain-pretag's return as `{gate, builds}` while foreign-toolchain-pretag.js:70-74 returns {tagRef, gate, builds}; sibling Returns lines (90, 98) list exact keys.",
+  "probe": "PROBE-CODE-STYLE-NIT-213-R1",
+  "script": "code-style-nit-213-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-213-r1-fail.md",
+  "registry": "registry-code-style-nit-213-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-213-R1 -registry probes/registry-code-style-nit-213-r1.json -> exit 1: docs/workflows.md:106: Returns lists {gate, builds} but foreign-toolchain-pretag.js returns {tagRef, gate, builds}",
+    "read": [
+      "skills/git/package-commit/workflows/foreign-toolchain-pretag.js:28 tagRef default '', :70-74 return { tagRef, gate, builds }",
+      "docs/workflows.md:106 '**Returns**: `{gate, builds}`'; :90 and :98 list their scripts' exact return keys",
+      "known.json: correctness-NIT-11-r2 on docs/workflows.md:46 concerns session-mine, a different section"
+    ],
+    "validity": "fixture run not executable here: direct /bin/bash <script> is denied by tool-policy; the real run's RED at the claimed line with the probe's own message shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-213-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-213-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-213-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-213-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-213-r1/files.txt"
+  ]
+}

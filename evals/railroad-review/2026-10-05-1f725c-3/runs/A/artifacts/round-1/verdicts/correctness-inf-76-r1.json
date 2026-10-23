@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-INF-76-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at 1f725ce: session-mine.js L96 (Drift stage), L106 (...tier spread), L116 (--subagents forwarding) are diff additions that none of the 14 spec copies name; not a variant of known correctness-INF-50-r1 (permissions dimension) or correctness-MAJ-62-r1 (Drift glob behaviour).",
+  "probe": "PROBE-CORRECTNESS-INF-76-R1",
+  "script": "correctness-inf-76-r1.sh",
+  "fixture": "probes/fixtures/correctness-inf-76-r1-fail.js",
+  "registry": "registry-correctness-inf-76-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-INF-76-R1 -registry probes/registry-correctness-inf-76-r1.json -> exit 1: skills/smine/smine/workflows/session-mine.js:96: Drift stage ... traces to none of the 14 supplied specs; :106 model/effort tier override; :116 --subagents forwarding; 3 violation(s)",
+    "read": [
+      "git diff b4981b8 1f725ce -- skills/smine/smine/workflows/session-mine.js: adds phase('Drift') + DRIFT_SCHEMA, const tier = {...model, ...effort} spread into every agent() opts, subagents ? '--subagents' in mineArgs",
+      "grep -i over all 14 spec copies for '--subagents|ledger drift|drift stage|drift check|tier override|args.model|--model': only hits are run.sh --model lines (spec-5 L297, spec-9 L266) for routine claude -p invocations and unrelated 'drift' prose (language drift, settings drift) — none names these workflow mechanisms",
+      "known.json: correctness-INF-50-r1 covers only the smine-permissions dimension; correctness-MAJ-62-r1 covers the Drift glob's wrong behaviour, not its traceability"
+    ],
+    "validity": "Fixture validity run could not execute here: a direct /bin/bash run of the script is denied by tool policy (candidate Bash(/bin/bash *)), and acdsl check -root over a scratch fixture root fails because acdsl's FileUniverse requires a git repo (exit 128). The real run's three hits, each at the exact marker line, show the script's detection path works.",
+    "notes": "The candidate cites checklist correctness-74 (the --since forwarding item), which does not describe this concept-audit claim; the claim stands on ACTION-REVIEW-SPEC-005, and INFO/debt/eventually with fix none needs no checklist item. Cells agreed."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-inf-76-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-inf-76-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-inf-76-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-inf-76-r1-fail.js"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-168-r1",
+  "verdict": "confirmed",
+  "reason": "New profilesettings_test.go repeats the newTestServer(PresentationPath/StylePath[/SyncScriptsDir]) block 9 times (6 in TestServer_HandleProfileSave at 53-140, 2 in StyleSave, 1 in Page) with no helper, while the package's other tests use helpers (reposTestEnv, newVoteServer, newGroupTitlesServer); probe RED.",
+  "probe": "PROBE-CODE-STYLE-NIT-168-R1",
+  "script": "code-style-nit-168-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-168-r1/fail_test.go",
+  "registry": "registry-code-style-nit-168-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-168-R1 -registry probes/registry-code-style-nit-168-r1.json at 1f725ce -> exit 1: internal/server/profilesettings_test.go:27: server construction repeated 9 times with no newProfileServer-style helper",
+    "read": [
+      "internal/server/profilesettings_test.go:53-58, 69-74, 85-90, 102-107, 119-124, 135-140 — identical dir/newTestServer blocks; 177-181, 192-196 the two-option variant",
+      "git grep: presentation_test.go:211 newGroupTitlesServer, proposals_test.go:480 newVoteServer, repos_test.go:25 reposTestEnv — in-package helper pattern exists",
+      "RULE-GOLANG-TEST-008 requires construction in each case block; a helper called per case block still satisfies it, so the proposed fix does not conflict",
+      "known.json profilesettings_test.go rows: code-style-NIT-20-r1 (t.Run body declarations), NIT-26-r2 (omitted meta field) — none about construction duplication"
+    ],
+    "validity": "acdsl check -root scratch/code-style-nit-168-r1/fixroot (fixture at internal/server/profilesettings_test.go, git init) -rule PROBE-CODE-STYLE-NIT-168-R1 -> exit 1 at profilesettings_test.go:5",
+    "cells": "agree with debt/rare"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-168-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-168-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-168-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-168-r1/fail_test.go"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-MAJ-70-r1",
+  "verdict": "confirmed",
+  "reason": "routine_worktree_create calls routine_chain_sync_main (unattended /merge-resolve in $wt) at worktree.sh:171 before any overlay copy; smine-nightly/run.sh copies skill-overrides.json into $wt/.claude/settings.local.json only at 144-148, after create returns, and no .claude file is tracked, so on a casual profile merge-resolve stays 'off' for the chain-sync run.",
+  "probe": "PROBE-CORRECTNESS-MAJ-70-R1",
+  "script": "correctness-maj-70-r1-overlay-before-sync.sh",
+  "fixture": "probes/fixtures/correctness-maj-70-r1-fail.sh",
+  "registry": "registry-correctness-maj-70-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-70-R1 -registry .../probes/registry-correctness-maj-70-r1.json -> routines/_lib/worktree.sh:171: routine_chain_sync_main runs /merge-resolve in the fresh worktree before any skill overlay copy into .claude/settings.local.json (exit 1, 1 violation)",
+    "validity": "acdsl check -rule PROBE-CORRECTNESS-MAJ-70-R1 -root scratch/correctness-maj-70-r1/root (fixture copy of probes/fixtures/correctness-maj-70-r1-fail.sh) -> RED, exit 1",
+    "read": [
+      "routines/_lib/worktree.sh:162-176 — worktree add, then `! routine_chain_sync_main \"$wt\"` (runs claude -p \"/merge-resolve theirs main...\" with cwd $wt), no overlay copy anywhere in the file",
+      "routines/smine-nightly/run.sh:128 create; 144-148 overlay copy into $wt/.claude/settings.local.json only after create returned",
+      "cmd/sync/sync_skills.sh:263-271 — casual profile sets skillOverrides <leaf>=off for every deployed leaf (comment: 'off' hides AND denies, incl. headless); skills/git/merge-resolve/SKILL.md is a deployed leaf",
+      "git ls-files .claude -> empty: the fresh worktree carries no settings.local.json",
+      "routines/_lib/platform.sh, skill.sh: no --settings / setting-sources injection",
+      "known.json: no open row on this substance (tests-NIT-27-r1 is about the symbolic-ref clause; correctness-BLK-22-r1 about bootstrap overwrite)"
+    ],
+    "deviations": "make -C <wt> acdsl ARGS=... was denied by tool policy (ARGS value with metacharacters); the shipped bin/acdsl was run directly as the protocol allows for repos shipping it. Direct /bin/bash run of the script was denied; validity was proven via acdsl check -root over a scratch git root holding the fixture copy."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-70-r1-overlay-before-sync.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-70-r1-fail.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-maj-70-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-70-r1.acdsl"
+  ]
+}

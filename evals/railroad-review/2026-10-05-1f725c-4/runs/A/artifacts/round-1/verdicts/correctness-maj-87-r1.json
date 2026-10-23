@@ -1,0 +1,25 @@
+{
+  "finding_id": "correctness-MAJ-87-r1",
+  "verdict": "confirmed",
+  "reason": "SKILL.md:55 reads parked rules from the sibling of settings/claude_code/settings.json, which is untracked and never written; the config server parks permission rules only in config.DisabledPath(~/.claude/settings.json) = ~/.claude/settings.disabled.json, so the promised suppression never fires",
+  "probe": "PROBE-CORRECTNESS-MAJ-87-R1",
+  "fixture": "probes/fixtures/correctness-maj-87-r1/fail/SKILL.md",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -registry <worktree>/acdsl/registry.json -rule PROBE-CORRECTNESS-MAJ-87-R1 -> exit 1: skills/smine/smine-permissions/SKILL.md:55: literal \"its `settings.disabled.json` sibling\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/correctness-maj-87-r1/files.txt literal=... allowed=^$ -> exit 1 on probes/fixtures/correctness-maj-87-r1/fail/SKILL.md:3",
+    "read": [
+      "skills/smine/smine-permissions/SKILL.md:55 — 'Read `settings/claude_code/settings.json` and its `settings.disabled.json` sibling'",
+      "git ls-files settings/claude_code -> CLAUDE.md, claude.json, claude.serena.json, presentation-profile.de.md, settings.json (no settings.disabled.json)",
+      "internal/config/config.go:185-192 — DefaultPath = ~/.claude/settings.json; DisabledPath = dir(settingsPath)/settings.disabled.json",
+      "cmd/configserver/main.go:42 — -settings defaults to config.DefaultPath()",
+      "internal/server/server.go:278-297 loadBoth/saveBoth; internal/server/permissions.go:62-114 move rules between live allow/ask and the disabled sidecar",
+      "cmd/sync has no reference to settings.disabled.json — nothing mirrors the sidecar into the repo"
+    ],
+    "notes": "Probe proxies the defect as the literal sibling-of-repo-template instruction; the repo-side absence of the file and the live-side location are established by the reads above. Effect incorrect / exposure rare upheld: needs a rule parked via the permissions page and then granted in >=2 later sessions."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-maj-87-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-maj-87-r1/fail/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-maj-87-r1/files.txt"
+  ]
+}

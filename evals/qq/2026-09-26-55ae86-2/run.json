@@ -1,0 +1,28 @@
+{
+  "arms": [
+    {
+      "id": "nosuchmodel-low-r1",
+      "disabledServers": [],
+      "effort": "low",
+      "key": "nosuchmodel-low",
+      "label": "A",
+      "model": "nosuchmodel",
+      "replica": 1,
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-55ae86-A"
+    }
+  ],
+  "at": "55ae869ea6b695ca2e47be99a587003af9550e77",
+  "budgetUsd": 1,
+  "check": [],
+  "checkTimeoutS": 1800,
+  "date": "2026-09-26",
+  "smoke": true,
+  "judge": "opus",
+  "presetSkillDir": "",
+  "prompt": "/qq what does make audit run?",
+  "reference": "",
+  "repo": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skillroutine-eval-smoke-test-0e8490",
+  "skill": "qq",
+  "skillMd": "evals/qq/2026-09-26-55ae86/SKILL.md",
+  "timeoutS": 300
+}

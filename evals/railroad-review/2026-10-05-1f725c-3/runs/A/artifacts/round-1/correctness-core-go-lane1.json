@@ -1,0 +1,58 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "core-go",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "notes": "Cross-chunk for the station: (1) correctness-MAJ-1's startup impact depends on how internal/server handles a failed registry Reload (not verified, server chunk). (2) startPeek adds a --back-link flag (README documents it; older peek binaries reject it) that no spec item names — concept-audit material already covered by known correctness-INF-2-r2. (3) Windows writeInstallEnv writes no CLAUDE_HOME/CODEX_HOME keys and overwrites install.env on every install; install.sh's env-over-file merge is in another chunk. Most walk items name skills, templates, shell scripts or server handlers outside core-go and were answered as out of chunk.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "core-go carries only the -presentation/-presentation-profile flag plumbing (main.go L58-59) and installPresentationProfile; materialization path ~/.claude/context/global/presentation-profile.md matches correctness-2. UI/i18n/consolidate items live in other chunks."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "No user-visible prose or rendering in core-go; operator profile install via -presentation-profile present (correctness-16 install half)."},
+    {"group": "spec-3-raw", "hits": [], "note": "correctness-20: -presentation flag defaults to server.DefaultPresentationPath() and is threaded into Options.PresentationPath (main.go L58, L149). Other items (template, hook, FuncMap, run.sh) outside chunk."},
+    {"group": "spec-3-raw (part 2)", "hits": [], "note": "correctness-29: flag passed into runInstall (main.go L117); installPresentationProfile runs after runSyncs, empty id installs nothing, creates the dir, errors in file style (install_windows.go L105, L356-379). Ordering vs casual sync is known correctness-BLK-3-r2."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "No core-go file implements templates, proposals.go or germanCatalog."},
+    {"group": "spec-5-change-nondev-automation", "hits": ["correctness-MAJ-1"], "note": "correctness-42: shell.RunSync with SyncTimeout=10m mirrors Run (platformArgv, HideWindow, WaitDelay, log line, wrapped error); call sites install_windows.go L86 and L387, contextdocs/sync.go L62, skills/sync.go L23 all use it; repo grep finds no shell.Run on sync_*/ensure_git_repo. correctness-47: Label field with omitempty and 80 cap present (byte-count issue is known correctness-MAJ-14-r1). correctness-54: folder picker owner form shown+activated (contextdocs/sync.go L93-101). correctness-48 git-init lives in the server chunk. The reserved-name addition (spec-8 item 87) breaks loading of legacy registries — correctness-MAJ-1 under ACTION-REVIEW-SPEC-004."},
+    {"group": "spec-5-change-nondev-automation (part 2)", "hits": [], "note": "Skill, run.sh, Welcome template and bootstrap handler items are outside core-go."},
+    {"group": "spec-6-raw", "hits": ["correctness-INF-2"], "note": "correctness-55: policy.json and schema match the specified values and constraints; ACDSL-JSON-003 declared reach global, empty ok, needs schema. correctness-56: LoadPolicy/parsePolicy defaults and errors match. correctness-57: CheckPolicy inside runCheck, policy diagnostics prepended before logVerdicts, exitError on load/check errors; base candidates and hard error match; vacuous rule deviates by design (correctness-INF-2). correctness-58..63 hold in code (surfaceDelta, overlayViolations, ruleDelta/classViolations, policyDiagnostic, git.go helpers, writePolicy); the known ledger already carries base_ref trust, rename detection, CRLF, task-lifetime exemption, GitRevParse stderr, path tokenization and origin/ stripping. correctness-64: README Modes section, deny snippet and amended overlay paragraph present; hook script outside chunk."},
+    {"group": "spec-7-raw", "hits": [], "note": "railroad-review skill and runbook items; nothing in core-go."},
+    {"group": "spec-8-change-bootstrap-profile", "hits": [], "note": "Welcome form, smine/smine-batch skill and session-routing items are outside core-go; no core-go code references the casual audience value."},
+    {"group": "spec-8-change-bootstrap-profile (part 2)", "hits": ["correctness-MAJ-1"], "note": "correctness-83: Store.Reload skips archived/; ArchiveScope/UnarchiveScope/DeleteScope/ArchivedFolders/validateScopeName behave as specified (sessions.go L147-151, L221-382). correctness-87: Repo.Validate rejects default/archived (registry.go L48) — but validating every stored entry makes legacy registries holding those names unloadable (correctness-MAJ-1). Routes/templates outside chunk."},
+    {"group": "spec-9-change-headless-bootstrap", "hits": [], "note": "cmd/bootstrap/run.sh, bootstrap.go and skill changes are outside core-go."},
+    {"group": "spec-9-change-headless-bootstrap (part 2)", "hits": [], "note": "Profile DevMode, profile handlers, skills and install scripts are outside core-go."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "correctness-107: planformat canon now places Open questions directly after Decisions with no other change to the checks (planformat/main.go L18, L60-104). Rule/skill/doc items outside chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "correctness-119: WorktreeCounts returns per-prefix {Count, Label} in prefix order, labels trimmed of '/', zero counts omitted, git error -> nil, same branch-line matching as the removed CountWorktrees so per-kind counts sum to the old total; CountPoolWorktrees doc comment updated (registry.go L430-508). Shell/template/statusCache items outside chunk."},
+    {"group": "spec-12-raw", "hits": [], "note": "correctness-127: -style flag defaulting to server.DefaultStylePath() threaded into Options.StylePath (main.go L60, L157). Store/handlers/skill outside chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "correctness-136: -claude-home/-codex-home default from os.UserHomeDir() (fatal on error); startPeek reuses only on matching healthz homes, logs ERROR and returns false on mismatch or non-peek listener, spawns with --claude-home/--codex-home (+--control-port when nonzero), false on spawn failure; caller clears endpoint and dashboard URL (main.go L28-32, L120-133, L216-281). correctness-138: plist template carries -peek-port/-peek-control-port placeholders and __PEEK_HOME_ARGS__. correctness-140: ExpandInstallMarkers reads ./install.env, missing -> 42442 default, other markers untouched; LoadFragment applies it. correctness-141 (Windows half): writeInstallEnv writes CONFIGSERVER_PORT/PEEK_PORT/PEEK_CONTROL_PORT into the repo dir before runSyncs. peek-mcp, install.sh, .gitignore and README items outside chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "correctness-142/143/144: registry identity tracking, missing-file empty snapshot, refreshIfChanged in Find/Repos with keep-last-good logging, Add/Remove re-reading under the write lock, save recording the written identity (registry.go L60-257). correctness-145: Fingerprint concatenates the two git reads and errors when either fails (L457-468). correctness-146..149 live in the server chunk."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "internal/repos/registry.go",
+      "line": 48,
+      "checklist": "ACTION-REVIEW-SPEC-004",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "Repo.Validate now rejects the names default/archived, and readRegistrySnapshot validates every stored entry, so an existing repos.json that already registers a repo named default or archived (legal before this change: namePattern admits both) becomes wholly unreadable — Reload fails, and every Add and Remove fails, instead of only new adds of the reserved names being refused.",
+      "evidence": "Re-read registry.go: Validate L35-58 adds the reserved-name check at L48; readRegistrySnapshot L244-253 calls repo.Validate() on every file entry and returns an error on the first failure; Reload L170-174, Add L139-142 and Remove L187-190 all go through readRegistrySnapshot and propagate that error. Base version (git diff) had no reserved-name check, and namePattern ^[A-Za-z0-9._-]+$ is unchanged, so {\"repos\":[{\"name\":\"default\",\"path\":\"/x\"}]} loaded fine at base and now fails with 'Repo.Validate: Invalid field Name: \"default\" is reserved'. refreshIfChanged keeps the last good state only after a successful earlier load; at startup there is none. No migration of such entries exists in the diff for this chunk.",
+      "fix": "Apply the reserved-name rule only at Registry.Add (new registrations) — e.g. move the default/archived check out of Validate into Add, or have readRegistrySnapshot skip-and-log reserved legacy entries instead of failing the whole file."
+    },
+    {
+      "finding_id": "correctness-INF-2",
+      "file": "internal/acdsl/policy.go",
+      "line": 216,
+      "checklist": "correctness-57",
+      "severity": "INFO",
+      "effect": "cosmetic",
+      "exposure": "rare",
+      "claim": "policyBase decides the vacuous case by branch name (checked-out branch == base branch name), not by the spec's 'HEAD at the base tip passes vacuously': an agent branch whose HEAD equals the base tip with uncommitted surface edits is gated, and a local base branch ahead of origin is still treated as the base. This is a deliberate deviation (code comment L190-192) that is stricter than correctness-57 and closer to spec D4 'agent worktrees can never self-escalate'; recorded so the spec owner confirms it.",
+      "evidence": "Re-read policy.go L189-219: isBoundary = branch != strings.TrimPrefix(baseName, \"origin/\"); no comparison of HEAD to the base tip exists. spec-6 L226-227 sketches 'isBoundary is false when HEAD == base tip'. With HEAD on claude/x at the main tip and an uncommitted edit to acdsl/registry.json in gated mode, surfaceDelta flags it, while the spec's literal rule would pass vacuously.",
+      "fix": "none"
+    }
+  ],
+  "walk_complete": true
+}

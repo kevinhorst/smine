@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-241-r1",
+  "verdict": "confirmed",
+  "reason": "The only 'jq' in skills/smine/smine-style/SKILL.md is the allowed-tools grant at L7; no step mentions jq, unlike smine-batch whose identical header is backed by jq steps (L37, L67, L124) — a copied, dead grant.",
+  "probe": "manual: command output — ACDSL probe unrunnable: /bin/bash validity run and bin/acdsl denied by tool-policy, Makefile has no acdsl target",
+  "evidence": {
+    "read": [
+      "grep -n jq skills/smine/smine-style/SKILL.md at 1f725ce -> only '7:allowed-tools: ..., Bash(jq *)' (expected: at least one step using jq if the grant were live)",
+      "grep -n jq skills/smine/smine-batch/SKILL.md -> L7 grant plus L37/L67/L124 jq instructions — the sibling's grant is used, this one is not",
+      "known.json rows for this file (NIT-153 L19, NIT-184 L2) do not cover the dead grant"
+    ],
+    "attempts": [
+      "attempt 1: /bin/bash probes/code-style-nit-241-r1.sh <fixture files list> -> tool-policy denied",
+      "attempt 2: bin/acdsl / make acdsl -> denied, no acdsl make target"
+    ],
+    "refutation_tried": "Considered jq as a fallback for spilled oversized session_full output; the skill body never instructs it and the steps read transcripts via peek-mcp only."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-241-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-241-r1-fail.md"
+  ]
+}

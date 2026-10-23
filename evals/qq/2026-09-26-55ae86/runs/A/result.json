@@ -1,0 +1,59 @@
+{
+  "allowedTools": "Glob, Grep, Read, Workflow, Skill",
+  "candidateCount": null,
+  "checkExit": null,
+  "endedAt": "2026-09-26T13:36:01.794034+02:00",
+  "exitStatus": 0,
+  "invalidReasons": null,
+  "isError": false,
+  "mcpServers": [
+    {
+      "name": "goland",
+      "status": "connected"
+    },
+    {
+      "name": "peek-mcp",
+      "status": "connected"
+    },
+    {
+      "name": "pycharm",
+      "status": "failed"
+    },
+    {
+      "name": "serena",
+      "status": "connected"
+    },
+    {
+      "name": "claude.ai Claude Docs",
+      "status": "connected"
+    },
+    {
+      "name": "claude.ai ClickUp",
+      "status": "needs-auth"
+    },
+    {
+      "name": "claude.ai Figma",
+      "status": "needs-auth"
+    },
+    {
+      "name": "claude.ai Sentry",
+      "status": "needs-auth"
+    }
+  ],
+  "model": "claude-sonnet-5",
+  "permissionDenials": [],
+  "resultText": "`make audit` runs `audit-gates` then Go tests without race and rust-test. Breakdown:\n\naudit-gates: `build-audit`, `golden-check`, `workflow-gen-check`, `rust-lint`, then `go mod verify`, `go vet ./...`, `./bin/acdsl project -strip`, `./bin/acdsl check -report bin/audit-report.md`, `./bin/acdsl fixtu…",
+  "sessionId": "02a24307-5ae2-41ff-bb59-aaeef8f01437",
+  "startedAt": "2026-09-26T13:35:40.67847+02:00",
+  "subtype": "success",
+  "terminalReason": "completed",
+  "toolCalls": [
+    {
+      "calls": 3,
+      "errors": 0,
+      "name": "Grep"
+    }
+  ],
+  "toolErrors": 0,
+  "unparsedLines": 0
+}

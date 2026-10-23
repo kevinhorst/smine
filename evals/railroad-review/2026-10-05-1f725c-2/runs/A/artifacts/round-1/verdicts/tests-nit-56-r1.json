@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-56-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at cmd/bootstrap/run.sh:170 — test_bootstrap_wrapper.sh, the only test driving the wrapper, always sets BOOTSTRAP_DRY_RUN=1 and asserts only exit 64; token gate (78), postcondition (70) and overall_status are unasserted. Spec-9 scopes out live claude only and leaves exit 78 to a manual step; a stub claude or a missing token file needs no paid API.",
+  "probe": "PROBE-TESTS-NIT-56-R1",
+  "script": "tests-nit-56-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-56-r1/cmd/bootstrap/run.sh",
+  "registry": "registry-tests-nit-56-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-56-R1 -registry registry-tests-nit-56-r1.json -> exit 1: cmd/bootstrap/run.sh:170: non-dry-run postcondition/token-gate exits (70/78) are asserted by no cmd/tests script driving bootstrap/run.sh",
+    "read": [
+      "cmd/bootstrap/run.sh:45-52 token gate only when dry_run != 1; 128-131 dry-run return; 164-166 dry-run exit 0 before postconditions 167-174",
+      "cmd/tests/test_bootstrap_wrapper.sh:39-41 run_wrapper hard-sets BOOTSTRAP_DRY_RUN=1; only exit-code asserts are = 64 (100, 107)",
+      "spec-9 lines 516-517 (tests table dry-run only; 'not tested: live claude stage execution'), 544 (exit 78 as a manual check)"
+    ],
+    "validity": "Direct interpreter run on the fixture files list was denied by tool policy (no rule for Bash(/bin/bash *)); acdsl check -root <fixture dir> fails (fixture is no git repo). The real run going RED shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-56-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-56-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-56-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-56-r1/cmd/bootstrap/run.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-56-r1/cmd/tests/test_bootstrap_wrapper.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-nit-56-r1/files.txt"
+  ]
+}

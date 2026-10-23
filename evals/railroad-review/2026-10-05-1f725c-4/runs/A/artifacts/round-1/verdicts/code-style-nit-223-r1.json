@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-223-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on policy.go:63,114,143,195,300,329 (by-value Policy params/returns); Policy has 7 fields incl. 3 slices and is mutated in dist.go writePolicy (243-246), so it is neither small nor immutable, and no caller needs copy semantics — RULE-GOLANG-POINTER-001 applies.",
+  "probe": "PROBE-CODE-STYLE-NIT-223-R1",
+  "script": "literal-owner (repo registry verifier, literal=\"Policy) (\" allowed=\"^NO-OWNER$\")",
+  "fixture": "probes/fixtures/code-style-nit-223-r1-fail.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-NIT-223-R1 -> exit 1: internal/acdsl/policy.go:63,114,143,195,300,329: literal \"Policy) (\" outside its owner",
+    "validity": "bin/verifiers/literalowner scratch/code-style-nit-223-r1/files.txt literal=\"Policy) (\" allowed=^NO-OWNER$ -> exit 1 on fixtures/code-style-nit-223-r1-fail.go:8",
+    "read": [
+      "internal/acdsl/policy.go:39-47 Policy struct: 7 fields, EditableScopes/LocalOverrides/VerifierAllowlist []string",
+      "internal/acdsl/dist.go:243-246 writePolicy mutates policy.Mode and policy.DistMode",
+      "context/rules/go.md:331-334 RULE-GOLANG-POINTER-001: structs MUST be passed by pointer; by value only for small immutable value objects or explicit copy semantics; if in doubt, use a pointer"
+    ],
+    "note": "Probe literal covers the param sites; returns at 82/177/380 (classViolations param, parsePolicy/LoadPolicy (Policy, error)) read directly. No known row covers POINTER-001."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-223-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-223-r1-fail.go"
+  ]
+}

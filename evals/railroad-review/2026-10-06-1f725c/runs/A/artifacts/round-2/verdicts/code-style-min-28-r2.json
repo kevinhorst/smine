@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-MIN-28-r2",
+  "verdict": "confirmed",
+  "reason": "The probe ran RED at the exact claimed line: the Disposition ledger bullet's parenthetical terminal-outcome enumeration lists 7 comma-separated inline-code items after this diff inserted `casual-locked`, exceeding RULE-SKILL-005's 6-item cap while sitting in a sentence rather than a fenced list. Confirmed against both the rejected-findings ledger (empty) and known-findings ledger (no match by file/substance) — this is a new, unreported finding. The diff's left side (pre-diff) had exactly 6 items (compliant); this is a genuine regression introduced by the diff, consistent with the same diff separately fixing an analogous over-cap enumeration a few lines above (step 8) into a fenced list. Cells stand as given.",
+  "probe": "PROBE-CODE-STYLE-MIN-28-R2",
+  "script": "code-style-min-28-r2.sh",
+  "fixture": "fixtures/code-style-min-28-r2/SKILL.md",
+  "registry": "registry-code-style-min-28-r2.json",
+  "evidence": {
+    "read": [
+      "skills/smine/smine-apply/SKILL.md:52 (committed head): '- **Disposition ledger** — the moment a vote reaches a *terminal* outcome (`implemented`, `rejected`, `postponed`, `manual-external`, `casual-locked`, `stale`, `auto-applied`), append its original vote line ...' — 7 comma-separated items",
+      "git diff b4981b88d52deaa69d6ed1d60eb51b57ead47ba0 e5245d08d2fe5c05f67742fd8ec5a67b759ca316 -- skills/smine/smine-apply/SKILL.md: left side (pre-diff) had exactly 6 items; `casual-locked` is new in this diff",
+      "context/rules/skills.md RULE-SKILL-005: 'An enumeration of more than 6 comma-separated items never sits in an inline code span or sentence — it becomes a fenced block ... or a table.'"
+    ],
+    "probe_run": "skills/smine/smine-apply/SKILL.md:52: Disposition ledger enumeration has 7 comma-separated items (>6) inline per RULE-SKILL-005: [PROBE-CODE-STYLE-MIN-28-R2] code-style-min-28-r2 — Disposition ledger bullet's terminal-outcome enumeration has 7 comma-separated inline items, over RULE-SKILL-005's 6-item cap"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-28-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-28-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-min-28-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-28-r2/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/code-style-min-28-r2/files.txt"
+  ],
+  "notes": "Direct `bash`/`/bin/bash <script>` self-check invocation was tool-policy-denied (two attempts); probe wired as a task-lifetime ACDSL rule and run via the prebuilt bin/acdsl binary, confirming RED against the real committed head at the exact claimed line."
+}

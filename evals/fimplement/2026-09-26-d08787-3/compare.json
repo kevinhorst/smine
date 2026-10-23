@@ -1,0 +1,58 @@
+{
+  "ranking": ["D", "A", "B", "C"],
+  "arms": [
+    {
+      "label": "D",
+      "summary": "Implements the full plan (dry-run step plan, transparent refusal, would_* outcomes, -close trigger via DecideBash, isAwaitingAi, skill Check/Report-refusal, settings, fact) with every planned test case and orders State.afterClose alphabetically before afterDelivery per go.md; no scope creep.",
+      "defects": []
+    },
+    {
+      "label": "A",
+      "summary": "Complete and matches the reference contract-for-contract, including the separate dirty worktree in ops_remove_dry_run and the /close-shaped real remove afterwards; only follows the plan's non-alphabetical method placement.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:42",
+          "claim": "State.afterClose placed after afterDelivery (plan placement) instead of alphabetically before it per go.md private-method order"
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "summary": "Complete implementation identical in production code to the reference; the scenario test's closing real remove is weakened and the plan's non-alphabetical placement is kept.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:42",
+          "claim": "State.afterClose placed after afterDelivery (plan placement) instead of alphabetically before it per go.md private-method order"
+        },
+        {
+          "severity": "MINOR",
+          "file": "cmd/agentwt/tests/scenarios/mod.rs:548",
+          "claim": "the 'real remove afterwards' case runs `remove --force claude/session` without --delete-branch on the dirtied worktree, so it no longer exercises the /close remove shape nor proves the branch survived the dry runs"
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "summary": "Complete implementation of the plan, but adds an unrequested change to the golangciwrap acdsl verifier and keeps the plan's non-alphabetical placement.",
+      "defects": [
+        {
+          "severity": "MINOR",
+          "file": "cmd/acdsl/verifiers/golangciwrap/main.go:51",
+          "claim": "out-of-scope change: adds --allow-serial-runners to both golangci-lint invocations to work around local audit lock contention; not in the plan's Changes table"
+        },
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/title.go:42",
+          "claim": "State.afterClose placed after afterDelivery (plan placement) instead of alphabetically before it per go.md private-method order"
+        },
+        {
+          "severity": "MINOR",
+          "file": "cmd/sessiontitle/main.go:138",
+          "claim": "DecideFirst doc comment left with a ragged wrap ('first prompt line is missing,' then a lone '// so the next tool call retries.') instead of reflowing the paragraph"
+        }
+      ]
+    }
+  ]
+}

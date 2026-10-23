@@ -1,0 +1,14 @@
+{
+  "finding_id": "tests-MIN-14-r2",
+  "verdict": "confirmed",
+  "reason": "Confirmed by static trace of both the test fixture and the production squash-counting logic: test_squash_transfer_reads_contained's fixture commits exactly two agent commits ('agent step one', 'agent step two') before the squash-merge, and verdict.sh's evaluate_branch (cmd/worktrees/_lib/verdict.sh:469-483) counts one squashed_n increment per intersection commit that is unpicked-but-explained — each of the two commits lands as its own '+' hash with a distinct patch-id from the squash commit, so the current, correct production output is already 'squashed:2', exactly as spec-11's Tests table (line 508) and Verification checklist (line 536) require. The test's `grep -q 'squashed:'` assertion is strictly weaker than the spec-named value and would silently pass if squashed_n regressed to 0, 1, or 3. This is a test-weakness/coverage-gap finding, not a production defect — no execution was needed or possible (the shell test cannot be run directly in this harness; see probe note) to settle it, since the claim is about the assertion's text, not about current runtime behavior diverging from it.",
+  "probe": "none: same structural block — direct bin/acdsl invocation and `make acdsl ARGS=...` both denied by tool-policy after two attempts; separately, running the shell test itself (bash cmd/tests/test_print_agent_worktrees_status.sh, or executing it directly) is also denied (no allow rule, and running scripts via bash is disallowed in this harness), so settlement is via static code trace of verdict.sh's squashed_n accumulation against the fixture's exact commit count rather than by execution.",
+  "evidence": {
+    "read": [
+      "cmd/tests/test_print_agent_worktrees_status.sh:469-499 (test_squash_transfer_reads_contained) — fixture makes exactly two commits ('agent step one','agent step two') then `git merge --squash`; assertion is `echo \"$row\" | grep -q 'squashed:'`, never checking the digit",
+      "cmd/worktrees/_lib/verdict.sh:469-483 — squashed_n increments once per intersection hash that is unpicked and hash_explained_anywhere; with two distinct agent commits each carrying a distinct patch-id from the squash-merge commit, both increment squashed_n, yielding squashed_n=2 for this fixture",
+      "artifacts/round-2/spec-11-change-repos-routines-ui.md:508,536 — states the expected value explicitly as `squashed:2`"
+    ]
+  },
+  "artifacts": []
+}

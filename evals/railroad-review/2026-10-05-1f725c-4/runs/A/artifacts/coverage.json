@@ -1,0 +1,3335 @@
+{
+  "code-style": {
+    ".github/workflows/ci.yml": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    ".gitignore": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "Makefile": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "README.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/README.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "acdsl/policy.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "acdsl/policy.schema.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "acdsl/rules.acdsl": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-JSON-003/fail/policy.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-JSON-003/pass/policy.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-PLAN-001/pass/plan.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/acdsl/main.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/acdsl/verifiers/planformat/main.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/bootstrap/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/com.smine.configserver.plist.template": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/configserver/install_windows.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/version.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/hooks/acdsl-policy-guard.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/read-gate.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/hooks/skill-invoke-gate.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/worktree-sessionstart.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/sync/sync_hooks.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/sync/sync_settings.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/sync/sync_skills.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_bootstrap_wrapper.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/tests/test_print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/tests/test_read_gate.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/tests/test_remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/tests/test_skill_invoke_gate.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/tests/test_sync_skills_overrides.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/worktrees/_lib/verdict.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/worktrees/print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "cmd/worktrees/remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "context/actions/implementing.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "context/rules/plan.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "docs/acdsl-go-tools.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "docs/acdsl-spec.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "docs/workflows.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "install.ps1": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "install.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "installer/windows/smine.iss": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/acdsl/dist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/dist_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/acdsl/git.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/git_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/acdsl/policy.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/policy_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/config/config.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/config/installenv.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/config/installenv_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/contextdocs/sync.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/evals/evals.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/evals/evals_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/peek/peek.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/peek/peek_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/repos/registry.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/repos/registry_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/routines/bootstrap_darwin.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/routines/launchctl_darwin_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/routines/routines.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/routines/routines_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/routines/sched_windows.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/assets/style.css": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/bootstrap.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/bootstrap_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/config.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/config_sync.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/config_sync_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/hooks.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/i18n.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/overview.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/overview_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/permissions.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/presentation.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/presentation_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/profilesettings.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/profilesettings_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/proposals.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/proposals_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/repos.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/repos_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/routines.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/server.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/server_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/sessions.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/sessions_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/skills_analytics_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/statuscache.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/statuscache_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_body.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_list.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_profile_test.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_proposal_card.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_routine_row.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_session_list.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_welcome_bootstrap.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/_worktree_status.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/layout.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/overview.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/profile.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/proposals.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/repo_detail.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repos_index.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/routine_detail.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_archive.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_batch.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_index.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/templates/welcome.html": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/welcome.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/server/welcome_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/sessions/sessions.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/sessions/sessions_test.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/shell/shell.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "internal/skills/sync.go": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/README.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/_lib/matrix.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/_lib/worktree.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/skill-eval/briefs/fexplore/applied-probe-safety.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/skill-eval/com.smine.routine.skill-eval.plist.template": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/skill-eval/default-disabled": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/skill-eval/run.sh": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/smine-nightly/com.smine.routine.smine-nightly.plist.template": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "routines/smine-nightly/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/presentation-profile.de.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "settings/claude_code/settings.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/README.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/workflows/subsystem-grounding.js": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/git/package-commit/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/git/package-commit/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/orchestration/close/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/workflows/railroad-review.js": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/reference/schema.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine/SKILL.md": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine/changelog.json": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    },
+    "skills/smine/smine/workflows/session-mine.js": {
+      "clean_reviews": 1,
+      "done": true,
+      "last_round": 1
+    }
+  },
+  "correctness": {
+    ".github/workflows/ci.yml": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    ".gitignore": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "Makefile": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "README.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/README.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/policy.schema.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/rules.acdsl": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/acdsl/main.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/acdsl/verifiers/planformat/main.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/bootstrap/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/com.smine.configserver.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/install_windows.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/version.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/acdsl-policy-guard.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/read-gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/skill-invoke-gate.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/worktree-sessionstart.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_hooks.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_settings.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_skills.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/_lib/verdict.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "context/actions/implementing.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "context/rules/plan.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "docs/acdsl-go-tools.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "docs/acdsl-spec.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "docs/workflows.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "install.ps1": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "install.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "installer/windows/smine.iss": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/dist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/git.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/policy.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/config.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/installenv.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/contextdocs/sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/evals/evals.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/peek/peek.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/repos/registry.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/bootstrap_darwin.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/routines.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/sched_windows.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/assets/style.css": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/bootstrap.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config_sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/hooks.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/i18n.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/overview.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/permissions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/presentation.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/profilesettings.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/proposals.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/repos.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/routines.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/server.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/sessions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/statuscache.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_body.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_list.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_profile_test.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_proposal_card.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_routine_row.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_session_list.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_welcome_bootstrap.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_worktree_status.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/layout.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/overview.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/profile.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/proposals.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repo_detail.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repos_index.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/routine_detail.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_archive.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_batch.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_index.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/welcome.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/welcome.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/sessions/sessions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/shell/shell.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/skills/sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/README.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/_lib/matrix.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/_lib/worktree.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/briefs/fexplore/applied-probe-safety.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/com.smine.routine.skill-eval.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/default-disabled": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/run.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/smine-nightly/com.smine.routine.smine-nightly.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/smine-nightly/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/presentation-profile.de.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/settings.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/README.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/workflows/subsystem-grounding.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/workflows/railroad-review.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/reference/schema.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/workflows/session-mine.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    }
+  },
+  "security": {
+    ".github/workflows/ci.yml": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    ".gitignore": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "Makefile": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/policy.schema.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/rules.acdsl": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-JSON-003/fail/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-JSON-003/pass/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-PLAN-001/pass/plan.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/acdsl/main.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/acdsl/verifiers/planformat/main.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/bootstrap/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/com.smine.configserver.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/install_windows.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/version.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/acdsl-policy-guard.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/read-gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/skill-invoke-gate.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/worktree-sessionstart.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_hooks.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_settings.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_skills.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_bootstrap_wrapper.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_read_gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_skill_invoke_gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_sync_skills_overrides.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/_lib/verdict.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "context/actions/implementing.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "context/rules/plan.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "install.ps1": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "install.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "installer/windows/smine.iss": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/dist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/dist_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/git.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/git_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/policy.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/policy_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/config.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/installenv.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/installenv_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/contextdocs/sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/evals/evals.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/evals/evals_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/peek/peek.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/peek/peek_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/repos/registry.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/repos/registry_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/bootstrap_darwin.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/launchctl_darwin_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/routines.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/routines_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/sched_windows.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/assets/style.css": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/bootstrap.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/bootstrap_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config_sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config_sync_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/hooks.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/i18n.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/overview.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/overview_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/permissions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/presentation.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/presentation_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/profilesettings.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/profilesettings_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/proposals.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/proposals_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/repos.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/repos_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/routines.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/server.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/server_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/sessions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/sessions_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/skills_analytics_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/statuscache.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/statuscache_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_body.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_list.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_profile_test.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_proposal_card.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_routine_row.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_session_list.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_welcome_bootstrap.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_worktree_status.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/layout.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/overview.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/profile.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/proposals.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repo_detail.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repos_index.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/routine_detail.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_archive.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_batch.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_index.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/welcome.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/welcome.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/welcome_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/sessions/sessions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/sessions/sessions_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/shell/shell.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/skills/sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/_lib/matrix.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/_lib/worktree.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/briefs/fexplore/applied-probe-safety.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/com.smine.routine.skill-eval.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/default-disabled": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/run.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/smine-nightly/com.smine.routine.smine-nightly.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/smine-nightly/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/presentation-profile.de.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/settings.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/workflows/subsystem-grounding.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/workflows/railroad-review.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/reference/schema.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/workflows/session-mine.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    }
+  },
+  "tests": {
+    ".github/workflows/ci.yml": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    ".gitignore": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "Makefile": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/policy.schema.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/rules.acdsl": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-JSON-003/fail/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-JSON-003/pass/policy.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "acdsl/testdata/ACDSL-PLAN-001/pass/plan.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/acdsl/main.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/acdsl/verifiers/planformat/main.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/bootstrap/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/com.smine.configserver.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/install_windows.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/main_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/configserver/version.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/acdsl-policy-guard.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/read-gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/skill-invoke-gate.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/hooks/worktree-sessionstart.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_hooks.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_settings.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/sync/sync_skills.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_bootstrap_wrapper.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_read_gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_skill_invoke_gate.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/tests/test_sync_skills_overrides.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/_lib/verdict.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/print_agent_worktrees_status.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "cmd/worktrees/remove_agent_worktrees.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "context/actions/implementing.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "context/rules/plan.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "install.ps1": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "install.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "installer/windows/smine.iss": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/dist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/dist_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/git.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/git_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/policy.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/acdsl/policy_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/config.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/installenv.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/config/installenv_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/contextdocs/sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/evals/evals.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/evals/evals_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/peek/peek.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/peek/peek_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/repos/registry.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/repos/registry_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/bootstrap_darwin.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/launchctl_darwin_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/plist_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/routines.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/routines_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/routines/sched_windows.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/assets/style.css": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/bootstrap.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/bootstrap_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config_sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/config_sync_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/hooks.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/i18n.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/overview.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/overview_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/permissions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/presentation.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/presentation_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/profilesettings.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/profilesettings_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/proposals.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/proposals_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/repos.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/repos_test.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/routines.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/server.go": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/server_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/sessions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/sessions_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/skills_analytics_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/statuscache.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/statuscache_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_body.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_batch_list.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_profile_test.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_proposal_card.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_routine_row.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_session_list.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_welcome_bootstrap.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/_worktree_status.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/layout.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/overview.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/profile.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/proposals.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repo_detail.html": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/repos_index.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/routine_detail.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_archive.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_batch.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/sessions_index.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/templates/welcome.html": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/welcome.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/server/welcome_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/sessions/sessions.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/sessions/sessions_test.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/shell/shell.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "internal/skills/sync.go": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/_lib/matrix.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/_lib/worktree.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/briefs/fexplore/applied-probe-safety.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/com.smine.routine.skill-eval.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/default-disabled": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/skill-eval/run.sh": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/smine-nightly/com.smine.routine.smine-nightly.plist.template": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "routines/smine-nightly/run.sh": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/presentation-profile.de.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "settings/claude_code/settings.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fdesign/workflows/subsystem-grounding.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/fmt/fmt/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/merge-resolve/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/git/package-commit/workflows/foreign-toolchain-pretag.js": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/orchestration/close/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/dod-report/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/quality/railroad-review/workflows/railroad-review.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-create/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/skillroutine/skillroutine-eval/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-apply/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-batch/reference/schema.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-consolidate/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-context/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-memory/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-orchestrate/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-permissions/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-routines/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-skills/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/SKILL.md": {
+      "clean_reviews": 0,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine-style/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/SKILL.md": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/changelog.json": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    },
+    "skills/smine/smine/workflows/session-mine.js": {
+      "clean_reviews": 1,
+      "done": false,
+      "last_round": 1
+    }
+  }
+}

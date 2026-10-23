@@ -1,0 +1,41 @@
+# Review: smine v1.1.4 → v1.2.1
+
+Range `b4981b88..a342811`, excluding `sessions/`, `evals/`, `proposals/`, `plans/`. 178 files, ~7300/750 lines. Reviewed in passes: full `git diff` read in ~2000-line chunks, cross-checked against the plan docs under `plans/v1-2-1/*/design/` (repo-cache-reload, repos-routines-improvements, language-style-setting, acdsl-policy-modes, bootstrap-profile-improvements, peek-multiple-profiles, plan-format-viewer-fixes, railroad-review-observability, session-context-report). Read-only — no working-tree changes made. Note: the checkout already carries ~23 files of pre-existing uncommitted diff (unrelated to this review, not introduced by me) from what looks like the repo's own ACDSL projection tooling; I did not touch it and did not run `go build`/`go test` to avoid interacting with it, relying on direct diff inspection instead.
+
+## Strengths
+
+- **Registry read-through + status-cache fingerprint** (`internal/repos/registry.go`, `internal/server/statuscache.go`, `internal/server/repos.go`) implements its plan (`2026-08-30-repo-cache-reload`) essentially verbatim, including the subtler decisions: stat-before-read ordering to catch a racing write, `DropBranches` deliberately keeping the *pre-removal* fingerprint so the next plain load reconverges, error-degrades-to-rescan on a fingerprint failure. Tests cover the actual regression scenarios (cross-instance delete, external edit races, corrupt-file fallback), not just the happy path.
+- **ACDSL self-management policy** (`internal/acdsl/policy.go`, `cmd/hooks/acdsl-policy-guard.sh`) is a clean, well-reasoned design: the trust boundary is git topology (diff against `merge-base(HEAD, base_ref)`), the hard gate lives in the compiled `acdsl check` binary and the PreToolUse hook is explicitly fail-open, task-lifetime entries are exempted consistently. Good test coverage in `policy_test.go` for strict/gated/free crossed with added/changed/removed/overlay/task-exempt cases.
+- **Peek session attribution fix** (`internal/peek/peek.go`, `SessionIndex`/`ByBranch`/`ByCwd`/`keepNewest`) is exactly the documented fix for the pool-recycled-worktree misattribution bug (FACT-REPO-ARCH-017), and `worktreeSessions` in `repos.go` correctly prefers branch identity with cwd as fallback.
+- **Multi-profile peek isolation** (`cmd/configserver/main.go` `startPeek`/`peekIdentity`) — reusing a listener only after confirming its `/healthz` identity matches this profile's homes, refusing otherwise — is a real fix for the "second macOS profile silently shares the first profile's peek" failure mode, with a genuinely useful table-driven test (`TestStartPeek`) covering match/mismatch/non-peek-listener/no-listener/spawn-failure.
+- Small, disciplined refactors throughout: `parseSchedule` → `scheduleInfo{Supported, Unscheduled}` cleanly distinguishes "no schedule yet" from "unsupported trigger type"; `History()`'s dedup of superseded `"started"` marker rows is correct (filter happens before the reverse-and-truncate, so `limit` can't cut into an already-superseded row); `disabledLabels` → `overrideLabels` generalization is minimal and well tested.
+- Consistent, repo-wide `non-developer` → `casual` rename (Go identifiers, templates, installer strings, docs) — no half-migrated spots found.
+- Defensive shell fixes match the project's own ACTION-IMPL-EXEC-002 doctrine: `read -r answer || answer=n` in `sync_hooks.sh` so an EOF stdin can't accidentally answer "yes" to a prune prompt.
+
+## Issues
+
+### Critical (Must Fix)
+
+None found. I did not find a data-loss, security, or broken-functionality bug in the code actually shipped in this range.
+
+### Important (Should Fix)
+
+- **`plans/v1-2-1/session-context-report/` plan appears to be entirely unimplemented, and its dir name is nonconformant.** This plan (651-line `raw.md` + 591-line `change-context-filters.md`) specifies `handleSessionsLive`, `handleSessionReport`, `sessionsLivePage`, routes `GET /sessions/live` and `GET /sessions/live/{id}`, a `ClaudeHome` server option, and a `sessions_live.html` template. None of these exist anywhere in the diff or at HEAD (`git grep` for `handleSessionsLive`/`handleSessionReport`/`ClaudeHome` in `internal/server` returns nothing). The plan directory also doesn't follow `RULE-PLAN-071` (`<date>-<slug>-<state>-<hash>`) — no date prefix, no `-wip-`/`-done-` suffix, no hash — unlike every sibling plan dir. Given it's filed under `plans/v1-2-1/`, please confirm with the author whether this was deliberately deferred past 1.2.1 (in which case the dir should move out of the `v1-2-1` bucket) or whether it's simply forgotten work; either way the stray non-conformant dir should be fixed or removed so `RULE-PLAN-072`'s glob-uniqueness contract keeps holding.
+- **`install.sh`'s new port-kill loop inherits a pre-existing fragile pattern, now at 2 more call sites.** `pid="$(lsof -tiTCP:"$peek_port" -sTCP:LISTEN || true)"` followed by `kill "$pid"` (lines ~2619-2626) silently no-ops if `lsof` ever returns more than one PID (embedded newlines make `"$pid"` a single invalid argument to `kill`, which fails and is swallowed by `2>/dev/null || true`). This exact pattern already existed for `ADDR_PORT` before this change; the diff propagates it to `PEEK_PORT` and `PEEK_CONTROL_PORT`, tripling the exposure. Since it's inherited rather than new, I'm not blocking on it, but given this PR is specifically hardening the peek multi-profile story, it would be worth fixing all three call sites while here (`kill $pid` unquoted with a loop, or `xargs kill` over the lsof output).
+
+### Minor (Nice to Have)
+
+- **`presentationStore.saveProfileSelection`'s first-activation template seed is untested and relies on an implicit cwd contract.** `templatePath := filepath.Join("settings", "claude_code", "presentation-profile.de.md")` is a relative path that only resolves correctly when the process cwd is the repo root (true at runtime via the launchd `WorkingDirectory`, and matches the existing `install.env` convention, but neither `presentation_test.go` nor `profilesettings_test.go` exercises this branch — a `t.Chdir` test would catch a future regression here, e.g. if the server is ever invoked from a different cwd in a test harness or a future refactor).
+- **`internal/shell.RunSync` duplicates `Run` almost verbatim** (only the timeout differs) rather than parameterizing `Run` with a timeout argument or option. The comment explains why (only sync scripts should get the 10-minute ceiling, and duplicating keeps that restriction visible/grep-able), which is a reasonable call, but it's worth a second look if a third timeout tier ever gets added — three near-identical copies would be the point to consolidate.
+- `cmd/hooks/skill-invoke-gate.sh`'s Bash-target detection (`set -- $command` after excluding shell metacharacters) is a coarse heuristic that only catches an exact bare `cat <path>` — consistent with the existing `read-gate.sh` pattern it mirrors, so not a new gap, just noting it inherits the same narrow coverage (a `cat -- <path>` or `cat < path` wouldn't be recognized either way).
+
+## Recommendations
+
+- Confirm the `session-context-report` plan's status explicitly (see above) rather than leaving an unimplemented, non-conformant plan directory sitting in the shipped-version bucket — it invites someone to assume the feature exists.
+- The squash-containment layer (`cmd/worktrees/_lib/verdict.sh` `squash_contained`) and its cache-key version salt (`|v2`) are a good pattern for the next time verdict semantics change — worth calling out in `cmd/worktrees/README.md` or similar so a future logic change remembers to bump the salt again.
+
+## Assessment
+
+**Ready to merge?** Yes.
+
+**Reasoning:** The two most complex/risky pieces of this release — the registry/status-cache invalidation rework and the ACDSL self-management policy gate — are implemented with the care their plans call for (documented edge cases, matching tests, no weakened guards). I found no critical or confirmed-breaking issues in the shipped code; the one Important finding is a documentation/plan-hygiene gap (an apparently-abandoned plan directory), not a code defect, and the other is a pre-existing minor script fragility that this PR merely extends rather than introduces.

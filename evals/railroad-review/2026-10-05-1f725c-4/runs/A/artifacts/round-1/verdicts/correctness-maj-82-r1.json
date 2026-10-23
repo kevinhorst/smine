@@ -1,0 +1,19 @@
+{
+  "finding_id": "correctness-MAJ-82-r1",
+  "verdict": "confirmed",
+  "reason": "Defect stands at 1f725ce: cmd/bootstrap/run.sh never writes ~/.claude/settings.json before run_stage smine-orchestrate (L161), while orchestrate SKILL.md L24/L61 makes bootstrap duties 3-7 identical and delegates the append to the invoking wrapper. Same file-substance as KNOWN open correctness-MAJ-58-r1 (SKILL.md:61, same fix) — a duplicate the station must mark known, not a new finding.",
+  "probe": "manual: source read — claim matches known open entry correctness-MAJ-58-r1; no probe authored because re-verifying a known entry is out of scope",
+  "duplicate_of_known": "correctness-MAJ-58-r1",
+  "evidence": {
+    "read": [
+      "cmd/bootstrap/run.sh@1f725ce L77-85 only reads .permissions.additionalDirectories; L154-161 runs the five stages; no write to $settings_file anywhere in the file",
+      "skills/smine/smine-orchestrate/SKILL.md@1f725ce L24 'duties 3-7 below are identical' (bootstrap mode); L31 'additionalDirectories is wrapper-owned ... never writes the user settings file directly'; L61 'The invoking wrapper appends registry paths ... before this stage'",
+      "routines/smine-nightly/run.sh@1f725ce L298-308 performs the append-only jq merge before stage 3 — the bootstrap wrapper has no counterpart",
+      "internal/server/repos.go@1f725ce L568-605: casual installs grant additionalDirectories transactionally at registration, so the gap is reachable only for pre-grant registrations, developer-audience opt-outs or a settings reset — exposure 'rare' holds",
+      "known.json: correctness-MAJ-58-r1 (skills/smine/smine-orchestrate/SKILL.md:61, fix_state open) states the same missing append in cmd/bootstrap/run.sh with the same fix"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/correctness-maj-82-r1.json"
+  ]
+}

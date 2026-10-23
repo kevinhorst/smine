@@ -1,0 +1,199 @@
+{
+  "shape": "group-first",
+  "groups": [
+    {
+      "id": "spec-1-concept",
+      "items": [
+        "correctness-1: One global presentation profile per install: language, register, and audience (non-developer) in a single source of truth.",
+        "correctness-2: Every user-facing surface honors the profile: config-server UI, proposal cards, session/batch views, welcome/tutorial, and prose produced by smine skill runs.",
+        "correctness-3: Enforcement against model drift back to English/developer register must be a checked pipeline gate (nightly consolidate pass), not a polite instruction alone.",
+        "correctness-4: Install remains the operator-operable: repo content, logs, and results.jsonl stay English regardless of the profile; a machine can be switched back to developer/English mode.",
+        "correctness-5: The profile is per-install state (never repo content), written by install/sync; a config-server settings page to view/edit it is explicitly backlog, not MVP.",
+        "correctness-6: An explicit supersede clause is required over the global \"handoff/doc artifacts always English\" rule, scoped only to user-visible artifacts.",
+        "correctness-7: A jargon glossary bans specific engine/developer terms (worktree, gate, transcript mining, consolidate, etc.) with plain-language replacements; code, ids, dates, tags, and gate fields are never translated.",
+        "correctness-8: Reduced navigation mode tied to the profile's audience field: non-developer installs show only Overview, Proposals, and Sessions.",
+        "correctness-9: Proposal cards hide gate/tag/target internals for the non-developer audience; code snippets render collapsed and clearly marked as technical detail, left untranslated.",
+        "correctness-10: Audience gating must be a render-time filter over the same data, not a UI fork — switching the profile back to developer/English restores the full surface with no data loss."
+      ]
+    },
+    {
+      "id": "spec-2-user_stories",
+      "items": [
+        "correctness-11: Proposal titles, change lines, and detail fields render in plain, jargon-free language for a non-developer user.",
+        "correctness-12: Evidence notes read as everyday explanations of what happened in the user's sessions, not internals of the mining engine.",
+        "correctness-13: Engine terms (worktree, gate, transcript mining, consolidation) must never appear in anything the non-developer user reads.",
+        "correctness-14: Navigation, page headings, and the welcome/tutorial content render in the user's language from first open.",
+        "correctness-15: The non-developer user sees only the pages relevant to them (overview, proposals, sessions) and is never confronted with skills/context-pack/repo-management internals.",
+        "correctness-16: Proposal cards show no gate bands, tags, or target paths for the non-developer audience.",
+        "correctness-17: Nightly runs keep all user-visible content in the target language and jargon-free over time, preventing English/developer prose from leaking back in.",
+        "correctness-18: Technical code blocks are visibly marked as technical detail and left untranslated so the user knows what to skip.",
+        "correctness-19: The operator sets the presentation profile once at install so the machine is fully configured for its user without ongoing manual styling.",
+        "correctness-20: The operator can switch a machine back to developer/English mode and get the full UI/register; repo content, logs, and pipeline results stay English regardless of the profile, unaffected by operator workflow changes."
+      ]
+    },
+    {
+      "id": "spec-3-raw",
+      "items": [
+        "correctness-21: Profile file is one markdown file at a fixed per-install path with `language:`/`audience:` front matter plus a directive body, parsed identically by Go and by shell (sed).",
+        "correctness-22: A missing, unreadable, or malformed profile (missing keys, unknown audience value) must fail open to today's defaults (English, developer) — absence must be byte-identical to pre-feature behavior.",
+        "correctness-23: The global-context hook is extended to scan a machine-global directory for profile/context files before the repo-local docs directory, so the profile reaches every session (interactive and headless) on the machine.",
+        "correctness-24: Server loads the profile once per install into FuncMap closures (`t`, `langAttr`, `isDeveloperAudience`) consumed by every template; no new per-request struct plumbing.",
+        "correctness-25: A German catalog is a map keyed by the English source string with an identity fallback on any missing key, so an incomplete catalog never breaks a page.",
+        "correctness-26: Reduced-surface mechanics: navigation gates dev-only entries on audience; the overview page for non-developer installs renders only session and proposal tiles; proposal cards hide target/gate/tag badges and gate detail; technical snippet summaries become a \"technical detail\" label.",
+        "correctness-27: Nightly consolidate stage threads the profile's `language` value (when set and not English) into its existing `language <lang>` arg, so the drift-correction gate becomes language-aware.",
+        "correctness-28: macOS install provisioning: an explicit opt-in environment variable copies a named repo-shipped profile template into the per-install path; a default install never plants a profile.",
+        "correctness-29: The global English-only authoring rule gains an explicit supersede clause: an installed presentation profile wins for end-user-visible artifacts; code, logs, commits, and repo docs stay English regardless.",
+        "correctness-30: Windows installer exposes a hard-coded profile selection (wizard page); the chosen profile id threads through the installer's own binary as a flag and is copied into place by the Windows install flow."
+      ]
+    },
+    {
+      "id": "spec-4-change-englishness",
+      "items": [
+        "correctness-31: Canonical skill/proposal group titles (\"New skills\", \"Edits to existing skills\", \"Workflows (skill-bundled scripts)\", \"Considered, not proposed\") stay verbatim in the stored data (apply logic routes on the exact string) and are translated only at render time via the catalog.",
+        "correctness-32: Each content-producing skill (batch, skills, routines, context, memory) gains an explicit language contract: read the presentation profile and author user-visible prose fields in that language when set and not English; never translate ids, targets, paths, code, dates, tags, schema keys, or the canonical group titles.",
+        "correctness-33: The translatable-prose field set is explicitly bounded: proposal title (post-target part)/change/fields[].label·text/evidence[].title/sessions[].note/free-form group titles for proposals, and title/theme bullets/arc summaries/session summaries·notes/finding titles for batches; operator-only artifacts (batch .md reports, ledgers, run reports) are excluded.",
+        "correctness-34: The nightly consolidate pass's language sweep widens from only \"reworded\" prose to every in-scope prose field of every mutable (unvoted, proposed) entry not already in the target language; canonical titles and technical identifiers stay verbatim; voted/archived entries are never touched.",
+        "correctness-35: The render layer must translate kind headings, category/group/subgroup titles, and remaining raw literal strings (e.g. empty-state and tooltip text) that currently bypass the translation overlay; Go-composed tooltip/format strings become catalog-driven format templates.",
+        "correctness-36: The catalog gains concrete target-language entries for every canonical group/category title and every newly-wrapped format string.",
+        "correctness-37: A documented one-time operator step (or the next nightly) runs the widened consolidate language sweep once on an already-seeded store to retroactively translate its backlog.",
+        "correctness-38: Developer machines (no profile installed) must render every touched page byte-identical to before this change — no regression to the English/full-detail path."
+      ]
+    },
+    {
+      "id": "spec-5-change-nondev-automation",
+      "items": [
+        "correctness-39: All sync scripts (hooks, skills, settings, context) run under a materially longer timeout than the original short ceiling, so a slow/cold install (notably Windows) cannot be killed mid-sync; the hooks prune prompt gets an EOF guard so unattended/no-stdin runs never abort the install and default to \"do not prune\".",
+        "correctness-40: On a non-developer install, deployed skills must be hidden from and non-invocable in the user's own interactive/headless sessions via a settings-level override, while staying fully deployed and invocable for the pipeline's own routine runs via a separate run-scoped overlay; every page route stays reachable for operator inspection (no route blocking).",
+        "correctness-41: The repos page renders as a simplified \"Projects\" view for non-developer installs: add/remove stays available with localized labels, dev-only columns (path/context/ACDSL/worktrees) are hidden, and the additional-directory mining opt-in is applied automatically on every non-developer repo add.",
+        "correctness-42: A new orchestrator capability runs as a gated nightly stage after publish: it judges the run's output (schema validity, audit-green, prose conformance), fixes small defects or rejects the run outright, merges an accepted run into the main branch, re-verifies, re-syncs deployed state and per-repo context packs, reconciles the additional-directories registry append-only, and pushes when a remote exists; the wrapper mechanically enforces a clean tree and correct merge/prune-or-kept outcome regardless of what the agent did.",
+        "correctness-43: On a non-developer install the pipeline's default auto-apply mode changes from \"never\" to a bounded \"decide\" mode, with the orchestrator acting as the final arbiter that can still reject or revert an auto-applied change it judges wrong.",
+        "correctness-44: Registered projects can carry an optional, purely cosmetic display label (distinct from the identity-bearing name) shown in the simplified project list, falling back to the name when absent.",
+        "correctness-45: The operator can trigger a one-shot initial-setup pipeline run over the machine's recent sessions (seed proposals, auto-apply, and a lenient initial-setup judge that commits directly) from a Welcome-page button that reports the started run's session id/monitoring link.",
+        "correctness-46: Adding a folder that is not yet a git repository via the repo-add form must initialize a local repository in place (no remote) so the roster/worktree machinery can use it; any Windows folder-picker fix must be evidence-first (capture the real failure before changing code).",
+        "correctness-47: Developer machines must be entirely unaffected by every item above: no orchestrator stage, no skill-visibility overrides, no forced auto-apply, unchanged full UI and routes."
+      ]
+    },
+    {
+      "id": "spec-6-raw",
+      "items": [
+        "correctness-48: A per-repo self-management policy file defines exactly three modes for the rule system: `strict` (nothing about rules/verifiers is editable), `gated` (rules editable only within designated scopes using only sanctioned verifiers), and `free` (today's unrestricted behavior).",
+        "correctness-49: The finite set of allowed validators is the shipped verifier registry itself — frozen in strict/gated mode against a git base; the only path for a genuinely new verifier binary is the existing human-voted, non-auto-applying proposal flow, never a second, parallel catalog.",
+        "correctness-50: Policy enforcement is authoritative inside the compiled check binary (not expressible as a registry-data verifier, since that would let the policy neuter itself), with an additional fail-open editor-level write-guard hook for immediate feedback only.",
+        "correctness-51: The privilege boundary for changing the self-management surface is git topology: the check diffs against the merge-base with a resolvable base branch; an agent working on its own branch can never self-escalate the policy, and an unresolvable base in strict/gated mode is a hard error, never a silent pass.",
+        "correctness-52: In gated mode, which rules are editable is expressed as a taxonomy-scope allowlist, and which verifiers may be newly bound is expressed as a verifier allowlist defaulting to \"every verifier already in the base-ref registry\".",
+        "correctness-53: A local, unsynced verifier-registry overlay can re-point any verifier's behavior; in strict/gated mode every overlay entry must be explicitly named in the policy's local-overrides list or the check fails.",
+        "correctness-54: Ephemeral, never-synced task-scoped rule contracts are exempt from the rule-delta policy check by default (with an explicit opt-out), so they keep working unmodified in gated/strict repos.",
+        "correctness-55: Distribution to target repos ships the policy file with its mode rewritten from a separate \"distribution mode\" field, so the shipping repo itself can stay unrestricted while every target it ships to is gated by default.",
+        "correctness-56: Initial shipped policy values gate only the structural/process rule scopes (plan, skill, pipeline-internal, runbook, commit) while leaving language-specific rule scopes editable by agents in target repos.",
+        "correctness-57: Documentation must describe all three modes, the git-topology privilege boundary, the distribution-mode rewrite, the local-overrides escape hatch, the task-contract exemption, and provide a copy-paste client-level settings snippet for humans who want additional strictness."
+      ]
+    },
+    {
+      "id": "spec-7-raw",
+      "items": [
+        "correctness-58: Review-lane subagents must invoke the shared review skill with its no-context option so lanes receive zero doctrine injection, restoring the skill's own already-documented \"lanes get no injection\" contract instead of silently receiving tens of kilobytes of unrequested doctrine per lane.",
+        "correctness-59: Every branch the review skill creates (lane, refuter, station) moves to a dedicated namespace prefix distinct from the general agent-branch prefix, with cleanup enumeration and all prose updated to match.",
+        "correctness-60: A trace runbook of commands over on-disk workflow transcripts must answer: per-lane context reads, injected context volume, tokens, wall time, and step adherence, including a concrete before/after comparison demonstrating the context-leak fix, without depending on any unreleased tooling.",
+        "correctness-61: A future transcript-inspection contract is specified (not built here): per-subagent event/transcript listing tools and a main-agent-thinking toggle that explicitly excludes subagent thinking content, for a separate tool's later implementation.",
+        "correctness-62: An eviction-screening rule is defined: a context entry becomes a tombstone candidate only when, across several traced real runs, it was never read by a lane whose direction required it, never cited in any finding, and is not mechanically gate/lint-enforced; output is a human-reviewed candidate list, never an automatic removal, and no confidence/usage metadata is added to entries.",
+        "correctness-63: The context-leak fix must ship as a direct restoration of the documented contract (not gated behind an A/B experiment); a heavier causal-evaluation harness is built only if review quality is later observed to degrade."
+      ]
+    },
+    {
+      "id": "spec-8-change-bootstrap-profile",
+      "items": [
+        "correctness-64: The Welcome Bootstrap control gains a date picker (\"mine sessions since …\", prefilled to roughly a month back) and an extra free-text instruction field, both of which scope/augment the triggered bootstrap run.",
+        "correctness-65: An inclusive `since <date>` mining-window filter, applied against each session's last-active timestamp, is added to the mining pipeline and wins over the existing default recent-session count when supplied.",
+        "correctness-66: The canonical non-developer audience value is renamed end-to-end (Go constants, shell comparisons, installer label, language template) to a single new value, with every existing profile file on disk migrated in place to the new value before anything reads it.",
+        "correctness-67: On a casual/non-developer install, the pipeline must never propose or apply an edit to a skill the user does not own; ownership is an explicit stamp set on every skill the pipeline itself creates, and the lockout is enforced at proposal-extraction time, at apply time (hard gate), and again at the orchestrator's judge step.",
+        "correctness-68: The hand-made work/personal session-scope concept is retired: mined sessions are routed into a folder named after the attributed project (or a default catch-all folder when unattributed), and the corresponding scope-selection flag is removed from the mining skills.",
+        "correctness-69: The sessions UI gains a per-folder archive action and a dedicated Archive tab offering unarchive and the only available delete; archived folders are excluded from active mining/dimension-skill scans but their dedup ledgers remain consulted so an archived or deleted session is never re-mined.",
+        "correctness-70: The sessions \"reload from disk\" button and its endpoint are removed entirely; the sessions store re-scans on every page request instead, which also fixes sessions never appearing after a fresh install.",
+        "correctness-71: The repo-add form gains an editable registry name (prefilled from the folder name) to resolve naming collisions, with the two structural folder names reserved and rejected as repo names.",
+        "correctness-72: Adding a folder with no existing git repository initializes one locally (no remote) so the new project is immediately mineable by the existing roster/worktree machinery.",
+        "correctness-73: Pre-existing legacy session-scope folders are left untouched (not force-migrated) and only stop receiving new batches; the user archives or deletes them at will through the new UI."
+      ]
+    },
+    {
+      "id": "spec-9-change-headless-bootstrap",
+      "items": [
+        "correctness-74: The Welcome-button bootstrap run is rebuilt as a wrapper-orchestrated stage script mirroring the existing nightly wrapper: each pipeline stage runs as its own headless invocation with that stage's installed skill's allowed-tools manifest passed explicitly, instead of one bare agent-orchestrated session with no tool grants.",
+        "correctness-75: The prior bootstrap-orchestration skill is removed entirely; the wrapper script is the single mechanism for triggering a bootstrap run, invoked either by the config server or directly by an operator.",
+        "correctness-76: Bootstrap parameters (mining window, extra instruction, count) travel from the triggering form into the wrapper as deterministic environment variables that the wrapper translates into stage flags, never as prose relayed inside a headless prompt string.",
+        "correctness-77: Individual pipeline stages are best-effort (a failed stage logs and the run continues); the final judging/orchestration stage always runs and is the one guaranteed terminal step that either commits a clean result or leaves an explicit, reported failure — the run must never strand the repository mid-pass with nothing committed.",
+        "correctness-78: Mining must default-deny sessions that belong to the pipeline's own repository or to its own routine-branch runs, re-enabled only by an explicit, off-by-default, casual-audience-locked developer-mode setting threaded as a flag by both the bootstrap and nightly wrappers; an alternate \"most recent n\" mining-depth flag is added alongside the date-based filter.",
+        "correctness-79: Every pipeline stage is granted write access to the machine-global context directory so the profile and style-profile writes (and the final stage's sync-script calls) succeed with real permissions instead of silently failing or stranding output in a staging location.",
+        "correctness-80: The learned style profile must be written in the declared presentation language and must itself read in the register it prescribes (an English file describing German usage is a defect).",
+        "correctness-81: On a casual install, user-visible pipeline prose must contain no file paths, internal rule/fact identifiers, or schema/taxonomy jargon, enforced at the point each field is authored, swept again during consolidation, and gated again by the final judging stage, which also flags any mined session that predates an explicit mining-window date.",
+        "correctness-82: The wrapper must neutralize path-mangling of its slash-command/skill arguments on Windows shells so a leading-slash argument is never silently rewritten into a filesystem path.",
+        "correctness-83: Installers warn (without blocking) when a required static-analysis dependency for shell scripts is missing, alongside the existing dependency check."
+      ]
+    },
+    {
+      "id": "spec-10-change-viewer-fixes",
+      "items": [
+        "correctness-84: Plan documents must not contain raw-HTML row-level anchor tags on fact/decision IDs; IDs stay plain text and every cross-reference becomes a markdown link to its containing section's heading, so the reference renders as clean styled text with no literal HTML markup.",
+        "correctness-85: The canonical plan section order places the Open-questions section directly after the Decisions section, rather than near the very end of the document.",
+        "correctness-86: Any plan that changes user-facing UI must include a screenshot of the actual running UI (not a mockup, except when the UI does not exist yet) stored alongside the plan, and every changes-entry that alters that UI must explicitly reference its screenshot.",
+        "correctness-87: The automated plan-format checker's canonical section-order list and its pass/fail test fixtures must reflect the new Open-questions position.",
+        "correctness-88: Every skill/template that authors or audits plans in this format (the plan-writing skill and the format-fixing skill) must be updated to match: no anchor authoring, the new section order, and the screenshot requirement.",
+        "correctness-89: The machine-readable, generated rules index must be regenerated from source after the rule text changes, never hand-edited.",
+        "correctness-90: Plain-text file:line links and `<br>`-based table-cell stacking remain permitted, since they render correctly in the target viewer unlike row-level anchors.",
+        "correctness-91: Already-existing plan documents are not automatically migrated to the new format; migration happens only on demand via the existing format-fixing tool."
+      ]
+    },
+    {
+      "id": "spec-11-change-repos-routines-ui",
+      "items": [
+        "correctness-92: The worktree containment/safety check gains a branch-level content-containment test (a conflict-free merge whose resulting tree exactly equals the target branch's tree) to correctly recognize squash-merged or reworded branches that today's commit-by-commit detection misses as unpicked/unsafe, surfaced as a new summary token and reflected in the cached-verdict key so stale pre-fix verdicts are never served.",
+        "correctness-93: After an optimistic worktree deletion completes cleanly, the removed branches are dropped from the server-side status cache immediately so a subsequent plain page load never re-serves the deleted rows; registry-level repo deletion also clears that repo's whole cache entry.",
+        "correctness-94: The repos index's worktree count column shows a separate line per worktree kind/branch-prefix (with its own label) instead of one undifferentiated total.",
+        "correctness-95: A routine's run-history table groups rows into collapsible per-week bands on the client side, with the newest week expanded and older weeks collapsed by default.",
+        "correctness-96: The routine detail page's status section is reordered to sit directly below the routine's identifying header and above its configure control, with run history still last.",
+        "correctness-97: A dead, UI-unreachable single-branch worktree-removal endpoint is deleted.",
+        "correctness-98: The new containment-detection layer must never weaken the existing removal safety gate — it may only prove additional branches safe via verified content equality, never bypass dirty-worktree or untracked-file checks."
+      ]
+    },
+    {
+      "id": "spec-12-raw",
+      "items": [
+        "correctness-99: A new mining capability learns the user's actual conversational voice from their recent sessions' user-authored messages and writes it as a standing, machine-injected style directive consumed by every future session; this mining becomes a stage of the initial-setup bootstrap run.",
+        "correctness-100: The declared presentation settings (audience/language, install/template-owned) and the learned conversational style (mining/editor-owned) are kept as two separate files so reinstalling the declared-settings template never destroys the learned voice.",
+        "correctness-101: A new settings page, reachable regardless of audience, lets the operator choose the initial audience/UI-language, hand-edit the learned style content in a text box, and fire a one-shot live test call that exercises the saved profile end-to-end exactly as it would in a real session.",
+        "correctness-102: The server's in-memory presentation settings become a safely-shared, live-reloadable store so that settings-page edits take effect immediately without restarting the server.",
+        "correctness-103: Saving the audience/language selector follows explicit, asymmetric semantics: the baseline selection (developer, default language) deletes the settings file entirely (absence is the default), a non-default audience+language combination seeds from a repo template only when no file yet exists and otherwise preserves any hand-edited directive body while only rewriting the declared header values.",
+        "correctness-104: Changing the saved audience must re-run the existing skill-visibility sync so hidden/visible skill state flips immediately without a separate manual step.",
+        "correctness-105: The live style-test call must use a fixed, realistic sample prompt and a single-turn, bounded invocation so the operator can judge the resulting register/language/jargon handling at a glance without materially larger cost than a routine check.",
+        "correctness-106: Style mining must never quote a user's messages verbatim, never surface PII/secrets/profanity from transcripts, and must never contradict or silently rewrite the separately declared audience/language settings, which remain authoritative.",
+        "correctness-107: The learned-style edit field enforces the same size cap used elsewhere for hand-edited operational text files."
+      ]
+    },
+    {
+      "id": "spec-13-change-multi-profile-ports",
+      "items": [
+        "correctness-108: Each machine-local user profile running the pipeline must get its own session-indexing service ports, driven by per-install environment settings persisted to a local, non-synced file, instead of every profile defaulting to the same ports and silently colliding.",
+        "correctness-109: The spawned session-indexing process is given this profile's home directories explicitly as flags, so it only ever reads this profile's own data rather than inheriting ambient defaults that could point at another profile.",
+        "correctness-110: The session-indexing service exposes a lightweight identity endpoint (version plus the home directories and ports it is actually serving); the spawning server must check this identity before deciding to reuse an already-listening instance, reusing only on an exact match and otherwise logging a loud error and disabling the integration rather than silently serving a different profile's session data.",
+        "correctness-111: Reinstalling must kill this profile's own stale listener on its configured ports before respawning, so an old running process with outdated flags or an outdated binary can never survive a reinstall indefinitely.",
+        "correctness-112: When the session-indexing service's control port is explicitly configured, it must bind exactly to that port and fail loudly if unavailable, rather than silently walking to a neighboring free port that could belong to another profile.",
+        "correctness-113: The telemetry/export endpoint written into synced developer-tool settings must be per-profile, driven from the same per-install port configuration rather than a single hard-coded value shared by every profile.",
+        "correctness-114: The standalone setup command for the session-indexing service must derive its telemetry endpoint from its own configured control port rather than a hard-coded default.",
+        "correctness-115: The per-install configuration file is the single source of truth for these ports/homes: re-running the install with no overrides must preserve a profile's previously resolved values rather than resetting them to shared defaults.",
+        "correctness-116: The Windows install path must also persist the same per-profile port/home configuration so its own sync steps pick up the correct per-profile values.",
+        "correctness-117: A default, single-profile install with no overrides must remain completely unchanged: same default ports, same default home directories, identical behavior to before this change."
+      ]
+    },
+    {
+      "id": "spec-14-change-repo-cache",
+      "items": [
+        "correctness-118: The in-memory repo registry becomes a read-through view of its on-disk file: every read checks the file's identity (modification time and size) and reloads on change, and every write re-reads the file first and applies its own delta on top of the freshest state before saving — a stale in-memory holder (a second running instance, a hand-made edit) must never be able to resurrect a deleted repo, and external edits must become visible without a restart.",
+        "correctness-119: If a read-triggered reload encounters a corrupt or unparseable registry file, the registry keeps serving its last known-good in-memory state and logs the problem rather than breaking every page; only the one-time startup load still fails loudly on a bad file.",
+        "correctness-120: The worktree status cache gains deterministic invalidation based on a cheap, git-derived fingerprint (branch-tip refs plus the worktree list) computed on every plain page load; any mismatch (or an error computing it) forces a full re-scan, and there is no time-based expiry at all.",
+        "correctness-121: The existing optimistic worktree-removal UI behavior (instant row hiding, silent success) is kept exactly as-is; correctness after removal comes entirely from the fingerprint mechanism — because a real removal changes the actual ref/worktree set, the very next plain page load's fingerprint mismatch forces a re-scan that can never re-show the just-removed rows.",
+        "correctness-122: A dead, UI-unreachable single-branch worktree-removal endpoint and its route are deleted.",
+        "correctness-123: Staleness in per-worktree dirty/untracked file counts, which do not change the ref/worktree-set fingerprint, is an explicitly accepted gap left to the existing manual reload control rather than solved by the fingerprint mechanism.",
+        "correctness-124: None of the above may change the underlying removal/status script invocation contracts, the sync/merge/cherry-pick operation handlers, per-repo operation locking, or the already-live repo index/overview counts."
+      ]
+    }
+  ]
+}

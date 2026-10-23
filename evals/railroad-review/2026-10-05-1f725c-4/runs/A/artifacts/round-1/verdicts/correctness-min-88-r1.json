@@ -1,0 +1,26 @@
+{
+  "finding_id": "correctness-MIN-88-r1",
+  "verdict": "confirmed",
+  "reason": "smine-apply L31 casual lockout only sets disposition casual-locked (no status change, no removal, no autoApplyHeld); L32 step-5 candidates are every remaining proposed entry with no casual exclusion, L36 fills cap slots before step-4 implementation runs the lockout; smine-skills L45/L59 never drop pre-existing locked edit entries.",
+  "probe": "PROBE-CORRECTNESS-MIN-88-R1",
+  "script": "correctness-min-88-r1.sh",
+  "fixture": "probes/fixtures/correctness-min-88-r1/fail/SKILL.md",
+  "registry": "registry-correctness-min-88-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MIN-88-R1 -registry registry-correctness-min-88-r1.json -> skills/smine/smine-apply/SKILL.md:31: casual lockout sets only a disposition; step-5 candidates (line 32) are every proposed entry with no casual exclusion or autoApplyHeld casual-locked (exit 1, 1 violation)",
+    "read": [
+      "skills/smine/smine-apply/SKILL.md:31 'set the proposal's disposition `casual-locked` with a one-line note, regardless of vote or auto-apply mode'",
+      "skills/smine/smine-apply/SKILL.md:32 'Candidates: every remaining entry with status `proposed`'; only same-run voted entries excluded",
+      "skills/smine/smine-apply/SKILL.md:36 implicit + votes fill cap slots, 'Implementation per kind exactly as step 4'",
+      "skills/smine/smine-skills/SKILL.md:45 lockout drops new candidates only; L59 reconciliation drops only done/rejected/already-present"
+    ],
+    "validity_note": "Direct interpreter run over the fixture was denied by tool policy (Bash(/bin/bash *)); acdsl -root on the fixture dir refused (no git repo)."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-min-88-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-min-88-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-correctness-min-88-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-min-88-r1/fail/SKILL.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-min-88-r1/files.txt"
+  ]
+}

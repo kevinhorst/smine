@@ -1,0 +1,17 @@
+{
+  "finding_id": "code-style-MIN-10-r1",
+  "verdict": "confirmed",
+  "reason": "Confirmed exactly as claimed. git diff shows skills/feature/fdesign/workflows/subsystem-grounding.js is a wholly new file in this change, and its own `whenToUse` metadata field states it is 'Invoked by /fdesign (or /fdesign change) when the drivers span two or more subsystems' — but grep for 'subsystem-grounding' and 'workflows/' across the full fdesign/SKILL.md returns zero matches: no Workflow({scriptPath...}) call, no reference anywhere in the skill's Ground phase or elsewhere. skills/README.md's Workflows section (read in full) documents session-mine, investigate, railroad-review, parallelize and skillroutine-parallel-eval only — no subsystem-grounding entry, despite the section's convention of documenting every bundled workflow. The changelog.json v3.7 entry (also new in this diff) asserts the file actively grounds plans ('grounds a multi-subsystem plan deterministically instead of hand-deciding fan-out width each run'), which is false at headCommit since nothing invokes it. The file is schema-complete but dead code.",
+  "probe": "none: bin/acdsl execution is categorically denied by this sandbox's tool-policy gate (see code-style-min-7-r1 verdict for the two exhausted attempts); falling back to the manual path.",
+  "evidence": {
+    "read": [
+      "skills/feature/fdesign/workflows/subsystem-grounding.js:1-10 — meta.whenToUse: 'Invoked by /fdesign (or /fdesign change) when the drivers span two or more subsystems and per-subsystem grounding is worth parallelizing'",
+      "grep -n 'subsystem-grounding|subsystem_grounding' skills/feature/fdesign/SKILL.md — zero matches",
+      "grep -n 'subsystem-grounding|## Workflows|session-mine|investigate|railroad-review|parallelize|skillroutine-parallel-eval' skills/README.md — Workflows section (lines 20-101) lists session-mine, investigate, railroad-review, parallelize, skillroutine-parallel-eval; no subsystem-grounding entry",
+      "skills/feature/fdesign/changelog.json:2-6 — v3.7 entry claiming the workflow 'grounds a multi-subsystem plan deterministically'",
+      "git diff b4981b88d52deaa69d6ed1d60eb51b57ead47ba0 1f725cedc5c8b092c8a3d7e408793ef72840ec7e -- skills/feature/fdesign/workflows/subsystem-grounding.js skills/feature/fdesign/changelog.json: both the file (new file mode) and the changelog entry are introduced fresh by this diff"
+    ],
+    "probe_run": "none — acdsl execution denied, see probe field"
+  },
+  "artifacts": []
+}

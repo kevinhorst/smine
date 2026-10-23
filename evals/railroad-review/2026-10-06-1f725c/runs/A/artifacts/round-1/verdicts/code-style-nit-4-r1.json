@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-4-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on the exact claimed file:line: internal/server/profilesettings.go:105's fmt.Errorf(\"profile saved, but the skills sync failed: %w\", err) lacks the Component.Method: prefix per RULE-GOLANG-ERR-001; the file is wholly new in this diff (243 insertions, 0 prior lines) and every sibling fmt.Errorf call in internal/server/*.go (autoapplyrules.go, bootstrap.go, config_sync.go, presentation.go, routines.go, repos.go) follows the Component.Method:/Function: prefix convention, confirming regression rather than legacy debt.",
+  "probe": "PROBE-CODE-STYLE-NIT-4-R1",
+  "script": "bin/verifiers/errorfprefix (reused repo-registry entry \"errorf-prefix\")",
+  "fixture": "artifacts/round-1/scratch/code-style-nit-4-r1/fail.go",
+  "registry": null,
+  "evidence": {
+    "read": [
+      "internal/server/profilesettings.go:105 — fmt.Errorf(\"profile saved, but the skills sync failed: %w\", err), lowercase, no prefix",
+      "git diff --stat b4981b88..1f725ced -- internal/server/profilesettings.go — 243 insertions(+), 0 deletions, confirming the whole file is new (in-scope, not pre-existing legacy)",
+      "grep -rn fmt.Errorf internal/server/*.go — every other call in the package carries a Function/Receiver.Method: prefix, e.g. bootstrap.go:90 \"handleWelcomeBootstrap: Failed to start claude: %w\", config_sync.go:119 \"copyFileAtomic: Failed to read %s: %w\""
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-NIT-4-R1 -root <worktree> -> exit 1: internal/server/profilesettings.go:105: error message lacks the Component.Method: prefix"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/code-style-nit-4-r1/fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/scratch/code-style-nit-4-r1/files.txt",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-nit-4-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b3-r1/railroad-probes-r1.acdsl"
+  ]
+}

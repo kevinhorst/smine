@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-MIN-15-r2",
+  "verdict": "confirmed",
+  "reason": "bootstrapRun.running (bootstrap.go:26) and its getter Running (bootstrap.go:32) are new bool names that are bare adjectives, not predicates (isX/hasX/shouldX), violating RULE-GOLANG-BOOL-001; the custom probe went RED on exactly the claimed file and line.",
+  "probe": "PROBE-CODE-STYLE-MIN-15-R2",
+  "script": "probe-bool-predicate.sh",
+  "fixture": "fixtures/code-style-min-15-r2/bad.go",
+  "registry": "registry-code-style-min-15-r2.json",
+  "evidence": {
+    "read": [
+      "internal/server/bootstrap.go:23-28 at e5245d08 (git show): type bootstrapRun struct { mu sync.Mutex; pid int; running bool; startedAt time.Time }"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-MIN-15-R2 -registry probes/registry-code-style-min-15-r2.json -root <review worktree> -lifetime task => internal/server/bootstrap.go:26: bool field 'running' does not read as a predicate (isX/hasX/shouldX) per RULE-GOLANG-BOOL-001",
+    "validity": "same probe on fixtures/code-style-min-15-r2/bad.go (fresh git-init fixture repo, bad.go with a bare-named bool field) went RED at bad.go:5 before the real run"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/probe-bool-predicate.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-min-15-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-15-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-15-r2/bad.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-15-r2/probe.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b1-r2/railroad-probes-r2.acdsl"
+  ]
+}

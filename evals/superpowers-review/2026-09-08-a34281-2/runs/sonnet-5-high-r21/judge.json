@@ -1,0 +1,48 @@
+{
+  "matched": [
+    {
+      "goldenId": "GV3-200",
+      "findingId": "SP-003",
+      "note": "Same defect: cmd/bootstrap/run.sh:23 `results=\"${TMPDIR:-/tmp}/smine-bootstrap-results.jsonl\"` is a fixed, non-run-scoped path appended to across stages with no truncation/uniqueness. Golden frames it as a multi-user race risk; SP-003 frames it as unbounded growth/run ambiguity — same root cause (fixed shared path, no per-run scoping), different consequence emphasis."
+    },
+    {
+      "goldenId": "GV3-179",
+      "findingId": "SP-006",
+      "note": "Identical defect: Registry struct's new loadedModTime/loadedSize fields inserted non-alphabetically into the unexported field group (mu, loadedModTime, loadedSize, repos), violating RULE-GOLANG-STRUCT-002."
+    }
+  ],
+  "missed": ["GV3-001","GV3-002","GV3-003","GV3-004","GV3-005","GV3-006","GV3-007","GV3-008","GV3-009","GV3-010","GV3-011","GV3-012","GV3-013","GV3-014","GV3-015","GV3-016","GV3-017","GV3-018","GV3-019","GV3-020","GV3-021","GV3-022","GV3-023","GV3-024","GV3-025","GV3-026","GV3-027","GV3-028","GV3-029","GV3-030","GV3-031","GV3-032","GV3-033","GV3-034","GV3-035","GV3-036","GV3-037","GV3-038","GV3-039","GV3-040","GV3-041","GV3-042","GV3-043","GV3-044","GV3-045","GV3-046","GV3-047","GV3-048","GV3-049","GV3-050","GV3-051","GV3-052","GV3-053","GV3-054","GV3-055","GV3-056","GV3-057","GV3-058","GV3-059","GV3-060","GV3-061","GV3-062","GV3-063","GV3-064","GV3-065","GV3-066","GV3-067","GV3-068","GV3-069","GV3-070","GV3-071","GV3-072","GV3-073","GV3-074","GV3-075","GV3-076","GV3-077","GV3-078","GV3-079","GV3-080","GV3-081","GV3-082","GV3-083","GV3-084","GV3-085","GV3-086","GV3-087","GV3-088","GV3-089","GV3-090","GV3-091","GV3-092","GV3-093","GV3-094","GV3-095","GV3-096","GV3-097","GV3-098","GV3-099","GV3-100","GV3-101","GV3-102","GV3-103","GV3-104","GV3-105","GV3-106","GV3-107","GV3-108","GV3-109","GV3-110","GV3-111","GV3-112","GV3-113","GV3-114","GV3-115","GV3-116","GV3-117","GV3-118","GV3-119","GV3-120","GV3-121","GV3-122","GV3-123","GV3-124","GV3-125","GV3-126","GV3-127","GV3-128","GV3-129","GV3-130","GV3-131","GV3-132","GV3-133","GV3-134","GV3-135","GV3-136","GV3-137","GV3-138","GV3-139","GV3-140","GV3-141","GV3-142","GV3-143","GV3-144","GV3-145","GV3-146","GV3-147","GV3-148","GV3-149","GV3-150","GV3-151","GV3-152","GV3-153","GV3-154","GV3-155","GV3-156","GV3-157","GV3-158","GV3-159","GV3-160","GV3-161","GV3-162","GV3-163","GV3-164","GV3-165","GV3-166","GV3-167","GV3-168","GV3-169","GV3-170","GV3-171","GV3-172","GV3-173","GV3-174","GV3-175","GV3-176","GV3-177","GV3-178","GV3-180","GV3-181","GV3-182","GV3-183","GV3-184","GV3-185","GV3-186","GV3-187","GV3-188","GV3-189","GV3-190","GV3-191","GV3-192","GV3-193","GV3-194","GV3-195","GV3-196","GV3-197","GV3-198","GV3-199","GV3-201","GV4-202","GV4-203","GV4-204","GV4-205","GV4-206","GV4-207","GV4-208","GV4-209","GV4-210","GV4-211","GV4-212","GV4-213","GV4-214","GV4-215","GV4-216","GV4-217","GV4-218","GV5-219","GV5-220","GV5-221","GV5-222","GV5-223","GV5-224","GV5-225","GV5-226","GV5-227","GV5-228","GV5-229","GV5-230","GV5-231","GV5-232","GV5-233","GV5-234","GV5-235","GV5-236","GV5-237","GV5-238","GV5-239","GV5-240","GV5-241","GV5-242","GV5-243","GV5-244","GV5-245","GV6-246","GV6-247","GV6-248","GV6-249","GV6-250","GV6-251","GV6-252"],
+  "misclassified": [
+    {
+      "goldenId": "GV3-200",
+      "findingId": "SP-003",
+      "expected": "MINOR",
+      "actual": "MAJOR"
+    },
+    {
+      "goldenId": "GV3-179",
+      "findingId": "SP-006",
+      "expected": "NIT",
+      "actual": "MINOR"
+    }
+  ],
+  "falsePositives": [],
+  "uncataloged": [
+    {
+      "findingId": "SP-001",
+      "reason": "Confirmed against code: cmd/hooks/acdsl-policy-guard.sh:43 unconditionally denies Write/Edit to acdsl/registry.local.json whenever mode is gated or strict. But internal/acdsl/policy.go's policySurface (the Go-side frozen self-management surface, lines ~31-35) does NOT include registry.local.json — it is instead governed by overlayViolations (policy.go:139-170), which reads registry.local.json and permits entries listed in policy.local_overrides. acdsl/README.md:32-35 confirms the overlay is meant to be policy-gated (sanctioned entries accepted), not flatly denied. So the hook's blanket deny blocks the sanctioned local-override path via normal tool calls even though the authoritative acdsl check would allow it. This is a distinct root cause from the golden's cataloged acdsl-policy-guard.sh findings (GV3-045 missing test, GV3-068 path-canonicalization bypass, GV3-125 case-sensitivity bypass, GV3-199 Bash-command blind spot) — none of which describe the local_overrides/hook conflict. Not a known false positive. Genuine in-range defect the golden does not catalog."
+    },
+    {
+      "findingId": "SP-002",
+      "reason": "Confirmed against skills/smine/smine-apply/SKILL.md:31 — the casual lockout ('Casual lockout (hard gate)') is stated purely as prose the implementing agent must follow (read frontmatter, check origin: user, skip if absent); there is no script or deterministic diff check anywhere in the pipeline (smine-apply, smine-skills:45, smine-orchestrate:41) enforcing it — smine-orchestrate's Judge-stage check is likewise agent-executed prose ('a violation is a hard invariant breach — revert the commit'), not a mechanical/code-level gate. This is a different root cause from GV5-237 (which is about a specific loophole — new-skill proposals being exempted via auto-stamped origin: user — that exists even when the lockout is followed correctly), and from GV3-013 (permissions-route allow/deny gap). No golden entry catalogs the general 'no mechanical backstop, agent-compliance-only' architecture claim. Not a known false positive. Genuine in-range defect the golden does not catalog."
+    },
+    {
+      "findingId": "SP-004",
+      "reason": "Confirmed against code: routines/smine-nightly/run.sh's newly-added Stage-3 reconcile block (git diff shows this whole `if [[ -f \"$repo_root/repos.json\" && -s \"$settings_file\" ]]; then ... fi` block, including the jq/mv line, is new in this range) does `jq ... \"$settings_file\" > \"$settings_file.tmp\" && mv \"$settings_file.tmp\" \"$settings_file\"` — the `>` redirection creates/truncates $settings_file.tmp before jq's exit status is known, and if jq fails the `&&` short-circuits before the mv, leaving the stray/partial .tmp file behind in ~/.claude/. This is a distinct root cause from the golden's cataloged findings on this same block (GV3-099 and GV3-114, both about missing test coverage of the reconcile guard/postconditions, and GV3-196, about the merge target lacking a path denylist) — none of which describe the leftover-tmp-file-on-jq-failure defect. Not a known false positive. Genuine in-range defect the golden does not catalog."
+    },
+    {
+      "findingId": "SP-005",
+      "reason": "Confirmed against code: internal/acdsl/policy.go:258-259, `workRules, _ := ParseRules(workLines)` and `baseRules, _ := ParseRules(baseLines)` inside ruleDelta, discard ParseRules' error return on both sides. An unparseable declaration file therefore silently yields incomplete/empty rule sets rather than surfacing a parse failure, skewing the added/removed/changed classification. This is a distinct function and root cause from the golden's cataloged parse-error findings on this file (GV3-097, about basePolicy's own unparseable-base-policy hard-error branch being untested; GV3-048/GV3-108/GV3-112, about other unexercised branches in policyBase/effectiveAllowlist) — none address ruleDelta's own ParseRules error discard. Not a known false positive. Genuine in-range defect the golden does not catalog."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-6-r1",
+  "verdict": "confirmed",
+  "reason": "peekID (new in this diff, cmd/configserver/main.go:216-221) has JSON-tagged fields Version, ClaudeHome, CodexHome, ControlPort — not alphabetical (ClaudeHome, CodexHome, ControlPort, Version), no Id field present, so RULE-GOLANG-STRUCT-002's Id-first exception does not apply. Cells (cosmetic/often) accepted as given — the defect is a static field-order violation, not a severity dispute.",
+  "probe": "PROBE-CODE-STYLE-NIT-6-R1",
+  "script": "check-struct-field-order.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/struct-order-fail.go",
+  "registry": "registry-code-style-nit-6-r1.json",
+  "evidence": {
+    "read": [
+      "cmd/configserver/main.go:216-221 (peekID struct) — field order Version, ClaudeHome, CodexHome, ControlPort",
+      "context/rules/go.md:221-223 — RULE-GOLANG-STRUCT-002: fields sort alphabetically within each group, Id always first",
+      "git diff b4981b88..1f725ce -- cmd/configserver/main.go — confirms peekID is wholly new in this diff, no prior ordering to preserve"
+    ],
+    "probe_run": "validity (fixture, untracked railroad-probe-fixture-nit6.go, anchor matched): railroad-probe-fixture-nit6.go:5: field ClaudeHome out of alphabetical order (after Version) in struct peekID — exit 1, RED as expected. Real run (anchor cmd/configserver/main.go): cmd/configserver/main.go:218: field ClaudeHome out of alphabetical order (after Version) in struct peekID — exit 1, RED — acdsl: 1 violation(s) across 1 rule(s)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/check-struct-field-order.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/struct-order-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-nit-6-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-nit-6-r1.acdsl"
+  ]
+}

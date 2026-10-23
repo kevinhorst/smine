@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-156-r1",
+  "verdict": "confirmed",
+  "reason": "validateScopeName, a free function added by this diff, is declared at 223 between Store methods InvocationsBySkill (208) and SentimentByBatch (251), with Store methods continuing to Scopes (406); RULE-GOLANG-FILE-001 puts free functions after the type blocks; the pre-existing collectInvocations misplacement is legacy, the new declaration is in scope.",
+  "probe": "manual: command output — probe path blocked by tool policy (Bash(/bin/bash *) and Bash(<worktree>/bin/acdsl *) both denied, so neither the fixture self-check nor acdsl check could run)",
+  "evidence": {
+    "read": [
+      "grep -n at 1f725ce internal/sessions/sessions.go -> 208:func (s *Store) InvocationsBySkill()  223:func validateScopeName(name string) error {  251:func (s *Store) SentimentByBatch()  406:func (s *Store) Scopes()  — expected: validateScopeName after the last Store method, in the unexported free-function group",
+      "git diff b4981b8..1f725ce -- internal/sessions/sessions.go: validateScopeName (221-230) is wholly added by this diff",
+      "context/rules/go.md RULE-GOLANG-FILE-001 (185-208)",
+      "known.json: code-style-NIT-48-r1 (missing prefix) and NIT-49-r1 (restating comment) concern validateScopeName's body, not its placement"
+    ],
+    "probe_attempts": [
+      "attempt 1: /bin/bash <probes>/code-style-nit-156-r1.sh <scratch>/code-style-nit-156-r1/files.txt -> tool-policy denied, candidate Bash(/bin/bash *)",
+      "attempt 2: <worktree>/bin/acdsl -h -> tool-policy denied, candidate Bash(<worktree>/bin/acdsl *); Makefile has no acdsl target"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-156-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-156-r1/fail/sessions.go.txt"
+  ],
+  "notes": "the probe script and fixture are unvalidated (never run) — not registered, no .acdsl mirror written"
+}

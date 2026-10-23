@@ -1,0 +1,47 @@
+{
+  "matched": [
+    {
+      "goldenId": "GV3-001",
+      "findingId": "SP-002",
+      "note": "Same root cause as GV3-001: CheckPolicy's `if baseErr != nil { if policy.Mode == PolicyModeFree { return nil, nil } ... }` guard (policy.go:329-336) checks policy.Mode from the pre-basePolicy, attacker-editable working-tree Policy struct passed into CheckPolicy — before the trusted base-branch policy is ever loaded (basePolicy() is only called after this branch, line 337). An attacker who sets working-tree policy.Mode=\"free\" and causes policyBase to fail (e.g. an unreachable/forged base_ref) hits this untrusted free-mode short-circuit instead of the hard error. Same 'working base_ref -> pre-policy base -> free-mode short-circuit disables gate' mechanism GV3-001 names; SP-002 just narrates the attack via the resolution-failure branch."
+    }
+  ],
+  "missed": [
+    "GV3-008", "GV3-020", "GV3-054", "GV3-093", "GV3-094", "GV3-185", "GV3-194", "GV3-201", "GV5-227", "GV6-249", "GV6-250",
+    "GV3-002", "GV3-042", "GV3-048", "GV3-077", "GV3-083", "GV3-097", "GV3-108", "GV3-112", "GV4-202", "GV5-219", "GV5-224", "GV5-228", "GV5-230",
+    "GV3-035", "GV3-063", "GV3-106", "GV3-179", "GV5-225", "GV5-240",
+    "GV3-034", "GV4-204", "GV4-211", "GV5-238"
+  ],
+  "misclassified": [
+    {
+      "goldenId": "GV3-001",
+      "findingId": "SP-002",
+      "expected": "BLOCKER",
+      "actual": "MAJOR"
+    }
+  ],
+  "falsePositives": [
+    {
+      "findingId": "SP-001",
+      "reason": "Matches known human-ruled false positive 'correctness-INF-1' in the golden falsePositives list (same underlying claim: the worktree-table filter mechanism swap citing decision D6 with no matching plan documentation/screenshot). That entry was rejected because 'Claim does not allege a code defect — it asks the station to confirm plan traceability for an already-working mechanism swap; a provenance/process observation, not a code defect.' SP-001 makes the identical process/provenance argument (just filed against internal/server/repos.go, the handler side of the same D6-cited feature, instead of the template file)."
+    },
+    {
+      "findingId": "SP-003",
+      "reason": "Factually wrong: `git log --oneline b4981b88..a342811` shows 16 distinct commits in the reviewed range, each scoped to one concern (22f663c internal/ bootstrap+status-cache+policy+registry, c1b52fb cmd/acdsl-policy-guard, 23d673c acdsl policy schema, cd9a4fa skills/smine split, 407ed89 docs, 03bf69c context, 5c11486 settings, ba8dd81 installer, f126183 ci, 1e68735 global scripts, 1575690 routines, 935dd9e release, 34315e8/a342811 archived-plans/rename). The claim that 'the entire feature set landed in one multi-concern commit (22f663c) touching every layer at once' is untrue — the repo's per-package one-plan-one-commit discipline was in fact followed at the commit-range level; 22f663c is only the internal/ Go-package commit, not the whole feature set."
+    },
+    {
+      "findingId": "SP-006",
+      "reason": "Not a defect: writePolicy (internal/acdsl/dist.go:235) returning PolicyMode(\"\") to mean 'nothing shipped' is exactly the zero-value-for-absence idiom context/rules/go.md RULE-GOLANG-POINTER-002 prescribes ('Express absence with the type's zero value where the zero value is unambiguous'). The function's own doc comment states this explicitly ('No source policy ships nothing and returns \"\"'), and every valid PolicyMode enum value (free/gated/strict) is non-empty, so \"\" is unambiguous. No go.md rule requires a named sentinel or a second boolean return for this shape; SP-006's claim runs against the repo's own documented convention rather than identifying a violation of it."
+    }
+  ],
+  "uncataloged": [
+    {
+      "findingId": "SP-004",
+      "reason": "Genuine RULE-GOLANG-CALL-005 violation in new code: internal/repos/registry.go's `save` function is entirely new in this diff (git diff shows the whole function, including line 126, as an addition), and line 126 is `r.apply(&registrySnapshot{modTime: info.ModTime(), repos: repos, size: info.Size()})` — a composite literal passed inline as a call argument, which go.md's RULE-GOLANG-CALL-005 explicitly forbids ('A composite literal ... MUST NOT appear inline as a function-call argument. Assign it to a descriptively named variable first'). Correct and in-range; the golden set does not catalog this specific instance (it separately catalogs a different registry.go save()-related nit, GV3-106, about 0644 vs 0o644)."
+    },
+    {
+      "findingId": "SP-005",
+      "reason": "Genuine, in-range semantics change: the fingerprint-check + status-cache logic in handleRepoWorktreeStatus (internal/server/repos.go) is new in this diff (git diff shows repos.Fingerprint/statusCache.Get/Store as additions). The `start := time.Now()` timer that used to wrap only `repos.Status(...)` now also wraps the new `repos.Fingerprint(...)` call and cache lookup before the conditional scan (repos.go:354-366), so on a cache hit `statusMs` measures fingerprint-check time rather than scan time even though it is still logged and rendered under the 'status' timing label. Real and undocumented; not cataloged in the golden set for this file."
+    }
+  ]
+}

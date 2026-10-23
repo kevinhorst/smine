@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-200-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED: repos_test.go:523 (new subtest clean-removal-drops-cached-rows) passes []repos.WorktreeStatus{...} inline to server.statusCache.Store, against RULE-GOLANG-CALL-005; sibling subtest at 540-541 binds statuses first; distinct from known code-style-NIT-41-r1 (line 287).",
+  "probe": "PROBE-CODE-STYLE-NIT-200-R1",
+  "script": "code-style-nit-200-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-200-r1/fail_test.go",
+  "registry": "registry-code-style-nit-200-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-200-R1 -registry probes/registry-code-style-nit-200-r1.json at 1f725ce -> exit 1: internal/server/repos_test.go:523: composite literal []repos.WorktreeStatus{...} passed inline to Store (RULE-GOLANG-CALL-005)",
+    "validity": "bin/acdsl check -root scratch/code-style-nit-200-r1/repo (git-initialised copy of the fixture) -> exit 1: fail_test.go:4",
+    "read": [
+      "internal/server/repos_test.go:523-526 at 1f725ce: server.statusCache.Store(\"demo\", \"\", []repos.WorktreeStatus{ {Branch: \"claude/feature\"}, {Branch: \"claude/keep\"}, })",
+      "internal/server/repos_test.go:540-541: statuses := []repos.WorktreeStatus{{Branch: \"claude/feature\"}} / server.statusCache.Store(\"demo\", \"\", statuses)"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-200-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-200-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-200-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-200-r1/fail_test.go"
+  ]
+}

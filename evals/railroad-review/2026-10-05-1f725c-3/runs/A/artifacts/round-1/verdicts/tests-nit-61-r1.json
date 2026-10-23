@@ -1,0 +1,27 @@
+{
+  "finding_id": "tests-NIT-61-r1",
+  "verdict": "confirmed",
+  "reason": "No test drives a failing print_agent_worktrees_status.sh: every status stub in internal/server exits 0, so the err == nil guard on statusCache.Store (repos.go:362) is unpinned; probe RED on repos.go:361.",
+  "probe": "PROBE-TESTS-NIT-61-R1",
+  "script": "tests-nit-61-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-61-r1/server/repos.go",
+  "registry": "registry-tests-nit-61-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-61-R1 -registry probes/registry-tests-nit-61-r1.json -> exit 1: internal/server/repos.go:361: status-cache write guard (err == nil) is never driven by a failing print_agent_worktrees_status.sh stub in any test",
+    "read": [
+      "internal/server/repos.go:355-365 — data.Cached needs a matching fingerprint; repos.Status error path skips Store only via `if err == nil`",
+      "internal/server/repos_test.go:46,135-141,318-324,359-365,380-387,413-418 — all print_agent_worktrees_status.sh stubs exit 0; exit 1 stubs at 494 (remove_agent_worktrees.sh) and 741 (osascript) only",
+      "grep -rln print_agent_worktrees_status internal -> only internal/repos/status.go and internal/server/repos_test.go",
+      "known.json tests-NIT-52-r1 covers only the fingerprintErr == nil term — distinct claim"
+    ],
+    "validity": "fixture validity run not executable: direct `/bin/bash <script>` denied by tool-policy (candidate Bash(/bin/bash *)); fixture written (status stub exit 0, exit 1 stub after the stubPath line) and the real RED carries the script's own message on the claimed line, so the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-61-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-61-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-61-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-61-r1/server/repos.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-61-r1/server/repos_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/tests-nit-61-r1/files.txt"
+  ]
+}

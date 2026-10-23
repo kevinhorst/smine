@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-207-r1",
+  "verdict": "confirmed",
+  "reason": "routines/README.md:14 at 1f725ce still describes smine-nightly as 'three stages, one publish' and the README never names the orchestrate stage, ROUTINE_ORCHESTRATE or SMINE_DEV_MODE, while run.sh:40-44 and 293-340 add them and the same diff documents SMINE_SUBAGENTS in the knob list.",
+  "probe": "PROBE-CODE-STYLE-NIT-207-R1",
+  "script": "code-style-nit-207-r1.sh",
+  "fixture": "fixtures/code-style-nit-207-r1-fail.md",
+  "registry": "registry-code-style-nit-203-r1.json",
+  "evidence": {
+    "probe_run": "routines/README.md:14: smine-nightly row omits the orchestrate stage; ROUTINE_ORCHESTRATE and SMINE_DEV_MODE undocumented: [PROBE-CODE-STYLE-NIT-207-R1] (acdsl check -rule PROBE-CODE-STYLE-NIT-207-R1, exit 1)",
+    "read": [
+      "git grep -i 'orchestrate|SMINE_DEV_MODE' at head: no hit in routines/README.md; run.sh:40 dev_mode=\"${SMINE_DEV_MODE:-}\", run.sh:43 orchestrate=\"${ROUTINE_ORCHESTRATE:-}\", run.sh:293 '# ---- Stage 3: orchestrate'",
+      "git diff b4981b8 1f725ce -- routines/README.md: adds the SMINE_SUBAGENTS knob line at 179, leaves row 14 and the knob list otherwise unchanged"
+    ],
+    "validity": "direct interpreter run denied by tool policy; the script's absence pattern was run with grep -c over the fail fixture (0 matches while the smine-nightly row exists = hit)",
+    "notes": "distinct from known code-style-NIT-32-r2 (run.sh header) and correctness-MIN-19-r1 (skill-eval-fexplore row); cells kept"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-207-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-207-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-203-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-207-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-207-r1/files.txt"
+  ]
+}

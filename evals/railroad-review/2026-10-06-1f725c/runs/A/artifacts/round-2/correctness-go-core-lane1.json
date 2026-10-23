@@ -1,0 +1,55 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "go-core",
+  "head": "e5245d08d2fe5c05f67742fd8ec5a67b759ca316",
+  "checkout_sha": "e5245d08d2fe5c05f67742fd8ec5a67b759ca316",
+  "overlay_ok": true,
+  "aborted": false,
+  "walk": [
+    {"group": "spec-1-concept", "hits": []},
+    {"group": "spec-2-user_stories", "hits": []},
+    {"group": "spec-3-raw", "hits": []},
+    {"group": "spec-4-change-englishness", "hits": []},
+    {"group": "spec-5-change-nondev-automation", "hits": []},
+    {"group": "spec-6-raw", "hits": ["correctness-BLK-1"]},
+    {"group": "spec-7-raw", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile", "hits": []},
+    {"group": "spec-9-change-headless-bootstrap", "hits": []},
+    {"group": "spec-10-change-viewer-fixes", "hits": []},
+    {"group": "spec-11-change-repos-routines-ui", "hits": []},
+    {"group": "spec-12-raw", "hits": []},
+    {"group": "spec-13-change-multi-profile-ports", "hits": []},
+    {"group": "spec-14-change-repo-cache", "hits": ["correctness-NIT-2"]}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-BLK-1",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "checklist": "correctness-48",
+      "severity": "BLOCKER",
+      "effect": "destructive",
+      "exposure": "rare",
+      "fix": "In policyBase, never let the working/HEAD policy's own base_ref select the commit that is then trusted to define that same policy: resolve the base candidate chain (origin/HEAD, origin/main, main, master) unconditionally first, and only honor a base_ref override once it is read FROM that already-resolved base's own policy.json (not from the policy being validated), so a branch can never make itself its own trust anchor.",
+      "claim": "policyBase(ctx, root, policy) lets Policy.BaseRef — a field inside acdsl/policy.json itself, freely editable by any commit on an agent's own claude/* branch — select which commit CheckPolicy treats as the authoritative base. A single commit that sets base_ref to \"HEAD\" (or any self-referencing ref/branch name) makes GitMergeBase(ctx, root, \"HEAD\") resolve to that very commit; CheckPolicy's basePolicy() then reads acdsl/policy.json AT that same self-chosen commit via GitShowFile, i.e. the agent's own forged document (e.g. mode: \"free\"), and because isBoundary is still true (branch name != \"HEAD\") the forged mode is accepted and `if policy.Mode == PolicyModeFree { return nil, nil }` exits with zero diagnostics. This completely defeats the self-management gate described in correctness-47/48 (\"an agent working on a claude/* branch can never self-escalate, only a commit to the base branch changes the surface\") without ever touching the real base branch: the branch escalates itself from strict/gated to free (or to any editable_scopes/verifier_allowlist it likes) in one commit.",
+      "evidence": "Re-read internal/acdsl/policy.go lines 189-219 (policyBase) and 329-346 (CheckPolicy) in full at head e5245d08d2fe5c05f67742fd8ec5a67b759ca316. Confirmed: (1) policyBase uses candidates = []string{policy.BaseRef} when policy.BaseRef != \"\", with `policy` being the argument CheckPolicy received from main.go's acdsl.LoadPolicy(*root) — i.e. the committed, agent-editable working file, not a separately-trusted source. (2) GitMergeBase runs `git merge-base HEAD <ref>`; with ref=\"HEAD\" this is `git merge-base HEAD HEAD`, which returns HEAD's own SHA. (3) basePolicy() then does GitShowFile(ctx, root, base, \"acdsl/policy.json\") — `git show <base-sha>:acdsl/policy.json` — reading the committed content AT that exact commit, which (if the attacker's commit included the malicious policy.json) is the forged document itself, not the real upstream base's policy. (4) isBoundary computation (`branch != baseName`) stays true for any branch name other than literally \"HEAD\", so the gate does not take the \"on the base branch\" exemption — it proceeds to trust the forged mode. No other code path cross-checks base_ref against a fixed, non-attacker-controlled anchor before using it to pick the authoritative commit. The claim survives the re-read unchanged.",
+      "route": "human"
+    },
+    {
+      "finding_id": "correctness-NIT-2",
+      "file": "internal/repos/registry.go",
+      "line": 89,
+      "checklist": "correctness-105",
+      "severity": "NIT",
+      "effect": "debt",
+      "exposure": "rare",
+      "fix": "On a failed Reload() in refreshIfChanged, remember the failed mtime/size (e.g. a lastFailedModTime/lastFailedSize pair) and skip re-attempting Reload until the file identity changes again, instead of re-stat+re-read+re-parse+re-log on every single Find()/Repos() call while repos.json stays malformed.",
+      "claim": "refreshIfChanged() only updates r.loadedModTime/r.loadedSize on a successful apply() (inside Reload). When repos.json is corrupted (or has a duplicate name) and stays unchanged, every subsequent Find()/Repos() call still sees info.ModTime()/info.Size() differ from the last *successfully loaded* identity, so it calls r.Reload() again, which re-reads and re-parses the same broken file and logs \"Registry.refreshIfChanged: Keeping last good state\" again — on every single repos-page render until an operator fixes the file, instead of once.",
+      "evidence": "Re-read internal/repos/registry.go lines 85-106 (refreshIfChanged) and 173-184 (Reload) at head e5245d08d2fe5c05f67742fd8ec5a67b759ca316. Confirmed r.apply() (which is what updates loadedModTime/loadedSize) is called only on Reload's success path; a failing readRegistrySnapshot leaves those fields untouched, so the mtime/size mismatch against the still-broken file persists and refreshIfChanged re-triggers Reload on every call. This does not violate correctness-107's literal requirement (last good state is kept, error is logged) but is a quality regression versus a reload-once-per-change cache: unbounded repeated disk reads/parses and log lines for as long as the file stays malformed. Low impact (operator-visible log noise plus wasted I/O on a rare, self-correcting condition), so kept at NIT.",
+      "route": "human"
+    }
+  ],
+  "walk_complete": true,
+  "notes": "Known findings correctness-BLK-2-r1 (cmd/configserver/install_windows.go writeInstallEnv does not read existing install.env before overwrite) and correctness-MAJ-3-r1 (cmd/configserver/main.go startPeek's reuse-match omits ControlPort) were re-verified present at head and are NOT re-reported here per the known-findings ledger instruction. Cross-chunk items I could not verify from go-core files alone (flagged for the station, not chased): correctness-100 (reinstall must deterministically kill a profile's own stale peek listener before respawning — no such kill step exists in cmd/configserver/main.go or install_windows.go; may be implemented in shell/install scripts outside this chunk, or may be a genuine gap — worth a sibling lane's look at install.sh); correctness-108/109 (worktree-status fingerprint invalidation and its error-as-changed handling: internal/repos/registry.go's Fingerprint() is sound in isolation, but the caller that decides cache-hit/miss behavior lives in internal/server, outside this chunk, so full-item verification needs that chunk)."
+}

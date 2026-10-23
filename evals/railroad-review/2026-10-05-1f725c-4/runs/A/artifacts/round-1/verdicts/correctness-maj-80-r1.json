@@ -1,0 +1,31 @@
+{
+  "finding_id": "correctness-MAJ-80-r1",
+  "verdict": "confirmed",
+  "reason": "sync_skills.sh:259 sed parse of a CRLF profile yields \"casual\\r\" (!= casual) and .gitattributes leaves settings/claude_code/presentation-profile.de.md unpinned (ls-files --eol: attr/ empty), while install_windows.go:364-374 copies that template byte-for-byte into the profile",
+  "probe": "manual: command with actual and expected output",
+  "evidence": {
+    "probe_run": "sed -n 's/^audience:[[:space:]]*//p' <CRLF profile> | jq -R '{value:., equals_casual:(.==\"casual\")}' -> {\"value\":\"casual\\r\",\"equals_casual\":false}; with a whitespace-trimming parse (fix direction) -> {\"value\":\"casual\",\"equals_casual\":true}",
+    "read": [
+      "cmd/sync/sync_skills.sh:259 profile_audience=\"$(sed -n 's/^audience:[[:space:]]*//p' \"$PRESENTATION_PROFILE\" | head -1)\"; :263 if [ \"$profile_audience\" = \"casual\" ]",
+      "routines/smine-nightly/run.sh:34-36 and cmd/bootstrap/run.sh:60-62 use the same unstripped sed parse for language/audience/dev-mode",
+      ".gitattributes at 1f725ce pins only *.sh, *.plist, *.template (lf) and *.bat (crlf); *.md unpinned",
+      "git ls-files --eol settings/claude_code/presentation-profile.de.md -> i/lf w/lf attr/(none): text auto-detected, so core.autocrlf=true (Git for Windows default) checks it out CRLF",
+      "cmd/configserver/install_windows.go:364-374 installPresentationProfile: os.ReadFile(template) then os.WriteFile(target, content) verbatim — CRLF frontmatter reaches ~/.claude/context/global/presentation-profile.md",
+      "internal/server/presentation.go:105 the /profile save path rewrites the frontmatter with \\n, so only the installer-copied profile carries CRLF until the user saves /profile once — exposure rare stands",
+      "Go parser (presentation.go:158-164) trims, so the UI shows casual while the shell consumers take the developer branch — the divergence is shell-only"
+    ],
+    "probe_attempts": [
+      "attempt 1: script probe correctness-maj-80-r1.sh validity run via /bin/bash denied by tool policy (candidate Bash(/bin/bash *))",
+      "attempt 2: validity through bin/acdsl check -root <fixture dir> failed: DiscoverRules needs a git repository at root (exit 128); no allowlisted way to make the fixture a repo",
+      "probe files left under probes/ (script, registry, .acdsl mirror, fixture) are unvalidated — the verdict rests on the manual artifact"
+    ],
+    "cells": "effect incorrect and exposure rare agreed: defect needs a Windows CRLF checkout plus the casual profile chosen at install; not demonstrated on Windows itself (macOS environment), CRLF checkout behaviour is git's documented autocrlf default"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-maj-80-r1/presentation-profile.crlf.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-maj-80-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-correctness-maj-80-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-maj-80-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-maj-80-r1/cmd/sync/sync_skills.sh"
+  ]
+}

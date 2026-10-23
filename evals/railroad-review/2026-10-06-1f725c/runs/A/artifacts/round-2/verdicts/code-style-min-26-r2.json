@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-MIN-26-r2",
+  "verdict": "confirmed",
+  "reason": "The probe ran RED at both claimed lines (52 and 58): Run's and RunSync's single-line `return runWithTimeout(ctx, Timeout/SyncTimeout, \"Run\"/\"RunSync\", dir, name, args...)` calls each carry 6 comma-separated argument expressions, at or above RULE-GOLANG-CALL-001's 5-argument multiline threshold. Both wrapper functions are new in this diff (the extraction that created runWithTimeout), so this is a regression in new code, not a legacy exemption. Cells (effect debt, exposure often) stand as given.",
+  "probe": "PROBE-CODE-STYLE-MIN-26-R2",
+  "script": "code-style-min-26-r2.sh",
+  "fixture": "fixtures/code-style-min-26-r2/shell.go",
+  "registry": "registry-code-style-min-26-r2.json",
+  "evidence": {
+    "read": [
+      "internal/shell/shell.go:51-59 (committed head): `return runWithTimeout(ctx, Timeout, \"Run\", dir, name, args...)` (line 52) and `return runWithTimeout(ctx, SyncTimeout, \"RunSync\", dir, name, args...)` (line 58) — both new, both single-line, both 6 argument expressions",
+      "context/rules/go.md RULE-GOLANG-CALL-001: 'A call MUST be multiline if ANY of the following holds: 5 or more arguments; ...'"
+    ],
+    "probe_run": "internal/shell/shell.go:52: single-line runWithTimeout call has 6 arguments (>=5) — must be multiline per RULE-GOLANG-CALL-001 ... ; internal/shell/shell.go:58: single-line runWithTimeout call has 6 arguments (>=5) — must be multiline per RULE-GOLANG-CALL-001"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-26-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-26-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-min-26-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-26-r2/shell.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/code-style-min-26-r2/files.txt"
+  ],
+  "notes": "Direct `bash`/`/bin/bash <script>` self-check invocation was tool-policy-denied (two attempts); probe wired as a task-lifetime ACDSL rule and run via the prebuilt bin/acdsl binary, confirming RED against the real committed head at both claimed lines, matching the claim's stated reason exactly (the original finding noted the same 5 named args + variadic spread)."
+}

@@ -1,0 +1,31 @@
+{
+  "finding_id": "correctness-NIT-11-r2",
+  "verdict": "confirmed",
+  "reason": "refreshIfChanged()'s failed-Reload branch (internal/repos/registry.go:103) only logs; it never records the failed file's mtime/size, so while repos.json stays malformed every subsequent Find()/Repos() call sees the same identity mismatch and re-triggers Reload(), re-reading/re-parsing/re-logging on every call instead of once. Verified by re-reading internal/repos/registry.go (apply(), which is the only writer of loadedModTime/loadedSize, runs only inside Reload's success path at lines 79-83 and 180-182; the failure branch at lines 103-105 has no such write) and by a deterministic ACDSL probe that is RED on this exact pattern and GREEN once the failed identity is recorded.",
+  "probe": "PROBE-CORRECTNESS-NIT-11-R2",
+  "script": "probes/correctness-nit-11-r2.sh",
+  "fixture": "probes/fixtures/correctness-nit-11-r2-fail/registry.go",
+  "registry": "registry-correctness-nit-11-r2.json",
+  "cells": {
+    "effect": "debt",
+    "exposure": "rare"
+  },
+  "evidence": {
+    "read": [
+      "internal/repos/registry.go:79-83 (apply, called only from save() and Reload())",
+      "internal/repos/registry.go:89-106 (refreshIfChanged — the err != nil branch at 103-105 logs only)",
+      "internal/repos/registry.go:174-184 (Reload — apply() runs only on the success path)"
+    ],
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-NIT-11-R2 -lifetime task -root <worktree> -registry registry-correctness-nit-11-r2.json -> exit 1: internal/repos/registry.go:103: refreshIfChanged's failed-Reload branch only logs — it never records the failed file identity, so every call re-reads/re-parses/re-logs while repos.json stays malformed",
+    "validity_check": "Same probe over probes/fixtures/correctness-nit-11-r2-fail/registry.go (minimal fail fixture, log-only branch) -> exit 1 (RED), confirming the probe detects the defect pattern.",
+    "fix_direction_check": "Same probe over a hand-edited copy of the fixture adding r.loadedModTime = modTime; r.loadedSize = size inside the failed-Reload branch -> exit 0 (GREEN, OK), confirming the probe clears once the proposed fix's memoization is present. Edit was made only in scratch/correctness-nit-11-r2/validity-root/registry.go, never in the reviewed worktree."
+  },
+  "cells_assessment": "Candidate's effect=debt and exposure=rare both stand: the defect never produces wrong output (last-good state is correctly kept, satisfying correctness-107 literally) — it is pure repeated I/O/CPU/log-noise overhead — and it is only exposed while an operator leaves repos.json malformed across multiple Find()/Repos() calls, which is an abnormal, self-correcting operator state, not normal operation.",
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-nit-11-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/correctness-nit-11-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-correctness-nit-11-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/correctness-nit-11-r2-fail/registry.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b7-r2/railroad-probes-r2.acdsl"
+  ]
+}

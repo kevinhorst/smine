@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-185-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at head: this diff adds the origin: user stamp rule (proposal-created skill, one line after author:, never on shipped skills, never removed) both to skillroutine-create SKILL.md L36 and to smine-apply SKILL.md L31, whose skills branch already delegates to the skillroutine-create skill-route format.",
+  "probe": "PROBE-CODE-STYLE-NIT-185-R1",
+  "script": "code-style-nit-185-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-185-r1/skills/smine/smine-apply/SKILL.md",
+  "registry": "registry-code-style-nit-182-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-NIT-185-R1 -registry registry-code-style-nit-182-r1.json -> exit 1: skills/smine/smine-apply/SKILL.md:31: restates the origin: user stamp rule that skills/skillroutine/skillroutine-create/SKILL.md also owns",
+    "fixture_run": "bin/acdsl check -root probes/fixtures/code-style-nit-185-r1 -rule PROBE-CODE-STYLE-NIT-185-R1 -> exit 1 (smine-apply/SKILL.md:1)",
+    "read": [
+      "git diff -G 'origin: user' b4981b8 1f725ce: +skillroutine-create/SKILL.md:36 and +smine-apply/SKILL.md:31 both introduce the rule in this change",
+      "known.json: security-MAJ-8-r1, code-style-NIT-137-r1, correctness-MIN-13-r2 on smine-apply are different substance"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-185-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-185-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-182-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-185-r1"
+  ]
+}

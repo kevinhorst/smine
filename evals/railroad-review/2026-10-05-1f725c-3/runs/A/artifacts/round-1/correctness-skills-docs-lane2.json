@@ -1,0 +1,45 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "skills-docs",
+  "aborted": false,
+  "artifact_json": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/correctness-skills-docs-lane2.json",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "notes": "Suppressed as known (not re-reported): cleanup rejects claude-review/* branches (correctness-BLK-29-r1); orphaned bundled workflows config-ui-fidelity-gate / foreign-toolchain-pretag / subsystem-grounding (correctness-MAJ-39/MAJ-40/MIN-42-r1); docs/workflows.md session-mine drift scope + args (correctness-NIT-11-r2); skills/README.md stale copy (correctness-NIT-45-r1, code-style-MIN-125-r1); spec-7 --no-context reversal (correctness-INF-49-r1). Cross-chunk: session-mine.js args/drift scope and remove_agent_worktrees.sh were read only as context to verify chunk docs. Overlay applied (worktree context/ files differ from head); context file judgments use the committed diff.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "Profile/UI/consolidate requirements live in settings, hooks, internal/server and smine skills — outside this chunk; no file in skills-docs implements or contradicts them."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "User-facing casual UI/prose stories are realized outside this chunk; nothing in the chunk's docs/skills contradicts them."},
+    {"group": "spec-3-raw", "hits": [], "note": "Template, hook, configserver, nav and run.sh items are outside this chunk."},
+    {"group": "spec-3-raw (part 2)", "hits": [], "note": "install.sh/installer/CLAUDE.md supersede clause are outside this chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "proposals templates, catalog and smine skill language contracts are outside this chunk."},
+    {"group": "spec-5-change-nondev-automation", "hits": [], "note": "sync scripts, shell.RunSync, repos page and git-init add are outside this chunk."},
+    {"group": "spec-5-change-nondev-automation (part 2)", "hits": [], "note": "smine-orchestrate, run.sh stage 3 and Welcome card are outside this chunk."},
+    {"group": "spec-6-raw", "hits": [], "note": "correctness-64 docs/acdsl-spec.md modes paragraph present (line 222: strict/gated/free, merge-base boundary, acdsl-policy-guard.sh, pointer to acdsl/README.md Modes) — PASS; remaining policy items are Go/hook/acdsl files outside this chunk."},
+    {"group": "spec-7-raw", "hits": ["correctness-NIT-1"], "note": "correctness-65/66/67 superseded by the deliberate v8.4 reversal (bare Skill invocation) — already carried as known correctness-INF-49-r1, not re-reported. correctness-68: builders and cleanup enumeration use claude-review/* (railroad-review.js:80-82,126-130,367,535-537) and no claude/railroad string remains under skills/quality/railroad-review/ outside historical changelog rows — PASS; that the cleanup script rejects claude-review/* is known correctness-BLK-29-r1. correctness-69: prompts/SKILL prose read claude-review/*; the canonical docs/workflows.md still documents claude/railroad-* (correctness-NIT-1). correctness-70-72 live under plans/ (excluded)."},
+    {"group": "spec-8-change-bootstrap-profile", "hits": [], "note": "correctness-78 skillroutine-create stamps origin: user after author: for proposal-created skills, never on shipped skills, version 1.9 + changelog — PASS. correctness-81/82 README describes repo folders + default/ + archived/ and no --scopes/personal/work remains in README/docs — PASS (docs/workflows.md drift-scope wording is known correctness-NIT-11-r2). Other items outside chunk."},
+    {"group": "spec-8-change-bootstrap-profile (part 2)", "hits": [], "note": "Sessions store/routes/repo-name items are outside this chunk."},
+    {"group": "spec-9-change-headless-bootstrap", "hits": [], "note": "correctness-94: README documents bash cmd/bootstrap/run.sh with BOOTSTRAP_TOKEN_FILE/SINCE/N/DRY_RUN (README.md:53); no smine-bootstrap reference remains in README/docs/skills indexes outside historical changelogs — PASS. Other items outside chunk."},
+    {"group": "spec-9-change-headless-bootstrap (part 2)", "hits": [], "note": "Profile dev-mode, smine-batch/style/orchestrate and installer warnings are outside this chunk."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "correctness-104/105/106 committed plan.md: RULE-PLAN-002 order Decisions → Open questions → Baseline … Stop conditions → Changelog with rationale bullet, RULE-PLAN-018 plain-text IDs + section-slug links + <br> sole HTML, RULE-PLAN-069/070 under '## UI evidence' at the tail — PASS. correctness-109 fdesign template moves Open questions, plain-text IDs, Hot items actual-UI, Changes ui: line, 3.6 changelog row present (frontmatter now 3.7 for a later bundled workflow; ordering nit known code-style-NIT-44-r2) — PASS. correctness-110 fmt audit/migrate/self-check inverted, 1.13 — PASS. correctness-113: no '<a id=' in skills/ or context/, remaining 'mockup' mentions carry actual-UI wording or are historical — PASS. 107/108/111/112 are verifier/concepting/context.json/plans files outside chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "verdict.sh, status cache, worktree counts and routine page items are outside this chunk."},
+    {"group": "spec-12-raw", "hits": [], "note": "smine-style skill, presentationStore and profile page are outside this chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "correctness-141 README multi-profile section (README.md:57-65) matches install.sh (PEEK_CLAUDE_HOME/PEEK_CODEX_HOME, install.env persistence, env-over-file) and README flag table adds -claude-home/-codex-home and the healthz reuse rule — PASS; peek pin 1.2.2 stated (README.md:50). Code items outside chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "Registry refresh, fingerprint cache and route deletion are Go items outside this chunk."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-NIT-1",
+      "file": "docs/workflows.md",
+      "line": 65,
+      "severity": "NIT",
+      "effect": "debt",
+      "exposure": "rare",
+      "checklist": "correctness-69",
+      "claim": "docs/workflows.md (the canonical workflow reference, edited in this diff) still documents the railroad-review lane, refuter and station branches as claude/railroad-{direction}-l{i}-r{round}-{hash6}, claude/railroad-refute-..., claude/railroad-station-..., and says cleanup runs per expected claude/railroad-* branch. Since v8.3 railroad-review.js builds claude-review/{direction}[-{chunk}]-l{i}-r{r}-{hash6}, claude-review/refute-..., claude-review/station-... (railroad-review.js:80-82, 129, 367, 535-537). An operator following the doc (git branch --list 'claude/railroad-*') to find a round's leftovers finds nothing while the real claude-review/* branches remain.",
+      "evidence": "Re-read docs/workflows.md:60-66 at the head (unchanged by the overlay) — the What-it-does bullet names claude/railroad-* four times. Re-read railroad-review.js:80-82 (laneBranchName), :129 (station branch), :367 (refuter branch), :535-537 (station checkout/rename) — all claude-review/*. git grep claude/railroad over skills/quality/railroad-review returns only historical changelog rows, so the code side is migrated and only this doc is stale. Not a variant of known correctness-NIT-45-r1 (that row is skills/README.md:64, a different file) nor correctness-NIT-11-r2 (docs/workflows.md:46, session-mine section, different claim).",
+      "fix": "In docs/workflows.md:65 replace claude/railroad-{direction}-l{i}-r{round}-{hash6} with claude-review/{direction}[-{chunk}]-l{i}-r{round}-{hash6}, claude/railroad-refute-{finding-id}-… with claude-review/refute-{finding-id}-…, claude/railroad-station-… with claude-review/station-…, and 'per expected claude/railroad-* branch' with 'per expected claude-review/* branch'."
+    }
+  ],
+  "walk_complete": true
+}

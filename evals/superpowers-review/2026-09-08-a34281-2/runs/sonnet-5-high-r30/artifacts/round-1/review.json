@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy trusts the working-tree policy's Mode when base resolution fails, so a single working-tree edit setting {\"mode\":\"free\",\"base_ref\":\"does-not-exist\"} makes gated/strict enforcement silently return clean instead of the hard error the README guarantees.",
+      "fix": "Do not let the baseErr branch trust the working policy's Mode: either make policyBase always fall back to the default candidate list (origin/HEAD, origin/main, main, master) even when policy.BaseRef is set, or distinguish a missing policy.json (legitimate free bootstrap) from an existing file that claims free — the latter with an unresolvable base must be a hard error; add a regression test combining a bad base_ref with mode free over a gated base."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The new skill-invoke-gate.sh PreToolUse enforcement hook and its test have no corresponding plan entry under plans/v1-2-1/, so this second security-relevant hook's design cannot be traced to an approved decision.",
+      "fix": "Confirm the hook was deliberately scoped under a plan (possibly outside plans/v1-2-1/, e.g. the skillroutine-eval single-pass fanout work) rather than added ad hoc, and document the design decision."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/dist.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "buildBinaries always rebuilds verifier binaries via go build unless a prebuilt exists at srcDir, so every Dist invocation pays a full go build per verifier with no caching.",
+      "fix": "Worth flagging only if Dist ever runs on a hot path; it currently doesn't (manual/CI-adjacent operation)."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The hook's Bash context-dir read denial only matches an exact two-argument cat invocation and disables itself on any shell metacharacter, so it documents intent rather than enforcing a boundary.",
+      "fix": "Make the hook's comment explicit that the Bash check is advisory-only, not a real boundary, so nobody later treats it as one in the policy engine's authoritative/advisory split."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/server/repos.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "handleReposAdd treats any stat failure on .git as needs-init (gitErr != nil rather than os.IsNotExist), so a transient stat error triggers a redundant git init -b main on an already-initialized repo.",
+      "fix": "Add a one-line comment noting the intentional gitErr != nil treats any stat failure as needs-init, not just os.IsNotExist."
+    }
+  ]
+}

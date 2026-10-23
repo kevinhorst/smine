@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "cmd/hooks/acdsl-policy-guard.sh",
+      "line": 43,
+      "severity": "BLOCKER",
+      "claim": "The ACDSL fast-feedback hook unconditionally denies every write to acdsl/registry.local.json in strict/gated mode, even though that file is deliberately excluded from the frozen self-management surface and is designed to be edited locally under per-entry local_overrides gating, so no gated target repo can ever add a sanctioned local verifier override.",
+      "fix": "Drop acdsl/registry.local.json from the hook's frozen-surface case entirely — either replicate overlayViolations by checking entry names against policy.local_overrides read from acdsl/policy.json, or simpler, don't gate this file at the hook layer at all and let the authoritative acdsl check catch unsanctioned entries."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/acdsl/dist.go",
+      "line": 285,
+      "severity": "MAJOR",
+      "claim": "shipBinary's prebuilt-copy branch names the destination after filepath.Base(prebuilt) instead of out, so on Windows a prebuilt binary without the .exe extension is shipped mis-named, violating the code's own invariant that Windows outputs always carry .exe.",
+      "fix": "Use fsx.CopyFile(prebuilt, filepath.Join(destDir, out))."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 42,
+      "severity": "MINOR",
+      "claim": "The prompt-start slash match is a prefix match, so a first message beginning with /railroad-review-observability would wrongly count as invocation of required skill railroad-review.",
+      "fix": "Anchor the match on a space/newline/end-of-string boundary, e.g. \"/$required\" | \"/$required \"* or a [[ $first_user =~ ^/$required($|[[:space:]]) ]] equivalent."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "plans/v1-2-1/",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "All plan directories under plans/v1-2-1/ are still -wip- (only the acdsl-policy-modes one is -done-) even though the range is the merged v1.2.1 release, violating RULE-PLAN-073 which says merged plans move to the plans-archive repo renamed done-<merge-hash>.",
+      "fix": "Move the shipped plans/v1-2-1/*-wip-* directories through /plan-archive now that the range is merged."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/dist.go",
+      "line": 235,
+      "severity": "MINOR",
+      "claim": "writePolicy forwards BaseRef verbatim into every distributed target's policy.json with no per-target override analogous to dist_mode, so a smine-side base_ref would leak unchanged into targets where it likely doesn't resolve.",
+      "fix": ""
+    }
+  ]
+}

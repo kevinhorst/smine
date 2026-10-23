@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-NIT-184-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at head: the new skill's frontmatter is name: smine-style (L2), smine-context/changelog.json L60 records 'renamed smine-style → smine-context' (and L100 'renamed smine-rules → smine-style'), and smine-context SKILL.md L29 still says the ledger 'predates the smine-style rename' — the reused leaf now reads as the unrelated voice-profile skill.",
+  "probe": "PROBE-CODE-STYLE-NIT-184-R1",
+  "script": "code-style-nit-184-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-184-r1/skills/smine/smine-style/SKILL.md",
+  "registry": "registry-code-style-nit-182-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-NIT-184-R1 -registry registry-code-style-nit-182-r1.json -> exit 1: skills/smine/smine-style/SKILL.md:2: skill name smine-style reuses smine-context's retired name; smine-context SKILL.md still refers to 'the smine-style rename'",
+    "fixture_run": "bin/acdsl check -root probes/fixtures/code-style-nit-184-r1 -rule PROBE-CODE-STYLE-NIT-184-R1 -> exit 1 (smine-style/SKILL.md:2)",
+    "read": [
+      "git grep smine-style at 1f725ce: smine-context/SKILL.md:29, smine-context/changelog.json:60 and :100, smine-style/SKILL.md:2 (new file in this diff)",
+      "known.json: code-style-NIT-153-r1 (missing Skill map link) is different substance"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-184-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-184-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-182-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-184-r1"
+  ]
+}

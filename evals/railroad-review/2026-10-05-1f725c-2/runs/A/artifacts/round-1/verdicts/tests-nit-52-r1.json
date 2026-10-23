@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-NIT-52-r1",
+  "verdict": "confirmed",
+  "reason": "Every status-fragment test runs on reposTestEnv's git repo, so repos.Fingerprint never fails and the fingerprintErr == nil term at repos.go:357 is unpinned; on failure Fingerprint returns \"\" and Store records \"\", so dropping the guard would serve stale rows — probe red on repos.go.",
+  "probe": "PROBE-TESTS-NIT-52-R1",
+  "script": "tests-nit-52-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-52-r1",
+  "registry": "registry-tests-nit-52-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-52-R1 -registry probes/registry-tests-nit-52-r1.json -> exit 1: internal/server/repos.go:357: no status-fragment test with a non-git repo / failing Fingerprint",
+    "validity": "same check with -root probes/fixtures/tests-nit-52-r1 (git-backed reposTestEnv cache test only) -> exit 1, 1 violation",
+    "read": [
+      "internal/server/repos.go:355-364 data.Cached = cached && !refresh && fingerprintErr == nil && fingerprint == entry.Fingerprint; Store(repo.Name, fingerprint, statuses) also on a failed fingerprint",
+      "internal/repos/registry.go:457-468 Fingerprint returns \"\" plus error when git for-each-ref / worktree list fails (non-git dir)",
+      "internal/server/repos_test.go:25-72 reposTestEnv git-inits the only registered repo; TestWorktreeStatusFragmentServesCache 409-463 covers cache hit, refresh and branch change only",
+      "known.json: repos.go entries MAJ-7, MIN-1, MIN-12, NIT-2/3/37 are distinct"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-52-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-52-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-52-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-52-r1"
+  ]
+}

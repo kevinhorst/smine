@@ -1,0 +1,21 @@
+{
+  "finding_id": "code-style-NIT-226-r1",
+  "verdict": "confirmed",
+  "reason": "shellGitAbbrevRef(ctx, root, ref) at git.go:26 — and GitChangedFiles(root, base), GitMergeBase/GitRevParse(root, ref), GitShowFile(root, rev, path) — are all new in the diff and list params after ctx non-alphabetically; RULE-GOLANG-CALL-003 requires alphabetical order; not covered by known code-style-NIT-3-r2 (policy.go only)",
+  "probe": "PROBE-CODE-STYLE-NIT-226-R1",
+  "fixture": "probes/fixtures/code-style-nit-226-r1/git.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-226-R1 -> exit 1: internal/acdsl/git.go:26: symbol \"shellGitAbbrevRef\" signature mismatch: got func shellGitAbbrevRef(ctx context.Context, root, ref string) (string, error), planned func shellGitAbbrevRef(ctx context.Context, ref, root string) (string, error)",
+    "validity": "bin/verifiers/symbolexists scratch/code-style-nit-226-r1/files.txt symbol=shellGitAbbrevRef signature=... -> exit 1 on fixture git.go:5",
+    "read": [
+      "internal/acdsl/git.go:26,46,69,78,89 signatures (root before ref/base/rev/path)",
+      "git diff b4981b8..1f725ce -- internal/acdsl/git.go: all five functions are additions",
+      "context/rules/go.md RULE-GOLANG-CALL-003: params sorted alphabetically, ctx first"
+    ],
+    "note": "make -C <wt> acdsl ARGS=... was denied by tool policy (ARGS not declared on the make target); ran the shipped bin/acdsl with -root <wt> instead — the probe covers shellGitAbbrevRef; the other four signatures were confirmed by reading"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-226-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-226-r1/git.go"
+  ]
+}

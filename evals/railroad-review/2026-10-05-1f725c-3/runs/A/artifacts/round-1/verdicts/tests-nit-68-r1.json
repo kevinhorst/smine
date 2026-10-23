@@ -1,0 +1,29 @@
+{
+  "finding_id": "tests-NIT-68-r1",
+  "verdict": "confirmed",
+  "reason": "No test function in cmd/tests/test_print_agent_worktrees_status.sh combines a same-subject twin with a squash landing: the only 'via squash' assertion (test_squash_transfer_reads_contained) uses distinct subjects, so verdicts land in unpicked-notwin and the unpicked arm's squash_in branch (line 202-203) never runs.",
+  "probe": "PROBE-TESTS-NIT-68-R1",
+  "script": "tests-nit-68-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-68-r1/cmd/worktrees/print_agent_worktrees_status.sh",
+  "registry": "registry-tests-nit-68-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-TESTS-NIT-68-R1 -registry probes/registry-tests-nit-68-r1.json -> exit 1: cmd/worktrees/print_agent_worktrees_status.sh:179: unpicked-arm squash annotation is never exercised — no test pairs a same-subject twin with a squash landing and asserts 'via squash'",
+    "read": [
+      "cmd/worktrees/print_agent_worktrees_status.sh:198-206 — unpicked arm: if [ -n \"$squash_in\" ] -> 'content contained in ... via squash', else 'twin ... differs'",
+      "cmd/tests/test_print_agent_worktrees_status.sh:469-499 — squash test subjects 'agent step one'/'agent step two' vs main 'squash-landed agent work': no subject twin",
+      "cmd/tests/test_print_agent_worktrees_status.sh:344-391 — the only same-subject twin fixture ('incident tweak doc') has no merge --squash and asserts picked-resolved",
+      "cmd/tests/test_print_agent_worktrees_status.sh:504-531 — edited squash: no detail call, distinct subjects"
+    ],
+    "note": "the probe's reported line is 179 (first squash_in after the first 'unpicked)' match, the class selector at 152); the uncovered annotation is lines 202-203 in the same detail block",
+    "validity": "fixture run: bin/acdsl check -root scratch/tests-nit-68-r1/root (git-init'd copy of the fixture) -> exit 1 at cmd/worktrees/print_agent_worktrees_status.sh:3",
+    "known_check": "distinct from code-style-NIT-101-r1 (duplicated git-log line) and tests-NIT-12-r2 (squashed count assertion)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-68-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-68-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-68-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-68-r1/cmd/worktrees/print_agent_worktrees_status.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-68-r1/cmd/tests/test_print_agent_worktrees_status.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-68-r1/railroad-probes-r1.acdsl"
+  ]
+}

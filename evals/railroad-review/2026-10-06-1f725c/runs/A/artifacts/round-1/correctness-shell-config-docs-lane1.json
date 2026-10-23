@@ -1,0 +1,54 @@
+{
+  "artifact": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/correctness-shell-config-docs-lane1.json",
+  "direction": "correctness",
+  "lane": 1,
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "aborted": false,
+  "notes": "Cross-chunk suspicion (not chased, per manifest scope): cmd/worktrees/_lib/verdict.sh and print_agent_worktrees_status.sh implement a new branch-level squash-containment layer (correctness-92/98) that appears correct in isolation, but its full correctness also depends on internal/repos/status.go (Go, another chunk) implementing the matching per-worktree cache-invalidation fingerprint described in spec-14 (correctness-120) — not verifiable from shell/config files alone. Also: acdsl/README.md states 'Dist also ships acdsl/policy.json ... overwritten on every sync like the registry subset' but the actual distribution sync logic (acdsl dist, Go) is outside this chunk, so I could not verify the claim against its implementation.",
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "install.ps1",
+      "line": 20,
+      "checklist": "correctness-83",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "severity": "MAJOR",
+      "fix": "Check shellcheck.exe separately from the hard-required deps (git/go/jq) and only print a WARN (matching install.sh's warn-only loop) instead of adding it to $missing, which blocks the whole install when winget is absent or the user declines the winget prompt.",
+      "claim": "correctness-83 requires installers to warn-without-blocking when the shell static-analysis dependency (shellcheck) is missing. install.sh does this correctly (lines 56-60: a bare WARN loop over jq/shellcheck that never affects the exit code). install.ps1 instead adds `koalaman.shellcheck` to the same `$missing` array used for the genuinely required prerequisites (git.exe, go.exe, jq.exe). If `$missing.Count -gt 0`: when winget.exe is absent, the script `throw`s and aborts the entire install citing shellcheck among the 'missing prerequisites' (line 23); when winget is present but the user declines the install prompt (answers anything other than 'y'), the script `throw`s 'prerequisites missing; aborting' (line 27) — also a full abort. Either path blocks the Windows from-source install over a missing optional/warn-only dependency, contradicting the explicit spec requirement that this check must warn, not block.",
+      "evidence": "Re-read install.ps1 lines 1-69 in full and install.sh lines 56-60 in full. install.ps1's prerequisite-detection block (lines 16-32) treats git/go/jq/shellcheck identically: any missing dep triggers the winget consent flow, and declining or lacking winget throws, aborting the whole script via `$ErrorActionPreference = \"Stop\"` (line 10) before any build or install step runs. install.sh's equivalent check (added in the same diff) is structurally different: a plain `for dep in jq shellcheck; do command -v ... || echo \"WARN: ...\"; done` loop with no effect on control flow. The asymmetry is the bug — the two platforms implement the same stated requirement (correctness-83) differently, and the Windows one violates it."
+    },
+    {
+      "finding_id": "correctness-MAJ-2",
+      "file": "routines/smine-nightly/run.sh",
+      "line": 33,
+      "checklist": "correctness-66",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "severity": "MAJOR",
+      "fix": "Have routines/smine-nightly/run.sh and cmd/bootstrap/run.sh normalize the legacy value when reading the profile (e.g. `[ \"$profile_audience\" = \"non-developer\" ] && profile_audience=casual`), or centralize the migration in a shared helper both scripts source, so a stale on-disk profile is never silently misread as developer/default audience.",
+      "checklist_hit": true,
+      "claim": "correctness-66 requires the audience value rename (non-developer -> casual) to migrate 'every existing profile file on disk ... before anything reads it.' The only migration logic in the diff lives in cmd/sync/sync_skills.sh (lines 253-260: a one-time sed rewrite of `audience: non-developer` to `audience: casual`), which runs only as part of install.sh's sync step. Two independent consumers read the same file directly and compare against the literal string \"casual\" with no fallback for the old value: routines/smine-nightly/run.sh (lines 29-47: profile_audience read at lines 33-37, then compared at lines 42/44/45) and cmd/bootstrap/run.sh (lines 54-66, same pattern). On any machine that already has a pre-migration profile file (audience: non-developer) and whose launchd-scheduled nightly routine or Welcome-button bootstrap runs again after a `git pull` of this change but before the next manual `install.sh` run, profile_audience resolves to the literal string \"non-developer\", which matches neither \"casual\" nor anything else these scripts check for — so dev_mode-forcing-off, orchestrate auto-enable, and the auto_apply=decide default (all casual-audience behaviors) silently fail to activate. This is self-healing once sync_skills.sh eventually runs, but until then the machine silently reverts to developer-audience routine behavior despite having an active casual profile — a real violation of the 'before anything reads it' ordering guarantee the spec states explicitly.",
+      "evidence": "Re-read routines/smine-nightly/run.sh in full (342 lines) and cmd/bootstrap/run.sh in full (175 lines): both read $HOME/.claude/context/global/presentation-profile.md directly via sed and compare profile_audience to the literal 'casual' with no other branch. Re-read cmd/sync/sync_skills.sh lines 244-301 in full: the non-developer->casual sed migration is the only place this rewrite happens, and it is reached only via install.sh's sync step (install.sh line 92: `bash \"$REPO_DIR/cmd/sync/sync_skills.sh\"`), never from the routine or bootstrap wrapper scripts themselves. The nightly routine and bootstrap wrapper are launchd/button-triggered independently of install.sh, so the ordering guarantee does not hold structurally."
+    }
+  ],
+  "walk": [
+    {"group": "spec-1-concept", "hits": []},
+    {"group": "spec-2-user_stories", "hits": []},
+    {"group": "spec-3-raw", "hits": []},
+    {"group": "spec-4-change-englishness", "hits": []},
+    {"group": "spec-5-change-nondev-automation", "hits": []},
+    {"group": "spec-6-raw", "hits": []},
+    {"group": "spec-7-raw", "hits": []},
+    {"group": "spec-8-change-bootstrap-profile", "hits": ["correctness-MAJ-2"]},
+    {"group": "spec-9-change-headless-bootstrap", "hits": ["correctness-MAJ-1"]},
+    {"group": "spec-10-change-viewer-fixes", "hits": []},
+    {"group": "spec-11-change-repos-routines-ui", "hits": []},
+    {"group": "spec-12-raw", "hits": []},
+    {"group": "spec-13-change-multi-profile-ports", "hits": []},
+    {"group": "spec-14-change-repo-cache", "hits": []}
+  ],
+  "walk_complete": true
+}

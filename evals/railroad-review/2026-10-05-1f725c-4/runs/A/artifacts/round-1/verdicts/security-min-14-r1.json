@@ -1,0 +1,33 @@
+{
+  "finding_id": "security-MIN-14-r1",
+  "verdict": "confirmed",
+  "reason": "A Bash-shaped PreToolUse payload yields an empty file_path under the guard's own jq extraction, so line 14 exits 0; the guard is registered only under Write|Edit|NotebookEdit while the template allow-lists Bash(cp *) under acceptEdits — cp onto acdsl/policy.json gets no deny and no prompt. CheckPolicy still flags it at acdsl check time, so the loss is the fast-feedback layer (degraded/rare held).",
+  "probe": "manual: command with actual and expected output",
+  "script": "security-min-14-r1.sh",
+  "registry": "registry-security-min-14-r1.json",
+  "evidence": {
+    "probe_run": "jq -r '.tool_input.file_path // .tool_input.notebook_path // empty' on {\"tool_name\":\"Bash\",\"cwd\":\"/repo\",\"tool_input\":{\"command\":\"cp /x/p.json acdsl/policy.json\"}} -> actual: empty output, so acdsl-policy-guard.sh:14 exits 0 (no hookSpecificOutput); expected for a gated/strict repo: permissionDecision deny as at :43-44",
+    "read": [
+      "cmd/hooks/acdsl-policy-guard.sh:13-14 file_path from tool_input.file_path // notebook_path; empty => exit 0; no tool_input.command handling anywhere in the file",
+      "settings/claude_code/settings.json (jq): PreToolUse matchers — null (skill-invoke-gate, read-gate), Read (acdsl-project), Write|Edit|NotebookEdit (worktree-write-guard, acdsl-policy-guard); permissions.allow contains Bash(cp *); defaultMode acceptEdits; deny list has no cp/acdsl rule",
+      "cmd/hooks/read-gate.sh: Bash branch only gates style-guide reads (bash_guide_candidates), never writes to acdsl/",
+      "no tool-policy/toolpolicy registration in settings/, cmd/sync/, install.sh (git grep empty)",
+      "internal/acdsl/policy.go:323-376 CheckPolicy diffs the self-management surface against the base-ref policy (working-copy weakening ignored) — the overwrite is still caught at acdsl check / audit time, so the effect stays degraded, not destructive",
+      "acdsl/policy.json in this repo is mode free — only gated/strict consumer repos are exposed: exposure rare held"
+    ],
+    "probe_attempts": [
+      "attempt 1: validity run of probes/security-min-14-r1.sh over scratch/security-min-14-r1/fixture-files.txt via /bin/bash denied by tool policy (candidate Bash(/bin/bash *))",
+      "attempt 2: validity via make acdsl ARGS=\"check -rule PROBE-SECURITY-MIN-14-R1 -registry ... -root <fixture dir>\" denied by tool policy (make value check); fixture dir is also no git repo, which acdsl rule discovery requires",
+      "probe script, registry, .acdsl mirror and fixture persist under probes/ unvalidated — the verdict rests on the manual artifact"
+    ],
+    "known_ledger": "distinct from security-MIN-3-r2 (path normalization on Write/Edit), correctness-MAJ-24-r1 (deleted ask rules for Edit/Write), tests-MIN-35-r1 (no shell test)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/security-min-14-r1/bash-payload.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/security-min-14-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-security-min-14-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/security-min-14-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/security-min-14-r1/fail/cmd/hooks/acdsl-policy-guard.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/security-min-14-r1/fail/settings/claude_code/settings.json"
+  ]
+}

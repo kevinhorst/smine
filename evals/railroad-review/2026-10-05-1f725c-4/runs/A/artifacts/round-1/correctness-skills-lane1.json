@@ -1,0 +1,60 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "skills",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "artifact_json": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/correctness-skills-lane1.json",
+  "notes": "Chunk skills: 48 files read in full, no partners. Most checklist groups target cmd/, internal/, routines/, settings/ — cross-chunk, not chased. Cross-chunk suspicion for the station: smine-apply step 4(d) dispatch on the literal eviction change text interacts with any UI/i18n rendering of proposal change fields (MIN-1). Many skills-chunk defects already in known.json (BLK-29, MAJ-30/31/36/39/40/58/59/60/61/62/75, MIN-13/14/35/42/43/44, INF-49/50/76) were not re-reported.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "skills chunk: smine-batch/skills/routines/context/memory/consolidate read the profile and author prose in its language; consolidate language arg keeps ids/code verbatim (items 1,5). Hook/UI items 2,3,6-8 outside chunk."},
+    {"group": "spec-2-user_stories", "hits": ["correctness-MIN-1"], "note": "items 9,10,13 carried by the language/casual rules in the dimension skills; MIN-1 is the casual-rule vs machine-read change conflict. UI items 11,12,14,15 outside chunk."},
+    {"group": "spec-3-raw/profile-hook-nightly-install", "hits": [], "note": "no skills-chunk file implements items 17-25 (settings/hooks/routines/installers) — cross-chunk."},
+    {"group": "spec-3-raw/server-ui", "hits": [], "note": "items 26-32 are internal/server — cross-chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "items 38-40 hold: five dimension skills carry the Language contract with versions/changelog[0] in sync (batch 1.28, skills 1.25, routines 1.20, context 1.34, memory 2.4); batch md stays English; context/memory path group titles untranslated; consolidate language sweep widened (1.4). 41 schema change (permissions block) is known INF-50. Others outside chunk."},
+    {"group": "spec-5-change-nondev-automation/install-visibility-projects", "hits": [], "note": "items 42-51 are sync scripts/server — cross-chunk."},
+    {"group": "spec-5-change-nondev-automation/orchestrator-welcome-picker", "hits": [], "note": "52-55 checked in smine-orchestrate: argument-hint/allowed-tools present (extra mv is known NIT-219); judge/merge/sync/push duties present; additionalDirectories, context-pack and rejection-target gaps are known MAJ-58/59/75, bootstrap clean-tree precondition known MIN-44. 56-61 outside chunk."},
+    {"group": "spec-6-raw/policy-engine", "hits": [], "note": "acdsl policy items — cross-chunk."},
+    {"group": "spec-6-raw/dist-hook-docs", "hits": [], "note": "acdsl git/dist/hook items — cross-chunk."},
+    {"group": "spec-7-raw", "hits": [], "note": "74/75 reversed deliberately (changelog 8.4) — known INF-49; 76/77 hold: lane/refuter/station builders use claude-review/*, cleanup enumerates from the same builders (script-arm mismatch known BLK-29); historical changelog entries still name claude/railroad (history). 78-80 outside chunk."},
+    {"group": "spec-8-change-bootstrap-profile/bootstrap-casual", "hits": ["correctness-MIN-2"], "note": "83 smine/smine-batch --since present and forwarded; 87 smine-apply + skillroutine-create stamp origin: user; 88 smine-skills casual lockout drops and reports; 89 smine-apply casual-locked gate holds, MIN-2 is the locked entry's lifecycle; 90 orchestrate lockout present. 81,82,84-86 outside chunk."},
+    {"group": "spec-8-change-bootstrap-profile/folders-reload", "hits": [], "note": "91-93 hold in smine-batch/smine (per-folder routing, default folder, per-folder ledgers with live+archived union, --scopes removed, cursor over every folder except archived; --repos not forwarded by session-mine.js is known MAJ-36, five-ledger cursor known MIN-14). 94-100 outside chunk."},
+    {"group": "spec-9-change-headless-bootstrap/wrapper-launcher", "hits": [], "note": "109 --last/--dev added and passed through, versions bumped; --since-wins violation is known MAJ-30. 108 smine-bootstrap skill absent from chunk; rest is cmd/bootstrap — cross-chunk."},
+    {"group": "spec-9-change-headless-bootstrap/devmode-presentation", "hits": ["correctness-MIN-1"], "note": "112 exclusion line present (repo-root scope known MAJ-60); 114 smine-style writes in profile language and reports write failures; 115 casual jargon rule in context/memory/routines/skills (MIN-1 conflict with machine-read change forms); 116 consolidate casual sweep present; 117 orchestrate concrete field list + since finding present. 110,111,113,118 outside chunk."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "124 fdesign template: Open questions after Decisions, plain-text IDs with section-slug links, ui: lines and actual-UI screenshot in Hot items; version moved 3.5->3.6 and further to 3.7 for the bundled workflow (date order known NIT-44). 125 fmt audit/migrate/self-check inverted, 1.12->1.13 in both surfaces. Others outside chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "verdict.sh/statusCache/templates — cross-chunk."},
+    {"group": "spec-12-raw/style-store-routes", "hits": [], "note": "137/138 hold in smine-style: argument-hint [n], allowed-tools peek session_list/session_full + ToolSearch/Read/Write/Bash(jq *), profile binding, user-message sampling default 30 skipping <2 user turns, generator marker first line, <=30 lines, profile wins, no PII/verbatim, single output file, report counts. 139-146 server — cross-chunk."},
+    {"group": "spec-12-raw/nav-i18n-files", "hits": [], "note": "149: smine-style writes only style-profile.md; install/hook side cross-chunk."},
+    {"group": "spec-13-change-multi-profile-ports/peek-mcp", "hits": [], "note": "peek-mcp items — cross-chunk."},
+    {"group": "spec-13-change-multi-profile-ports/smine", "hits": [], "note": "configserver/install items — cross-chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "registry/statusCache items — cross-chunk."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MIN-1",
+      "file": "skills/smine/smine-context/SKILL.md",
+      "line": 33,
+      "checklist": "correctness-115",
+      "severity": "MINOR",
+      "effect": "degraded",
+      "exposure": "rare",
+      "claim": "The new casual-presentation rule forbids file paths and rule/FACT/ACDSL IDs in `change`, but the same skill still mandates machine-read `change` strings that consist of exactly those (step 4b eviction: `set projected=\"false\" on <ID>` / `remove <ID> from <skill> context:`; step 2 declaration: `declare <entry-ID> in skills/<path>/SKILL.md acdsl-context:`), with no exemption like smine-permissions grants its rule string. On a casual install every such proposal violates one of the two contracts, and smine-consolidate's casual jargon sweep (§4 L51) then rewrites `change` and moves the ID into anchor/target — removing the literal form smine-apply step 4(d) dispatches the eviction route on. Same class in smine-skills L65: a Workflows entry's `change` must be \"author `workflows/<name>.js` under `<target>`\", a file path the casual rule bans.",
+      "fix": "Exempt the machine-read change forms (eviction `set projected=…`/`remove <ID> from …`, `declare <ID> in …`, Workflows `author workflows/<name>.js …`) from the casual rule in smine-context/smine-memory/smine-skills and from smine-consolidate's casual sweep, the way smine-permissions keeps its rule string in `change`.",
+      "evidence": "Re-read smine-context L33 (casual rule lists `change` among prose fields that carry no paths/IDs), L48 and L71 (change text prescribed with entry IDs and skill paths); smine-consolidate L51 (casual sweep rewords mutable entries whose `change` carries IDs/paths, moving content to target/anchor); smine-apply L31 route (d) keyed on the `set projected=\"false\" on <ID>` / `remove <ID> from <skill> context:` change forms; smine-permissions L33 shows the explicit exemption pattern the other skills lack; smine-skills L65 Workflows change format with a path. Trigger: audience: casual + a context-use present-irrelevant aggregate over >=5 sessions (or a needed-not-present declaration amendment). Not covered by known.json (MAJ-61 concerns lockout of context routes editing skill files, not this field contract)."
+    },
+    {
+      "finding_id": "correctness-MIN-2",
+      "file": "skills/smine/smine-apply/SKILL.md",
+      "line": 31,
+      "checklist": "correctness-89",
+      "severity": "MINOR",
+      "effect": "degraded",
+      "exposure": "rare",
+      "claim": "A casual-locked proposal is never archived, removed or status-changed: step 4 only sets the vote's disposition `casual-locked` (terminal, so the vote drains from the sidecar) and leaves the entry `proposed` in skills.json. It therefore resurfaces on the /proposals page for another vote, and in decide/always auto-apply it is a candidate again every night (step 5 candidates = every remaining `proposed` entry not voted this run), re-locked and re-ledgered each run. Reachable on a casual install for skills edit entries written before the audience switch, or re-homed into skills.json by smine-consolidate §2, which has no lockout check.",
+      "fix": "On casual-locked, also set the entry's status to `rejected` (or archive it to rejected.md with reason `casual lockout`) and remove it from skills.json like the other terminal outcomes, so it is neither re-voted nor re-picked by auto-apply.",
+      "evidence": "Re-read smine-apply L31 (lockout: 'do not touch the skill — set the proposal's disposition casual-locked with a one-line note'; the archive-and-remove sentence closes the implemented path only), L32-36 (auto-apply candidates: every remaining `proposed` entry, only entries voted this run excluded), L41-43 (casual-locked is a terminal outcome appended to votes-archive.jsonl, draining the vote); smine-skills L45 drops such candidates only at extraction and L59 reconciliation does not drop locked ones; smine-consolidate L37-41 re-homes into skills.json with no lockout. Spec item 89 (untouched skill + disposition) holds; the defect is the entry's lifecycle after the lock."
+    }
+  ],
+  "walk_complete": true
+}

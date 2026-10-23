@@ -1,0 +1,59 @@
+{
+  "round": 1,
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "tiers": {
+    "high": {
+      "reason": "permission grants, hooks, persisted config/registry state, installers, concurrency (status cache), public CLI/server contracts",
+      "files": [
+        "settings/claude_code/settings.json",
+        "cmd/hooks/acdsl-policy-guard.sh",
+        "cmd/hooks/read-gate.sh",
+        "cmd/hooks/skill-invoke-gate.sh",
+        "cmd/hooks/worktree-sessionstart.sh",
+        "cmd/sync/sync_hooks.sh",
+        "cmd/sync/sync_settings.sh",
+        "cmd/sync/sync_skills.sh",
+        "cmd/bootstrap/run.sh",
+        "install.sh",
+        "install.ps1",
+        "installer/windows/smine.iss",
+        "cmd/configserver/install_windows.go",
+        "cmd/configserver/main.go",
+        "cmd/configserver/com.smine.configserver.plist.template",
+        "internal/acdsl/policy.go",
+        "internal/acdsl/git.go",
+        "internal/acdsl/dist.go",
+        "acdsl/policy.json",
+        "acdsl/policy.schema.json",
+        "internal/config/config.go",
+        "internal/config/installenv.go",
+        "internal/repos/registry.go",
+        "internal/routines/plist.go",
+        "internal/routines/routines.go",
+        "internal/routines/bootstrap_darwin.go",
+        "internal/routines/sched_windows.go",
+        "internal/server/statuscache.go",
+        "internal/server/bootstrap.go",
+        "internal/server/profilesettings.go",
+        "internal/server/repos.go",
+        "internal/server/server.go",
+        "internal/server/config_sync.go",
+        "internal/sessions/sessions.go",
+        "internal/shell/shell.go",
+        "cmd/worktrees/remove_agent_worktrees.sh",
+        "routines/smine-nightly/run.sh",
+        "routines/_lib/worktree.sh"
+      ]
+    },
+    "medium": {
+      "reason": "business logic and error handling, workflow scripts, server handlers",
+      "files": "every remaining non-test .go/.sh/.js file in the diff"
+    },
+    "low": {
+      "reason": "tests, templates, docs, changelogs, skill prose, testdata",
+      "files": "every *_test.go, cmd/tests/*, templates, *.md, changelog.json, acdsl/testdata"
+    }
+  },
+  "selection": "explicit directions arg binds: code-style correctness tests security; security also indicated by high-tier permission/hook/install files"
+}

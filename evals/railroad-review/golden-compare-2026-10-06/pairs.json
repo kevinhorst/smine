@@ -1,0 +1,1213 @@
+{
+  "old": "skills/quality/railroad-review/eval/golden/smine-1.1.4-1.2.1.v9.master.json (347 findings)",
+  "new": "skills/quality/railroad-review/eval/golden/smine-1.1.4-1.2.1.g2.seed.json (352 findings)",
+  "method": "text-only same-defect matching by 5 per-area opus matchers plus 2 cross-area residual matchers over unmatched BLOCKER/MAJOR entries; criterion = scoring.json judgeGuide; no code access, unadjudicated",
+  "pairs": [
+    {
+      "old": "GV3-001",
+      "new": "correctness-MAJ-9-r1",
+      "confidence": "high",
+      "why": "working-policy base_ref picks the base; unresolvable ref plus free mode neuters the gate"
+    },
+    {
+      "old": "GV3-002",
+      "new": "correctness-MAJ-9-r1",
+      "confidence": "high",
+      "why": "branch-chosen base_ref (resolving to the checked-out branch) makes CheckPolicy short-circuit"
+    },
+    {
+      "old": "GV3-003",
+      "new": "correctness-BLK-29-r1",
+      "confidence": "high",
+      "why": "remove_agent_worktrees.sh target arm rejects claude-review/* branches, so round worktrees and branches leak"
+    },
+    {
+      "old": "GV3-005",
+      "new": "correctness-MAJ-31-r1",
+      "confidence": "high",
+      "why": "Trim cap omits proposals/permissions.json so the global cap is exceeded"
+    },
+    {
+      "old": "GV3-006",
+      "new": "correctness-MAJ-6-r1",
+      "confidence": "high",
+      "why": "audience persisted before skills-sync lock; retry after 409/500 skips sync"
+    },
+    {
+      "old": "GV3-007",
+      "new": "tests-NIT-27-r1",
+      "confidence": "high",
+      "why": "HEAD-off-dated-branch guard in worktree.sh:171 never driven by a test"
+    },
+    {
+      "old": "GV3-008",
+      "new": "correctness-MAJ-7-r1",
+      "confidence": "high",
+      "why": "git init runs before duplicate-name rejection, mutating the folder"
+    },
+    {
+      "old": "GV3-009",
+      "new": "correctness-MIN-17-r1",
+      "confidence": "high",
+      "why": "untracked .orchestrate-report trips dirty check, rejection reported as exit 70"
+    },
+    {
+      "old": "GV3-010",
+      "new": "correctness-MIN-19-r1",
+      "confidence": "high",
+      "why": "README documents skill-eval-fexplore routine with no backing files"
+    },
+    {
+      "old": "GV3-011",
+      "new": "correctness-MAJ-30-r1",
+      "confidence": "high",
+      "why": "--since and --last both forwarded, exclusivity not enforced"
+    },
+    {
+      "old": "GV3-012",
+      "new": "code-style-NIT-44-r1",
+      "confidence": "high",
+      "why": "RunSync duplicates Run's body"
+    },
+    {
+      "old": "GV3-013",
+      "new": "correctness-MAJ-87-r1",
+      "confidence": "low",
+      "why": "settings.disabled.json not effectively consulted, so a parked permission rule resurfaces as a proposal"
+    },
+    {
+      "old": "GV3-014",
+      "new": "tests-NIT-32-r1",
+      "confidence": "high",
+      "why": ".serena husk-sweep case untested"
+    },
+    {
+      "old": "GV3-015",
+      "new": "tests-MIN-17-r1",
+      "confidence": "high",
+      "why": "handleWelcomeBootstrapStatus/resolveBootstrapSession untested"
+    },
+    {
+      "old": "GV3-016",
+      "new": "tests-NIT-9-r1",
+      "confidence": "high",
+      "why": "translated overview tile details never asserted for lack of batch fixtures"
+    },
+    {
+      "old": "GV3-017",
+      "new": "code-style-NIT-163-r1",
+      "confidence": "high",
+      "why": "SyncAll doc comment not reflowed at L17"
+    },
+    {
+      "old": "GV3-018",
+      "new": "code-style-NIT-40-r1",
+      "confidence": "high",
+      "why": "last NonDeveloper test name after casual rename"
+    },
+    {
+      "old": "GV3-020",
+      "new": "code-style-MIN-1-r1",
+      "confidence": "high",
+      "why": "rootCause doc comment now attached to worktreeSessions"
+    },
+    {
+      "old": "GV3-023",
+      "new": "correctness-NIT-79-r1",
+      "confidence": "high",
+      "why": "sessions archive tab title untranslated while siblings translate"
+    },
+    {
+      "old": "GV3-024",
+      "new": "code-style-MIN-104-r1",
+      "confidence": "high",
+      "why": "build-install help line labeled ## build:"
+    },
+    {
+      "old": "GV3-025",
+      "new": "correctness-MIN-19-r1",
+      "confidence": "low",
+      "why": "blank line splits the README table at the skill-eval-fexplore row"
+    },
+    {
+      "old": "GV3-026",
+      "new": "code-style-NIT-131-r1",
+      "confidence": "high",
+      "why": "smine-permissions three-part 0.1.0 version unlike siblings"
+    },
+    {
+      "old": "GV3-027",
+      "new": "correctness-NIT-34-r1",
+      "confidence": "high",
+      "why": "batchesWritten example names retired work scope"
+    },
+    {
+      "old": "GV3-028",
+      "new": "code-style-NIT-240-r1",
+      "confidence": "high",
+      "why": "EVID-003/004 drop the italic label EVID-002/005 use"
+    },
+    {
+      "old": "GV3-029",
+      "new": "code-style-NIT-44-r2",
+      "confidence": "high",
+      "why": "fdesign changelog 3.7 dated before 3.6"
+    },
+    {
+      "old": "GV3-030",
+      "new": "correctness-NIT-45-r1",
+      "confidence": "high",
+      "why": "skills/README.md session-mine args stale"
+    },
+    {
+      "old": "GV3-031",
+      "new": "correctness-MIN-35-r1",
+      "confidence": "high",
+      "why": "smine SKILL.md dimension lists omit permissions"
+    },
+    {
+      "old": "GV3-032",
+      "new": "correctness-NIT-45-r1",
+      "confidence": "low",
+      "why": "skills/README.md session-mine returns omit drift/trimmed (named in fix)"
+    },
+    {
+      "old": "GV3-033",
+      "new": "correctness-NIT-74-r1",
+      "confidence": "high",
+      "why": "docs/workflows.md documents claude/railroad-* names instead of claude-review/*"
+    },
+    {
+      "old": "GV3-035",
+      "new": "correctness-MAJ-63-r1",
+      "confidence": "high",
+      "why": "reserved default/archived check in Validate breaks loading existing repos.json holding such names"
+    },
+    {
+      "old": "GV3-041",
+      "new": "tests-NIT-74-r1",
+      "confidence": "high",
+      "why": "windows writeInstallEnv has no test"
+    },
+    {
+      "old": "GV3-042",
+      "new": "correctness-MAJ-10-r1",
+      "confidence": "high",
+      "why": "surfaceDelta raw byte compare flags unchanged files on CRLF checkouts"
+    },
+    {
+      "old": "GV3-043",
+      "new": "correctness-BLK-8-r2",
+      "confidence": "high",
+      "why": "sync_file cp of template wipes live additionalDirectories grants"
+    },
+    {
+      "old": "GV3-043",
+      "new": "correctness-MAJ-71-r1",
+      "confidence": "low",
+      "why": "same sync_file cp-over-live settings.json root cause, skillOverrides consequence"
+    },
+    {
+      "old": "GV3-044",
+      "new": "tests-MIN-11-r1",
+      "confidence": "high",
+      "why": "routineSession prefix matching/tie-break has no test"
+    },
+    {
+      "old": "GV3-045",
+      "new": "tests-MIN-35-r1",
+      "confidence": "high",
+      "why": "acdsl-policy-guard hook has no shell test"
+    },
+    {
+      "old": "GV3-046",
+      "new": "tests-MIN-33-r1",
+      "confidence": "high",
+      "why": "nightly wrapper casual/developer profile gating untested"
+    },
+    {
+      "old": "GV3-046",
+      "new": "tests-NIT-84-r1",
+      "confidence": "low",
+      "why": "stage-3 orchestrate block in run.sh untested"
+    },
+    {
+      "old": "GV3-048",
+      "new": "tests-MIN-19-r1",
+      "confidence": "high",
+      "why": "policyBase origin/HEAD branch never tested"
+    },
+    {
+      "old": "GV3-049",
+      "new": "tests-NIT-26-r1",
+      "confidence": "high",
+      "why": "TestFolderDialogScript does not assert the shown-owner fix"
+    },
+    {
+      "old": "GV3-050",
+      "new": "tests-NIT-16-r1",
+      "confidence": "high",
+      "why": "profileTestAnswer parser untested"
+    },
+    {
+      "old": "GV3-051",
+      "new": "tests-MIN-15-r1",
+      "confidence": "high",
+      "why": "styleTestTarget model/token resolution untested"
+    },
+    {
+      "old": "GV3-052",
+      "new": "tests-MIN-17-r1",
+      "confidence": "high",
+      "why": "resolveBootstrapSession matching/staleness path untested"
+    },
+    {
+      "old": "GV3-055",
+      "new": "tests-MIN-36-r1",
+      "confidence": "high",
+      "why": "PEEK_CONTROL_PORT expansion in sync_settings unasserted"
+    },
+    {
+      "old": "GV3-056",
+      "new": "correctness-MIN-35-r1",
+      "confidence": "high",
+      "why": "smine SKILL.md L49 list omits smine-permissions"
+    },
+    {
+      "old": "GV3-057",
+      "new": "code-style-NIT-213-r1",
+      "confidence": "high",
+      "why": "workflows.md foreign-toolchain-pretag return omits tagRef"
+    },
+    {
+      "old": "GV3-058",
+      "new": "code-style-NIT-70-r1",
+      "confidence": "high",
+      "why": "LoadFragment duplicates Load's skeleton"
+    },
+    {
+      "old": "GV3-059",
+      "new": "tests-MIN-5-r2",
+      "confidence": "low",
+      "why": "handleProfileSave 409 lock-contention branch untested"
+    },
+    {
+      "old": "GV3-061",
+      "new": "correctness-MAJ-51-r1",
+      "confidence": "high",
+      "why": "GitChangedFiles strings.Fields splits space-containing paths"
+    },
+    {
+      "old": "GV3-062",
+      "new": "correctness-BLK-22-r1",
+      "confidence": "high",
+      "why": "bootstrap cp overwrites main-checkout settings.local.json instead of merging"
+    },
+    {
+      "old": "GV3-064",
+      "new": "correctness-BLK-5-r1",
+      "confidence": "low",
+      "why": "bootstrap log written to fixed os.TempDir path"
+    },
+    {
+      "old": "GV3-065",
+      "new": "code-style-NIT-64-r1",
+      "confidence": "high",
+      "why": "GitRevParse has only test callers"
+    },
+    {
+      "old": "GV3-066",
+      "new": "tests-MIN-23-r1",
+      "confidence": "high",
+      "why": "SyncAll default-disabled gate untested"
+    },
+    {
+      "old": "GV3-067",
+      "new": "tests-NIT-55-r1",
+      "confidence": "high",
+      "why": "sync_hooks EOF prune fallback untested"
+    },
+    {
+      "old": "GV3-068",
+      "new": "security-MIN-3-r2",
+      "confidence": "high",
+      "why": "unnormalized ./ and ../ paths bypass acdsl policy guard prefix match"
+    },
+    {
+      "old": "GV3-069",
+      "new": "correctness-MAJ-10-r2",
+      "confidence": "high",
+      "why": "unquoted PEEK home in install.env aborts install and sync on a spaced path"
+    },
+    {
+      "old": "GV3-071",
+      "new": "tests-NIT-59-r1",
+      "confidence": "high",
+      "why": "casual+de template-body seeding from presentation-profile.de.md never exercised"
+    },
+    {
+      "old": "GV3-072",
+      "new": "tests-MIN-15-r1",
+      "confidence": "high",
+      "why": "POST /profile/test handler has no test"
+    },
+    {
+      "old": "GV3-073",
+      "new": "tests-NIT-13-r2",
+      "confidence": "high",
+      "why": "bootstrap --repos roster from additionalDirectories untested"
+    },
+    {
+      "old": "GV3-074",
+      "new": "tests-NIT-30-r1",
+      "confidence": "high",
+      "why": "REPO_LOCAL_SETTINGS merge-not-overwrite never asserted against an operator key"
+    },
+    {
+      "old": "GV3-075",
+      "new": "tests-MIN-2-r1",
+      "confidence": "low",
+      "why": "GET /routines/{name} detail render (result column) untested"
+    },
+    {
+      "old": "GV3-075",
+      "new": "tests-NIT-82-r1",
+      "confidence": "low",
+      "why": "Unscheduled routine branch has no render test"
+    },
+    {
+      "old": "GV3-076",
+      "new": "code-style-NIT-133-r1",
+      "confidence": "high",
+      "why": "released fimplement versions 1.21-1.23 renumbered and reused"
+    },
+    {
+      "old": "GV3-079",
+      "new": "code-style-NIT-106-r1",
+      "confidence": "high",
+      "why": "peekID spelled ID against repo's Id house style"
+    },
+    {
+      "old": "GV3-080",
+      "new": "code-style-NIT-118-r1",
+      "confidence": "high",
+      "why": "header husk list omits .serena"
+    },
+    {
+      "old": "GV3-083",
+      "new": "code-style-NIT-66-r1",
+      "confidence": "high",
+      "why": "default-policy literal duplicated in parsePolicy and LoadPolicy absent branch"
+    },
+    {
+      "old": "GV3-084",
+      "new": "code-style-NIT-22-r2",
+      "confidence": "high",
+      "why": "skills-sync failure error lacks Method: prefix"
+    },
+    {
+      "old": "GV3-086",
+      "new": "code-style-NIT-46-r2",
+      "confidence": "high",
+      "why": "smine-apply changelog version/date order broken"
+    },
+    {
+      "old": "GV3-087",
+      "new": "code-style-NIT-131-r1",
+      "confidence": "high",
+      "why": "smine-permissions initial version 0.1 unlike siblings"
+    },
+    {
+      "old": "GV3-088",
+      "new": "tests-NIT-45-r1",
+      "confidence": "high",
+      "why": "runCheck policy-diagnostic wiring untested"
+    },
+    {
+      "old": "GV3-089",
+      "new": "tests-NIT-2-r2",
+      "confidence": "high",
+      "why": "RunSync has no direct test; timeout and label unasserted"
+    },
+    {
+      "old": "GV3-090",
+      "new": "tests-NIT-79-r1",
+      "confidence": "low",
+      "why": "bootstrap pre-spawn since-400 validation untested"
+    },
+    {
+      "old": "GV3-091",
+      "new": "tests-MIN-17-r1",
+      "confidence": "low",
+      "why": "status handler session-resolved arms never executed in tests"
+    },
+    {
+      "old": "GV3-092",
+      "new": "tests-NIT-7-r2",
+      "confidence": "high",
+      "why": "Load->LoadFragment switches lack marker regression tests"
+    },
+    {
+      "old": "GV3-094",
+      "new": "tests-MIN-12-r1",
+      "confidence": "high",
+      "why": "delete handler statusCache.Delete unasserted"
+    },
+    {
+      "old": "GV3-095",
+      "new": "tests-NIT-11-r2",
+      "confidence": "high",
+      "why": "any-depth .DS_Store exclusion untested, fixtures only top-level"
+    },
+    {
+      "old": "GV3-096",
+      "new": "tests-MIN-72-r1",
+      "confidence": "high",
+      "why": "gate.pass from violations length lets pass:false rows with empty violations pass"
+    },
+    {
+      "old": "GV3-099",
+      "new": "tests-NIT-84-r1",
+      "confidence": "high",
+      "why": "stage-3 dirty-tree/prune postconditions uncovered"
+    },
+    {
+      "old": "GV3-100",
+      "new": "code-style-NIT-77-r1",
+      "confidence": "high",
+      "why": "EvalDir.Dir comment says basename but holds nested path"
+    },
+    {
+      "old": "GV3-101",
+      "new": "code-style-NIT-22-r2",
+      "confidence": "high",
+      "why": "profile-saved-but-sync-failed error lacks prefix"
+    },
+    {
+      "old": "GV3-104",
+      "new": "correctness-NIT-4-r1",
+      "confidence": "high",
+      "why": "sentence period moved inside t-key changes developer output"
+    },
+    {
+      "old": "GV3-108",
+      "new": "tests-NIT-1-r2",
+      "confidence": "low",
+      "why": "CheckPolicy free-mode unresolvable-base branch untested (one item of the broader list)"
+    },
+    {
+      "old": "GV3-109",
+      "new": "tests-NIT-53-r1",
+      "confidence": "high",
+      "why": "permissions kind default dimension never asserted"
+    },
+    {
+      "old": "GV3-110",
+      "new": "tests-NIT-30-r1",
+      "confidence": "low",
+      "why": "operator keys surviving the developer flip never asserted"
+    },
+    {
+      "old": "GV3-111",
+      "new": "correctness-MAJ-36-r1",
+      "confidence": "high",
+      "why": "session-mine workflow never forwards --repos to smine-batch"
+    },
+    {
+      "old": "GV3-115",
+      "new": "code-style-NIT-140-r1",
+      "confidence": "high",
+      "why": "Stage A/B/C banners vs Ground/Fold phases"
+    },
+    {
+      "old": "GV3-116",
+      "new": "code-style-NIT-92-r1",
+      "confidence": "low",
+      "why": "peekID.ControlPort decoded from healthz but never read"
+    },
+    {
+      "old": "GV3-117",
+      "new": "tests-MIN-24-r1",
+      "confidence": "high",
+      "why": "unchanged-file test cannot distinguish skip-reload from unconditional reload"
+    },
+    {
+      "old": "GV3-119",
+      "new": "tests-NIT-28-r1",
+      "confidence": "high",
+      "why": "no TestStartPeek case passes a non-zero controlPort through to the spawned peek"
+    },
+    {
+      "old": "GV3-120",
+      "new": "tests-NIT-13-r2",
+      "confidence": "low",
+      "why": "roster .git filter never proven to drop a non-repo dir"
+    },
+    {
+      "old": "GV3-121",
+      "new": "tests-MIN-15-r1",
+      "confidence": "high",
+      "why": "styleTestTarget missing/empty labeled-token fallback untested"
+    },
+    {
+      "old": "GV3-122",
+      "new": "correctness-MIN-3-r1",
+      "confidence": "high",
+      "why": "HX-Redirect set even on failed archive/unarchive/delete, error lost"
+    },
+    {
+      "old": "GV3-123",
+      "new": "correctness-MAJ-25-r1",
+      "confidence": "high",
+      "why": "skill-eval defaults point at absent applied_probe_safety artifacts"
+    },
+    {
+      "old": "GV3-124",
+      "new": "code-style-NIT-43-r2",
+      "confidence": "high",
+      "why": "meta.whenToUse lists only a subset of the args contract"
+    },
+    {
+      "old": "GV3-125",
+      "new": "security-MIN-3-r2",
+      "confidence": "high",
+      "why": "case-sensitive match lets ACDSL/policy.json pass on case-insensitive FS"
+    },
+    {
+      "old": "GV3-127",
+      "new": "tests-NIT-7-r2",
+      "confidence": "high",
+      "why": "Load->LoadFragment flips in hooks/permissions/claudeRows lack marker tests"
+    },
+    {
+      "old": "GV3-128",
+      "new": "tests-NIT-60-r1",
+      "confidence": "low",
+      "why": "sessions page German translation never render-tested"
+    },
+    {
+      "old": "GV3-133",
+      "new": "correctness-MAJ-39-r1",
+      "confidence": "high",
+      "why": "config-ui-fidelity-gate never invoked by fimplement"
+    },
+    {
+      "old": "GV3-134",
+      "new": "correctness-MAJ-40-r1",
+      "confidence": "high",
+      "why": "foreign-toolchain-pretag never invoked by package-commit"
+    },
+    {
+      "old": "GV3-135",
+      "new": "correctness-MAJ-5-r2",
+      "confidence": "high",
+      "why": "apply-overrides copies live literal port over {{PEEK_CONTROL_PORT}} marker"
+    },
+    {
+      "old": "GV3-136",
+      "new": "correctness-NIT-45-r1",
+      "confidence": "high",
+      "why": "skills/README.md still names retired claude/railroad-* branch namespace"
+    },
+    {
+      "old": "GV3-139",
+      "new": "correctness-MIN-42-r1",
+      "confidence": "high",
+      "why": "subsystem-grounding never invoked by fdesign"
+    },
+    {
+      "old": "GV3-140",
+      "new": "code-style-NIT-100-r1",
+      "confidence": "high",
+      "why": "drop-filter jq program duplicated for both settings files"
+    },
+    {
+      "old": "GV3-142",
+      "new": "code-style-NIT-47-r1",
+      "confidence": "high",
+      "why": "ArchivedFolders repeats Reload's MdReports counting loop"
+    },
+    {
+      "old": "GV3-143",
+      "new": "code-style-MIN-125-r1",
+      "confidence": "low",
+      "why": "skills/README.md workflow sections not updated while docs/workflows.md was"
+    },
+    {
+      "old": "GV3-144",
+      "new": "tests-NIT-56-r1",
+      "confidence": "high",
+      "why": "dirty-tree postcondition unreachable because every wrapper test is a dry run"
+    },
+    {
+      "old": "GV3-148",
+      "new": "code-style-NIT-27-r2",
+      "confidence": "high",
+      "why": "peek stop-listener loop duplicates configserver lsof/kill block"
+    },
+    {
+      "old": "GV3-149",
+      "new": "code-style-NIT-150-r1",
+      "confidence": "high",
+      "why": "smine-orchestrate Workflow position line lacks Skill map link"
+    },
+    {
+      "old": "GV3-149",
+      "new": "code-style-NIT-153-r1",
+      "confidence": "high",
+      "why": "smine-style Workflow position line lacks Skill map link"
+    },
+    {
+      "old": "GV3-150",
+      "new": "correctness-MIN-35-r1",
+      "confidence": "high",
+      "why": "smine-batch L104 downstream list names only four dimensions"
+    },
+    {
+      "old": "GV3-155",
+      "new": "correctness-MAJ-16-r1",
+      "confidence": "high",
+      "why": "install.ps1 makes missing shellcheck a hard prerequisite instead of warn-only"
+    },
+    {
+      "old": "GV3-156",
+      "new": "code-style-NIT-164-r1",
+      "confidence": "high",
+      "why": "package doc omits the nested evals/<skill>/<date>-<hash>/ layout"
+    },
+    {
+      "old": "GV3-157",
+      "new": "code-style-MIN-125-r1",
+      "confidence": "low",
+      "why": "skills/README.md workflow copy drifted behind docs/workflows.md"
+    },
+    {
+      "old": "GV3-158",
+      "new": "tests-NIT-56-r1",
+      "confidence": "high",
+      "why": "token preflight gate never runs under dry-run-only tests"
+    },
+    {
+      "old": "GV3-161",
+      "new": "tests-NIT-79-r1",
+      "confidence": "low",
+      "why": "handleWelcomeBootstrap's early-return validation branches have no handler test"
+    },
+    {
+      "old": "GV3-162",
+      "new": "tests-NIT-67-r1",
+      "confidence": "high",
+      "why": "bootstrap since/today form defaults never asserted"
+    },
+    {
+      "old": "GV3-164",
+      "new": "tests-MIN-42-r1",
+      "confidence": "high",
+      "why": "ACDSL-JSON-001 anchor excludes proposals/permissions.json"
+    },
+    {
+      "old": "GV3-165",
+      "new": "tests-MIN-43-r1",
+      "confidence": "low",
+      "why": "new batch permissions block never validated"
+    },
+    {
+      "old": "GV3-169",
+      "new": "code-style-NIT-134-r1",
+      "confidence": "high",
+      "why": "fdesign template guidance carries bare RULE-PLAN ids"
+    },
+    {
+      "old": "GV3-170",
+      "new": "code-style-NIT-33-r2",
+      "confidence": "high",
+      "why": "skill-invoke-gate copies read-gate cat-target logic instead of a shared helper"
+    },
+    {
+      "old": "GV3-171",
+      "new": "code-style-NIT-11-r1",
+      "confidence": "high",
+      "why": "writeFileAtomic duplicates saveAutoApplyRules atomic writer"
+    },
+    {
+      "old": "GV3-172",
+      "new": "code-style-NIT-28-r2",
+      "confidence": "high",
+      "why": "marker-expansion sed duplicated in sync_file and merge_mcp_servers"
+    },
+    {
+      "old": "GV3-173",
+      "new": "code-style-NIT-5-r2",
+      "confidence": "high",
+      "why": "unexported installEnvValues placed after exported ExpandInstallMarkers"
+    },
+    {
+      "old": "GV3-174",
+      "new": "code-style-NIT-6-r2",
+      "confidence": "high",
+      "why": "shellGitAbbrevRef placed after shellGitGrepCached out of alphabetical order"
+    },
+    {
+      "old": "GV3-175",
+      "new": "code-style-NIT-12-r1",
+      "confidence": "high",
+      "why": "DevMode bare bool config field, not Is<X>Active"
+    },
+    {
+      "old": "GV3-176",
+      "new": "code-style-NIT-29-r1",
+      "confidence": "high",
+      "why": "grouping comments in bootstrapEnv"
+    },
+    {
+      "old": "GV3-177",
+      "new": "code-style-NIT-6-r1",
+      "confidence": "high",
+      "why": "statusEntry declared before statusCache"
+    },
+    {
+      "old": "GV3-178",
+      "new": "code-style-NIT-17-r1",
+      "confidence": "high",
+      "why": "proposalsTile Sprintf two args per line"
+    },
+    {
+      "old": "GV3-180",
+      "new": "code-style-NIT-93-r1",
+      "confidence": "high",
+      "why": "type peekID declared among free functions instead of before them"
+    },
+    {
+      "old": "GV3-181",
+      "new": "code-style-NIT-25-r2",
+      "confidence": "high",
+      "why": "running/Running booleans not predicate-named"
+    },
+    {
+      "old": "GV3-182",
+      "new": "code-style-NIT-85-r1",
+      "confidence": "high",
+      "why": "TestOverrideLabels uses an anonymous struct table instead of testCase pattern"
+    },
+    {
+      "old": "GV3-183",
+      "new": "code-style-NIT-14-r1",
+      "confidence": "high",
+      "why": "6-arg exec.CommandContext with nested call on one line"
+    },
+    {
+      "old": "GV3-184",
+      "new": "code-style-NIT-68-r1",
+      "confidence": "high",
+      "why": "TestLoadPolicy t.Run body has conditional setup and asserts"
+    },
+    {
+      "old": "GV3-186",
+      "new": "code-style-NIT-22-r1",
+      "confidence": "high",
+      "why": "two && operators in presentation.go:98 condition"
+    },
+    {
+      "old": "GV3-188",
+      "new": "code-style-NIT-198-r1",
+      "confidence": "high",
+      "why": "saveProfileSelection params not alphabetical"
+    },
+    {
+      "old": "GV3-189",
+      "new": "code-style-NIT-9-r1",
+      "confidence": "high",
+      "why": "9-arg shell.Run on one line"
+    },
+    {
+      "old": "GV3-190",
+      "new": "code-style-NIT-198-r1",
+      "confidence": "high",
+      "why": "writeFileAtomic params not alphabetical"
+    },
+    {
+      "old": "GV3-191",
+      "new": "code-style-NIT-201-r1",
+      "confidence": "high",
+      "why": "DropBranches params not alphabetical"
+    },
+    {
+      "old": "GV3-192",
+      "new": "code-style-NIT-30-r1",
+      "confidence": "high",
+      "why": "grouping comments in handleProfileSave"
+    },
+    {
+      "old": "GV3-193",
+      "new": "code-style-NIT-201-r1",
+      "confidence": "high",
+      "why": "statusCache.Store params not alphabetical"
+    },
+    {
+      "old": "GV3-196",
+      "new": "security-MAJ-4-r1",
+      "confidence": "low",
+      "why": "nightly reconcile merges every repos.json path into global additionalDirectories unchecked"
+    },
+    {
+      "old": "GV3-197",
+      "new": "security-MIN-7-r1",
+      "confidence": "high",
+      "why": "permissions capture persists unredacted command lines into committed JSON"
+    },
+    {
+      "old": "GV3-198",
+      "new": "correctness-MAJ-24-r1",
+      "confidence": "high",
+      "why": "removed acdsl Edit/Write ask rules leave free-mode repos unprotected"
+    },
+    {
+      "old": "GV3-199",
+      "new": "security-MIN-14-r1",
+      "confidence": "high",
+      "why": "acdsl policy guard ignores Bash writes to acdsl/policy.json"
+    },
+    {
+      "old": "GV3-201",
+      "new": "tests-MIN-3-r1",
+      "confidence": "high",
+      "why": "repos add with existing .git (skip git init) untested"
+    },
+    {
+      "old": "GV4-202",
+      "new": "correctness-MAJ-9-r1",
+      "confidence": "high",
+      "why": "base_ref=HEAD makes base equal HEAD so every diagnostic path is vacuous"
+    },
+    {
+      "old": "GV4-203",
+      "new": "code-style-NIT-219-r1",
+      "confidence": "high",
+      "why": "smine-orchestrate grants Bash(mv *) no duty uses"
+    },
+    {
+      "old": "GV4-205",
+      "new": "correctness-NIT-20-r1",
+      "confidence": "high",
+      "why": "comment still names retired Non-developer mode"
+    },
+    {
+      "old": "GV4-206",
+      "new": "code-style-NIT-83-r1",
+      "confidence": "high",
+      "why": "overrideLabels if condition carries two boolean operators"
+    },
+    {
+      "old": "GV4-207",
+      "new": "code-style-NIT-174-r1",
+      "confidence": "high",
+      "why": "repos_index h1 re-derives handler's Title"
+    },
+    {
+      "old": "GV4-208",
+      "new": "correctness-MAJ-67-r1",
+      "confidence": "high",
+      "why": "germanCatalog missing permissions kind heading"
+    },
+    {
+      "old": "GV4-213",
+      "new": "code-style-NIT-166-r1",
+      "confidence": "high",
+      "why": "handleSessionsArchiveTab placed after handleSessionsBatch"
+    },
+    {
+      "old": "GV4-214",
+      "new": "code-style-NIT-204-r1",
+      "confidence": "high",
+      "why": "5-arg Sprintf in saveProfileSelection on one line"
+    },
+    {
+      "old": "GV4-216",
+      "new": "code-style-NIT-45-r2",
+      "confidence": "high",
+      "why": "package-commit changelog 3.3 dated before 3.2"
+    },
+    {
+      "old": "GV4-217",
+      "new": "code-style-NIT-47-r2",
+      "confidence": "high",
+      "why": "smine changelog 1.12 dated before 1.11"
+    },
+    {
+      "old": "GV4-218",
+      "new": "tests-MIN-23-r1",
+      "confidence": "low",
+      "why": "SyncAll gating untested, Windows twin named in the fix"
+    },
+    {
+      "old": "GV5-219",
+      "new": "code-style-NIT-9-r2",
+      "confidence": "high",
+      "why": "surfaceDelta if condition chains two && operators"
+    },
+    {
+      "old": "GV5-220",
+      "new": "code-style-NIT-97-r1",
+      "confidence": "high",
+      "why": "7-arg startPeek call on one line in main.go"
+    },
+    {
+      "old": "GV5-221",
+      "new": "code-style-NIT-48-r1",
+      "confidence": "high",
+      "why": "validateScopeName error lacks function-name prefix"
+    },
+    {
+      "old": "GV5-222",
+      "new": "code-style-NIT-238-r1",
+      "confidence": "high",
+      "why": "README Windows prerequisites omit shellcheck install.ps1 now installs"
+    },
+    {
+      "old": "GV5-223",
+      "new": "code-style-NIT-98-r1",
+      "confidence": "high",
+      "why": "7-arg startPeek call on one line in main_test.go"
+    },
+    {
+      "old": "GV5-224",
+      "new": "code-style-NIT-226-r1",
+      "confidence": "high",
+      "why": "git.go helpers place root before other params non-alphabetically"
+    },
+    {
+      "old": "GV5-224",
+      "new": "code-style-NIT-228-r1",
+      "confidence": "high",
+      "why": "writePolicy(root, dest) non-alphabetical params"
+    },
+    {
+      "old": "GV5-224",
+      "new": "code-style-NIT-3-r2",
+      "confidence": "high",
+      "why": "new policy.go signatures order params non-alphabetically"
+    },
+    {
+      "old": "GV5-225",
+      "new": "code-style-NIT-74-r1",
+      "confidence": "high",
+      "why": "refreshIfChanged if condition chains two && operators"
+    },
+    {
+      "old": "GV5-226",
+      "new": "code-style-NIT-96-r1",
+      "confidence": "high",
+      "why": "startPeek params after ctx not alphabetical"
+    },
+    {
+      "old": "GV5-228",
+      "new": "code-style-NIT-56-r1",
+      "confidence": "high",
+      "why": "Diagnostic literal fields not alphabetical"
+    },
+    {
+      "old": "GV5-229",
+      "new": "code-style-NIT-27-r1",
+      "confidence": "high",
+      "why": "Rejected/Postponed stateNoteFor 6-arg calls single-line"
+    },
+    {
+      "old": "GV5-230",
+      "new": "code-style-NIT-230-r1",
+      "confidence": "high",
+      "why": "parsePolicy and policyBase error messages start lowercase"
+    },
+    {
+      "old": "GV5-231",
+      "new": "code-style-NIT-114-r1",
+      "confidence": "high",
+      "why": "writeInstallEnv params not alphabetical"
+    },
+    {
+      "old": "GV5-233",
+      "new": "correctness-MAJ-77-r1",
+      "confidence": "high",
+      "why": "select-all checks filter-hidden rows, Remove acts on unseen branches"
+    },
+    {
+      "old": "GV5-235",
+      "new": "correctness-MAJ-10-r2",
+      "confidence": "low",
+      "why": "install.sh writes PEEK_* values unquoted into install.env, which is later sourced as shell"
+    },
+    {
+      "old": "GV5-239",
+      "new": "tests-NIT-34-r1",
+      "confidence": "high",
+      "why": "remote-tracking FROM squash-containment branch unexercised"
+    },
+    {
+      "old": "GV5-241",
+      "new": "tests-NIT-47-r1",
+      "confidence": "low",
+      "why": "invalid-scope-name tests stay green when validateScopeName guards are dropped"
+    },
+    {
+      "old": "GV5-243",
+      "new": "tests-NIT-66-r1",
+      "confidence": "high",
+      "why": "dev_mode checkbox disabled-for-casual render untested"
+    },
+    {
+      "old": "GV6-246",
+      "new": "code-style-NIT-13-r1",
+      "confidence": "high",
+      "why": "bootstrapEnv params not alphabetical"
+    },
+    {
+      "old": "GV6-247",
+      "new": "code-style-NIT-139-r1",
+      "confidence": "high",
+      "why": "blocking_errors lone snake_case JS local"
+    },
+    {
+      "old": "GV6-248",
+      "new": "code-style-NIT-91-r1",
+      "confidence": "high",
+      "why": "peekID exported fields not alphabetical"
+    },
+    {
+      "old": "GV6-249",
+      "new": "code-style-NIT-37-r1",
+      "confidence": "high",
+      "why": "git init error message starts lower-case"
+    },
+    {
+      "old": "GV6-250",
+      "new": "code-style-NIT-2-r1",
+      "confidence": "high",
+      "why": "git-init guard nests three levels"
+    },
+    {
+      "old": "GV7-254",
+      "new": "correctness-INF-49-r1",
+      "confidence": "high",
+      "why": "lane invocation lacks --no-context against the plan decision"
+    },
+    {
+      "old": "GV7-258",
+      "new": "code-style-NIT-207-r1",
+      "confidence": "high",
+      "why": "README still says three stages, omits orchestrate stage"
+    },
+    {
+      "old": "GV7-262",
+      "new": "code-style-NIT-72-r1",
+      "confidence": "high",
+      "why": "if-guarded install.env write inside t.Run body"
+    },
+    {
+      "old": "GV7-263",
+      "new": "code-style-NIT-7-r2",
+      "confidence": "high",
+      "why": "const labelMaxLength declared after var namePattern"
+    },
+    {
+      "old": "GV7-264",
+      "new": "code-style-NIT-61-r1",
+      "confidence": "high",
+      "why": "otherTriggerKeys/scheduleInfo declared between free functions"
+    },
+    {
+      "old": "GV7-272",
+      "new": "code-style-MIN-86-r1",
+      "confidence": "high",
+      "why": "profile parsing and skill-overlay copy duplicated across both wrappers"
+    },
+    {
+      "old": "GV7-279",
+      "new": "code-style-NIT-52-r1",
+      "confidence": "high",
+      "why": "inline composite literal passed to r.apply in save"
+    },
+    {
+      "old": "GV7-288",
+      "new": "tests-NIT-8-r2",
+      "confidence": "high",
+      "why": "TestReposDelete lacks cross-instance handler-level case"
+    },
+    {
+      "old": "GV7-289",
+      "new": "correctness-MAJ-2-r1",
+      "confidence": "high",
+      "why": "GET /sessions/archive shadows /sessions/{scope}; 'archive' not reserved by validateScopeName/Repo.Validate"
+    },
+    {
+      "old": "GV7-294",
+      "new": "tests-NIT-44-r1",
+      "confidence": "high",
+      "why": "single ACDSL-JSON-003 fail fixture collapses mode and unknown-key cases"
+    },
+    {
+      "old": "GV8-295",
+      "new": "security-MAJ-1-r2",
+      "confidence": "high",
+      "why": "lifetime=task tag exempts protected rules from gated/strict checks"
+    },
+    {
+      "old": "GV8-296",
+      "new": "correctness-MAJ-10-r2",
+      "confidence": "low",
+      "why": "sync_settings.sh sources the unquoted install.env values as shell"
+    },
+    {
+      "old": "GV8-297",
+      "new": "correctness-BLK-15-r1",
+      "confidence": "high",
+      "why": "plist pins SMINE_AUTO_APPLY=never so casual decide default never fires"
+    },
+    {
+      "old": "GV8-302",
+      "new": "code-style-NIT-190-r1",
+      "confidence": "high",
+      "why": "SessionIndex and SessionsById duplicate the Session construction literal"
+    },
+    {
+      "old": "GV8-309",
+      "new": "code-style-NIT-3-r2",
+      "confidence": "high",
+      "why": "classViolations and policyDiagnostic params non-alphabetical"
+    },
+    {
+      "old": "GV8-315",
+      "new": "security-MIN-14-r1",
+      "confidence": "high",
+      "why": "acdsl-policy-guard hooks only Write/Edit/NotebookEdit while Bash(cp *) is auto-allowed, so a cp overwrites acdsl/policy.json unintercepted"
+    },
+    {
+      "old": "GV8-317",
+      "new": "tests-MIN-17-r1",
+      "confidence": "low",
+      "why": "bootstrap status success path untested"
+    },
+    {
+      "old": "GV8-324",
+      "new": "code-style-NIT-100-r1",
+      "confidence": "high",
+      "why": "REPO_LOCAL_SETTINGS assigned twice in both branches"
+    },
+    {
+      "old": "GV9-325",
+      "new": "code-style-NIT-78-r1",
+      "confidence": "high",
+      "why": "LoadForSkill flat and nested loops duplicate the load-and-append body"
+    },
+    {
+      "old": "GV9-331",
+      "new": "code-style-NIT-227-r1",
+      "confidence": "high",
+      "why": "keepNewest params not alphabetical"
+    },
+    {
+      "old": "GV9-332",
+      "new": "code-style-NIT-7-r1",
+      "confidence": "high",
+      "why": "mu comment restates placement"
+    }
+  ]
+}

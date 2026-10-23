@@ -1,0 +1,15 @@
+{
+  "finding_id": "code-style-MIN-9-r1",
+  "verdict": "confirmed",
+  "reason": "The underlying defect is real: cmd/bootstrap/run.sh:55-66 and routines/smine-nightly/run.sh both read presentation-profile.md and derive profile_language/profile_audience/profile_dev_mode then dev_mode via near-identical logic (differing only in `[ ]` vs `[[ ]]` test syntax), and git diff confirms the smine-nightly copy is new in this change. However, the write-up's own location citation for the second copy is wrong: it cites 'routines/smine-nightly/run.sh:621-634', but that file is only 342 lines long at headCommit — the actual block sits at lines 25-45 (profile read 29-35, dev_mode derivation 40-42). The claimed line range does not exist. This is a citation defect in the finding, not a defect in the code; the duplication itself, the two files, and the proposed fix (shared routines/_lib/presentation.sh) are all independently verified correct by direct reading, so the finding is confirmed with a corrected location.",
+  "probe": "none: bin/acdsl execution is categorically denied by this sandbox's tool-policy gate (see code-style-min-7-r1 verdict for the two exhausted attempts); falling back to the manual path.",
+  "evidence": {
+    "read": [
+      "cmd/bootstrap/run.sh:54-66 — presentation_profile read, profile_language/profile_audience/profile_dev_mode extraction, dev_mode derivation with `[ ]` tests",
+      "routines/smine-nightly/run.sh: file is 342 lines total (Read past offset 610 returned 'file is shorter than the provided offset'); actual block is at lines 25-45 (`grep -n 'presentation-profile|profile_audience|profile_dev_mode|dev_mode='`), using `[[ ]]` tests — structurally identical derivation to bootstrap/run.sh, confirmed as new via git diff against the fork point",
+      "git diff b4981b88d52deaa69d6ed1d60eb51b57ead47ba0 1f725cedc5c8b092c8a3d7e408793ef72840ec7e -- routines/smine-nightly/run.sh: the whole presentation-profile/dev_mode/orchestrate block is added fresh at the top of the script"
+    ],
+    "probe_run": "none — acdsl execution denied, see probe field"
+  },
+  "artifacts": []
+}

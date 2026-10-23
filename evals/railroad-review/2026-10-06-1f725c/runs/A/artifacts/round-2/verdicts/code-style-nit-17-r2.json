@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-17-r2",
+  "verdict": "confirmed",
+  "reason": "The probe ran RED at the exact claimed function: TestWorktreeSessionsPrefersBranchOverRecycledDir's t.Run body declares `statuses := ...` then `sessions := ...` before its single assert.Equal, violating RULE-GOLANG-TEST-008's 'completely flat: value / assert / assert — zero declarations' requirement for the loop body. Considered and rejected a counter-argument: the statuses slice literal exists inline here only because RULE-GOLANG-CALL-005 forbids an inline composite literal as a call argument — but the proposed fix (move the slice into a `statuses []repos.WorktreeStatus` field on testCase, set in the per-case append block) resolves both rules simultaneously, since RULE-GOLANG-TEST-008 explicitly sanctions per-case setup in the case block above the loop, and a composite literal assigned to a struct field (not passed as a call argument) does not trip RULE-GOLANG-CALL-005. The whole test function is new in this diff, so there is no legacy exemption. Cells (effect debt, exposure rare, severity NIT) stand as given.",
+  "probe": "PROBE-CODE-STYLE-NIT-17-R2",
+  "script": "code-style-nit-17-r2.sh",
+  "fixture": "fixtures/code-style-nit-17-r2/repos_test.go",
+  "registry": "registry-code-style-nit-17-r2.json",
+  "evidence": {
+    "read": [
+      "internal/server/repos_test.go:285-291 (committed head): for _, test := range tests { t.Run(test._id, func(t *testing.T) { statuses := []repos.WorktreeStatus{test.status}; sessions := worktreeSessions(statuses, test.index); assert.Equal(t, test._expectedId, sessions[test.status.Worktree].Id) }) } — two declarations precede the single assertion",
+      "git diff confirms TestWorktreeSessionsPrefersBranchOverRecycledDir is new in this diff",
+      "context/rules/go.md RULE-GOLANG-TEST-008: 'The body MUST be completely flat: value / assert / assert — zero declarations, no if, no early return, no nil-guards. All per-case setup ... happens in the case block above the loop.'"
+    ],
+    "probe_run": "internal/server/repos_test.go:286: t.Run body has 2 declaration(s) before its assert — RULE-GOLANG-TEST-008 requires zero: [PROBE-CODE-STYLE-NIT-17-R2] code-style-nit-17-r2 — TestWorktreeSessionsPrefersBranchOverRecycledDir's t.Run body declares two values before its assert, violating RULE-GOLANG-TEST-008's flat value/assert/assert requirement"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-nit-17-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-nit-17-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-nit-17-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-nit-17-r2/repos_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/scratch/code-style-nit-17-r2/files.txt"
+  ],
+  "notes": "Direct `bash`/`/bin/bash <script>` self-check invocation was tool-policy-denied (two attempts); probe wired as a task-lifetime ACDSL rule and run via the prebuilt bin/acdsl binary, confirming RED against the real committed head at the exact claimed line."
+}

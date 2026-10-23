@@ -1,0 +1,17 @@
+{
+  "finding_id": "code-style-MIN-21-r2",
+  "verdict": "confirmed",
+  "reason": "cmd/configserver/main.go:216 type peekID (plus peekIdentity's *peekID return and the var id peekID decl, all new in this diff) cases the non-leading ID acronym ALL-CAPS instead of the mandated Id casing; RULE-GOLANG-NAME-002 requires otpHash/userId-style PascalCase-within-camelCase for a non-leading acronym.",
+  "probe": "none: ACDSL repo (acdsl/registry.json, bin/acdsl present) but both verdict invocations are denied by this session's tool-policy: `<worktree>/bin/acdsl check -rule PROBE-CODE-STYLE-MIN-21-R2` -> denied, no allow rule matches candidate Bash(<worktree>/bin/acdsl *); `make -C <worktree> acdsl ARGS=...` -> denied, the Makefile has no `acdsl` target at all (only build-audit/audit/audit-full), so ARGS= matches no target's declared parameters. Two attempts, both denied; settled manually per PROBE-006.",
+  "evidence": {
+    "read": [
+      "cmd/configserver/main.go:216 type peekID struct { ... }  (confirmed new in this diff via git diff b4981b88d5..e5245d08d2)",
+      "cmd/configserver/main.go:223 func peekIdentity(addr string) (*peekID, error)",
+      "cmd/configserver/main.go:232 var id peekID",
+      "context/rules/go.md:77 camelCase symbols ... a non-leading acronym takes the PascalCase form -> otpHash, userId, otpTtl, deviceUuid, sqsBounceQueueUrl"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/code-style-min-21-r2-evidence.txt"
+  ]
+}

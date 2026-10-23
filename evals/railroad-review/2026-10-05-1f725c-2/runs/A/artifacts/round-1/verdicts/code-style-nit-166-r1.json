@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-166-r1",
+  "verdict": "confirmed",
+  "reason": "New handleSessionsArchiveTab (sessions.go:127) sits after handleSessionsBatch (L75) while every other Server method in the file is alphabetical (base order Batch, Index, Reload, Scope was alphabetical); probe RED at sessions.go:127.",
+  "probe": "PROBE-CODE-STYLE-NIT-166-R1",
+  "script": "code-style-nit-166-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-166-r1/fail.go",
+  "registry": "registry-code-style-nit-166-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-166-R1 -registry probes/registry-code-style-nit-166-r1.json at 1f725ce -> exit 1: internal/server/sessions.go:127: handleSessionsArchiveTab declared after handleSessionsBatch (line 75); Server methods out of alphabetical order",
+    "read": [
+      "internal/server/sessions.go:75-211 — method order Batch(75), ArchiveTab(127), Index(142), Scope(154), ScopeArchive(177), ScopeDelete(186), ScopeUnarchive(195), reloadSessions(207); only ArchiveTab is out of order",
+      "context/rules/go.md RULE-GOLANG-FILE-001 — a type's non-exported methods ordered alphabetically within its block",
+      "git diff b4981b8..1f725ce internal/server/sessions.go — handleSessionsArchiveTab is new in this diff, so it is the touched declaration (ENFORCEMENT scope)",
+      "known.json sessions.go rows (correctness-MIN-3-r1, code-style-NIT-4-r1, NIT-5-r1, NIT-20-r2) — none about method order"
+    ],
+    "validity": "acdsl check -root scratch/code-style-nit-166-r1/fixroot (fixture at internal/server/sessions.go, git init) -rule PROBE-CODE-STYLE-NIT-166-R1 -> exit 1 at sessions.go:5",
+    "cells": "agree with debt/rare"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-166-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-166-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-code-style-nit-166-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-166-r1/fail.go"
+  ]
+}

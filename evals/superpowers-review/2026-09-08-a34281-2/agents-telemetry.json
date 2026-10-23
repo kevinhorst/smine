@@ -1,0 +1,905 @@
+[
+  {
+    "label": "preflight:freeze",
+    "tokens": 60353,
+    "durationMs": 24719,
+    "startedAt": 1788896398193,
+    "lastProgressAt": 1788896422912
+  },
+  {
+    "label": "setup:sonnet-5-high-r11",
+    "tokens": 59192,
+    "durationMs": 17716,
+    "startedAt": 1788896422940,
+    "lastProgressAt": 1788896440656
+  },
+  {
+    "label": "setup:sonnet-5-high-r3",
+    "tokens": 59304,
+    "durationMs": 21412,
+    "startedAt": 1788896422950,
+    "lastProgressAt": 1788896445942
+  },
+  {
+    "label": "setup:sonnet-5-high-r20",
+    "tokens": 59385,
+    "durationMs": 22372,
+    "startedAt": 1788896422958,
+    "lastProgressAt": 1788896446902
+  },
+  {
+    "label": "setup:sonnet-5-high-r18",
+    "tokens": 59324,
+    "durationMs": 21777,
+    "startedAt": 1788896422971,
+    "lastProgressAt": 1788896446307
+  },
+  {
+    "label": "setup:sonnet-5-high-r13",
+    "tokens": 59212,
+    "durationMs": 18503,
+    "startedAt": 1788896422978,
+    "lastProgressAt": 1788896443034
+  },
+  {
+    "label": "setup:sonnet-5-high-r10",
+    "tokens": 59299,
+    "durationMs": 19546,
+    "startedAt": 1788896422986,
+    "lastProgressAt": 1788896444077
+  },
+  {
+    "label": "setup:sonnet-5-high-r15",
+    "tokens": 59345,
+    "durationMs": 21369,
+    "startedAt": 1788896422992,
+    "lastProgressAt": 1788896445900
+  },
+  {
+    "label": "setup:sonnet-5-high-r8",
+    "tokens": 59291,
+    "durationMs": 21451,
+    "startedAt": 1788896422998,
+    "lastProgressAt": 1788896445982
+  },
+  {
+    "label": "setup:sonnet-5-high-r22",
+    "tokens": 59315,
+    "durationMs": 19758,
+    "startedAt": 1788896423004,
+    "lastProgressAt": 1788896444289
+  },
+  {
+    "label": "setup:sonnet-5-high-r9",
+    "tokens": 59275,
+    "durationMs": 21995,
+    "startedAt": 1788896423011,
+    "lastProgressAt": 1788896446526
+  },
+  {
+    "label": "setup:sonnet-5-high-r19",
+    "tokens": 59194,
+    "durationMs": 18341,
+    "startedAt": 1788896423017,
+    "lastProgressAt": 1788896442872
+  },
+  {
+    "label": "setup:sonnet-5-high-r2",
+    "tokens": 59352,
+    "durationMs": 19745,
+    "startedAt": 1788896423023,
+    "lastProgressAt": 1788896444276
+  },
+  {
+    "label": "setup:sonnet-5-high-r1",
+    "tokens": 59194,
+    "durationMs": 18713,
+    "startedAt": 1788896423029,
+    "lastProgressAt": 1788896443244
+  },
+  {
+    "label": "setup:sonnet-5-high-r5",
+    "tokens": 59345,
+    "durationMs": 20813,
+    "startedAt": 1788896423035,
+    "lastProgressAt": 1788896445344
+  },
+  {
+    "label": "setup:sonnet-5-high-r27",
+    "tokens": 58967,
+    "durationMs": 17558,
+    "startedAt": 1788896440662,
+    "lastProgressAt": 1788896458220
+  },
+  {
+    "label": "setup:sonnet-5-high-r14",
+    "tokens": 59193,
+    "durationMs": 17737,
+    "startedAt": 1788896442881,
+    "lastProgressAt": 1788896460618
+  },
+  {
+    "label": "setup:sonnet-5-high-r12",
+    "tokens": 59192,
+    "durationMs": 17594,
+    "startedAt": 1788896443041,
+    "lastProgressAt": 1788896460635
+  },
+  {
+    "label": "setup:sonnet-5-high-r28",
+    "tokens": 59191,
+    "durationMs": 18082,
+    "startedAt": 1788896443250,
+    "lastProgressAt": 1788896461332
+  },
+  {
+    "label": "setup:sonnet-5-high-r29",
+    "tokens": 59195,
+    "durationMs": 18491,
+    "startedAt": 1788896444083,
+    "lastProgressAt": 1788896462574
+  },
+  {
+    "label": "setup:sonnet-5-high-r21",
+    "tokens": 59187,
+    "durationMs": 18028,
+    "startedAt": 1788896444284,
+    "lastProgressAt": 1788896462312
+  },
+  {
+    "label": "setup:sonnet-5-high-r24",
+    "tokens": 59241,
+    "durationMs": 19202,
+    "startedAt": 1788896444294,
+    "lastProgressAt": 1788896463496
+  },
+  {
+    "label": "setup:sonnet-5-high-r23",
+    "tokens": 59347,
+    "durationMs": 19571,
+    "startedAt": 1788896445351,
+    "lastProgressAt": 1788896464923
+  },
+  {
+    "label": "setup:sonnet-5-high-r31",
+    "tokens": 59328,
+    "durationMs": 20433,
+    "startedAt": 1788896445909,
+    "lastProgressAt": 1788896466342
+  },
+  {
+    "label": "setup:sonnet-5-high-r6",
+    "tokens": 59194,
+    "durationMs": 19460,
+    "startedAt": 1788896445951,
+    "lastProgressAt": 1788896465411
+  },
+  {
+    "label": "setup:sonnet-5-high-r32",
+    "tokens": 59192,
+    "durationMs": 18304,
+    "startedAt": 1788896445987,
+    "lastProgressAt": 1788896464291
+  },
+  {
+    "label": "setup:sonnet-5-high-r17",
+    "tokens": 59316,
+    "durationMs": 19290,
+    "startedAt": 1788896446316,
+    "lastProgressAt": 1788896465606
+  },
+  {
+    "label": "setup:sonnet-5-high-r16",
+    "tokens": 59312,
+    "durationMs": 19419,
+    "startedAt": 1788896446530,
+    "lastProgressAt": 1788896465949
+  },
+  {
+    "label": "setup:sonnet-5-high-r4",
+    "tokens": 59302,
+    "durationMs": 19294,
+    "startedAt": 1788896446907,
+    "lastProgressAt": 1788896466201
+  },
+  {
+    "label": "setup:sonnet-5-high-r26",
+    "tokens": 59193,
+    "durationMs": 17735,
+    "startedAt": 1788896458225,
+    "lastProgressAt": 1788896475960
+  },
+  {
+    "label": "setup:sonnet-5-high-r30",
+    "tokens": 59197,
+    "durationMs": 18196,
+    "startedAt": 1788896460627,
+    "lastProgressAt": 1788896478823
+  },
+  {
+    "label": "setup:sonnet-5-high-r7",
+    "tokens": 59308,
+    "durationMs": 18938,
+    "startedAt": 1788896460645,
+    "lastProgressAt": 1788896479583
+  },
+  {
+    "label": "setup:sonnet-5-high-r25",
+    "tokens": 59322,
+    "durationMs": 19016,
+    "startedAt": 1788896461338,
+    "lastProgressAt": 1788896480354
+  },
+  {
+    "label": "review:sonnet-5-high-r11",
+    "tokens": 262679,
+    "durationMs": 847548,
+    "startedAt": 1788896462314,
+    "lastProgressAt": 1788897309862
+  },
+  {
+    "label": "review:sonnet-5-high-r19",
+    "tokens": 324780,
+    "durationMs": 926757,
+    "startedAt": 1788896462576,
+    "lastProgressAt": 1788897391474
+  },
+  {
+    "label": "review:sonnet-5-high-r13",
+    "tokens": 266130,
+    "durationMs": 1367254,
+    "startedAt": 1788896463499,
+    "lastProgressAt": 1788897831971
+  },
+  {
+    "label": "review:sonnet-5-high-r1",
+    "tokens": 304818,
+    "durationMs": 975811,
+    "startedAt": 1788896464293,
+    "lastProgressAt": 1788897440528
+  },
+  {
+    "label": "review:sonnet-5-high-r10",
+    "tokens": 294515,
+    "durationMs": 947871,
+    "startedAt": 1788896464924,
+    "lastProgressAt": 1788897412795
+  },
+  {
+    "label": "review:sonnet-5-high-r2",
+    "tokens": 302509,
+    "durationMs": 1299209,
+    "startedAt": 1788896465412,
+    "lastProgressAt": 1788897764621
+  },
+  {
+    "label": "review:sonnet-5-high-r22",
+    "tokens": 291217,
+    "durationMs": 969985,
+    "startedAt": 1788896465607,
+    "lastProgressAt": 1788897435592
+  },
+  {
+    "label": "review:sonnet-5-high-r5",
+    "tokens": 282215,
+    "durationMs": 846890,
+    "startedAt": 1788896465950,
+    "lastProgressAt": 1788897312840
+  },
+  {
+    "label": "review:sonnet-5-high-r15",
+    "tokens": 354170,
+    "durationMs": 1052970,
+    "startedAt": 1788896466202,
+    "lastProgressAt": 1788897519172
+  },
+  {
+    "label": "review:sonnet-5-high-r3",
+    "tokens": 316473,
+    "durationMs": 988168,
+    "startedAt": 1788896466343,
+    "lastProgressAt": 1788897454511
+  },
+  {
+    "label": "review:sonnet-5-high-r8",
+    "tokens": 340089,
+    "durationMs": 978497,
+    "startedAt": 1788896475961,
+    "lastProgressAt": 1788897454459
+  },
+  {
+    "label": "review:sonnet-5-high-r18",
+    "tokens": 315157,
+    "durationMs": 554178,
+    "startedAt": 1788896478824,
+    "lastProgressAt": 1788897033002
+  },
+  {
+    "label": "review:sonnet-5-high-r9",
+    "tokens": 316402,
+    "durationMs": 1099849,
+    "startedAt": 1788896479584,
+    "lastProgressAt": 1788897579433
+  },
+  {
+    "label": "review:sonnet-5-high-r20",
+    "tokens": 333771,
+    "durationMs": 1211469,
+    "startedAt": 1788896480355,
+    "lastProgressAt": 1788897691824
+  },
+  {
+    "label": "review:sonnet-5-high-r27",
+    "tokens": 358562,
+    "durationMs": 1008442,
+    "startedAt": 1788897033006,
+    "lastProgressAt": 1788898041448
+  },
+  {
+    "label": "review:sonnet-5-high-r14",
+    "tokens": 294749,
+    "durationMs": 867216,
+    "startedAt": 1788897309863,
+    "lastProgressAt": 1788898177080
+  },
+  {
+    "label": "review:sonnet-5-high-r12",
+    "tokens": 265024,
+    "durationMs": 842865,
+    "startedAt": 1788897312841,
+    "lastProgressAt": 1788898155706
+  },
+  {
+    "label": "review:sonnet-5-high-r28",
+    "tokens": 418232,
+    "durationMs": 776465,
+    "startedAt": 1788897391476,
+    "lastProgressAt": 1788898167942
+  },
+  {
+    "label": "review:sonnet-5-high-r21",
+    "tokens": 296742,
+    "durationMs": 999038,
+    "startedAt": 1788897412797,
+    "lastProgressAt": 1788898411835
+  },
+  {
+    "label": "review:sonnet-5-high-r29",
+    "tokens": 328122,
+    "durationMs": 1163465,
+    "startedAt": 1788897435594,
+    "lastProgressAt": 1788898599059
+  },
+  {
+    "label": "review:sonnet-5-high-r24",
+    "tokens": 271555,
+    "durationMs": 878733,
+    "startedAt": 1788897440530,
+    "lastProgressAt": 1788898319263
+  },
+  {
+    "label": "review:sonnet-5-high-r32",
+    "tokens": 349825,
+    "durationMs": 975181,
+    "startedAt": 1788897454460,
+    "lastProgressAt": 1788898429641
+  },
+  {
+    "label": "review:sonnet-5-high-r23",
+    "tokens": 287543,
+    "durationMs": 710082,
+    "startedAt": 1788897454513,
+    "lastProgressAt": 1788898164595
+  },
+  {
+    "label": "review:sonnet-5-high-r6",
+    "tokens": 322796,
+    "durationMs": 975846,
+    "startedAt": 1788897519174,
+    "lastProgressAt": 1788898495021
+  },
+  {
+    "label": "review:sonnet-5-high-r17",
+    "tokens": 312077,
+    "durationMs": 769720,
+    "startedAt": 1788897579435,
+    "lastProgressAt": 1788898349155
+  },
+  {
+    "label": "review:sonnet-5-high-r16",
+    "tokens": 286239,
+    "durationMs": 1086216,
+    "startedAt": 1788897691827,
+    "lastProgressAt": 1788898778043
+  },
+  {
+    "label": "review:sonnet-5-high-r4",
+    "tokens": 300188,
+    "durationMs": 859453,
+    "startedAt": 1788897764624,
+    "lastProgressAt": 1788898624077
+  },
+  {
+    "label": "review:sonnet-5-high-r31",
+    "tokens": 332223,
+    "durationMs": 1176555,
+    "startedAt": 1788897831973,
+    "lastProgressAt": 1788899008528
+  },
+  {
+    "label": "review:sonnet-5-high-r26",
+    "tokens": 310807,
+    "durationMs": 710742,
+    "startedAt": 1788898041450,
+    "lastProgressAt": 1788898752192
+  },
+  {
+    "label": "review:sonnet-5-high-r30",
+    "tokens": 302697,
+    "durationMs": 871644,
+    "startedAt": 1788898155708,
+    "lastProgressAt": 1788899027352
+  },
+  {
+    "label": "review:sonnet-5-high-r7",
+    "tokens": 271836,
+    "durationMs": 679615,
+    "startedAt": 1788898164596,
+    "lastProgressAt": 1788898844212
+  },
+  {
+    "label": "review:sonnet-5-high-r25",
+    "tokens": 301366,
+    "durationMs": 939757,
+    "startedAt": 1788898167943,
+    "lastProgressAt": 1788899107700
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r18",
+    "tokens": 65024,
+    "durationMs": 31588,
+    "startedAt": 1788898177092,
+    "lastProgressAt": 1788898208680
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r11",
+    "tokens": 65284,
+    "durationMs": 30005,
+    "startedAt": 1788898208690,
+    "lastProgressAt": 1788898238695
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r5",
+    "tokens": 63738,
+    "durationMs": 21113,
+    "startedAt": 1788898238703,
+    "lastProgressAt": 1788898259817
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r19",
+    "tokens": 63893,
+    "durationMs": 24389,
+    "startedAt": 1788898259824,
+    "lastProgressAt": 1788898284213
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r10",
+    "tokens": 65416,
+    "durationMs": 23747,
+    "startedAt": 1788898284219,
+    "lastProgressAt": 1788898307966
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r22",
+    "tokens": 65916,
+    "durationMs": 40538,
+    "startedAt": 1788898307972,
+    "lastProgressAt": 1788898348510
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r1",
+    "tokens": 63753,
+    "durationMs": 23498,
+    "startedAt": 1788898319276,
+    "lastProgressAt": 1788898342774
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r8",
+    "tokens": 65642,
+    "durationMs": 33485,
+    "startedAt": 1788898342780,
+    "lastProgressAt": 1788898376265
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r3",
+    "tokens": 63771,
+    "durationMs": 37401,
+    "startedAt": 1788898348515,
+    "lastProgressAt": 1788898385916
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r15",
+    "tokens": 64642,
+    "durationMs": 34939,
+    "startedAt": 1788898349161,
+    "lastProgressAt": 1788898384100
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r9",
+    "tokens": 62633,
+    "durationMs": 19820,
+    "startedAt": 1788898376271,
+    "lastProgressAt": 1788898396091
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r20",
+    "tokens": 65319,
+    "durationMs": 34965,
+    "startedAt": 1788898384105,
+    "lastProgressAt": 1788898419072
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r2",
+    "tokens": 62655,
+    "durationMs": 22646,
+    "startedAt": 1788898385920,
+    "lastProgressAt": 1788898408566
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r13",
+    "tokens": 65245,
+    "durationMs": 39823,
+    "startedAt": 1788898396097,
+    "lastProgressAt": 1788898435921
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r27",
+    "tokens": 62836,
+    "durationMs": 26704,
+    "startedAt": 1788898408573,
+    "lastProgressAt": 1788898435277
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r12",
+    "tokens": 66323,
+    "durationMs": 36881,
+    "startedAt": 1788898411846,
+    "lastProgressAt": 1788898448727
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r23",
+    "tokens": 63745,
+    "durationMs": 32933,
+    "startedAt": 1788898419081,
+    "lastProgressAt": 1788898452014
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r28",
+    "tokens": 64932,
+    "durationMs": 26066,
+    "startedAt": 1788898429647,
+    "lastProgressAt": 1788898455713
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r14",
+    "tokens": 67244,
+    "durationMs": 31247,
+    "startedAt": 1788898435282,
+    "lastProgressAt": 1788898466529
+  },
+  {
+    "label": "judge:sonnet-5-high-r18",
+    "tokens": 145064,
+    "durationMs": 268479,
+    "startedAt": 1788898435922,
+    "lastProgressAt": 1788898704401
+  },
+  {
+    "label": "judge:sonnet-5-high-r11",
+    "tokens": 178121,
+    "durationMs": 366469,
+    "startedAt": 1788898448729,
+    "lastProgressAt": 1788898815198
+  },
+  {
+    "label": "judge:sonnet-5-high-r5",
+    "tokens": 102113,
+    "durationMs": 75413,
+    "startedAt": 1788898452016,
+    "lastProgressAt": 1788898527429
+  },
+  {
+    "label": "judge:sonnet-5-high-r19",
+    "tokens": 139066,
+    "durationMs": 289337,
+    "startedAt": 1788898455715,
+    "lastProgressAt": 1788898745052
+  },
+  {
+    "label": "judge:sonnet-5-high-r10",
+    "tokens": 137034,
+    "durationMs": 272403,
+    "startedAt": 1788898466531,
+    "lastProgressAt": 1788898738934
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r24",
+    "tokens": 64242,
+    "durationMs": 24319,
+    "startedAt": 1788898495027,
+    "lastProgressAt": 1788898519347
+  },
+  {
+    "label": "judge:sonnet-5-high-r1",
+    "tokens": 134757,
+    "durationMs": 178154,
+    "startedAt": 1788898519348,
+    "lastProgressAt": 1788898697502
+  },
+  {
+    "label": "judge:sonnet-5-high-r22",
+    "tokens": 138385,
+    "durationMs": 287039,
+    "startedAt": 1788898527431,
+    "lastProgressAt": 1788898814471
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r17",
+    "tokens": 64341,
+    "durationMs": 31689,
+    "startedAt": 1788898599069,
+    "lastProgressAt": 1788898630758
+  },
+  {
+    "label": "judge:sonnet-5-high-r8",
+    "tokens": 137729,
+    "durationMs": 273148,
+    "startedAt": 1788898624078,
+    "lastProgressAt": 1788898897226
+  },
+  {
+    "label": "judge:sonnet-5-high-r15",
+    "tokens": 162366,
+    "durationMs": 344011,
+    "startedAt": 1788898630759,
+    "lastProgressAt": 1788898974770
+  },
+  {
+    "label": "judge:sonnet-5-high-r3",
+    "tokens": 142611,
+    "durationMs": 322371,
+    "startedAt": 1788898697504,
+    "lastProgressAt": 1788899019875
+  },
+  {
+    "label": "judge:sonnet-5-high-r9",
+    "tokens": 140109,
+    "durationMs": 203282,
+    "startedAt": 1788898704403,
+    "lastProgressAt": 1788898907685
+  },
+  {
+    "label": "judge:sonnet-5-high-r2",
+    "tokens": 125371,
+    "durationMs": 219098,
+    "startedAt": 1788898738936,
+    "lastProgressAt": 1788898958034
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r21",
+    "tokens": 63058,
+    "durationMs": 20505,
+    "startedAt": 1788898745060,
+    "lastProgressAt": 1788898765566
+  },
+  {
+    "label": "judge:sonnet-5-high-r20",
+    "tokens": 130724,
+    "durationMs": 212530,
+    "startedAt": 1788898752193,
+    "lastProgressAt": 1788898964723
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r32",
+    "tokens": 64786,
+    "durationMs": 29863,
+    "startedAt": 1788898765573,
+    "lastProgressAt": 1788898795436
+  },
+  {
+    "label": "judge:sonnet-5-high-r27",
+    "tokens": 148981,
+    "durationMs": 196351,
+    "startedAt": 1788898778045,
+    "lastProgressAt": 1788898974396
+  },
+  {
+    "label": "judge:sonnet-5-high-r13",
+    "tokens": 115351,
+    "durationMs": 127045,
+    "startedAt": 1788898795437,
+    "lastProgressAt": 1788898922482
+  },
+  {
+    "label": "judge:sonnet-5-high-r12",
+    "tokens": 151929,
+    "durationMs": 356567,
+    "startedAt": 1788898814473,
+    "lastProgressAt": 1788899171040
+  },
+  {
+    "label": "judge:sonnet-5-high-r23",
+    "tokens": 136669,
+    "durationMs": 268951,
+    "startedAt": 1788898815200,
+    "lastProgressAt": 1788899084151
+  },
+  {
+    "label": "judge:sonnet-5-high-r28",
+    "tokens": 121867,
+    "durationMs": 153079,
+    "startedAt": 1788898844214,
+    "lastProgressAt": 1788898997293
+  },
+  {
+    "label": "judge:sonnet-5-high-r14",
+    "tokens": 141852,
+    "durationMs": 254488,
+    "startedAt": 1788898897228,
+    "lastProgressAt": 1788899151716
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r6",
+    "tokens": 66600,
+    "durationMs": 32197,
+    "startedAt": 1788898907697,
+    "lastProgressAt": 1788898939894
+  },
+  {
+    "label": "judge:sonnet-5-high-r24",
+    "tokens": 140374,
+    "durationMs": 259364,
+    "startedAt": 1788898922484,
+    "lastProgressAt": 1788899181848
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r29",
+    "tokens": 64319,
+    "durationMs": 29974,
+    "startedAt": 1788898939901,
+    "lastProgressAt": 1788898969875
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r4",
+    "tokens": 64328,
+    "durationMs": 23661,
+    "startedAt": 1788898958043,
+    "lastProgressAt": 1788898981704
+  },
+  {
+    "label": "judge:sonnet-5-high-r17",
+    "tokens": 141676,
+    "durationMs": 264271,
+    "startedAt": 1788898964725,
+    "lastProgressAt": 1788899228996
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r26",
+    "tokens": 65920,
+    "durationMs": 30350,
+    "startedAt": 1788898969881,
+    "lastProgressAt": 1788899000231
+  },
+  {
+    "label": "judge:sonnet-5-high-r21",
+    "tokens": 113610,
+    "durationMs": 230619,
+    "startedAt": 1788898974398,
+    "lastProgressAt": 1788899205017
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r16",
+    "tokens": 62684,
+    "durationMs": 23934,
+    "startedAt": 1788898974775,
+    "lastProgressAt": 1788898998709
+  },
+  {
+    "label": "judge:sonnet-5-high-r32",
+    "tokens": 108282,
+    "durationMs": 296998,
+    "startedAt": 1788898981705,
+    "lastProgressAt": 1788899278703
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r7",
+    "tokens": 66682,
+    "durationMs": 27937,
+    "startedAt": 1788898997299,
+    "lastProgressAt": 1788899025236
+  },
+  {
+    "label": "judge:sonnet-5-high-r6",
+    "tokens": 123512,
+    "durationMs": 360895,
+    "startedAt": 1788898998712,
+    "lastProgressAt": 1788899359607
+  },
+  {
+    "label": "judge:sonnet-5-high-r29",
+    "tokens": 86198,
+    "durationMs": 107923,
+    "startedAt": 1788899000232,
+    "lastProgressAt": 1788899108155
+  },
+  {
+    "label": "judge:sonnet-5-high-r4",
+    "tokens": 121900,
+    "durationMs": 220797,
+    "startedAt": 1788899008530,
+    "lastProgressAt": 1788899229327
+  },
+  {
+    "label": "judge:sonnet-5-high-r16",
+    "tokens": 84100,
+    "durationMs": 98052,
+    "startedAt": 1788899019876,
+    "lastProgressAt": 1788899117928
+  },
+  {
+    "label": "judge:sonnet-5-high-r26",
+    "tokens": 113663,
+    "durationMs": 257711,
+    "startedAt": 1788899025238,
+    "lastProgressAt": 1788899282949
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r31",
+    "tokens": 64228,
+    "durationMs": 27300,
+    "startedAt": 1788899027356,
+    "lastProgressAt": 1788899054657
+  },
+  {
+    "label": "judge:sonnet-5-high-r7",
+    "tokens": 136584,
+    "durationMs": 397186,
+    "startedAt": 1788899054659,
+    "lastProgressAt": 1788899451845
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r30",
+    "tokens": 65166,
+    "durationMs": 37943,
+    "startedAt": 1788899084156,
+    "lastProgressAt": 1788899122099
+  },
+  {
+    "label": "judge:sonnet-5-high-r31",
+    "tokens": 120662,
+    "durationMs": 280137,
+    "startedAt": 1788899107702,
+    "lastProgressAt": 1788899387839
+  },
+  {
+    "label": "transcribe:sonnet-5-high-r25",
+    "tokens": 64997,
+    "durationMs": 23186,
+    "startedAt": 1788899108160,
+    "lastProgressAt": 1788899131346
+  },
+  {
+    "label": "judge:sonnet-5-high-r30",
+    "tokens": 107477,
+    "durationMs": 206086,
+    "startedAt": 1788899122101,
+    "lastProgressAt": 1788899328187
+  },
+  {
+    "label": "judge:sonnet-5-high-r25",
+    "tokens": 108512,
+    "durationMs": 177488,
+    "startedAt": 1788899131348,
+    "lastProgressAt": 1788899308836
+  }
+]

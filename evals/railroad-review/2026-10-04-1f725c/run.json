@@ -1,0 +1,45 @@
+{
+  "arms": [
+    {
+      "id": "opus-high-r1",
+      "disabledServers": [],
+      "effort": "high",
+      "key": "opus-high",
+      "label": "A",
+      "model": "opus",
+      "replica": 1,
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-04-1f725c-a"
+    }
+  ],
+  "at": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "budgetUsd": 500,
+  "check": null,
+  "checkTimeoutS": 1800,
+  "contextIndex": "context/review-index.json",
+  "date": "2026-10-04",
+  "judge": "opus",
+  "layer": "eval",
+  "mode": "nightly",
+  "overlayPatch": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skillroutine-eval-railroad-review-9e9946/evals/railroad-review/2026-10-04-1f725c/overlay.patch",
+  "prebuild": {
+    "command": [
+      "make",
+      "build-audit"
+    ],
+    "outputs": [
+      "bin/acdsl",
+      "bin/verifiers"
+    ]
+  },
+  "presetSkillDir": "skills/quality/railroad-review",
+  "prompt": "/railroad-review directions: code-style correctness tests security lanes: 2[opus:medium] scope: branch[b4981b88d52deaa69d6ed1d60eb51b57ead47ba0] exclude: sessions/ evals/ proposals/ plans/ spec: plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/concept/concept.md plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/concept/user_stories.md plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/design/raw.md plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/design/change-englishness.md plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/design/change-nondev-automation.md plans/v1-2-1/2026-08-26-acdsl-policy-modes-done-a7cd7bf/design/raw.md plans/v1-2-1/2026-08-26-railroad-review-observability-wip-5158764/design/raw.md plans/v1-2-1/2026-08-27-bootstrap-profile-improvements-wip-397f906/design/change-bootstrap-profile.md plans/v1-2-1/2026-08-27-bootstrap-profile-improvements-wip-397f906/design/change-headless-bootstrap.md plans/v1-2-1/2026-08-27-plan-format-viewer-fixes-wip-1cdbf2b/design/change-viewer-fixes.md plans/v1-2-1/2026-08-27-repos-routines-improvements-wip-4afbe98/design/change-repos-routines-ui.md plans/v1-2-1/2026-08-27-smine-profile-settings-wip-ca34568/design/raw.md plans/v1-2-1/2026-08-30-peek-multiple-profiles-wip-78bfb3e/design/change-multi-profile-ports.md plans/v1-2-1/2026-08-30-repo-cache-reload-wip-46c8d9e/design/change-repo-cache.md refute-level: major ignore-level: none autofix-level: minor station: opus:medium nightly rounds: 2 run-id: {runId} overlay-patch: {overlayPatch} prebuilt: bin/acdsl bin/verifiers Persist all run artifacts under {artifactsDir} (your artifact directory).",
+  "reference": "",
+  "repo": "/Users/devuser/GolandProjects/smine",
+  "repoName": "smine",
+  "scorer": null,
+  "skill": "railroad-review",
+  "skillMd": "evals/railroad-review/2026-10-04-1f725c/SKILL.md",
+  "skillVersion": "23.1.0",
+  "timeoutS": 14400,
+  "token": "Max-Private"
+}

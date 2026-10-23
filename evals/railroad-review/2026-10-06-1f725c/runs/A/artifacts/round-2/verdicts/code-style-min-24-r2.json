@@ -1,0 +1,16 @@
+{
+  "finding_id": "code-style-MIN-24-r2",
+  "verdict": "confirmed",
+  "reason": "internal/repos/registry.go:99 (refreshIfChanged, wholly new in this diff) inlines `err == nil && info.ModTime().Equal(modTime) && info.Size() == size` with two && operators; RULE-GOLANG-COND-001 forbids more than one binary boolean operator in an if condition, and the function's own line 95 already demonstrates the sanctioned named-predicate remedy for the identical shape.",
+  "probe": "none: ACDSL repo but both verdict invocations are denied by this session's tool-policy: `<worktree>/bin/acdsl check -rule PROBE-CODE-STYLE-MIN-24-R2` -> denied, no allow rule matches candidate Bash(<worktree>/bin/acdsl *); `make -C <worktree> acdsl ARGS=...` -> denied, no `acdsl` make target exists. Two attempts, both denied; settled manually per PROBE-006.",
+  "evidence": {
+    "read": [
+      "internal/repos/registry.go:95 isMissingAndUnloaded := os.IsNotExist(err) && size == 0 && modTime.IsZero()  (sanctioned named-predicate remedy, same shape)",
+      "internal/repos/registry.go:99 if err == nil && info.ModTime().Equal(modTime) && info.Size() == size {  -- two && operators, left inline",
+      "context/rules/go.md:370 An if condition holds at most one binary boolean operator; never two &&."
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/code-style-min-24-r2-evidence.txt"
+  ]
+}

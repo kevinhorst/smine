@@ -1,0 +1,4464 @@
+{
+  "artifact": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/code-style-go-core-lane1.json",
+  "direction": "code-style",
+  "lane": 1,
+  "chunk": "go-core",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "aborted": false,
+  "walk": [
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/main.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/acdsl/verifiers/planformat/main.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/com.smine.configserver.plist.template",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/install_windows.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": [
+        "code-style-NIT-1"
+      ]
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/main_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "cmd/configserver/version.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/dist_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/git_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/acdsl/policy_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/config.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/config/installenv_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/contextdocs/sync.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/evals/evals_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/peek/peek_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/repos/registry_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/bootstrap_darwin.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/launchctl_darwin_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/plist_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/routines_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/routines/sched_windows.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/sessions/sessions_test.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": [
+        "code-style-MIN-1"
+      ]
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/shell/shell.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "ACTION-REVIEW-QUALITY",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-ASSERT",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-BOOL",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-CALL",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-CLI",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-COMMENT",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-COND",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-CONST",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-CTX",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-ERR",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-FILE",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-FUNC",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-GR",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-INTERFACE",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-LOG",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-NAME",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-NEST",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-PKG",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-POINTER",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-RECEIVER",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-RETURN",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-STRUCT",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-TEST/1",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-TEST/2",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-TYPE",
+      "hits": []
+    },
+    {
+      "file": "internal/skills/sync.go",
+      "group": "RULE-GOLANG-VALIDATE",
+      "hits": []
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "code-style-MIN-1",
+      "file": "internal/shell/shell.go",
+      "line": 50,
+      "checklist": "ACTION-REVIEW-QUALITY-005",
+      "severity": "MINOR",
+      "effect": "debt",
+      "exposure": "often",
+      "fix": "Extract a shared unexported helper (e.g. runWithTimeout(ctx, timeout, dir, name, args...)) that both Run and RunSync call, parameterizing only the timeout and the error-message prefix.",
+      "claim": "RunSync (new in this diff) is a near-byte-for-byte duplicate of Run: identical body (platformArgv, exec.CommandContext, cmd.Dir, HideWindow, WaitDelay, timing log, CombinedOutput, error wrap) except the timeout constant (Timeout vs SyncTimeout) and the error-message function-name prefix.",
+      "evidence": "Re-read internal/shell/shell.go in full (both functions, lines 26-67) and the diff against b4981b88 confirming RunSync is wholly new (added, not pre-existing): Run (lines 26-46) and RunSync (lines 50-67) share every statement verbatim aside from the two differing tokens. RULE-GOLANG-TYPE-001's 'grep for an existing helper' bullet and ACTION-REVIEW-QUALITY-005 ('No unnecessary code duplication') both apply; this is newly introduced duplication, not a pre-existing pattern, so it is in scope under the enforcement-scope rule."
+    },
+    {
+      "finding_id": "code-style-NIT-1",
+      "file": "cmd/configserver/main.go",
+      "line": 216,
+      "checklist": "RULE-GOLANG-STRUCT-002",
+      "severity": "NIT",
+      "effect": "cosmetic",
+      "exposure": "often",
+      "fix": "Reorder peekID's fields alphabetically: ClaudeHome, CodexHome, ControlPort, Version.",
+      "claim": "The new peekID struct's JSON-tagged fields are not sorted alphabetically (Version, ClaudeHome, CodexHome, ControlPort instead of ClaudeHome, CodexHome, ControlPort, Version), violating RULE-GOLANG-STRUCT-002.",
+      "evidence": "Re-read cmd/configserver/main.go lines 216-221 and the diff against b4981b88 confirming type peekID is newly added in this change (no prior version existed). Field order is Version, ClaudeHome, CodexHome, ControlPort — alphabetically it should be ClaudeHome, CodexHome, ControlPort, Version; no Id field is present so the 'Id first' exception does not apply."
+    }
+  ],
+  "walk_complete": true,
+  "notes": ""
+}

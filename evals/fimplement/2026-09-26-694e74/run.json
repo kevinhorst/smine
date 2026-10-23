@@ -1,0 +1,58 @@
+{
+  "arms": [
+    {
+      "id": "opus-high-no-serena-r1",
+      "disabledServers": ["serena"],
+      "effort": "high",
+      "key": "opus-high-no-serena",
+      "label": "C",
+      "model": "opus",
+      "replica": 1,
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-C"
+    },
+    {
+      "id": "opus-high-no-serena-r2",
+      "disabledServers": ["serena"],
+      "effort": "high",
+      "key": "opus-high-no-serena",
+      "label": "D",
+      "model": "opus",
+      "replica": 2,
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-D"
+    },
+    {
+      "id": "sonnet-high-no-serena-r1",
+      "disabledServers": ["serena"],
+      "effort": "high",
+      "key": "sonnet-high-no-serena",
+      "label": "A",
+      "model": "sonnet",
+      "replica": 1,
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-A"
+    },
+    {
+      "id": "sonnet-high-no-serena-r2",
+      "disabledServers": ["serena"],
+      "effort": "high",
+      "key": "sonnet-high-no-serena",
+      "label": "B",
+      "model": "sonnet",
+      "replica": 2,
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-B"
+    }
+  ],
+  "at": "694e74664326ffc14231fdd4985840954978c391",
+  "budgetUsd": 100,
+  "check": ["make", "audit"],
+  "checkTimeoutS": 1800,
+  "date": "2026-09-26",
+  "smoke": false,
+  "judge": "opus",
+  "presetSkillDir": "",
+  "prompt": "/fimplement /Users/devuser/GolandProjects/claude-configs/plans/2026-09-26-session-title-state-wip-a4d350b/design/change-close-done.md",
+  "reference": "f2274ba247b4504cca9d25743329e157b13c7206",
+  "repo": "/Users/devuser/GolandProjects/claude-configs",
+  "skill": "fimplement",
+  "skillMd": "evals/fimplement/2026-09-26-694e74/SKILL.md",
+  "timeoutS": 7200
+}

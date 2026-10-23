@@ -1,0 +1,56 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "cmd/hooks/acdsl-policy-guard.sh",
+      "line": 43,
+      "severity": "MAJOR",
+      "claim": "The fast policy hook unconditionally denies Write/Edit to acdsl/registry.local.json in gated/strict mode, while the authoritative check permits entries listed in policy.local_overrides, making the sanctioned local-override feature unusable via normal tool calls.",
+      "fix": "Teach the hook to read policy.local_overrides and only deny entries not yet present there, or drop registry.local.json from the hook's frozen-surface list and let it fall through to acdsl check."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "skills/smine/smine-apply/SKILL.md",
+      "line": 31,
+      "severity": "MAJOR",
+      "claim": "The casual skill-edit lockout (DR3) is enforced only as prose instructions in the smine-apply, smine-skills, and smine-orchestrate SKILL.md files with no mechanical code-level backstop, so a single missed instruction ships a shipped-skill edit to a casual user.",
+      "fix": "Add at minimum a deterministic check in the orchestrate stage (or the wrapper itself) that diffs touched skills/*/SKILL.md frontmatter against origin: user when the profile is casual, rather than relying purely on agent judgment."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "cmd/bootstrap/run.sh",
+      "line": 23,
+      "severity": "MAJOR",
+      "claim": "The bootstrap results log uses a fixed non-run-scoped path that every stage appends to with no truncation, so it grows unbounded across runs and makes the log for a given run ambiguous.",
+      "fix": "Timestamp the filename, or truncate it at the top of the script."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "routines/smine-nightly/run.sh",
+      "line": 300,
+      "severity": "MINOR",
+      "claim": "The additionalDirectories reconciliation pipeline leaves a stray .tmp file behind in ~/.claude/ when jq fails, because the redirection creates the temp file before jq's exit status is checked and the && skips the mv.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/acdsl/policy.go",
+      "line": 259,
+      "severity": "MINOR",
+      "claim": "ruleDelta silently discards ParseRules errors on both the working and base sides, so an unparseable declaration file would silently under- or over-report added/removed rules, and no test exercises this path.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-006",
+      "file": "internal/repos/registry.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The Registry struct field order is not alphabetical per RULE-GOLANG-STRUCT-002; the new loadedModTime/loadedSize fields are grouped with the mutex they are guarded alongside via a comment instead.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

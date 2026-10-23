@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-NIT-71-r1",
+  "verdict": "confirmed",
+  "reason": "WTS_CANDIDATES_DIGEST (script 318-319) hashes refs/heads/ only, so $from_tip in cache_key (266) is the sole key part that sees a remote-tracking FROM move; the only refs/remotes update-ref in the suite is test line 37, before any run, and the cache test (568-627) uses local main — no test warms the cache, moves origin/main, and asserts re-probing.",
+  "probe": "none: probe authored with fail/pass fixtures, but both its validity run (/bin/bash <script> <list>) and the verdict run (<worktree>/bin/acdsl check) are denied by the tool policy and the Makefile has no acdsl target",
+  "evidence": {
+    "read": [
+      "grep -nE 'cache_file|update-ref refs/remotes|head -[0-9]' cmd/tests/test_print_agent_worktrees_status.sh -> 37: git -C \"$repo\" update-ref refs/remotes/origin/main main is the only remote-ref move, in test_from_resolves_remote_tracking_origin before its single run; the cache test 568-627 never touches refs/remotes",
+      "cmd/worktrees/print_agent_worktrees_status.sh:318-319: for-each-ref ... refs/heads/ | awk '$1 !~ /^claude(-routines)?\\//' | shasum — remote-tracking refs excluded from the digest",
+      "cmd/worktrees/print_agent_worktrees_status.sh:266: cache_key=\"$tip|$raw_from|$from_tip|$WTS_CANDIDATES_DIGEST|v2\" — with raw_from='origin/main' fixed, only $from_tip changes on a fetch",
+      "internal/server/repos_test.go stubs print_agent_worktrees_status.sh; test_rm_safety.sh runs only detail mode (no cache)"
+    ],
+    "probe_attempts": [
+      "/bin/bash probes/tests-nit-70-r1.sh (same mechanism) -> tool-policy denied (no Bash(/bin/bash *) rule)",
+      "<worktree>/bin/acdsl -h -> tool-policy denied; Makefile has no acdsl target"
+    ],
+    "cells": "effect debt / exposure rare agreed: the production key is correct today; the gap only bites if a refactor drops $from_tip"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-71-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-71-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-71-r1/fail/worktrees/status.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-71-r1/fail/tests/test_print_agent_worktrees_status.sh"
+  ]
+}

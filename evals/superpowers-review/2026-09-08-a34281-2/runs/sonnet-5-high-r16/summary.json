@@ -1,0 +1,48 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy's baseErr branch trusts the untrusted working-copy policy.Mode, so an agent branch can silently disable the self-management gate by editing acdsl/policy.json to {\"mode\":\"free\",\"base_ref\":\"nosuchref\"}, yielding zero diagnostics and no error against a committed gated/strict base policy.",
+      "fix": "Make the baseErr early-out never consult the untrusted working policy.Mode: either treat every unresolvable base as a hard error unconditionally (per D10, with base_ref handling or a documented exemption for free-mode repos like smine), or honor baseErr as benign only on a trustworthy signal such as acdsl/policy.json being entirely absent from the working tree."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/hooks/skill-invoke-gate.sh",
+      "line": 62,
+      "severity": "MAJOR",
+      "claim": "The post-invocation Bash enforcement of context-file denial only recognizes a literal two-word 'cat <path>' command and bails on any metacharacter, so head/less/sed/python or variant cat invocations read the supposedly injected-only context files straight through Bash, trivially sidestepping the forced-Skill-call contract.",
+      "fix": "Deny on anything that isn't Read/Grep/Glob touching the context dir, or match on the resolved absolute path being under ctx_dir for any tool, rather than parsing Bash command strings."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/git.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "GitRevParse is declared, documented, and unit-tested but has zero production call sites — dead exported surface from the plan's Changes §2 helper list that the final implementation didn't need.",
+      "fix": "Remove it or document why it's kept for a near-term consumer."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "install.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "PEEK_HOME_ARGS concatenates raw shell-variable content into plist XML and injects it via sed without escaping XML special characters or sed replacement metacharacters, so a path containing & < > or backslash would silently corrupt the generated LaunchAgent plist.",
+      "fix": "Add a one-line sed escape for the substituted values."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The ~40 skills' changelog.json bumps and SKILL.md wording tweaks were only spot-checked structurally (valid JSON, version monotonic) rather than read line-by-line, so review scope there is limited.",
+      "fix": ""
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

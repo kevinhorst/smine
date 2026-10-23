@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "MAJOR",
+      "claim": "CheckPolicy bases mode decisions on the base-ref policy rather than the working-tree policy that LoadPolicy/main.go pass in, deviating from the plan's written pseudocode (Changes-1, D2), though the shipped behavior is safer and tested.",
+      "fix": "Confirm the base-authoritative-mode deviation was a deliberate implementation-time strengthening; no code change requested."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/configserver/main.go",
+      "line": 216,
+      "severity": "MINOR",
+      "claim": "peekID struct field order is Version, ClaudeHome, CodexHome, ControlPort, not alphabetical per RULE-GOLANG-STRUCT-002.",
+      "fix": "Reorder fields to ClaudeHome, CodexHome, ControlPort, Version."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/acdsl/git.go",
+      "line": 78,
+      "severity": "MINOR",
+      "claim": "GitRevParse is exported and test-covered but has zero production callers, making it dead code in the shipped binary.",
+      "fix": "Either use GitRevParse or drop it (ACTION-REVIEW-QUALITY-004)."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/config/installenv.go",
+      "line": 22,
+      "severity": "MINOR",
+      "claim": "strings.Fields(diffed + \"\\n\" + untracked) (same shape as GitChangedFiles in internal/acdsl/git.go:57) splits on all whitespace and would silently merge or mis-split a path containing a space.",
+      "fix": ""
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "routines/README.md",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The new default-disabled marker file and per-routine Unscheduled state are documented and implemented but have no corresponding plan doc under plans/v1-2-1/, a paperwork gap.",
+      "fix": "Confirm the change was intentionally out-of-band from the plan set under review."
+    }
+  ]
+}

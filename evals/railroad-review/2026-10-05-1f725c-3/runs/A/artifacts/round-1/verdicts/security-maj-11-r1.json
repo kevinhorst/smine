@@ -1,0 +1,29 @@
+{
+  "finding_id": "security-MAJ-11-r1",
+  "verdict": "confirmed",
+  "reason": "policyBase (policy.go:196-201) passes bare names origin/HEAD, origin/main, main, master to `git merge-base HEAD <ref>` (git.go:70) unqualified; per gitrevisions a bare name resolves refs/tags/<name> before refs/remotes/<name>, so in a repo without refs/remotes/origin/{HEAD,main} a branch-made `git tag origin/main` makes HEAD the policy base and CheckPolicy diffs to nothing. Probe RED on policy.go:196. Effect lowered: the gate returns a wrong (empty) verdict, nothing is destroyed — incorrect, not destructive.",
+  "probe": "PROBE-SECURITY-MAJ-11-R1",
+  "script": "security-maj-11-r1-bare-base-refs.sh",
+  "fixture": "probes/fixtures/security-maj-11-r1/fail/policy.go",
+  "registry": "registry-security-maj-11-r1.json",
+  "effect": "incorrect",
+  "exposure": "eventually",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-SECURITY-MAJ-11-R1 -registry registry-security-maj-11-r1.json -> exit 1: internal/acdsl/policy.go:196: policy-base candidates are bare ref names resolvable through refs/tags/: candidates := []string{\"origin/HEAD\", \"origin/main\", \"main\", \"master\"}",
+    "validity_run": "bin/acdsl check -root scratch/security-maj-11-r1/fixroot (git-init'd, holds the fail fixture as internal/acdsl/policy.go) -rule PROBE-SECURITY-MAJ-11-R1 -> exit 1: internal/acdsl/policy.go:4 hit",
+    "read": [
+      "internal/acdsl/policy.go:195-219 policyBase: candidates bare names; GitMergeBase(ctx, root, candidate); first resolving candidate wins; isBoundary = branch != TrimPrefix(candidate, \"origin/\")",
+      "internal/acdsl/git.go:69-75 GitMergeBase runs `git merge-base HEAD <ref>` with the ref unqualified",
+      "internal/acdsl/policy.go:63-76 basePolicy reads acdsl/policy.json at the resolved base — at base=HEAD that is the branch's own committed policy",
+      "internal/acdsl/policy.go:329-375 CheckPolicy: surfaceDelta and ruleDelta diff against that base, so committed branch edits vanish"
+    ],
+    "cells": "effect destructive -> incorrect: the defect is a gate returning zero diagnostics for a policy violation; no data is lost and the rule removal stays in the branch history visible at merge review. exposure eventually kept: needs a gated/strict repo lacking refs/remotes/origin/HEAD and origin/main (this repo has an origin remote; no repo runs gated today). Severity per table: MINOR.",
+    "known_ledger": "not a duplicate of correctness-MAJ-9-r1 (working base_ref edit) or correctness-MAJ-52-r1 (origin/ prefix stripping) — this path needs no file edit"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/security-maj-11-r1-bare-base-refs.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-security-maj-11-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/security-maj-11-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/security-maj-11-r1/fail/policy.go"
+  ]
+}

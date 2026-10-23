@@ -1,0 +1,23 @@
+{
+  "finding_id": "code-style-MIN-20-r2",
+  "verdict": "confirmed",
+  "reason": "peekIdentity's `return nil, fmt.Errorf(\"healthz status %d\", resp.StatusCode)` at main.go:231 lacks the Component.Method: prefix RULE-GOLANG-ERR-001 requires for a newly-created error; the repo's own errorf-prefix verifier, re-anchored at this file, went RED on exactly the claimed line.",
+  "probe": "PROBE-CODE-STYLE-MIN-20-R2",
+  "script": "none — reuses the repo's prebuilt bin/verifiers/errorfprefix binary directly (already registered in the repo as errorf-prefix for RULE-GOLANG-ERR-001)",
+  "fixture": "fixtures/code-style-min-20-r2/bad.go",
+  "registry": "registry-code-style-min-20-r2.json",
+  "evidence": {
+    "read": [
+      "cmd/configserver/main.go:223-238 at e5245d08 (git show), peekIdentity, wholly new: if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf(\"healthz status %d\", resp.StatusCode) } — no \"peekIdentity: \" prefix, unlike every other new error in this diff"
+    ],
+    "probe_run": "acdsl check -rule PROBE-CODE-STYLE-MIN-20-R2 -registry probes/registry-code-style-min-20-r2.json -root <review worktree> -lifetime task => cmd/configserver/main.go:231: error message lacks the Component.Method: prefix",
+    "validity": "same probe (repo's prebuilt errorfprefix binary) on fixtures/code-style-min-20-r2/bad.go (fresh git-init fixture repo, an unprefixed fmt.Errorf) went RED at bad.go:7 before the real run"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-code-style-min-20-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/code-style-min-20-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-20-r2/bad.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/code-style-min-20-r2/probe.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/verify-b1-r2/railroad-probes-r2.acdsl"
+  ]
+}

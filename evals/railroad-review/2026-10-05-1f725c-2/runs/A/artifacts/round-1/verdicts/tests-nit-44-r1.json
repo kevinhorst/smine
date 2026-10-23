@@ -1,0 +1,26 @@
+{
+  "finding_id": "tests-NIT-44-r1",
+  "verdict": "confirmed",
+  "reason": "ACDSL-JSON-003's only fail fixture carries both mode 'loose' and unknown key editable_rules; the fail set is judged as a whole (fixtures.go:95), so dropping additionalProperties:false from policy.schema.json stays green; spec-6:363 requires a separate unknown-key fixture",
+  "probe": "PROBE-TESTS-NIT-44-R1",
+  "script": "tests-nit-44-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-44-r1/fail/policy.json",
+  "registry": "registry-tests-nit-44-r1.json",
+  "evidence": {
+    "probe_run": "acdsl/testdata/ACDSL-JSON-003/fail/policy.json:2: no fail fixture carries an unknown key with a valid mode — the unknown-key rejection (additionalProperties false) is masked by the mode enum defect: [PROBE-TESTS-NIT-44-R1]",
+    "validity_run": "bin/acdsl check -rule PROBE-TESTS-NIT-44-R1 anchored on an in-worktree fixture copy -> exit 1 (direct interpreter run denied by tool policy; copy removed afterwards)",
+    "read": [
+      "git ls-files acdsl/testdata/ACDSL-JSON-003 -> fail/policy.json, pass/policy.json only",
+      "acdsl/policy.schema.json:4 additionalProperties false, :7 mode enum",
+      "internal/acdsl/fixtures.go:95 — fail set fails only when zero diagnostics",
+      "spec-6-raw.md:363 — fail/ one with mode loose and one with an unknown key"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-44-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/tests-nit-44-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/registry-tests-nit-44-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/tests-nit-44-r1/fail/policy.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/scratch/tests-nit-44-r1/files.txt"
+  ]
+}

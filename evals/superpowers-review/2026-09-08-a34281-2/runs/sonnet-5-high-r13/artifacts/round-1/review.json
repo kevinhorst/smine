@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "settings/claude_code/settings.json",
+      "line": 105,
+      "severity": "MAJOR",
+      "claim": "The global ask-permission entries for ACDSL rule-file edits (Edit/Write on **/*.acdsl and acdsl/**) were removed with no full replacement, leaving repos without acdsl/policy.json, gated-mode repos (for ordinary rule files), and this free-mode repo itself with no interactive gate on a security-relevant edit surface.",
+      "fix": "Make the removal an explicit decision; at minimum keep a baseline ask (or deny) for repos where acdsl/policy.json is absent or mode free is only the un-declared default, so unadopted repos don't silently lose the gate."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/acdsl/git.go",
+      "line": 57,
+      "severity": "MAJOR",
+      "claim": "GitChangedFiles splits git diff/ls-files output with strings.Fields, so any changed or untracked path containing a space is split into bogus paths and silently skipped by ruleDelta/CheckPolicy's rule-change detection.",
+      "fix": "Split the output on newlines and trim/filter empty lines instead of using strings.Fields."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/routines/routines.go",
+      "line": 123,
+      "severity": "MAJOR",
+      "claim": "The RunResult Subtype/Result fields, IsRunning() (subtype \"started\"), and the History() filter for started rows are dead code — no writer of results.jsonl ever emits subtype \"started\", only the unit test's synthetic fixture does.",
+      "fix": "Either wire an actual \"started\" marker write (e.g. in the wrapper templates before claude -p is invoked) or drop IsRunning() and the filtering loop until a producer exists."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/server/repos.go",
+      "line": 173,
+      "severity": "MINOR",
+      "claim": "The pre-existing doc comment for rootCause now sits above the newly inserted worktreeSessions function (which has its own doc comment), leaving rootCause undocumented and worktreeSessions with two unrelated comments.",
+      "fix": "Move the rootCause doc comment back above rootCause so each function carries its own comment."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "internal/config/installenv.go",
+      "line": 11,
+      "severity": "MINOR",
+      "claim": "installEnvPath is read via the bare relative path \"install.env\", so ExpandInstallMarkers silently falls back to DefaultPeekControlPort with no logging whenever the process cwd is not the repo root.",
+      "fix": "Resolve a repo-root-relative path once at startup instead of using a bare relative literal ad hoc."
+    }
+  ]
+}

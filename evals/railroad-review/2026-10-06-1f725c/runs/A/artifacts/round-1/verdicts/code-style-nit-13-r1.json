@@ -1,0 +1,24 @@
+{
+  "finding_id": "code-style-NIT-13-r1",
+  "verdict": "confirmed",
+  "reason": "skills/smine/smine-apply/SKILL.md:41 (Step 8, Handoff) enumerates 9 pipe-separated outcomes in one inline code span — implemented | rejected | postponed | deferred-cap | manual-external | manual-verifier | casual-locked | stale | auto-applied — over RULE-SKILL-005's 6-item cap (rule text says 'comma-separated' literally, but the repo's own convention for status/outcome enums uses the pipe delimiter inside a single inline span, e.g. smine-skills/SKILL.md:68, smine-permissions/SKILL.md:65 and smine-routines/SKILL.md:58 all cap at exactly 6 items that way, so the pipe-vs-comma wording gap does not debunk the claim). Diff confirms this change adds the 9th item (casual-locked) to an already-over-threshold 8-item list.",
+  "probe": "PROBE-CODE-STYLE-NIT-13-R1",
+  "script": "check-inline-enum-cap.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/inline-enum-fail.md",
+  "registry": "registry-code-style-nit-13-r1.json",
+  "evidence": {
+    "read": [
+      "skills/smine/smine-apply/SKILL.md:41 — 9-item pipe-separated inline span, counted by hand and by probe",
+      "context/rules/skills.md:31 — RULE-SKILL-005: an enumeration of more than 6 comma-separated items never sits in an inline code span",
+      "skills/smine/smine-skills/SKILL.md:68, smine-permissions/SKILL.md:65, smine-routines/SKILL.md:58 — sibling status enums, pipe-delimited, all exactly 6 items",
+      "git diff b4981b88..1f725ce -- skills/smine/smine-apply/SKILL.md — pre-diff line had 8 items (no casual-locked); this diff adds the 9th"
+    ],
+    "probe_run": "validity (fixture, untracked railroad-probe-fixture-nit13.md, anchor matched): railroad-probe-fixture-nit13.md:1: inline code span has 7 pipe-separated items (> 6) — exit 1, RED as expected. Real run (anchor skills/smine/smine-apply/SKILL.md): skills/smine/smine-apply/SKILL.md:41: inline code span has 9 pipe-separated items (> 6) — exit 1, RED — acdsl: 1 violation(s) across 1 rule(s)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/check-inline-enum-cap.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/inline-enum-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-nit-13-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-nit-13-r1.acdsl"
+  ]
+}

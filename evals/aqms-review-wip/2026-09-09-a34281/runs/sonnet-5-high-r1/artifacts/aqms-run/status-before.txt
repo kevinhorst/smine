@@ -1,0 +1,23 @@
+ M AGENTS.md
+ M acdsl/policy.json
+ M acdsl/registry.json
+ M acdsl/rules.acdsl
+ M context/actions/README.md
+ M context/actions/concepting.md
+ M context/actions/implementing.md
+ M context/actions/navigating.md
+ M context/actions/reviewing.md
+ D context/facts/smine.md
+ M context/rules/plan.md
+ M context/rules/runbooks.md
+?? CLAUDE.md
+?? context/actions/concepting-local.md
+?? context/actions/implementing-local.md
+?? context/context.json
+?? context/facts/claude-configs.md
+?? context/facts/claude.md
+?? context/rules/commits.md
+?? context/rules/go.md
+?? context/rules/python.md
+?? context/rules/skills.md
+?? context/rules/sql.md

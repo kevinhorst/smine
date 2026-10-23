@@ -1,0 +1,25 @@
+{
+  "finding_id": "tests-MIN-3-r1",
+  "verdict": "confirmed",
+  "reason": "internal/config.LoadFragment (config.go:212) has 4 call sites in internal/server but no sibling *_test.go file in internal/config calls LoadFragment directly — config_test.go's TestLoadSave/TestFileIOErrors/TestSettingsDecodeErrors exercise Load only, and installenv_test.go exercises only the standalone ExpandInstallMarkers helper, never LoadFragment's os.ReadFile+json.Unmarshal(ExpandInstallMarkers(...)) wrapper.",
+  "probe": "PROBE-TESTS-MIN-3-R1",
+  "script": "tests-min-3-r1-loadfragment.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-3-r1",
+  "registry": "registry-tests-min-3-r1.json",
+  "evidence": {
+    "read": [
+      "internal/config/config.go:210-225 — LoadFragment definition",
+      "grep -n LoadFragment internal/config/config_test.go — no match",
+      "grep -rn LoadFragment internal/*.go — 4 call sites, all in internal/server (config.go, config_sync.go, hooks.go, permissions.go), none in internal/config's own test files"
+    ],
+    "probe_run": "internal/config/config.go:212: LoadFragment has no dedicated unit test in internal/config — its missing-file and malformed-JSON-after-expansion branches are untested: [PROBE-TESTS-MIN-3-R1] tests-min-3-r1-loadfragment (acdsl check -root <worktree> -rule PROBE-TESTS-MIN-3-R1 -registry registry-tests-min-3-r1.json -lifetime task, exit 1)"
+    ,
+    "fixture_validity": "same probe run against probes/fixtures/tests-min-3-r1 (a LoadFragment stub plus a config_test.go that only calls Load) exits 1 with the identical message"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-3-r1-loadfragment.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/tests-min-3-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-tests-min-3-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/tests-min-3-r1"
+  ]
+}

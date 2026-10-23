@@ -1,0 +1,23 @@
+{
+  "finding_id": "tests-NIT-58-r1",
+  "verdict": "confirmed",
+  "reason": "Probe (attempt 2) RED at policy_test.go:50: the only policyGit commits are main-branch setup commits before `checkout -b work` (lines 49 and 298); no test commits on work, so base == HEAD in every CheckPolicy/ruleDelta test and the committed-on-branch delta path is never exercised. Attempt 1 went GREEN only because it counted the line-298 main commit textually after line 50 — a probe flaw, not a refutation; the fixture now carries that shape.",
+  "probe": "PROBE-TESTS-NIT-58-R1",
+  "script": "tests-nit-58-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-58-r1/fail/internal/acdsl/policy_test.go",
+  "registry": "registry-tests-nit-58-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-58-R1 -registry probes/registry-tests-nit-58-r1.json -> internal/acdsl/policy_test.go:50: no test commits on the work branch after creating it (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/tests-nit-58-r1/fail -rule PROBE-TESTS-NIT-58-R1 -> policy_test.go:7 hit (exit 1)",
+    "read": [
+      "git grep policyGit|checkout in internal/acdsl/policy_test.go: commits only at 49 (newPolicyRepo, main) and 298 (TestCheckPolicyNewUntrackedPolicyOnBranch, main), each before checkout -b work at 50/299",
+      "internal/acdsl/policy.go:237-238 ruleDelta -> GitChangedFiles(ctx, root, base); CheckPolicy/ruleDelta called only from policy_test.go and cmd/acdsl/main.go"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-58-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-58-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-58-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-58-r1/fail/internal/acdsl/policy_test.go"
+  ]
+}

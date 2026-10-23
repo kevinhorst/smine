@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-195-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red at registry.go:458: new Fingerprint hard-codes refs/heads/claude/ and refs/heads/claude-routines/ while WorktreeCounts in the same file takes the set as branchPrefixes (supplied by server/repos.go:537); a third copy sits at ops.go:118.",
+  "probe": "PROBE-CODE-STYLE-NIT-195-R1",
+  "script": "code-style-nit-195-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-195-r1/fail/internal/repos/registry.go",
+  "registry": "registry-code-style-nit-195-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-195-R1 -registry probes/registry-code-style-nit-195-r1.json -> internal/repos/registry.go:458: agent branch prefixes hard-coded here while a sibling in the same file takes them as branchPrefixes []string (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/code-style-nit-195-r1/fail -rule PROBE-CODE-STYLE-NIT-195-R1 -> internal/repos/registry.go:4 hit (exit 1)",
+    "read": [
+      "registry.go:458 shell.Run(ctx, repoPath, \"git\", \"for-each-ref\", ..., \"refs/heads/claude/\", \"refs/heads/claude-routines/\")",
+      "registry.go:481 func WorktreeCounts(ctx context.Context, repoPath string, branchPrefixes []string)",
+      "server/repos.go:537 branchPrefixes := []string{\"claude/\", \"claude-routines/\"}; ops.go:118 HasPrefix(branch, \"claude/\") && HasPrefix(branch, \"claude-routines/\")",
+      "git grep at base b4981b8: func Fingerprint absent — the hard-coded copy is introduced by this diff"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-195-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-195-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-195-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-195-r1/fail/internal/repos/registry.go"
+  ]
+}

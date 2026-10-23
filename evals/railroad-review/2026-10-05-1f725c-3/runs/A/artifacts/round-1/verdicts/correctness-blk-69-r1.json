@@ -1,0 +1,18 @@
+{
+  "finding_id": "correctness-BLK-69-r1",
+  "verdict": "confirmed",
+  "reason": "Known-ledger match: correctness-BLK-3-r2 (open) already carries this defect, and its claim names install.sh explicitly. Its substance is that the presentation profile is installed only after sync_skills.sh runs, so a fresh casual install gets no skillOverrides and no overlay. A code read at the pinned head shows the order unchanged. Per the ledger rule it was not re-probed; the dispatcher carries it.",
+  "probe": "manual: code-read; known-ledger duplicate of correctness-BLK-3-r2, not re-verified per ledger rule",
+  "evidence": {
+    "read": [
+      "install.sh:82-95 at 1f725ce runs sync_skills.sh (line 92) before install.sh:100-105 copies settings/claude_code/presentation-profile.$SMINE_PRESENTATION_PROFILE.md to ~/.claude/context/global/presentation-profile.md",
+      "cmd/sync/sync_skills.sh:252-263: profile_audience stays empty when the profile file is absent, so line 263 [casual] is false and the developer branch 286-300 runs (drops leaf overrides, rm -f overlay)",
+      "settings/claude_code/presentation-profile.de.md:3: audience: casual",
+      "known.json: correctness-BLK-3-r2 (cmd/configserver/install_windows.go:105, fix_state open) has the claim 'runInstall (and install.sh) install the presentation profile only after runSyncs/sync_skills.sh ran, so a fresh casual install takes sync_skills' developer branch...'"
+    ],
+    "known_match": "correctness-BLK-3-r2"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/verdicts/correctness-blk-69-r1.json"
+  ]
+}

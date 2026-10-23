@@ -1,0 +1,40 @@
+{
+  "rounds": 1,
+  "clean": false,
+  "confirmed_findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 329,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy's unresolvable-base fallback trusts the attacker-writable working-tree policy.Mode, so setting mode=free plus a non-resolving base_ref in acdsl/policy.json silently bypasses the entire policy gate (exit 0, no diagnostics) in gated/strict repos.",
+      "fix": "Drop the free-mode shortcut in the baseErr branch and always propagate the error when the base is unresolvable (no base, no bypass, in every mode); optionally make policyBase fall through to the default candidate chain when an explicit BaseRef fails to resolve; add the missing test case of mode free plus unresolvable base_ref on a repo whose base is gated."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/server/sessions.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The sessions store rescans every batch JSON file in every scope on every GET (Store.Reload full ReadDir/ReadFile/Unmarshal pass) with no cache tier, which will show as page-load latency once the batch corpus grows into the hundreds.",
+      "fix": "Not a fix-now item since it is an explicitly adjudicated tradeoff (D17); keep it on the radar and consider a cache/invalidation scheme like the repo status cache if session-report pages start feeling slow."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "cmd/configserver/main.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "peekIdentity's mismatch branch logs \"another profile's peek holds this port\" even when the listener is an unrelated process that happens to return decodable JSON on /healthz, which can mislead an operator debugging a port conflict.",
+      "fix": "Adjust the log wording so it does not assert the port holder is another profile's peek when identity could not actually be established."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "install.sh",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "The peek-port kill loop assumes lsof -t returns one PID; multiple newline-separated PIDs make kill \"$pid\" fail because the quoted argument is not a valid single PID.",
+      "fix": "Use unquoted word-splitting (kill $pid) or loop over the PIDs."
+    }
+  ],
+  "known_findings": [],
+  "leftover_worktrees": []
+}

@@ -1,0 +1,16 @@
+{
+  "finding_id": "code-style-NIT-211-r1",
+  "verdict": "debunked",
+  "reason": "No in-repo convention requires a script header to list every env var it reads: routines/_lib/matrix.sh's 'Env knobs' header lists only its own ROUTINE_EVAL_* knobs while reading ROUTINE_MODEL (line 28), and routines/smine-nightly/run.sh lists no env at all while reading SMINE_APPLY_CAP/SMINE_AGENTS/SMINE_DEV_MODE; bootstrap/run.sh follows that pattern by listing its own BOOTSTRAP_* knobs.",
+  "probe": "manual: convention comparison",
+  "evidence": {
+    "read": [
+      "routines/_lib/matrix.sh:17-22 header 'Env knobs (all defaulted): ROUTINE_EVAL_SKILL, ...' omits ROUTINE_MODEL, which line 28 reads (MATRIX_MODELS=\"${ROUTINE_EVAL_MODELS:-${ROUTINE_MODEL:-...}}\")",
+      "routines/smine-nightly/run.sh:1-6 header lists no env vars; lines 19-25 read SMINE_APPLY_CAP, SMINE_AUTO_APPLY, SMINE_AGENTS, SMINE_SUBAGENTS, SMINE_DEV_MODE",
+      "git grep '^# Env' over *.sh at 1f725ce: only cmd/bootstrap/run.sh:9 and routines/_lib/matrix.sh:17 carry an Env header — both scoped to their own prefix",
+      "cmd/bootstrap/run.sh:9-11 lists BOOTSTRAP_TOKEN_FILE, BOOTSTRAP_SINCE, BOOTSTRAP_N, BOOTSTRAP_EXTRA_PROMPT, BOOTSTRAP_DRY_RUN; the six unlisted vars are the shared nightly/routine knobs (ROUTINE_* from routines/_lib, SMINE_* from the nightly wrapper)"
+    ],
+    "unprobeable": "the factual omission is trivially greppable, but the dispute is whether ACTION-REVIEW-QUALITY-001's convention requires the listing — a convention comparison, not a pattern a probe can settle"
+  },
+  "artifacts": []
+}

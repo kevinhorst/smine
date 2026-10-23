@@ -1,0 +1,27 @@
+{
+  "finding_id": "correctness-MAJ-63-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at internal/repos/registry.go:48: the default/archived reservation sits in Repo.Validate, which readRegistrySnapshot (L247) applies to every stored entry and returns on the first error, so a pre-change repos.json holding a repo named default or archived (legal at base, namePattern unchanged, names were filepath.Base(path)) fails Reload, Add and Remove; server startup logs and serves an empty roster.",
+  "probe": "PROBE-CORRECTNESS-MAJ-63-R1",
+  "script": "correctness-maj-63-r1.sh",
+  "fixture": "probes/fixtures/correctness-maj-63-r1/registry.go",
+  "registry": "registry-correctness-maj-63-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CORRECTNESS-MAJ-63-R1 -registry probes/registry-correctness-maj-63-r1.json -> internal/repos/registry.go:48: reserved-name check lives in Repo.Validate, which readRegistrySnapshot (line 247) applies to every stored entry, failing the whole registry read on a legacy default/archived entry (exit 1)",
+    "validity_run": "bin/acdsl check -root scratch/correctness-maj-63-r1/root (git-inited copy of the fail fixture) -rule PROBE-CORRECTNESS-MAJ-63-R1 -> internal/repos/registry.go:4 hit, exit 1; direct /bin/bash run of the script was denied by tool policy, so validity ran through acdsl over a fixture root",
+    "read": [
+      "internal/repos/registry.go L48-50 (head): if r.Name == \"default\" || r.Name == \"archived\" { return ... is reserved }",
+      "internal/repos/registry.go readRegistrySnapshot: for _, repo := range file.Repos { if err := repo.Validate(); err != nil { return nil, ... } } — Reload, Add, Remove all call it and propagate the error",
+      "internal/server/server.go L216-219: registry.Reload() failure -> log 'repos: initial load failed, serving empty'",
+      "spec-8 D13/D-8 mandates the check in Repo.Validate but says nothing about pre-existing registry entries with those names; the whole-file load failure is the unaddressed regression (ACTION-REVIEW-SPEC-004)"
+    ],
+    "cells": "agree with effect incorrect / exposure rare — only installs whose roster already holds a repo named default or archived are hit"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-63-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-maj-63-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-maj-63-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-maj-63-r1/registry.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-maj-63-r1/root/internal/repos/registry.go"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-NIT-81-r1",
+  "verdict": "confirmed",
+  "reason": "Diff b4981b8..1f725ce adds ACTION-IMPL-TEST-001 (implementing.md:107), the skill-eval concept->fexplore default (matrix.sh:25, skill-eval plist), the worktree.sh HEAD guard + 'Merge directly on the current branch' prompt, and SMINE_SUBAGENTS; none of the 14 spec copies names any of them, and the two introducing commits (03bf69c, dbc9c47) carry no driver in their bodies.",
+  "probe": "manual: command with actual and expected output (ACDSL probe authored but unrunnable: tool policy denies /bin/bash <script> and bin/acdsl direct runs; repo Makefile has no acdsl target)",
+  "script": "correctness-nit-81-r1.sh",
+  "fixture": "probes/fixtures/correctness-nit-81-r1-fail.md",
+  "registry": "registry-correctness-nit-81-r1.json",
+  "evidence": {
+    "read": [
+      "grep -c -E 'ACTION-IMPL-TEST|SMINE_SUBAGENTS|ROUTINE_EVAL_SKILL|fexplore|symbolic-ref|Merge directly on the current branch' over spec-1..spec-14: 0 in every spec except spec-9 (1 hit, line 163: an unrelated bootstrap 'branch=$(git symbolic-ref --short HEAD ...)' snippet); expected >=1 traceable requirement per added concept",
+      "git diff b4981b8 1f725ce: implementing.md +ACTION-IMPL-TEST-001 at L107-111 (Reach: backend); matrix.sh MATRIX_SKILL default concept->fexplore; skill-eval plist ROUTINE_EVAL_SKILL fexplore + ROUTINE_EVAL_QUALITY_CONTEXT; worktree.sh L64 prompt suffix and L168-172 symbolic-ref guard; smine-nightly plist SMINE_SUBAGENTS=0, run.sh subagents -> --subagents",
+      "git log b4981b8..1f725ce on the cited files: 03bf69c 'context: implementing action and plan rule updates' and dbc9c47 'routines: skill-eval fexplore and railroad-review routines, nightly and matrix updates' — empty bodies, no plan/proposal reference",
+      "known.json: MAJ-25 (missing QUALITY_CONTEXT path), MIN-19, tests-NIT-27, MAJ-70, INF-50 (smine-permissions untraced) — different substance or file; not a duplicate"
+    ],
+    "attempts": [
+      "1: /bin/bash probes/correctness-nit-81-r1.sh scratch/correctness-nit-81-r1/files.txt -> tool-policy denied (no Bash(/bin/bash *) rule)",
+      "2: bin/acdsl -h and make acdsl ARGS=... -> tool-policy denied; Makefile has no acdsl target"
+    ],
+    "cells_note": "Weakest sub-claim: the worktree.sh HEAD guard protects the run_branch capture that spec-5's orchestrate stage (C10) introduced in run.sh, so it is arguably derivative of spec-5; the other three additions remain fully untraced. Effect debt / exposure rare held."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/correctness-nit-81-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/correctness-nit-81-r1-fail.md",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-correctness-nit-81-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/correctness-nit-81-r1/files.txt"
+  ]
+}

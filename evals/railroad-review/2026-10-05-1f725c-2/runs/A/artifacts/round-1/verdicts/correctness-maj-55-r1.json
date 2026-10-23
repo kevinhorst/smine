@@ -1,0 +1,20 @@
+{
+  "finding_id": "correctness-MAJ-55-r1",
+  "verdict": "debunked",
+  "reason": "The specs explicitly scope Welcome as an English, operator-facing page: spec-4 Scope.Out lists Welcome among dev-only pages that 'stay English', spec-5 C20 drops the audience gate because Welcome is 'operator-facing either way', and spec-12 defers the welcome tutorial register; correctness-12/26 do not reach it.",
+  "probe": "none: the code fact (raw 'Welcome' literal at layout.html:28, untranslated welcome.html strings) is undisputed; the claim turns on spec scope, which no code-shape probe can decide — a forbid-phrase probe would go red on an intentional, spec-decided literal",
+  "evidence": {
+    "read": [
+      "spec-4-change-englishness.md:42 — Out: **dev-only pages** (Skills/Context/Repos/Routines/Tools/Checklist/Config/Welcome) — stay English",
+      "spec-5-change-nondev-automation.md:132 (C20) — Welcome nav gating reverts to plain `{{if initWelcome}}` (audience condition dropped) — operator-facing either way",
+      "spec-5-change-nondev-automation.md:332 — layout.html: Welcome nav gating reverts to `{{if initWelcome}}` (drop the audience condition from the base feature)",
+      "spec-12-raw.md:35,42 — Out: i18n expansion: only the new page's strings enter the German catalog; Deferred: welcome tutorial register still developer-voiced",
+      "spec-3-raw.md:38 — welcome/tutorial rewrite for non-developers out: Welcome is hidden for the audience instead; spec-1-concept.md:105 lists the non-developer welcome as Backlog",
+      "layout.html:28 at 1f725ce — `{{if initWelcome}}<a href=\"/welcome\" ...>Welcome</a>{{end}}` — matches spec-5 C20 exactly"
+    ],
+    "decisive": "The later change specs (spec-4 Out, spec-5 C20) supersede the concept's 'welcome/tutorial in German' wording for Welcome: it stays English and is shown on initWelcome installs regardless of audience, by design. The implementation matches that decision; the fix proposed (translate Welcome) is unrequested scope, explicitly listed Out/Deferred."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/verdicts/correctness-maj-55-r1.json"
+  ]
+}

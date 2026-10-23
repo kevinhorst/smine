@@ -1,0 +1,20 @@
+{
+  "finding_id": "code-style-NIT-227-r1",
+  "verdict": "confirmed",
+  "reason": "new keepNewest(sessions, key, candidate) at peek.go:192 orders params non-alphabetically against RULE-GOLANG-CALL-003; probe red",
+  "probe": "PROBE-CODE-STYLE-NIT-227-R1",
+  "fixture": "probes/fixtures/code-style-nit-227-r1/peek.go",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-227-R1 -> exit 1: internal/peek/peek.go:192: symbol \"keepNewest\" signature mismatch: got func keepNewest(sessions map[string]Session, key string, candidate Session), planned func keepNewest(candidate Session, key string, sessions map[string]Session)",
+    "validity": "bin/verifiers/symbolexists scratch/code-style-nit-227-r1/files.txt symbol=keepNewest signature=... -> exit 1 on fixture peek.go:5",
+    "read": [
+      "internal/peek/peek.go:192 keepNewest declaration; callers 119 and 124",
+      "git diff b4981b8..1f725ce -- internal/peek/peek.go: keepNewest is an addition"
+    ],
+    "note": "make -C <wt> acdsl ARGS=... denied by tool policy; ran shipped bin/acdsl -root <wt>"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-227-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-227-r1/peek.go"
+  ]
+}

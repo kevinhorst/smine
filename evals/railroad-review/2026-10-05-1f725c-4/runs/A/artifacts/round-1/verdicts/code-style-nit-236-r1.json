@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-236-r1",
+  "verdict": "confirmed",
+  "reason": "Probe red: presentation.go:186 guards len(lines) == 0 directly on lines := strings.Split(content, \"\\n\"); Split with a non-empty separator always returns at least one element, so the term is dead.",
+  "probe": "PROBE-CODE-STYLE-NIT-236-R1",
+  "script": "code-style-nit-236-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-236-r1-fail.go",
+  "registry": "registry-code-style-nit-236-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CODE-STYLE-NIT-236-R1 -registry probes/registry-code-style-nit-236-r1.json -> exit 1: internal/server/presentation.go:186: len(lines) == 0 can never hold — lines comes from strings.Split with a non-empty separator (line 185)",
+    "read": [
+      "internal/server/presentation.go:184-195 at 1f725ce: lines := strings.Split(content, \"\\n\"); if len(lines) == 0 || strings.TrimSpace(lines[0]) != \"---\"",
+      "Go stdlib strings.Split doc: 'If s does not contain sep and sep is not empty, Split returns a slice of length 1 whose only element is s' — Split(\"\", \"\\n\") = [\"\"]"
+    ],
+    "validity": "Direct fixture run denied by tool policy (/bin/bash <script> has no allow rule) and acdsl check -root on the round dir fails (not a git repo: DiscoverRules FileUniverse exit 128); the real run went red, so the probe is not blind — validity matters only for a green result",
+    "known": "known.json presentation.go rows (NIT-11, NIT-12, NIT-19, NIT-22, NIT-198, NIT-204, tests-MIN-18, tests-NIT-59) cover other code — not this claim"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-236-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-code-style-nit-236-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-236-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-236-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/code-style-nit-236-r1/files.txt"
+  ]
+}

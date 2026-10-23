@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/server/sessions.go",
+      "line": 177,
+      "severity": "MAJOR",
+      "claim": "The archive/delete/unarchive session-scope handlers set HX-Redirect unconditionally, so on any error the browser redirects and discards the rendered error fragment, silently hiding failures on all three operations.",
+      "fix": "Set HX-Redirect only when err == nil (one shared fix for all three handlers), mirroring the runRepoOp pattern in internal/server/repos.go that sets its trigger header conditionally and otherwise lets the fragment render the error in place."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "plans/v1-2-1/2026-08-27-bootstrap-profile-improvements-wip-397f906/design/change-bootstrap-profile.md",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The superseded plan's Changelog, Changes, Verification, and Contracts sections were never updated to record that Phase A's prompt-string-only mechanism was dropped and replaced by change-headless-bootstrap.md's wrapper-orchestrated design, misleading a reader into believing the old mechanism shipped.",
+      "fix": "Append a Changelog row to change-bootstrap-profile.md pointing at change-headless-bootstrap.md and marking Phase A superseded, per RULE-PLAN-049."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/server/presentation_test.go",
+      "line": 222,
+      "severity": "MINOR",
+      "claim": "The newly added test TestProposalsGroupTitlesNonDeveloper kept the stale NonDeveloper identifier despite the casual rename sweep, though its body already uses the new audience: casual fixture value.",
+      "fix": "Rename to TestProposalsGroupTitlesCasual."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/repos/registry.go",
+      "line": 63,
+      "severity": "MINOR",
+      "claim": "The new loadedModTime and loadedSize fields are inserted between mu and repos, breaking the alphabetical field ordering of Registry's guarded-state block required by RULE-GOLANG-STRUCT-002.",
+      "fix": "Sort the new fields before mu: loadedModTime, loadedSize, mu, repos."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "cmd/configserver/main.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "startPeek's backLink parameter and the --back-link flag passed to the spawned peek-mcp process are not documented in the multi-profile-ports plan's Phase 2 Changes list, making it an untracked addition against that plan.",
+      "fix": "Add a one-line note in the plan's Changelog explaining where --back-link came from, per ACTION-REVIEW-SPEC-005."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "finding_id": "code-style-MIN-22-r2",
+  "verdict": "confirmed",
+  "reason": "internal/repos/registry.go:462 and :467 (Fingerprint, wholly new in this diff) each call shell.Run on a single line with 7 and 6 arguments respectively; RULE-GOLANG-CALL-001 requires multiline at 5+ arguments, same pattern as the already-fixed round-1 instances (bootstrap.go, profilesettings.go).",
+  "probe": "none: ACDSL repo but both verdict invocations are denied by this session's tool-policy: `<worktree>/bin/acdsl check -rule PROBE-CODE-STYLE-MIN-22-R2` -> denied, no allow rule matches candidate Bash(<worktree>/bin/acdsl *); `make -C <worktree> acdsl ARGS=...` -> denied, no `acdsl` make target exists. Two attempts, both denied; settled manually per PROBE-006.",
+  "evidence": {
+    "read": [
+      "internal/repos/registry.go:462 refs, err := shell.Run(ctx, repoPath, \"git\", \"for-each-ref\", \"--format=%(refname) %(objectname)\", \"refs/heads/claude/\", \"refs/heads/claude-routines/\")  -- 7 args, single line",
+      "internal/repos/registry.go:467 worktrees, err := shell.Run(ctx, repoPath, \"git\", \"worktree\", \"list\", \"--porcelain\")  -- 6 args, single line",
+      "context/rules/go.md:384 A call MUST be multiline if ANY of the following holds: 5 or more arguments; ..."
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/code-style-min-22-r2-evidence.txt"
+  ]
+}

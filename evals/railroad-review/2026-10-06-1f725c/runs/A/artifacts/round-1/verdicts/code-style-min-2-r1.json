@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-MIN-2-r1",
+  "verdict": "confirmed",
+  "reason": "internal/server/bootstrap.go:82 is a single-line exec.CommandContext call with 6 arguments, one a nested filepath.Join(...) call — both independently trip RULE-GOLANG-CALL-001's mandatory-multiline threshold — reproduced by a deterministic ACDSL probe, RED on the real file.",
+  "probe": "PROBE-CODE-STYLE-MIN-2-R1",
+  "script": "probe-call-multiline.sh",
+  "fixture": "round-1/probes/fixtures/min2-fail.go",
+  "registry": "registry-code-style-min-2-r1.json",
+  "evidence": {
+    "read": [
+      "internal/server/bootstrap.go:82 (git show 1f725cedc5c8b092c8a3d7e408793ef72840ec7e) — cmd := exec.CommandContext(runCtx, bashPath, \"-c\", script, \"bash\", filepath.Join(\"cmd\", \"bootstrap\", \"run.sh\")) on one physical line; bootstrap.go is new-file-mode in this diff, so in scope"
+    ],
+    "probe_run": "bin/acdsl check -root <worktree> -rule PROBE-CODE-STYLE-MIN-2-R1 -registry registry-code-style-min-2-r1.json -lifetime task => exit 1: internal/server/bootstrap.go:82: single-line call with 7 commas / nested-call argument exceeds RULE-GOLANG-CALL-001 multiline threshold",
+    "validity_check": "probe exits 1 on the single-line fixture (round-1/probes/fixtures/min2-fail.go, staged untracked in the pinned worktree) and exits 0 (acdsl: 1 rule(s) OK) once the same call is reformatted one-argument-per-line, both via bin/acdsl check; direct-interpreter self-check substituted with the acdsl mechanism since this environment's tool policy denies invoking /bin/bash on a script directly"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/probe-call-multiline.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/fixtures/min2-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/registry-code-style-min-2-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-1/probes/code-style-min-2-r1.acdsl"
+  ]
+}

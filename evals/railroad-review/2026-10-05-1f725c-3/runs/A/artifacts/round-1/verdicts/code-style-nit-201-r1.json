@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-201-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED on both signatures of the new statuscache.go: line 44 DropBranches(repoName, branches) and line 68 Store(repoName, fingerprint, statuses) violate RULE-GOLANG-CALL-003 alphabetical parameter order; no ctx/variadic exemption applies; known NIT-6/7-r1 on this file cover other claims.",
+  "probe": "PROBE-CODE-STYLE-NIT-201-R1",
+  "script": "code-style-nit-201-r1.sh",
+  "fixture": "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-201-r1/fail.go",
+  "registry": "registry-code-style-nit-201-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-201-R1 -registry probes/registry-code-style-nit-201-r1.json at 1f725ce -> exit 1: internal/server/statuscache.go:44: parameters not alphabetical: repoName branches; internal/server/statuscache.go:68: parameters not alphabetical: repoName fingerprint statuses",
+    "validity": "bin/acdsl check -root scratch/code-style-nit-201-r1/repo (git-initialised copy of the fixture) -> exit 1 on fail.go:3 only; the ctx-first sorted signature in the fixture stayed clean",
+    "read": [
+      "internal/server/statuscache.go:44 at 1f725ce: func (c *statusCache) DropBranches(repoName string, branches []string)",
+      "internal/server/statuscache.go:68 at 1f725ce: func (c *statusCache) Store(repoName, fingerprint string, statuses []repos.WorktreeStatus) statusEntry",
+      "context/rules/go.md RULE-GOLANG-CALL-003: Parameters in a function signature MUST be sorted alphabetically (ctx first, variadic last)",
+      "git diff --stat: statuscache.go is a new 74-line file in this range"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-201-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-201-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-201-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-201-r1/fail.go"
+  ]
+}

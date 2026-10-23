@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "internal/acdsl/policy.go",
+      "line": 195,
+      "severity": "BLOCKER",
+      "claim": "CheckPolicy's isBoundary determination string-compares the current branch name against a candidate resolved from the working-tree policy's base_ref (or default names), so an agent branch can set base_ref to its own branch name or check out a local branch named main/master to make isBoundary false and skip all strict/gated enforcement before surfaceDelta ever runs.",
+      "fix": "Determine isBoundary from commit identity, not branch-name string comparison: resolve candidates strictly from remote-tracking refs (never the local branch's own name), treat the tree as on-boundary whenever HEAD differs from the resolved base commit or there are uncommitted changes, and re-derive the boundary decision from the base-ref policy's own recorded base_ref rather than the working copy; add regression tests for the self-referential base_ref and local-main scenarios."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "cmd/bootstrap/run.sh",
+      "line": 120,
+      "severity": "MAJOR",
+      "claim": "The new stage runners in cmd/bootstrap/run.sh (run_stage) and routines/smine-nightly/run.sh (new orchestrate stage) fail open when routine_allowed_tools returns empty, proceeding with no --allowedTools restriction at all on unattended stages that hold commit authority on main.",
+      "fix": "Abort the run (non-zero exit, clear message) when the allowed-tools manifest is missing for a stage with real write/commit authority, instead of degrading to unrestricted tool access."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "skills/smine/smine-apply/SKILL.md",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "The casual-audience \"never propose edits to skills the user doesn't own\" gate is enforced only in skill markdown prose, with no Go/shell code or hook reading presentation-profile.md's audience field to refuse a skill-file write, leaving no compiled backstop if the agent ignores or misreads the prose gate.",
+      "fix": "Confirm the prose-only enforcement was a deliberate scope decision, or add a real enforcement point in code or a hook; at minimum add a fixture-based smoke test proving a casual-profile smine-apply run refuses to touch a skill lacking origin: user."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": "internal/repos/registry.go",
+      "line": 61,
+      "severity": "MINOR",
+      "claim": "The Registry struct's new loadedModTime/loadedSize fields are placed after mu, violating RULE-GOLANG-STRUCT-002's alphabetical field ordering within the group.",
+      "fix": "Reorder so loadedModTime and loadedSize precede mu within the field group."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": "settings/claude_code/settings.json",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "Removing the blanket permissions.ask entries on acdsl/** edits in favor of the acdsl-policy-guard.sh hook leaves gated targets with no interactive confirmation in the tool-permission layer (the hook fires only on Write|Edit|NotebookEdit, not Bash, and only blocks the four frozen surface files), so the only backstop is the acdsl check path that finding #1 shows can be bypassed.",
+      "fix": "Be deliberate about the narrowed coverage for distributed gated targets: either restore an ask gate for rule-surface edits or extend the hook's scope, at least until the finding-#1 boundary bypass is fixed."
+    }
+  ]
+}

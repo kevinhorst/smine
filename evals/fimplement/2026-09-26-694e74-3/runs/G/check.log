@@ -1,0 +1,18 @@
+go build  -o ./bin/acdsl ./cmd/acdsl
+go build  -o ./bin/verifiers ./cmd/acdsl/verifiers/...
+cargo fmt --manifest-path cmd/agentwt/Cargo.toml -- --check
+Diff in /Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-3-G/cmd/agentwt/tests/scenarios/mod.rs:499:
+     let mut f = Fixture::new();
+     f.branch("claude/session", "main");
+     let session_wt = f.worktree("claude/session", "session");
+-    let dry_run = [
+-        "remove",
+-        "--dry-run",
+-        "--delete-branch",
+-        "claude/session",
+-    ];
++    let dry_run = ["remove", "--dry-run", "--delete-branch", "claude/session"];
+ 
+     // /close check shape from inside a clean worktree: exit 0, previewed lines, nothing touched.
+     let out = f.run_in(&session_wt, &dry_run);
+make: *** [rust-lint] Error 1

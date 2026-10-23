@@ -1,0 +1,5 @@
+=== RUN   TestReproSanctionedOverlayAccepted
+    policy_repro_test.go:32: overlayViolations (authoritative check) accepts the sanctioned registry.local.json edit with zero diagnostics
+--- PASS: TestReproSanctionedOverlayAccepted (0.00s)
+PASS
+ok  	github.com/kevinhorst/smine/internal/acdsl	(cached)

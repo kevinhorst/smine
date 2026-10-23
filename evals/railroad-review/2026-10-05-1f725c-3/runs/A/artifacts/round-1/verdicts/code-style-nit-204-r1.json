@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-204-r1",
+  "verdict": "confirmed",
+  "reason": "presentation.go:105 at 1f725ce is a single-line fmt.Sprintf with exactly 5 arguments; RULE-GOLANG-CALL-001 requires a multiline call at 5 or more arguments.",
+  "probe": "PROBE-CODE-STYLE-NIT-204-R1",
+  "script": "code-style-nit-204-r1.sh",
+  "fixture": "fixtures/code-style-nit-204-r1-fail.go",
+  "registry": "registry-code-style-nit-203-r1.json",
+  "evidence": {
+    "probe_run": "internal/server/presentation.go:105: single-line fmt.Sprintf with 5+ arguments (RULE-GOLANG-CALL-001): [PROBE-CODE-STYLE-NIT-204-R1] (acdsl check -rule PROBE-CODE-STYLE-NIT-204-R1, exit 1)",
+    "read": [
+      "presentation.go:105 at head: content := fmt.Sprintf(\"---\\nlanguage: %s\\naudience: %s\\ndev-mode: %t\\n---\\n%s\", language, audience, devMode, body)",
+      "context/rules/go.md:384-387 RULE-GOLANG-CALL-001: 'A call MUST be multiline if ANY of the following holds: 5 or more arguments; any argument is a nested call'"
+    ],
+    "validity": "direct interpreter run denied by tool policy; the script's match regex was run with grep over the fail fixture and hit line 6",
+    "notes": "not covered by known ledger rows for presentation.go (NIT-11, NIT-12, NIT-22, NIT-19-r2, tests-MIN-18)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-204-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-204-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-203-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-204-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-204-r1/files.txt"
+  ]
+}

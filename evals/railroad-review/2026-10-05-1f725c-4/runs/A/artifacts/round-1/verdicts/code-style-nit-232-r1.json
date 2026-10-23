@@ -1,0 +1,26 @@
+{
+  "finding_id": "code-style-NIT-232-r1",
+  "verdict": "confirmed",
+  "reason": "acdsl probe RED at internal/routines/plist.go:112 — the added `if !ok` -> `for range otherTriggerKeys` -> `if present` nests three levels; RULE-GOLANG-NEST-001 counts range loops and writes new code to 2.",
+  "probe": "PROBE-CODE-STYLE-NIT-232-R1",
+  "script": "code-style-nit-232-r1.sh",
+  "fixture": "probes/fixtures/code-style-nit-232-r1-fail.go",
+  "registry": "registry-code-style-nit-232-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-CODE-STYLE-NIT-232-R1 -registry registry-code-style-nit-232-r1.json -> exit 1: internal/routines/plist.go:112: trigger-key check nested at control level 3",
+    "read": [
+      "internal/routines/plist.go:109 if !ok { / :111 for _, key := range otherTriggerKeys { / :112 if _, present := content[key]; present {",
+      "diff: base returned `nil, false, nil` directly; lines 110-117 are all added",
+      "context/rules/go.md:358-364 new code is written to 2; the same limit counts for … range, which revive does not count"
+    ],
+    "validity": "Direct /bin/bash run denied by tool policy; the script's exact grep -nE pattern over the fail fixture hit line 6.",
+    "notes": "Known NIT-61 (declaration placement) and NIT-13 (bool naming) on plist.go are different substance."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-232-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/code-style-nit-232-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/registry-code-style-nit-232-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/probes/fixtures/code-style-nit-232-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/scratch/code-style-nit-232-r1/files.txt"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "finding_id": "tests-NIT-60-r1",
+  "verdict": "confirmed",
+  "reason": "Probe RED at sessions.go:219: no _test.go in internal/server calls batchBands with languageGerman or asserts an 'Auswertung' batch label/title; TestBatchBands uses languageEnglish only. Partial mitigation: the catalog key \"Sessions\" is also asserted via nav (server_test.go:62 '>Sitzungen</a>'), but the \"Batch\" and \"Batch %d-%d\" keys and the sessions.go Go-side literals are untested in German.",
+  "probe": "PROBE-TESTS-NIT-60-R1",
+  "script": "tests-nit-60-r1.sh",
+  "fixture": "probes/fixtures/tests-nit-60-r1/fail/internal/server/sessions.go",
+  "registry": "registry-tests-nit-60-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -rule PROBE-TESTS-NIT-60-R1 -registry probes/registry-tests-nit-60-r1.json -> internal/server/sessions.go:219: German batch band/title translations are never exercised by a test (exit 1)",
+    "fixture_run": "acdsl check -root probes/fixtures/tests-nit-60-r1/fail -rule PROBE-TESTS-NIT-60-R1 -> sessions.go:4 hit (exit 1)",
+    "read": [
+      "git grep translate(|batchBands(|languageGerman|Auswertung|Sitzungen in internal/server: sessions_test.go:486/497/502 call batchBands(..., languageEnglish) only; no 'Auswertung' assertion in any test",
+      "internal/server/i18n.go:93-94 catalog keys \"Batch\" and \"Batch %d-%d\"; sessions.go:115/172/219 translate calls"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-60-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/tests-nit-60-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-tests-nit-60-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-60-r1/fail/internal/server/sessions.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/tests-nit-60-r1/fail/internal/server/sessions_test.go"
+  ]
+}

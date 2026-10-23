@@ -1,0 +1,2 @@
+{"type":"user","message":{"content":"REQUIRE-SKILL:some-skill please review this"}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Skill","input":{"skill":"some-skill"}}]}}

@@ -1,0 +1,97 @@
+{
+  "baseline": "claude-opus-5-5[1m]-low-no-serena",
+  "comparisons": null,
+  "groups": [
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 1,
+      "metricId": "smoke_pass",
+      "n": 4,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 1,
+      "metricId": "check_pass",
+      "n": 4,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 579.25,
+      "metricId": "wall_seconds",
+      "n": 4,
+      "note": "",
+      "stddev": 27.10934648173332,
+      "variance": 734.9166666666666
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 579.25,
+      "metricId": "active_seconds",
+      "n": 4,
+      "note": "",
+      "stddev": 27.10934648173332,
+      "variance": 734.9166666666666
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 29294.25,
+      "metricId": "output_tokens",
+      "n": 4,
+      "note": "",
+      "stddev": 1515.1786198333186,
+      "variance": 2295766.25
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 4.379430350000001,
+      "metricId": "cost_usd",
+      "n": 4,
+      "note": "",
+      "stddev": 0.4829292856189574,
+      "variance": 0.23322069490843655
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 2.5,
+      "metricId": "permission_denials",
+      "n": 4,
+      "note": "",
+      "stddev": 1.9148542155126762,
+      "variance": 3.6666666666666665
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 15.443121693121693,
+      "metricId": "step_miss_pct",
+      "n": 4,
+      "note": "",
+      "stddev": 3.4346989874599965,
+      "variance": 11.797157134458724
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 0,
+      "metricId": "defects_major",
+      "n": 4,
+      "note": "",
+      "stddev": 0,
+      "variance": 0
+    },
+    {
+      "arm": "claude-opus-5-5[1m]-low-no-serena",
+      "mean": 2.5,
+      "metricId": "quality_rank",
+      "n": 4,
+      "note": "",
+      "stddev": 1.2909944487358056,
+      "variance": 1.6666666666666667
+    }
+  ],
+  "notes": "two-sided alpha=0.05 via t-critical table; no p-values computed"
+}

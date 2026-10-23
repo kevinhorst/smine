@@ -1,0 +1,277 @@
+go build  -o ./bin/acdsl ./cmd/acdsl
+go build  -o ./bin/verifiers ./cmd/acdsl/verifiers/...
+cargo fmt --manifest-path cmd/agentwt/Cargo.toml -- --check
+cargo clippy --locked --manifest-path cmd/agentwt/Cargo.toml --all-targets --all-features -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.69s
+cargo check --locked --manifest-path cmd/agentwt/Cargo.toml --lib --no-default-features
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.52s
+go mod verify
+all modules verified
+go vet ./...
+./bin/acdsl project -strip
+2026/09/26 17:15:26 shell: git dur=165ms err=false
+acdsl: stripped 0 file(s)
+./bin/acdsl check -report bin/audit-report.md
+2026/09/26 17:15:27 shell: git dur=48ms err=false
+2026/09/26 17:15:27 shell: git dur=97ms err=false
+2026/09/26 17:15:27 shell: git dur=166ms err=true
+2026/09/26 17:15:27 shell: git dur=75ms err=true
+2026/09/26 17:15:27 shell: git dur=85ms err=true
+2026/09/26 17:15:27 shell: git dur=78ms err=true
+2026/09/26 17:15:27 shell: git dur=71ms err=false
+2026/09/26 17:15:27 shell: git dur=72ms err=false
+2026/09/26 17:15:27 shell: git dur=83ms err=true
+2026/09/26 17:15:28 shell: git dur=73ms err=true
+2026/09/26 17:15:28 shell: git dur=124ms err=true
+2026/09/26 17:15:28 shell: git dur=103ms err=true
+2026/09/26 17:15:28 shell: git dur=64ms err=true
+2026/09/26 17:15:28 shell: git dur=64ms err=true
+2026/09/26 17:15:28 shell: git dur=65ms err=false
+2026/09/26 17:15:28 shell: git dur=69ms err=false
+2026/09/26 17:15:28 shell: git dur=123ms err=true
+2026/09/26 17:15:28 shell: git dur=114ms err=true
+2026/09/26 17:15:28 shell: git dur=96ms err=false
+2026/09/26 17:15:28 shell: git dur=43ms err=false
+2026/09/26 17:15:28 shell: git dur=36ms err=false
+2026/09/26 17:15:28 shell: git dur=39ms err=false
+2026/09/26 17:15:29 shell: forbidcall dur=429ms err=false
+2026/09/26 17:15:29 shell: literalowner dur=670ms err=false
+2026/09/26 17:15:29 shell: errorfprefix dur=949ms err=false
+2026/09/26 17:15:30 shell: testschema dur=1251ms err=false
+2026/09/26 17:15:30 shell: linttags dur=1422ms err=false
+2026/09/26 17:15:31 shell: gofmtwrap dur=1570ms err=false
+2026/09/26 17:15:31 shell: funcsig dur=1770ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=310ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=791ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=1190ms err=false
+2026/09/26 17:15:32 shell: skillcontext dur=327ms err=false
+2026/09/26 17:15:32 shell: skillentries dur=677ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=11ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=9ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=12ms err=false
+2026/09/26 17:15:32 shell: skillmeta dur=25ms err=false
+2026/09/26 17:15:32 shell: skillmap dur=940ms err=false
+2026/09/26 17:15:33 shell: severitytable dur=938ms err=false
+2026/09/26 17:15:33 shell: jsonschemacheck dur=861ms err=false
+2026/09/26 17:15:33 shell: skillmodelcheck dur=1004ms err=false
+2026/09/26 17:15:34 shell: skillplantemplate dur=974ms err=false
+2026/09/26 17:15:34 shell: exhaustivewrap dur=4156ms err=false
+2026/09/26 17:15:34 shell: jsonschemacheck dur=27ms err=false
+2026/09/26 17:15:34 shell: jsonschemacheck dur=10ms err=false
+2026/09/26 17:15:34 shell: jsonschemacheck dur=11ms err=false
+2026/09/26 17:15:34 shell: jsonschemacheck dur=9ms err=false
+2026/09/26 17:15:34 shell: jsonschemacheck dur=12ms err=false
+2026/09/26 17:15:34 shell: bash32compat dur=959ms err=false
+2026/09/26 17:15:35 shell: filebaseline dur=967ms err=false
+2026/09/26 17:15:35 shell: rulescheck dur=1283ms err=false
+2026/09/26 17:15:35 shell: rulescheck dur=815ms err=false
+2026/09/26 17:15:35 shell: evalgenbounds dur=666ms err=false
+2026/09/26 17:15:35 shell: shellcheckwrap dur=2362ms err=false
+2026/09/26 17:15:36 shell: planformat dur=446ms err=false
+2026/09/26 17:15:36 shell: idgrammar dur=792ms err=false
+2026/09/26 17:15:37 shell: forbidphrase dur=1175ms err=false
+2026/09/26 17:15:37 shell: forbidphrase dur=965ms err=false
+2026/09/26 17:15:38 shell: golangciwrap dur=2822ms err=false
+2026/09/26 17:15:38 shell: git dur=21ms err=false
+acdsl: 41 rule(s) OK
+./bin/acdsl fixtures
+2026/09/26 17:15:38 shell: git dur=79ms err=false
+2026/09/26 17:15:38 shell: git dur=139ms err=false
+2026/09/26 17:15:39 shell: errorfprefix dur=6ms err=false
+2026/09/26 17:15:39 shell: errorfprefix dur=7ms err=true
+2026/09/26 17:15:39 shell: testschema dur=7ms err=false
+2026/09/26 17:15:39 shell: testschema dur=6ms err=true
+2026/09/26 17:15:39 shell: forbidcall dur=5ms err=false
+2026/09/26 17:15:39 shell: forbidcall dur=6ms err=true
+2026/09/26 17:15:39 shell: literalowner dur=5ms err=false
+2026/09/26 17:15:39 shell: literalowner dur=4ms err=true
+2026/09/26 17:15:39 shell: linttags dur=5ms err=false
+2026/09/26 17:15:39 shell: linttags dur=7ms err=true
+2026/09/26 17:15:39 shell: gofmtwrap dur=13ms err=false
+2026/09/26 17:15:39 shell: gofmtwrap dur=13ms err=true
+2026/09/26 17:15:39 shell: funcsig dur=7ms err=false
+2026/09/26 17:15:39 shell: funcsig dur=6ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=7ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=7ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=7ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=5ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=7ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=6ms err=true
+2026/09/26 17:15:39 shell: skillcontext dur=7ms err=false
+2026/09/26 17:15:39 shell: skillcontext dur=8ms err=true
+2026/09/26 17:15:39 shell: skillentries dur=7ms err=false
+2026/09/26 17:15:39 shell: skillentries dur=8ms err=true
+2026/09/26 17:15:39 shell: skillmap dur=8ms err=false
+2026/09/26 17:15:39 shell: skillmap dur=9ms err=true
+2026/09/26 17:15:39 shell: severitytable dur=6ms err=false
+2026/09/26 17:15:39 shell: severitytable dur=6ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=7ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=10ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=13ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=11ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=10ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=11ms err=true
+2026/09/26 17:15:39 shell: skillmeta dur=11ms err=false
+2026/09/26 17:15:39 shell: skillmeta dur=9ms err=true
+2026/09/26 17:15:39 shell: skillmodelcheck dur=9ms err=false
+2026/09/26 17:15:39 shell: skillmodelcheck dur=13ms err=true
+2026/09/26 17:15:39 shell: skillplantemplate dur=11ms err=false
+2026/09/26 17:15:39 shell: skillplantemplate dur=11ms err=true
+2026/09/26 17:15:39 shell: shellcheckwrap dur=44ms err=false
+2026/09/26 17:15:39 shell: shellcheckwrap dur=60ms err=true
+2026/09/26 17:15:39 shell: bash32compat dur=24ms err=false
+2026/09/26 17:15:39 shell: bash32compat dur=17ms err=true
+2026/09/26 17:15:39 shell: filebaseline dur=30ms err=false
+2026/09/26 17:15:39 shell: filebaseline dur=15ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=30ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=26ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=43ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=49ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=23ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=11ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=13ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=10ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=10ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=12ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=10ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=11ms err=true
+2026/09/26 17:15:39 shell: jsonschemacheck dur=9ms err=false
+2026/09/26 17:15:39 shell: jsonschemacheck dur=14ms err=true
+2026/09/26 17:15:39 shell: evalgenbounds dur=9ms err=false
+2026/09/26 17:15:39 shell: evalgenbounds dur=17ms err=true
+2026/09/26 17:15:39 shell: planformat dur=12ms err=false
+2026/09/26 17:15:39 shell: planformat dur=14ms err=true
+2026/09/26 17:15:40 shell: idgrammar dur=28ms err=false
+2026/09/26 17:15:40 shell: idgrammar dur=17ms err=true
+2026/09/26 17:15:40 shell: golangciwrap dur=275ms err=false
+2026/09/26 17:15:40 shell: golangciwrap dur=506ms err=true
+2026/09/26 17:15:40 shell: forbidphrase dur=6ms err=false
+2026/09/26 17:15:40 shell: forbidphrase dur=6ms err=true
+acdsl: fixtures OK (35 rule(s) with examples) · 78 file(s) · 1.767s
+go test -vet=off ./...
+?   	github.com/kevinhorst/smine/cmd/acdsl	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/bash32compat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/errorfprefix	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/evalgenbounds	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/exhaustivewrap	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/filebaseline	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidaddrlit	(cached)
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidcall	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidphrase	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/funcsig	(cached)
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/gofmtwrap	0.408s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/golangciwrap	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/goldendiff	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/idgrammar	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/jsonschemacheck	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/linttags	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/literalowner	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/planformat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/rulescheck	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/runbookformat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/severitytable	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/shellcheckwrap	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillcontext	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillentries	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillmap	(cached)
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillmeta	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillmodelcheck	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillplantemplate	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/symbolcoverage	(cached)
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/symbolexists	(cached)
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/testschema	(cached)
+?   	github.com/kevinhorst/smine/cmd/configserver	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/evalstats	(cached)
+?   	github.com/kevinhorst/smine/cmd/routine	[no test files]
+?   	github.com/kevinhorst/smine/cmd/rules	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/sessiontitle	0.851s
+?   	github.com/kevinhorst/smine/cmd/skilleval	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/skillfmt	(cached)
+ok  	github.com/kevinhorst/smine/cmd/skillhelp	(cached)
+ok  	github.com/kevinhorst/smine/cmd/skillmodel	(cached)
+ok  	github.com/kevinhorst/smine/cmd/toolpolicy	(cached)
+ok  	github.com/kevinhorst/smine/cmd/worktreecreate	1.712s
+ok  	github.com/kevinhorst/smine/internal/acdsl	24.566s
+ok  	github.com/kevinhorst/smine/internal/backlog	(cached)
+ok  	github.com/kevinhorst/smine/internal/codex	(cached)
+ok  	github.com/kevinhorst/smine/internal/config	(cached)
+ok  	github.com/kevinhorst/smine/internal/contextdocs	4.409s
+ok  	github.com/kevinhorst/smine/internal/evals	(cached)
+ok  	github.com/kevinhorst/smine/internal/fsx	(cached)
+ok  	github.com/kevinhorst/smine/internal/peek	2.310s
+ok  	github.com/kevinhorst/smine/internal/plans	(cached)
+ok  	github.com/kevinhorst/smine/internal/presentation	(cached)
+ok  	github.com/kevinhorst/smine/internal/proposals	(cached)
+ok  	github.com/kevinhorst/smine/internal/reach	(cached)
+ok  	github.com/kevinhorst/smine/internal/repos	8.571s
+ok  	github.com/kevinhorst/smine/internal/routinerun	28.050s
+ok  	github.com/kevinhorst/smine/internal/routines	1.142s
+ok  	github.com/kevinhorst/smine/internal/server	30.123s
+ok  	github.com/kevinhorst/smine/internal/server/catalog	(cached)
+?   	github.com/kevinhorst/smine/internal/server/respond	[no test files]
+ok  	github.com/kevinhorst/smine/internal/sessions	(cached)
+ok  	github.com/kevinhorst/smine/internal/shell	4.360s
+ok  	github.com/kevinhorst/smine/internal/skilleval	(cached)
+ok  	github.com/kevinhorst/smine/internal/skillmodel	3.299s
+ok  	github.com/kevinhorst/smine/internal/skills	(cached)
+ok  	github.com/kevinhorst/smine/internal/stats	(cached)
+ok  	github.com/kevinhorst/smine/internal/transcript	(cached)
+ok  	github.com/kevinhorst/smine/internal/xp0	(cached)
+/Library/Developer/CommandLineTools/usr/bin/make rust-test
+cargo test --locked --manifest-path cmd/agentwt/Cargo.toml
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running unittests src/lib.rs (cmd/agentwt/target/debug/deps/agentwt-dc100e07a3a687eb)
+
+running 14 tests
+test inventory::tests::agent_kind_and_candidates ... ok
+test gitstate::tests::rfc3339_epoch_and_leap ... ok
+test status::tests::safety_matrix ... ok
+test ops::tests::steps_follow_the_plan ... ok
+test wire::tests::operation_reason_spelling_matches_wire ... ok
+test wire::tests::enum_wire_strings_are_pinned ... ok
+test gitstate::tests::infrastructure_filter ... ok
+test gitstate::tests::fork_points_shapes ... ok
+test sessions::tests::longest_prefix_alive_newest_wins ... ok
+test gitstate::tests::reanchor_target_lines ... ok
+test order::tests::components_and_exact_set ... ok
+test gitstate::tests::pick_trailer_lines ... ok
+test order::tests::greedy_matches_exact_on_small_graphs ... ok
+test inventory::tests::operating_branch_files ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (cmd/agentwt/target/debug/deps/agentwt-e146a166866e40d5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration.rs (cmd/agentwt/target/debug/deps/integration-ae6a2521bc2cf21b)
+
+running 17 tests
+test scenarios::load_forty_branches ... ignored, load evidence, run via make rust-load
+test scenarios::schema_is_committed ... ok
+test scenarios::repo_without_agent_branches ... ok
+test scenarios::no_stdout_narration ... ok
+test scenarios::from_inside_worktree ... ok
+test scenarios::ops_remove_dry_run ... ok
+test scenarios::picked_then_merged_back ... ok
+test scenarios::inventory_worktree_facts ... ok
+test scenarios::ops_remove ... ok
+test scenarios::picked_in_subdirectory ... ok
+test scenarios::order_train ... ok
+test scenarios::status_on_fixture_repo ... ok
+test scenarios::history::worktree_histories ... ok
+test scenarios::history::base_histories ... ok
+test scenarios::history::merge_histories ... ok
+test scenarios::history::rebase_histories ... ok
+test scenarios::history::pick_histories ... ok
+
+test result: ok. 16 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 8.13s
+
+   Doc-tests agentwt
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

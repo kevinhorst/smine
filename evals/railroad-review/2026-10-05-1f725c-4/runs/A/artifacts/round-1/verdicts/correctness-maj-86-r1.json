@@ -1,0 +1,20 @@
+{
+  "finding_id": "correctness-MAJ-86-r1",
+  "verdict": "debunked",
+  "reason": "The sweep's trigger classes (file paths, rule/FACT/ACDSL IDs, schema/taxonomy jargon) do not cover an allowlist rule string, and on casual installs smine-permissions L33 already forbids path/jargon in change while pinning the rule string there, so the claimed sequence starts from a producer output the producer's own casual rule rules out and ends in a sweep action the sweep does not specify.",
+  "probe": "none: the claim turns on how an LLM stage interprets instruction prose (whether `Bash(gh pr view *)` counts as a sweep trigger class); a text probe can only detect that no permissions carve-out exists, which is not the defect, so a probe RED would not confirm and GREEN is impossible by construction",
+  "evidence": {
+    "read": [
+      "skills/smine/smine-permissions/SKILL.md:33 — casual: 'the prose fields carry no file paths and no schema/taxonomy jargon — say what becomes frictionless; the rule string itself stays in `change`.' (added in this diff together with L51 of consolidate)",
+      "skills/smine/smine-consolidate/SKILL.md:51 — sweep fires only on prose that 'still carries file paths, rule/FACT/ACDSL IDs, or schema/taxonomy jargon'; 'rule/FACT/ACDSL IDs' are context-entry IDs (RULE-*, FACT-*, ACDSL-*), not permission rule strings; the content 'moves', 'never deleted'",
+      "skills/smine/smine-permissions/SKILL.md:48 — the path+permissions.allow change template is the default; L33 is the casual override of it, so a conformant casual change reads e.g. 'Allow `Bash(gh pr view *)` so viewing PRs no longer prompts' and holds nothing the sweep targets",
+      "skills/smine/smine-orchestrate/SKILL.md:40 — same forbidden-class list; same reasoning applies",
+      "skills/smine/smine-apply/SKILL.md:31 — permissions branch reads the allowlist string named in change; on a conformant casual proposal it is still there",
+      "known.json — no matching entry (checked rows for smine-consolidate/permissions/apply/orchestrate)"
+    ],
+    "reasoning": "Failure needs two independent deviations: (1) smine-permissions writes the L48 developer template despite its L33 casual rule, and (2) the consolidate/orchestrate agent classifies the allowlist rule string itself as a path/ID/jargon class and moves it out of change. Neither is what the text instructs; even under (1) the sweep's targets are the path (already in `target`) and the 'permissions.allow' phrasing, not the rule string. The missing explicit carve-out is at most a robustness/clarity gap (debt), not a demonstrable incorrect behaviour."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/correctness-maj-86-r1.json"
+  ]
+}

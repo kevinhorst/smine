@@ -1,0 +1,25 @@
+{
+  "finding_id": "code-style-NIT-205-r1",
+  "verdict": "confirmed",
+  "reason": "repos.go:419 at 1f725ce is a single-line log.Printf with 5 arguments, two of them nested calls (formatTimings, len); RULE-GOLANG-CALL-001 requires multiline on either condition.",
+  "probe": "PROBE-CODE-STYLE-NIT-205-R1",
+  "script": "code-style-nit-205-r1.sh",
+  "fixture": "fixtures/code-style-nit-205-r1-fail.go",
+  "registry": "registry-code-style-nit-203-r1.json",
+  "evidence": {
+    "probe_run": "internal/server/repos.go:419: single-line timing log.Printf with 5 arguments incl. nested calls (RULE-GOLANG-CALL-001): [PROBE-CODE-STYLE-NIT-205-R1] (acdsl check -rule PROBE-CODE-STYLE-NIT-205-R1, exit 1)",
+    "read": [
+      "repos.go:419 at head: log.Printf(\"timing: repo=%s %s rows=%d cached=%t\", repo.Name, formatTimings(data.Timings), len(statuses), data.Cached)",
+      "context/rules/go.md:384-387 RULE-GOLANG-CALL-001"
+    ],
+    "validity": "direct interpreter run denied by tool policy; the script's match regex was run with grep over the fail fixture and hit line 6",
+    "notes": "the nested-call argument predates the diff, but the diff touched this line (added cached=%t / data.Cached), so the changed line violates the rule; no known ledger row covers repos.go:419"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-205-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/code-style-nit-205-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-code-style-nit-203-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/code-style-nit-205-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/code-style-nit-205-r1/files.txt"
+  ]
+}

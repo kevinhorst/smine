@@ -1,0 +1,21 @@
+{
+  "finding_id": "tests-MIN-77-r1",
+  "verdict": "confirmed",
+  "reason": "Mutant that snapshots language/audience at New (t, langAttr, isDeveloperAudience read captured values) keeps go test ./internal/server/... green at 1f725ce, so no test pins live re-render after a Profile save; exposure lowered: a Profile save is an occasional user action, no evidence of an often-hit path.",
+  "probe": "manual: mutation test (command with actual vs expected output)",
+  "effect": "debt",
+  "exposure": "rare",
+  "evidence": {
+    "probe_run": "go -C <wt> test ./internal/server/... -count=1 with server.go FuncMap mutated to snapLang/snapDev captured at New -> 'ok github.com/kevinhorst/smine/internal/server 15.279s' (expected: a failure if any test asserted render-after-save)",
+    "read": [
+      "internal/server/server.go:163-169 — t calls translate(presentation.language(), text); langAttr = presentation.language; isDeveloperAudience = presentation.isDeveloperAudience (live store reads)",
+      "internal/server/presentation.go:51-121 — presentationStore methods language/isDeveloperAudience/saveProfileSelection"
+    ],
+    "unprobeable_why": "claim is about test-suite sensitivity to a behavioral mutation; no registry verifier expresses it and a script verifier would have to build and run go test, which probes may not do",
+    "restore": "git diff --stat -- internal/server/server.go empty after restoring the mutation",
+    "cells": "exposure 'often' not supported: the uncovered path runs only when a user saves the Profile page; lowered to rare (debt/rare = NIT)"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/tests-min-77-r1.json"
+  ]
+}

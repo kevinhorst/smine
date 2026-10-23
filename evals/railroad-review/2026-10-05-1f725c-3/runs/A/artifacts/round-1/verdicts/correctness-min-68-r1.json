@@ -1,0 +1,28 @@
+{
+  "finding_id": "correctness-MIN-68-r1",
+  "verdict": "confirmed",
+  "reason": "bootstrap.go:82 spawns the wrapper with exec.CommandContext and no Setpgid/Setsid or cmd.Cancel anywhere in internal/ or cmd/; the probe goes RED at bootstrap.go:82. Stage timeouts in run.sh sum to 7h (3600+10800+3600+3600+3600), so the 6h deadline can fire mid-stage; the default cancel SIGKILLs only the bash pid, the $(routine_run_claude ...) subshell with timeout/caffeinate/claude survives until its own per-stage timeout (<=1h left), and the goroutine clears running. Overstatement in the claim: the orphan is still bounded by the per-stage timeout, not unbounded, and a second bootstrap is refused by run.sh's clean-tree preflight while the orphan has a dirty tree.",
+  "probe": "PROBE-CORRECTNESS-MIN-68-R1",
+  "script": "correctness-min-68-r1.sh",
+  "fixture": "probes/fixtures/correctness-min-68-r1/internal/server/bootstrap.go",
+  "registry": "registry-correctness-min-68-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-MIN-68-R1 -registry probes/registry-correctness-min-68-r1.json -> exit 1: internal/server/bootstrap.go:82: exec.CommandContext deadline kills only the direct child — no process group (Setpgid/Setsid) and no cmd.Cancel group kill",
+    "read": [
+      "internal/server/bootstrap.go:80-104 — exec.CommandContext(runCtx, bashPath, \"-c\", verifyPathPrefix+`exec bash \"$1\"`, ...), no SysProcAttr/Cancel; goroutine sets running=false after cmd.Wait()",
+      "internal/shell/hide_other.go:9 — HideWindow is a no-op off Windows; hide_windows.go:18-24 sets only HideWindow/CreationFlags",
+      "git grep Setpgid|Setsid|Pgid|.Cancel =|CREATE_NEW_PROCESS_GROUP over internal cmd -> no output",
+      "cmd/bootstrap/run.sh:133 output=$(routine_run_claude \"$timeout_s\" claude -p ...); stages 154-161 timeouts 3600,10800,3600,3600,3600 (7h total)",
+      "routines/_lib/platform.sh:28-29 darwin: timeout \"$timeout_s\" caffeinate -is \"$@\" — the per-stage bound that survives the wrapper kill"
+    ],
+    "validity": "fixture validity run not executable here: direct `/bin/bash <script>` and `bash <script>` are denied by tool-policy (candidate rules Bash(/bin/bash *), Bash(bash *)), and `acdsl check -root <fixture dir>` exits 2 because the fixture dir is not a git repo (FileUniverse). The real run's RED with the script's own message shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-min-68-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-min-68-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-min-68-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-min-68-r1/internal/server/bootstrap.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-min-68-r1-fail.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-min-68-r1/files.txt"
+  ]
+}

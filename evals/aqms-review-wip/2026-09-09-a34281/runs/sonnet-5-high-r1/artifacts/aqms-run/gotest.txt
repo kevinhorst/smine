@@ -1,0 +1,367 @@
+?   	github.com/kevinhorst/smine/cmd/acdsl	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/bash32compat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/errorfprefix	0.294s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/evalgenbounds	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/exhaustivewrap	0.549s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidaddrlit	2.107s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/forbidcall	0.799s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/funcsig	1.056s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/gofmtwrap	1.326s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/goldendiff	1.597s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/idgrammar	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/jsonschemacheck	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/linttags	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/literalowner	1.856s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/planformat	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/rulescheck	2.631s
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/runbookformat	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/shellcheckwrap	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillcontext	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillentries	[no test files]
+?   	github.com/kevinhorst/smine/cmd/acdsl/verifiers/skillmeta	[no test files]
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/symbolcoverage	2.893s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/symbolexists	2.373s
+ok  	github.com/kevinhorst/smine/cmd/acdsl/verifiers/testschema	3.150s
+ok  	github.com/kevinhorst/smine/cmd/configserver	3.165s
+?   	github.com/kevinhorst/smine/cmd/routinewrap	[no test files]
+?   	github.com/kevinhorst/smine/cmd/rules	[no test files]
+2026/09/09 11:52:22 shell: git dur=16ms err=false
+2026/09/09 11:52:22 shell: git dur=11ms err=false
+2026/09/09 11:52:22 shell: git dur=23ms err=false
+2026/09/09 11:52:23 shell: git dur=19ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:23 shell: go dur=244ms err=false
+--- FAIL: TestDistShipsReachCoveredSliceWithBinaries (0.41s)
+    dist_test.go:76: 
+        	Error Trace:	/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skillroutine-eval-aqms-review-3f52bb/evals/aqms-review-wip/2026-09-09-a34281/runs/sonnet-5-high-r1/artifacts/arm-wt/internal/acdsl/dist_test.go:76
+        	Error:      	Received unexpected error:
+        	            	stat /var/folders/tv/xn4t8qt15bv9fjbb6jdtbqv00000gp/T/TestDistShipsReachCoveredSliceWithBinaries3388091407/001/bin/verifiers/gofmt: no such file or directory
+        	Test:       	TestDistShipsReachCoveredSliceWithBinaries
+2026/09/09 11:52:23 shell: git dur=15ms err=false
+2026/09/09 11:52:23 shell: git dur=12ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:23 shell: git dur=9ms err=false
+2026/09/09 11:52:23 shell: git dur=15ms err=false
+2026/09/09 11:52:23 shell: git dur=14ms err=false
+2026/09/09 11:52:23 shell: git dur=14ms err=false
+2026/09/09 11:52:23 shell: git dur=9ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:23 shell: git dur=9ms err=false
+2026/09/09 11:52:23 shell: git dur=13ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:23 shell: git dur=9ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:23 shell: git dur=10ms err=false
+2026/09/09 11:52:27 shell: go dur=3887ms err=false
+2026/09/09 11:52:27 shell: git dur=14ms err=false
+2026/09/09 11:52:27 shell: git dur=10ms err=false
+2026/09/09 11:52:27 shell: git dur=22ms err=false
+2026/09/09 11:52:27 shell: git dur=20ms err=false
+2026/09/09 11:52:27 shell: git dur=10ms err=false
+2026/09/09 11:52:27 shell: git dur=15ms err=false
+2026/09/09 11:52:27 shell: git dur=11ms err=false
+2026/09/09 11:52:27 shell: git dur=23ms err=false
+2026/09/09 11:52:27 shell: git dur=25ms err=false
+2026/09/09 11:52:27 shell: git dur=10ms err=false
+2026/09/09 11:52:27 shell: go dur=240ms err=false
+2026/09/09 11:52:28 shell: script.sh dur=797ms err=false
+2026/09/09 11:52:28 shell: script.sh dur=5ms err=true
+2026/09/09 11:52:29 shell: script.sh dur=908ms err=true
+2026/09/09 11:52:29 shell: script.sh dur=6ms err=true
+2026/09/09 11:52:30 shell: script.sh dur=715ms err=false
+2026/09/09 11:52:30 shell: script.sh dur=6ms err=true
+2026/09/09 11:52:30 shell: script.sh dur=449ms err=false
+2026/09/09 11:52:30 shell: script.sh dur=5ms err=false
+2026/09/09 11:52:31 shell: script.sh dur=462ms err=true
+2026/09/09 11:52:31 shell: git dur=13ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=17ms err=false
+2026/09/09 11:52:31 shell: git dur=12ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=10ms err=true
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=15ms err=false
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=10ms err=false
+2026/09/09 11:52:31 shell: git dur=13ms err=false
+2026/09/09 11:52:31 shell: git dur=18ms err=false
+2026/09/09 11:52:31 shell: git dur=12ms err=false
+2026/09/09 11:52:31 shell: git dur=10ms err=true
+2026/09/09 11:52:31 shell: git dur=10ms err=true
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=14ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=20ms err=false
+2026/09/09 11:52:31 shell: git dur=16ms err=false
+2026/09/09 11:52:31 shell: git dur=18ms err=false
+2026/09/09 11:52:31 shell: git dur=10ms err=true
+2026/09/09 11:52:31 shell: git dur=10ms err=true
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=13ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=18ms err=false
+2026/09/09 11:52:31 shell: git dur=11ms err=false
+2026/09/09 11:52:31 shell: git dur=10ms err=true
+2026/09/09 11:52:31 shell: git dur=8ms err=true
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=10ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=true
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=true
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:31 shell: git dur=8ms err=false
+2026/09/09 11:52:31 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=14ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=18ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=10ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=10ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=13ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=17ms err=false
+2026/09/09 11:52:32 shell: git dur=12ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=10ms err=true
+2026/09/09 11:52:32 shell: git dur=12ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=14ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=10ms err=false
+2026/09/09 11:52:32 shell: git dur=18ms err=false
+2026/09/09 11:52:32 shell: git dur=12ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=10ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=10ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=14ms err=false
+2026/09/09 11:52:32 shell: git dur=10ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=18ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=10ms err=true
+2026/09/09 11:52:32 shell: git dur=10ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=true
+2026/09/09 11:52:32 shell: git dur=10ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=13ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=13ms err=false
+2026/09/09 11:52:32 shell: git dur=17ms err=false
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=8ms err=true
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=true
+2026/09/09 11:52:32 shell: git dur=11ms err=false
+2026/09/09 11:52:32 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=14ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=12ms err=false
+2026/09/09 11:52:33 shell: git dur=19ms err=false
+2026/09/09 11:52:33 shell: git dur=11ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=13ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=11ms err=false
+2026/09/09 11:52:33 shell: git dur=18ms err=false
+2026/09/09 11:52:33 shell: git dur=11ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=7ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=14ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=17ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=12ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=7ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=16ms err=false
+2026/09/09 11:52:33 shell: git dur=11ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:33 shell: git dur=15ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=false
+2026/09/09 11:52:33 shell: git dur=12ms err=false
+2026/09/09 11:52:33 shell: git dur=20ms err=false
+2026/09/09 11:52:33 shell: git dur=12ms err=false
+2026/09/09 11:52:33 shell: git dur=10ms err=true
+2026/09/09 11:52:33 shell: git dur=13ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=9ms err=false
+2026/09/09 11:52:33 shell: git dur=16ms err=false
+2026/09/09 11:52:33 shell: git dur=11ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=false
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=8ms err=true
+2026/09/09 11:52:33 shell: git dur=9ms err=true
+2026/09/09 11:52:34 shell: git dur=10ms err=true
+2026/09/09 11:52:34 shell: git dur=10ms err=true
+2026/09/09 11:52:34 shell: git dur=9ms err=true
+2026/09/09 11:52:34 shell: git dur=9ms err=false
+2026/09/09 11:52:34 shell: git dur=9ms err=false
+2026/09/09 11:52:34 shell: git dur=15ms err=false
+2026/09/09 11:52:34 shell: git dur=9ms err=false
+2026/09/09 11:52:34 shell: git dur=8ms err=false
+2026/09/09 11:52:34 shell: git dur=11ms err=false
+2026/09/09 11:52:34 shell: git dur=17ms err=false
+2026/09/09 11:52:34 shell: git dur=12ms err=false
+2026/09/09 11:52:34 shell: git dur=10ms err=true
+2026/09/09 11:52:34 shell: git dur=9ms err=true
+2026/09/09 11:52:34 shell: git dur=9ms err=false
+2026/09/09 11:52:34 shell: git dur=9ms err=false
+2026/09/09 11:52:34 shell: git dur=11ms err=false
+2026/09/09 11:52:34 shell: git dur=10ms err=false
+2026/09/09 11:52:34 shell: git dur=10ms err=false
+2026/09/09 11:52:34 shell: git dur=10ms err=true
+2026/09/09 11:52:34 shell: script.sh dur=128ms err=false
+2026/09/09 11:52:34 shell: script.sh dur=451ms err=true
+2026/09/09 11:52:35 shell: script.sh dur=451ms err=true
+2026/09/09 11:52:35 shell: script.sh dur=448ms err=true
+2026/09/09 11:52:36 shell: script.sh dur=350ms err=true
+2026/09/09 11:52:36 shell: script.sh dur=340ms err=true
+2026/09/09 11:52:36 shell: script.sh dur=345ms err=true
+2026/09/09 11:52:36 shell: script.sh dur=128ms err=false
+2026/09/09 11:52:38 shell: script.sh dur=2002ms err=true
+FAIL
+FAIL	github.com/kevinhorst/smine/internal/acdsl	19.299s
+ok  	github.com/kevinhorst/smine/internal/checklist	3.601s
+ok  	github.com/kevinhorst/smine/internal/codex	3.814s
+ok  	github.com/kevinhorst/smine/internal/config	4.056s
+ok  	github.com/kevinhorst/smine/internal/contextdocs	10.372s
+ok  	github.com/kevinhorst/smine/internal/evals	4.087s
+ok  	github.com/kevinhorst/smine/internal/fsx	4.414s
+ok  	github.com/kevinhorst/smine/internal/peek	4.052s
+ok  	github.com/kevinhorst/smine/internal/proposals	4.084s
+ok  	github.com/kevinhorst/smine/internal/reach	4.104s
+ok  	github.com/kevinhorst/smine/internal/repos	10.963s
+ok  	github.com/kevinhorst/smine/internal/routines	4.050s
+ok  	github.com/kevinhorst/smine/internal/server	16.376s
+ok  	github.com/kevinhorst/smine/internal/server/catalog	3.896s
+?   	github.com/kevinhorst/smine/internal/server/respond	[no test files]
+ok  	github.com/kevinhorst/smine/internal/sessions	4.160s
+ok  	github.com/kevinhorst/smine/internal/shell	7.326s
+ok  	github.com/kevinhorst/smine/internal/skills	3.852s
+ok  	github.com/kevinhorst/smine/internal/xp0	4.103s
+FAIL

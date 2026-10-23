@@ -1,0 +1,45 @@
+{
+  "direction": "correctness",
+  "lane": 2,
+  "chunk": "core",
+  "aborted": false,
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "notes": "Cross-chunk for the station: (1) internal/evals EvalDir.Dir is now a nested relative path 'skill/date-hash' (backslash on Windows); internal/server/skill_tests.go matches it against the ?d= query and joins it into a file path — templates must urlquery-encode it (not verified, other chunk). (2) ExpandInstallMarkers reads install.env from the process cwd; the config server must run with the repo dir as cwd for the Windows/launchd installs (other chunk). (3) shell.RunSync call sites in cmd/configserver/install_windows.go not verified (other chunk). Known-ledger entries for policy.go/git.go/registry.go/sessions.go were not re-reported.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "No core-chunk file implements the profile, hook injection, UI overlay or audience gating; nothing to check here."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "User stories are realized in server/templates/skills (other chunks); core files carry no casual-visible prose."},
+    {"group": "spec-3-raw#1", "hits": [], "note": "Profile loader, hook, configserver flag, FuncMap, i18n all outside core."},
+    {"group": "spec-3-raw#2", "hits": [], "note": "run.sh, install.sh, Windows installer and CLAUDE.md outside core."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "Templates, proposals.go/overview.go and skills outside core."},
+    {"group": "spec-5-change-nondev-automation#1", "hits": [], "note": "correctness-48: shell.RunSync (SyncTimeout 10m, platformArgv, HideWindow, WaitDelay, logging) present; contextdocs/sync.go and skills/sync.go switched; install_windows.go sites are another chunk. correctness-56: Repo.Label json label,omitempty with 80 cap (byte-count issue is known correctness-MAJ-14-r1)."},
+    {"group": "spec-5-change-nondev-automation#2", "hits": [], "note": "correctness-66: folderDialogScript shows (Opacity=0) and activates the TopMost owner before ShowDialog and closes it after. Other items outside core."},
+    {"group": "spec-6-raw#1", "hits": ["correctness-MAJ-1"], "note": "correctness-67/68: policy.json and schema match exactly; ACDSL-JSON-003 declared as specified. correctness-69: LoadPolicy/parsePolicy defaults, absent key true, malformed/unknown mode error. correctness-70: runCheck loads policy after registry, exit 2 on errors, prepends diagnostics before logVerdicts. correctness-71: candidate order and hard error present, but base-branch recognition strips only origin/ (correctness-MAJ-1); base_ref-from-working-policy is known correctness-MAJ-9-r1. correctness-72/73/74 implemented (CRLF and rename/lifetime holes are known MAJ-10-r1, security-MAJ-2-r1, security-MAJ-1-r2). correctness-75: Message/RuleId/Verifier/Why shape present. correctness-76: helpers present via shell.Run (GitRevParse stderr known MIN-1-r2)."},
+    {"group": "spec-6-raw#2", "hits": [], "note": "correctness-77: writePolicy rewrites mode from dist_mode (fallback source mode), strips dist_mode, copies schema, ships nothing without source policy, adds the 'acdsl/policy.json -> mode:' line, overwrites every sync. correctness-80: README Modes section, amended registry.local.json paragraph and runCheck doc comment present (docs/acdsl-spec.md is another chunk). correctness-81: smine policy mode free, DistHeader unchanged. Guard hook and settings.json are other chunks."},
+    {"group": "spec-7-raw", "hits": [], "note": "railroad-review skill files, runbooks and peek contract are outside core."},
+    {"group": "spec-8-change-bootstrap-profile#1", "hits": [], "note": "Welcome form, skill args, audience rename and lockout are outside core."},
+    {"group": "spec-8-change-bootstrap-profile#2", "hits": [], "note": "correctness-99: Store.Reload overrides batch.Scope with the folder name. correctness-102: store skips archived/, ArchiveScope/UnarchiveScope/DeleteScope/ArchivedFolders/validateScopeName behave as specified. correctness-106: Repo.Validate rejects default/archived; duplicates rejected in Add and snapshot read. correctness-107: registry Remove never touches sessions/. Routes/handlers/templates are other chunks ('archive' shadowing is known MAJ-2-r1)."},
+    {"group": "spec-9-change-headless-bootstrap#1", "hits": [], "note": "Bootstrap wrapper, handler, skills and profile store are outside core."},
+    {"group": "spec-9-change-headless-bootstrap#2", "hits": [], "note": "run.sh, skills and install scripts are outside core."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "correctness-127: planformat canon now places Open questions directly after Decisions; TLDR-first, Changelog check, orderProblems and CLI contract unchanged. Rule/skill/doc items are other chunks."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "correctness-140: WorktreeCounts(ctx, repoPath, prefixes) returns {Count, Label} buckets, label = prefix minus '/', zero kinds omitted, prefix order, errors -> nil; CountPoolWorktrees comment names WorktreeCounts. Shell scripts, statusCache and templates are other chunks."},
+    {"group": "spec-12-raw", "hits": [], "note": "smine-style skill and server profile store are outside core."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "correctness-162: ExpandInstallMarkers parses install.env KEY=VALUE from the working directory, defaults PEEK_CONTROL_PORT to 42442 on a missing file, leaves unknown markers untouched; LoadFragment applies it (copyFileAtomic/handleConfig callers are another chunk). peek-mcp, configserver flags, install scripts, plist template are other chunks."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "correctness-164: Registry records mtime+size; readRegistrySnapshot stats before reading, missing file = empty, validates entries, rejects duplicates; Reload applies under lock. correctness-165: Find/Repos call refreshIfChanged; failed re-read logs and keeps state; missing never-loaded file no-op. correctness-166: Add/Remove re-read under write lock and save records post-write identity. correctness-167: Fingerprint runs the specified for-each-ref and worktree list via shell.Run with wrapped errors. correctness-171: a deleted repos.json reloads as an empty registry. statusCache and handler items are other chunks."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "internal/acdsl/policy.go",
+      "line": 215,
+      "checklist": "correctness-71",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "policyBase recognizes the base branch only by stripping a literal \"origin/\" prefix from the candidate ref, so with base_ref naming another remote or a full ref (\"upstream/main\", \"refs/heads/main\") a human on the base branch itself is treated as a boundary: uncommitted and unpushed surface/rule changes on main are flagged, contradicting correctness-71 (HEAD at the base tip is a vacuous pass) and the README's 'on the base branch itself the diff is vacuous'.",
+      "evidence": "Re-read policy.go:195-219 and CheckPolicy 329-346. Sequence: gated repo, acdsl/policy.json base_ref=\"upstream/main\" (fork workflow), checkout main == upstream/main tip, edit acdsl/registry.json, run acdsl check. GitMergeBase(HEAD, upstream/main) succeeds; GitBranch returns \"main\"; baseName stays \"upstream/main\" (TrimPrefix removes only \"origin/\"), so isBoundary = (\"main\" != \"upstream/main\") = true; surfaceDelta then reports registry.json differs -> exit 1. After committing on main the merge-base is still upstream/main's tip, so make audit stays red on the base branch until pushed. Spec-6 F/D4 and correctness-71 require the diff to be vacuous on the base branch / at the base tip. Same with base_ref=\"refs/heads/main\" (baseName \"refs/heads/main\" != \"main\"). Not covered by known correctness-MAJ-9-r1 (which concerns the working policy choosing base_ref, not base-branch recognition).",
+      "fix": "Derive baseName from the resolved ref's branch part (git rev-parse --symbolic-full-name <candidate> -> strip refs/heads/ or refs/remotes/<remote>/), or treat HEAD == rev-parse(<candidate>) as the vacuous case per correctness-71 in addition to the branch-name match."
+    }
+  ],
+  "walk_complete": true
+}

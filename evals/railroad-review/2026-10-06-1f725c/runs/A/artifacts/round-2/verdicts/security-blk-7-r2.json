@@ -1,0 +1,24 @@
+{
+  "finding_id": "security-BLK-7-r2",
+  "verdict": "confirmed",
+  "reason": "settings/claude_code/settings.json:21-25 carries exactly the four cited rules — Bash(git * branch*), Bash(git * log*), Bash(git * show*), Bash(git * status*) — each with a bare wildcard between \"git\" and the subcommand word; the only excluded rule, Bash(git * stash list), has a literal suffix and is correctly not flagged. A deterministic ACDSL probe anchored at this file goes RED on exactly lines 21, 22, 23, 25 at headCommit, and GREEN once the leading wildcard is dropped from all four (git branch*/log*/show*/status*), both directions verified in the disposable worktree and the file restored byte-identical afterward (clean git diff). The repo's own AGENTS.md (ACTION-IMPL-EXEC-007) independently documents, with its own empirically-gathered denial counts, that this permission engine matches Bash() rules as literal whole-command globs, not flag-aware, and that only -C/-p/--no-pager/--no-optional-locks are specially stripped before matching rules with no explicit wildcard there — every other git global option, including -c, is refused outright UNLESS the rule itself already carries a wildcard in that position, which these four rules do. git's core.pager/GIT_PAGER mechanism spawning an arbitrary subprocess for log/show/branch/status output is long-standing, undisputed git behavior, independent of this review. The live end-to-end PoC (issuing `git -c core.pager=<cmd> log` as an actual Bash tool call) could not be executed in this refuter's own sandbox either: this session's own global AGENTS.md independently puts `git -c k=v` on its own deny list (ACTION-IMPL-EXEC-010), which is itself external corroboration that this exact command shape is recognized as requiring a gate elsewhere, not evidence against the claim. Effect and exposure cells (destructive / rare) are left as the candidate stated them: destructive because the payoff is arbitrary command execution outside the permission model's intended boundary, rare because it requires a specific adversarial trigger (compromised MCP tool, prompt injection, or a confused model issuing that one command) rather than hitting on normal operation.",
+  "probe": "PROBE-SECURITY-BLK-7-R2",
+  "script": "security-blk-7-r2.sh",
+  "fixture": "probes/fixtures/settings-vulnerable.json",
+  "registry": "registry-security-blk-7-r2.json",
+  "evidence": {
+    "read": [
+      "settings/claude_code/settings.json:21-25 at headCommit e5245d08d2fe5c05f67742fd8ec5a67b759ca316 (via git show and direct Read) — Bash(git * branch*), Bash(git * log*), Bash(git * show*), Bash(git * stash list), Bash(git * status*)",
+      "AGENTS.md ACTION-IMPL-EXEC-007 (this session's global context) — documents the literal-whole-command-glob matching semantics and the narrow -C/-p/--no-pager/--no-optional-locks carve-out, with its own empirical denial-count evidence",
+      "internal/acdsl/run.go FileUniverse — confirms untracked, non-ignored files (including the probe's own railroad-probes-r2.acdsl) are discovered via `git ls-files --cached --others --exclude-standard`"
+    ],
+    "probe_run": "bin/acdsl check -root <worktree> -lifetime task -rule PROBE-SECURITY-BLK-7-R2 -registry probes/registry-security-blk-7-r2.json -> exit 1, 4 violations at settings/claude_code/settings.json:21,22,23,25 (RED, headCommit content); after temporarily rewriting the four rules to drop the leading wildcard (git branch*/log*/show*/status*), the identical command -> exit 0, \"1 rule(s) OK\" (GREEN); file then restored exactly, `git diff --stat settings/claude_code/settings.json` empty"
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-blk-7-r2.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/security-blk-7-r2.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/registry-security-blk-7-r2.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/artifacts/round-2/probes/fixtures/settings-vulnerable.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-06-1f725c-a-out/wt/refute-security-blk-7-r2-r2/railroad-probes-r2.acdsl"
+  ]
+}

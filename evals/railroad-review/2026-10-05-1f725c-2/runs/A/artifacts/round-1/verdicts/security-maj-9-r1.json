@@ -1,0 +1,21 @@
+{
+  "finding_id": "security-MAJ-9-r1",
+  "verdict": "confirmed",
+  "reason": "Go repro on newPolicyRepo (gated base): git rm --cached acdsl/rules.acdsl + .git/info/exclude entry leaves DiscoverRules with 0 rules while CheckPolicy returns no diagnostics; with the proposed FileUniverse filter in ruleDelta the same test reports ACDSL-PLAN-100 removed.",
+  "probe": "manual: failing test (both directions) — ACDSL probe unprobeable: tool policy denies running bin/acdsl and the verifier script directly (candidate rules Bash(<wt>/bin/acdsl *), Bash(/bin/bash *)), and this repo has no make acdsl target",
+  "evidence": {
+    "probe_run": "go -C <wt> test ./internal/acdsl/ -run TestRefuteMaj9 at 1f725ce: FAIL — discovered rules after untrack+ignore: 0; CheckPolicy diagnostics: \"\"; with fix applied: PASS — \"acdsl/rules.acdsl:2: policy(gated): rule ACDSL-PLAN-100 removed outside the editable scopes (scope \\\"PLAN\\\")\"",
+    "read": [
+      "internal/acdsl/policy.go:237-280 ruleDelta: working side via os.ReadFile at 248, no FileUniverse check",
+      "internal/acdsl/git.go:46-66 GitChangedFiles: git diff --name-only <base> lists the index-removed path",
+      "internal/acdsl/load.go:38-47 DiscoverRules loads declarations from FileUniverse (ls-files --cached --others --exclude-standard)",
+      "internal/acdsl/run.go:37-50 FileUniverse"
+    ],
+    "both_directions": "Failed at head for the stated reason (rules dropped from gate, zero removed diagnostics); passed with the fix applied temporarily (FileUniverse(ctx, root, path) gating the working read); all existing TestCheckPolicy* stayed green with the fix. policy.go restored byte-exact (git diff HEAD -- internal/acdsl empty) and the temporary test file deleted.",
+    "cells": "effect incorrect and exposure rare agreed: deterministic, 2 local commands, zero cost; limited to the local/pre-commit gate — a fresh CI clone has no on-disk file so ruleDelta's read fails and the removal is caught there."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/security-maj-9-r1-repro_test.go",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/security-maj-9-r1.sh"
+  ]
+}

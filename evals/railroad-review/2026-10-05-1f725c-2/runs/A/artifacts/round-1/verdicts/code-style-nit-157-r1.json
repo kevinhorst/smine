@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-157-r1",
+  "verdict": "confirmed",
+  "reason": "New TestFingerprint defines `run := func(args ...string)` at 288 building -C repo args, running exec.Command(\"git\", gitArgs...).CombinedOutput() and require.NoError, a copy of the closure in pre-existing gitRepoWithAgentWorktrees at 262 differing only by the -c user.* flags; ACTION-REVIEW-QUALITY-005 duplication introduced by this diff.",
+  "probe": "manual: command output — probe path blocked by tool policy (Bash(/bin/bash *) and Bash(<worktree>/bin/acdsl *) both denied, so neither the fixture self-check nor acdsl check could run)",
+  "evidence": {
+    "read": [
+      "grep -n at 1f725ce internal/repos/registry_test.go -> 259:func gitRepoWithAgentWorktrees  262:\trun := func(args ...string) {  264:\t\toutput, err := exec.Command(\"git\", gitArgs...).CombinedOutput()  274:func TestFingerprint  288:\trun := func(args ...string) {  290:\t\toutput, err := exec.Command(\"git\", gitArgs...).CombinedOutput()  — expected: one shared git-runner helper",
+      "git diff b4981b8..1f725ce -- internal/repos/registry_test.go: TestFingerprint (274-307) including the closure at 288-292 is added by this diff; gitRepoWithAgentWorktrees is pre-existing",
+      "known.json: tests-MIN-24-r1 is the only known entry on this file and concerns refreshIfChanged coverage"
+    ],
+    "probe_attempts": [
+      "attempt 1: /bin/bash <probes>/code-style-nit-157-r1.sh <scratch>/code-style-nit-157-r1/files.txt -> tool-policy denied, candidate Bash(/bin/bash *)",
+      "attempt 2: <worktree>/bin/acdsl -h -> tool-policy denied, candidate Bash(<worktree>/bin/acdsl *); Makefile has no acdsl target"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/code-style-nit-157-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-2-a-out/artifacts/round-1/probes/fixtures/code-style-nit-157-r1/fail/registry_test.go.txt"
+  ],
+  "notes": "the probe script and fixture are unvalidated (never run) — not registered, no .acdsl mirror written"
+}

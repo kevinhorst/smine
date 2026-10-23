@@ -1,0 +1,22 @@
+{
+  "finding_id": "code-style-NIT-234-r1",
+  "verdict": "debunked",
+  "reason": "Each test scripts exactly two simple scenarios; context/rules/go.md RULE-GOLANG-TEST-007 (L954-956) and the baseline (L856) prefer plain asserts over a testCase table for one or two simple cases, and the cited RULE-GOLANG-TEST-014 is a prohibition on tables, not a mandate that overrides that carve-out.",
+  "probe": "none: the disputed point is rule applicability (TEST-014's trailing table guidance vs TEST-007's one-or-two-cases carve-out), not a code shape a verifier can decide — any shape probe goes red on the undisputed two-scenario structure and says nothing about whether it violates the guide",
+  "evidence": {
+    "read": [
+      "context/rules/go.md:956 — 'It applies only when a table-driven test is warranted (complex behavior or many combinations — see baseline). For one or two simple cases, plain assert.Equal calls are preferred over the boilerplate below.'",
+      "context/rules/go.md:856 — 'Keep tests short. Use table-driven tests for complex behavior or many combinations.'",
+      "context/rules/go.md:982-997 — RULE-GOLANG-TEST-014 headline: 'No table-driven structure when the method has no branching and only one meaningful scenario'; trailing sentence L997 'When a method branches ..., use table-driven tests to cover each branch.'",
+      "internal/acdsl/policy_test.go:228-278 at 1f725ce — TestCheckPolicyGatedVerifierAllowlist, TestCheckPolicyOverlay, TestCheckPolicyTaskContractExempt each run exactly two scenarios (newPolicyRepo + writePolicyFile + CheckPolicy + one assert), i.e. 'one or two simple cases'",
+      "internal/acdsl/policy_test.go:201-226 — sibling CheckPolicy tests in the same file are direct (non-table) tests; the two-scenario bodies follow that nearest pattern",
+      "known.json: code-style-NIT-68-r1, NIT-158-r1, NIT-12-r2, tests-NIT-58-r1 cover other policy_test.go issues — not this claim"
+    ],
+    "attempts": [
+      "Considered a shape probe (test func with two CheckPolicy calls): it would be red on the undisputed structure and cannot encode the TEST-007 carve-out, so it cannot settle the claim"
+    ]
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-4-a-out/artifacts/round-1/verdicts/code-style-nit-234-r1.json"
+  ]
+}

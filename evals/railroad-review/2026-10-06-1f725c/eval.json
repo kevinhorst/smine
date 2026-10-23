@@ -1,0 +1,3069 @@
+{
+  "eval": {
+    "date": "2026-10-06",
+    "notes": "",
+    "notesBullets": [
+      "autofix-level minor · lanes 1[sonnet:medium] · station opus:medium · rounds 2",
+      "start commit 1f725ced"
+    ],
+    "skill": "railroad-review",
+    "skillMdPath": "evals/railroad-review/2026-10-06-1f725c/SKILL.md"
+  },
+  "golden": {
+    "goldenFile": "evals/railroad-review/2026-10-06-1f725c/golden.json",
+    "goldenId": "smine-1.1.4-1.2.1-g2",
+    "goldenVersion": 1,
+    "nullMinutes": 21110,
+    "oracleMinutes": 8540,
+    "perRun": [
+      {
+        "falsePositives": [
+          {
+            "findingId": "r1-code-style-NIT-13-r1",
+            "reason": "Outside the reviewed change: step 8's outcome list already enumerated 8 items inline at base; the diff appended casual-locked to a pre-existing violation. The diff-caused over-cap enumeration is the Disposition ledger (G2-133), matched by r2-code-style-MIN-28-r2."
+          },
+          {
+            "findingId": "r1-tests-NIT-5-r1",
+            "reason": "Not a defect: the reserved-name cases the plan assigns to TestRepoValidate exist under TestRegistryAdd; a test-name mismatch against the plan changes no behavior or coverage."
+          },
+          {
+            "findingId": "r2-security-BLK-7-r2",
+            "reason": "Outside the reviewed range: the git * log* / branch* / show* / status* allow rules are unchanged by this diff, as the finding itself states."
+          },
+          {
+            "findingId": "r2-security-BLK-10-r2",
+            "reason": "Not a defect. The casual lockout protects shipped skills; the diff states explicitly that new-skill proposals stay allowed and get stamped origin: user. The stamp only makes a skill editable by the same pipeline and grants no privilege, and vote-less creation under auto-apply was there before this diff."
+          },
+          {
+            "findingId": "r2-security-MAJ-8-r2",
+            "reason": "Outside the reviewed range: the unverified curl downloads of jq.exe and peek-mcp.exe were already there at base; the diff only bumps the peek-mcp release tag on an existing line."
+          },
+          {
+            "findingId": "r2-security-MAJ-9-r2",
+            "reason": "Outside the reviewed range: the --serena `uv tool install --upgrade serena-agent` line is untouched by the diff."
+          },
+          {
+            "findingId": "r2-code-style-MIN-23-r2",
+            "reason": "Not a defect: the new loadedModTime/loadedSize fields sit under the mutex that guards them, as RULE-GOLANG-GR-007 requires (mutex directly above guarded state); the struct's path/mu/repos order was non-alphabetical at base."
+          },
+          {
+            "findingId": "r2-code-style-MIN-25-r2",
+            "reason": "Outside the reviewed range: runWithTimeout does not exist at the reviewed head; it was introduced by this run's own round-1 fix (r1-code-style-MIN-5-r1)."
+          },
+          {
+            "findingId": "r2-code-style-MIN-26-r2",
+            "reason": "Outside the reviewed range: the runWithTimeout calls in Run/RunSync were introduced by this run's own round-1 fix, not by the reviewed diff."
+          },
+          {
+            "findingId": "r2-tests-MIN-10-r2",
+            "reason": "Outside the reviewed range: the '.'/'..' traversal guard in Repo.Validate was added by this run's round-1 fix (r1-security-NIT-2-r1); it does not exist at the reviewed head."
+          },
+          {
+            "findingId": "r2-code-style-NIT-27-r2",
+            "reason": "Not a defect: no repo rule or doc prescribes '// ---- Stage' banners, and most workflow scripts (e.g. railroad-review.js) do not use them."
+          }
+        ],
+        "fixEscapes": [
+          "G2-004",
+          "G2-027",
+          "G2-035",
+          "G2-038",
+          "G2-055",
+          "G2-111",
+          "G2-114",
+          "G2-117",
+          "G2-170",
+          "G2-192"
+        ],
+        "matched": [
+          {
+            "findingId": "r1-correctness-BLK-6-r1",
+            "goldenId": "G2-150",
+            "note": "same defect: railroad-review lanes are invoked without --no-context against spec-7's lane-invocation items; the golden records the changelog 8.4 reversal, so the finding's 'no recorded decision' framing overstates it"
+          },
+          {
+            "findingId": "r1-security-BLK-4-r1",
+            "goldenId": "G2-162",
+            "note": "same defect: the Bash(\u003cprogram\u003e \u003csubcommand\u003e *) family derivation has no guard for programs whose second token is not a safe subcommand (ssh host / bash -c), yielding an arbitrary-execution allow rule"
+          },
+          {
+            "findingId": "r1-security-BLK-5-r1",
+            "goldenId": "G2-050",
+            "note": "same defect: smine-batch records granted/denied command lines verbatim into committed batch JSON and proposals with no secret redaction"
+          },
+          {
+            "findingId": "r1-security-MAJ-3-r1",
+            "goldenId": "G2-010",
+            "note": "same defect: the permissions.ask rules for Edit/Write on *.acdsl and acdsl/** were deleted and the policy guard is silent in free mode"
+          },
+          {
+            "findingId": "r1-correctness-MAJ-3-r1",
+            "goldenId": "G2-109",
+            "note": "same root cause: peekID.ControlPort is decoded but never read, so startPeek's reuse match ignores the control port; the finding states the functional consequence of the golden's dead field"
+          },
+          {
+            "findingId": "r1-correctness-MAJ-4-r1",
+            "goldenId": "G2-015",
+            "note": "same defect: install.ps1 appends shellcheck to $missing, making it a hard prerequisite instead of a warning"
+          },
+          {
+            "findingId": "r1-correctness-MAJ-7-r1",
+            "goldenId": "G2-016",
+            "note": "same defect: session-mine.js Trim counts only routines/context/skills proposals, so permissions proposals escape --max-proposals-mined"
+          },
+          {
+            "findingId": "r1-code-style-MIN-1-r1",
+            "goldenId": "G2-026",
+            "note": "same defect: worktreeSessions inserted between rootCause's doc comment and its body"
+          },
+          {
+            "findingId": "r1-code-style-MIN-2-r1",
+            "goldenId": "G2-066",
+            "note": "same defect: one-line 6-argument exec.CommandContext with nested filepath.Join in handleWelcomeBootstrap"
+          },
+          {
+            "findingId": "r1-code-style-MIN-3-r1",
+            "goldenId": "G2-061",
+            "note": "same defect: one-line 9-argument shell.Run in handleProfileTest"
+          },
+          {
+            "findingId": "r1-code-style-MIN-5-r1",
+            "goldenId": "G2-080",
+            "note": "same defect: RunSync is a parallel copy of Run differing only in timeout and prefix"
+          },
+          {
+            "findingId": "r1-code-style-MIN-7-r1",
+            "goldenId": "G2-023",
+            "note": "same defect: build-install's help line is labeled '## build:'"
+          },
+          {
+            "findingId": "r1-code-style-MIN-8-r1",
+            "goldenId": "G2-117",
+            "note": "same defect: the skillOverrides drop-filter jq program is repeated in sync_skills.sh"
+          },
+          {
+            "findingId": "r1-code-style-MIN-9-r1",
+            "goldenId": "G2-027",
+            "note": "same defect: presentation-profile parsing and dev-mode derivation duplicated between cmd/bootstrap/run.sh and routines/smine-nightly/run.sh"
+          },
+          {
+            "findingId": "r1-code-style-MIN-10-r1",
+            "goldenId": "G2-024",
+            "note": "same defect: subsystem-grounding.js claims /fdesign invokes it but fdesign never names it"
+          },
+          {
+            "findingId": "r1-code-style-MIN-14-r1",
+            "goldenId": "G2-128",
+            "note": "same defect: smine-permissions uses three-part version 0.1.0"
+          },
+          {
+            "findingId": "r1-tests-MIN-1-r1",
+            "goldenId": "G2-035",
+            "note": "same defect: the routine-detail run-history rendering (spec-11 TestRoutineDetailRunHistory) has no server test"
+          },
+          {
+            "findingId": "r1-tests-MIN-2-r1",
+            "goldenId": "G2-167",
+            "note": "same defect: TestReposDelete lacks spec-14's cross-instance case"
+          },
+          {
+            "findingId": "r1-security-MIN-1-r1",
+            "goldenId": "G2-004",
+            "note": "same code site and fix: the bootstrap log is opened at a fixed os.TempDir()/smine-bootstrap.log path instead of under the routine logs dir; the finding argues the security angle, the golden the spec-5 location/pid requirement"
+          },
+          {
+            "findingId": "r1-code-style-NIT-4-r1",
+            "goldenId": "G2-190",
+            "note": "same defect: the skills-sync failure error in handleProfileSave lacks the Component.Method: prefix"
+          },
+          {
+            "findingId": "r1-code-style-NIT-6-r1",
+            "goldenId": "G2-108",
+            "note": "same defect: peekID fields not alphabetical"
+          },
+          {
+            "findingId": "r1-code-style-NIT-11-r1",
+            "goldenId": "G2-019",
+            "note": "same defect: config-ui-fidelity-gate.js is promised as fronted by /fimplement but no skill invokes it"
+          },
+          {
+            "findingId": "r1-code-style-NIT-12-r1",
+            "goldenId": "G2-020",
+            "note": "same defect: foreign-toolchain-pretag.js is promised as fronted by /package-commit but never invoked"
+          },
+          {
+            "findingId": "r1-tests-NIT-6-r1",
+            "goldenId": "G2-145",
+            "note": "same defect: no test moves HEAD off the dated branch, so routine_worktree_create's post-sync symbolic-ref guard is unexercised"
+          },
+          {
+            "findingId": "r2-correctness-BLK-10-r2",
+            "goldenId": "G2-006",
+            "note": "same defect: policyBase takes base_ref from the branch-editable working policy, so base_ref=HEAD lets a branch diff against itself and self-escalate"
+          },
+          {
+            "findingId": "r2-correctness-MAJ-9-r2",
+            "goldenId": "G2-268",
+            "note": "same defect: stateNoteFor appends untranslated English click-hint suffixes"
+          },
+          {
+            "findingId": "r2-correctness-MAJ-12-r2",
+            "goldenId": "G2-277",
+            "note": "same defect: docs/workflows.md documents the retired claude/railroad-* branch names while railroad-review.js builds claude-review/*"
+          },
+          {
+            "findingId": "r2-correctness-MAJ-13-r2",
+            "goldenId": "G2-048",
+            "note": "same defect: ACDSL-JSON-002's anchor still matches only sessions/(personal|work)/json/, so the new per-repo batch JSON escapes the schema gate"
+          },
+          {
+            "findingId": "r2-code-style-MIN-15-r2",
+            "goldenId": "G2-192",
+            "note": "same defect (bootstrap.go part): bootstrapRun.running is not predicate-named"
+          },
+          {
+            "findingId": "r2-code-style-MIN-15-r2",
+            "goldenId": "G2-055",
+            "note": "same defect (repos.go part): cached / worktreeStatusPage.Cached are not predicate-named"
+          },
+          {
+            "findingId": "r2-code-style-MIN-15-r2",
+            "goldenId": "G2-062",
+            "note": "same defect (profilesettings.go part): audienceChanged is not predicate-named"
+          },
+          {
+            "findingId": "r2-code-style-MIN-16-r2",
+            "goldenId": "G2-073",
+            "note": "same defect: grouping comments (// since, // extra-prompt) in bootstrapEnv"
+          },
+          {
+            "findingId": "r2-code-style-MIN-16-r2",
+            "goldenId": "G2-074",
+            "note": "same defect: grouping comments (// audience, // language) in handleProfileSave"
+          },
+          {
+            "findingId": "r2-code-style-MIN-19-r2",
+            "goldenId": "G2-114",
+            "note": "same defect: one-line 7-argument startPeek call in main"
+          },
+          {
+            "findingId": "r2-code-style-MIN-20-r2",
+            "goldenId": "G2-111",
+            "note": "same defect: peekIdentity's errors lack the function prefix"
+          },
+          {
+            "findingId": "r2-code-style-MIN-21-r2",
+            "goldenId": "G2-107",
+            "note": "same defect: type peekID spells ID instead of Id"
+          },
+          {
+            "findingId": "r2-code-style-MIN-22-r2",
+            "goldenId": "G2-087",
+            "note": "same defect: Fingerprint's two shell.Run calls (7 and 6 args) on single lines"
+          },
+          {
+            "findingId": "r2-code-style-MIN-24-r2",
+            "goldenId": "G2-086",
+            "note": "same defect: refreshIfChanged's if condition holds two \u0026\u0026 operators"
+          },
+          {
+            "findingId": "r2-code-style-MIN-28-r2",
+            "goldenId": "G2-133",
+            "note": "same defect: the Disposition ledger bullet enumerates seven terminal outcomes inline (reviewed-head L43, L52 after the round-1 fix shifted it)"
+          },
+          {
+            "findingId": "r2-tests-MIN-7-r2",
+            "goldenId": "G2-141",
+            "note": "same defect: profileTestAnswer has no test"
+          },
+          {
+            "findingId": "r2-tests-MIN-7-r2",
+            "goldenId": "G2-038",
+            "note": "same defect: styleTestTarget has no test"
+          },
+          {
+            "findingId": "r2-tests-MIN-8-r2",
+            "goldenId": "G2-034",
+            "note": "same defect: routineSession's prefix matching and latest-wins selection are untested"
+          },
+          {
+            "findingId": "r2-tests-MIN-9-r2",
+            "goldenId": "G2-039",
+            "note": "same defect: handleWelcomeBootstrapStatus and resolveBootstrapSession have no test"
+          },
+          {
+            "findingId": "r2-tests-MIN-11-r2",
+            "goldenId": "G2-044",
+            "note": "same defect: darwin SyncAll's default-disabled skip is untested"
+          },
+          {
+            "findingId": "r2-tests-MIN-13-r2",
+            "goldenId": "G2-046",
+            "note": "same defect: acdsl-policy-guard.sh has no shell test"
+          },
+          {
+            "findingId": "r2-tests-MIN-14-r2",
+            "goldenId": "G2-170",
+            "note": "same defect: test_squash_transfer_reads_contained asserts only 'squashed:' instead of spec-11's squashed:2"
+          },
+          {
+            "findingId": "r2-code-style-NIT-17-r2",
+            "goldenId": "G2-077",
+            "note": "same defect: the TestWorktreeSessionsPrefersBranchOverRecycledDir t.Run body declares locals (statuses, sessions) before its assert"
+          },
+          {
+            "findingId": "r2-tests-NIT-12-r2",
+            "goldenId": "G2-144",
+            "note": "same defect: TestFolderDialogScript does not pin the $owner.Show()/$owner.Activate() fix"
+          }
+        ],
+        "misclassified": [
+          {
+            "actual": "BLOCKER",
+            "expected": "INFO",
+            "findingId": "r1-correctness-BLK-6-r1",
+            "goldenId": "G2-150"
+          },
+          {
+            "actual": "BLOCKER",
+            "expected": "MINOR",
+            "findingId": "r1-security-BLK-4-r1",
+            "goldenId": "G2-162"
+          },
+          {
+            "actual": "BLOCKER",
+            "expected": "MINOR",
+            "findingId": "r1-security-BLK-5-r1",
+            "goldenId": "G2-050"
+          },
+          {
+            "actual": "MAJOR",
+            "expected": "NIT",
+            "findingId": "r1-correctness-MAJ-3-r1",
+            "goldenId": "G2-109"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r1-code-style-MIN-2-r1",
+            "goldenId": "G2-066"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r1-code-style-MIN-3-r1",
+            "goldenId": "G2-061"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r1-code-style-MIN-5-r1",
+            "goldenId": "G2-080"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r1-code-style-MIN-8-r1",
+            "goldenId": "G2-117"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r1-code-style-MIN-14-r1",
+            "goldenId": "G2-128"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r1-tests-MIN-2-r1",
+            "goldenId": "G2-167"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "BLOCKER",
+            "findingId": "r1-security-MIN-1-r1",
+            "goldenId": "G2-004"
+          },
+          {
+            "actual": "NIT",
+            "expected": "MAJOR",
+            "findingId": "r1-code-style-NIT-11-r1",
+            "goldenId": "G2-019"
+          },
+          {
+            "actual": "NIT",
+            "expected": "MAJOR",
+            "findingId": "r1-code-style-NIT-12-r1",
+            "goldenId": "G2-020"
+          },
+          {
+            "actual": "BLOCKER",
+            "expected": "MAJOR",
+            "findingId": "r2-correctness-BLK-10-r2",
+            "goldenId": "G2-006"
+          },
+          {
+            "actual": "MAJOR",
+            "expected": "NIT",
+            "findingId": "r2-correctness-MAJ-12-r2",
+            "goldenId": "G2-277"
+          },
+          {
+            "actual": "MAJOR",
+            "expected": "MINOR",
+            "findingId": "r2-correctness-MAJ-13-r2",
+            "goldenId": "G2-048"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-15-r2",
+            "goldenId": "G2-192"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-15-r2",
+            "goldenId": "G2-055"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-15-r2",
+            "goldenId": "G2-062"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-16-r2",
+            "goldenId": "G2-073"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-16-r2",
+            "goldenId": "G2-074"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-19-r2",
+            "goldenId": "G2-114"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-20-r2",
+            "goldenId": "G2-111"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-21-r2",
+            "goldenId": "G2-107"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-22-r2",
+            "goldenId": "G2-087"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-24-r2",
+            "goldenId": "G2-086"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-code-style-MIN-28-r2",
+            "goldenId": "G2-133"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-tests-MIN-7-r2",
+            "goldenId": "G2-141"
+          },
+          {
+            "actual": "MINOR",
+            "expected": "NIT",
+            "findingId": "r2-tests-MIN-14-r2",
+            "goldenId": "G2-170"
+          }
+        ],
+        "missed": [
+          "G2-001",
+          "G2-002",
+          "G2-003",
+          "G2-005",
+          "G2-007",
+          "G2-008",
+          "G2-009",
+          "G2-011",
+          "G2-012",
+          "G2-013",
+          "G2-014",
+          "G2-017",
+          "G2-018",
+          "G2-021",
+          "G2-022",
+          "G2-025",
+          "G2-028",
+          "G2-029",
+          "G2-030",
+          "G2-031",
+          "G2-032",
+          "G2-033",
+          "G2-036",
+          "G2-037",
+          "G2-040",
+          "G2-041",
+          "G2-042",
+          "G2-043",
+          "G2-045",
+          "G2-047",
+          "G2-049",
+          "G2-051",
+          "G2-052",
+          "G2-053",
+          "G2-054",
+          "G2-056",
+          "G2-057",
+          "G2-058",
+          "G2-059",
+          "G2-060",
+          "G2-063",
+          "G2-064",
+          "G2-065",
+          "G2-067",
+          "G2-068",
+          "G2-069",
+          "G2-070",
+          "G2-071",
+          "G2-072",
+          "G2-075",
+          "G2-076",
+          "G2-078",
+          "G2-079",
+          "G2-081",
+          "G2-082",
+          "G2-083",
+          "G2-084",
+          "G2-085",
+          "G2-088",
+          "G2-089",
+          "G2-090",
+          "G2-091",
+          "G2-092",
+          "G2-093",
+          "G2-094",
+          "G2-095",
+          "G2-096",
+          "G2-097",
+          "G2-098",
+          "G2-099",
+          "G2-100",
+          "G2-101",
+          "G2-102",
+          "G2-103",
+          "G2-104",
+          "G2-105",
+          "G2-106",
+          "G2-110",
+          "G2-112",
+          "G2-113",
+          "G2-115",
+          "G2-116",
+          "G2-118",
+          "G2-119",
+          "G2-120",
+          "G2-121",
+          "G2-122",
+          "G2-123",
+          "G2-124",
+          "G2-125",
+          "G2-126",
+          "G2-127",
+          "G2-129",
+          "G2-130",
+          "G2-131",
+          "G2-132",
+          "G2-134",
+          "G2-135",
+          "G2-136",
+          "G2-137",
+          "G2-138",
+          "G2-139",
+          "G2-140",
+          "G2-142",
+          "G2-143",
+          "G2-146",
+          "G2-147",
+          "G2-148",
+          "G2-149",
+          "G2-151",
+          "G2-152",
+          "G2-153",
+          "G2-154",
+          "G2-155",
+          "G2-156",
+          "G2-157",
+          "G2-158",
+          "G2-159",
+          "G2-160",
+          "G2-161",
+          "G2-163",
+          "G2-164",
+          "G2-165",
+          "G2-166",
+          "G2-168",
+          "G2-169",
+          "G2-171",
+          "G2-172",
+          "G2-173",
+          "G2-174",
+          "G2-175",
+          "G2-176",
+          "G2-177",
+          "G2-178",
+          "G2-179",
+          "G2-180",
+          "G2-181",
+          "G2-182",
+          "G2-183",
+          "G2-184",
+          "G2-185",
+          "G2-186",
+          "G2-187",
+          "G2-188",
+          "G2-189",
+          "G2-191",
+          "G2-193",
+          "G2-194",
+          "G2-195",
+          "G2-196",
+          "G2-197",
+          "G2-198",
+          "G2-199",
+          "G2-200",
+          "G2-201",
+          "G2-202",
+          "G2-203",
+          "G2-204",
+          "G2-205",
+          "G2-206",
+          "G2-207",
+          "G2-208",
+          "G2-209",
+          "G2-210",
+          "G2-211",
+          "G2-212",
+          "G2-213",
+          "G2-214",
+          "G2-215",
+          "G2-216",
+          "G2-217",
+          "G2-218",
+          "G2-219",
+          "G2-220",
+          "G2-221",
+          "G2-222",
+          "G2-223",
+          "G2-224",
+          "G2-225",
+          "G2-226",
+          "G2-227",
+          "G2-228",
+          "G2-229",
+          "G2-230",
+          "G2-231",
+          "G2-232",
+          "G2-233",
+          "G2-234",
+          "G2-235",
+          "G2-236",
+          "G2-237",
+          "G2-238",
+          "G2-239",
+          "G2-240",
+          "G2-241",
+          "G2-242",
+          "G2-243",
+          "G2-244",
+          "G2-245",
+          "G2-246",
+          "G2-247",
+          "G2-248",
+          "G2-249",
+          "G2-250",
+          "G2-251",
+          "G2-252",
+          "G2-253",
+          "G2-254",
+          "G2-255",
+          "G2-256",
+          "G2-257",
+          "G2-258",
+          "G2-259",
+          "G2-260",
+          "G2-261",
+          "G2-262",
+          "G2-263",
+          "G2-264",
+          "G2-265",
+          "G2-266",
+          "G2-267",
+          "G2-269",
+          "G2-270",
+          "G2-271",
+          "G2-272",
+          "G2-273",
+          "G2-274",
+          "G2-275",
+          "G2-276",
+          "G2-278",
+          "G2-279",
+          "G2-280",
+          "G2-281",
+          "G2-282",
+          "G2-283",
+          "G2-284",
+          "G2-285",
+          "G2-286",
+          "G2-287",
+          "G2-288",
+          "G2-289",
+          "G2-290",
+          "G2-291",
+          "G2-292",
+          "G2-293",
+          "G2-294",
+          "G2-295",
+          "G2-296",
+          "G2-297",
+          "G2-298",
+          "G2-299",
+          "G2-300",
+          "G2-301",
+          "G2-302",
+          "G2-303",
+          "G2-304",
+          "G2-305",
+          "G2-306",
+          "G2-307",
+          "G2-308",
+          "G2-309",
+          "G2-310",
+          "G2-311",
+          "G2-312",
+          "G2-313",
+          "G2-314",
+          "G2-315",
+          "G2-316",
+          "G2-317",
+          "G2-318",
+          "G2-319",
+          "G2-320",
+          "G2-321",
+          "G2-322",
+          "G2-323",
+          "G2-324",
+          "G2-325",
+          "G2-326",
+          "G2-327",
+          "G2-328",
+          "G2-329",
+          "G2-330",
+          "G2-331",
+          "G2-332",
+          "G2-333",
+          "G2-334",
+          "G2-335",
+          "G2-336",
+          "G2-337",
+          "G2-338",
+          "G2-339",
+          "G2-340",
+          "G2-341",
+          "G2-342",
+          "G2-343",
+          "G2-344",
+          "G2-345",
+          "G2-346",
+          "G2-347",
+          "G2-348",
+          "G2-349",
+          "G2-350",
+          "G2-351",
+          "G2-352"
+        ],
+        "runId": "opus-high-r1",
+        "severities": [
+          {
+            "entries": 8,
+            "escapedMinutes": 4800,
+            "falsePositiveMinutes": 240,
+            "falsePositives": 2,
+            "found": 1,
+            "foundMinutes": 0,
+            "missed": 7,
+            "outcomes": {
+              "atPrice": {
+                "count": 0,
+                "minutes": 0
+              },
+              "dismissed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixFailed": {
+                "count": 1,
+                "minutes": 600
+              },
+              "fixUnverified": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "missed": {
+                "count": 7,
+                "minutes": 4200
+              },
+              "wrongSeverity": {
+                "count": 0,
+                "minutes": 0
+              }
+            },
+            "severity": "BLOCKER"
+          },
+          {
+            "entries": 41,
+            "escapedMinutes": 9720,
+            "falsePositiveMinutes": 180,
+            "falsePositives": 2,
+            "found": 7,
+            "foundMinutes": 480,
+            "missed": 34,
+            "outcomes": {
+              "atPrice": {
+                "count": 4,
+                "minutes": 360
+              },
+              "dismissed": {
+                "count": 2,
+                "minutes": 540
+              },
+              "fixFailed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixUnverified": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "missed": {
+                "count": 34,
+                "minutes": 9180
+              },
+              "wrongSeverity": {
+                "count": 1,
+                "minutes": 120
+              }
+            },
+            "severity": "MAJOR"
+          },
+          {
+            "entries": 45,
+            "escapedMinutes": 2100,
+            "falsePositiveMinutes": 150,
+            "falsePositives": 4,
+            "found": 13,
+            "foundMinutes": 577.5,
+            "missed": 32,
+            "outcomes": {
+              "atPrice": {
+                "count": 2,
+                "minutes": 60
+              },
+              "dismissed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixFailed": {
+                "count": 3,
+                "minutes": 180
+              },
+              "fixUnverified": {
+                "count": 5,
+                "minutes": 187.5
+              },
+              "fixed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "missed": {
+                "count": 32,
+                "minutes": 1920
+              },
+              "wrongSeverity": {
+                "count": 3,
+                "minutes": 330
+              }
+            },
+            "severity": "MINOR"
+          },
+          {
+            "entries": 253,
+            "escapedMinutes": 2330,
+            "falsePositiveMinutes": 33,
+            "falsePositives": 3,
+            "found": 26,
+            "foundMinutes": 378,
+            "missed": 227,
+            "outcomes": {
+              "atPrice": {
+                "count": 0,
+                "minutes": 0
+              },
+              "dismissed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixFailed": {
+                "count": 6,
+                "minutes": 60
+              },
+              "fixUnverified": {
+                "count": 18,
+                "minutes": 198
+              },
+              "fixed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "missed": {
+                "count": 227,
+                "minutes": 2270
+              },
+              "wrongSeverity": {
+                "count": 2,
+                "minutes": 180
+              }
+            },
+            "severity": "NIT"
+          },
+          {
+            "entries": 5,
+            "escapedMinutes": 8,
+            "falsePositiveMinutes": 0,
+            "falsePositives": 0,
+            "found": 1,
+            "foundMinutes": 120,
+            "missed": 4,
+            "outcomes": {
+              "atPrice": {
+                "count": 0,
+                "minutes": 0
+              },
+              "dismissed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixFailed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixUnverified": {
+                "count": 0,
+                "minutes": 0
+              },
+              "fixed": {
+                "count": 0,
+                "minutes": 0
+              },
+              "missed": {
+                "count": 4,
+                "minutes": 8
+              },
+              "wrongSeverity": {
+                "count": 1,
+                "minutes": 120
+              }
+            },
+            "severity": "INFO"
+          }
+        ],
+        "uncataloged": [
+          {
+            "findingId": "r1-correctness-BLK-2-r1",
+            "reason": "Genuine and in range. The new writeInstallEnv writes install.env from the -peek-port/-peek-control-port flags, and install.ps1 always passes its defaults (4242/42442), so re-running install.ps1 without arguments resets a profile's customized ports. install.sh in the same diff sources the existing install.env first and preserves them."
+          },
+          {
+            "findingId": "r1-tests-MIN-3-r1",
+            "reason": "Genuine and in range: the new config.LoadFragment has no test at the reviewed head (no _test.go references it); its missing-file and parse-error-after-expansion branches are unpinned. G2-168 covers the caller switches, not LoadFragment itself."
+          },
+          {
+            "findingId": "r1-tests-MIN-4-r1",
+            "reason": "Genuine and in range: the diff's new NotFound + DefaultDisabled skip in sched_windows.go SyncAll has no test at the reviewed head. G2-044 catalogs only the darwin twin."
+          },
+          {
+            "findingId": "r1-security-NIT-2-r1",
+            "reason": "Genuine and in range: the diff makes Repo.Name a sessions/ mining-folder segment and reserves default/archived, but namePattern still admits '.' and '..', so the new reservation is incomplete. Low severity, since no Go path sink consumes Name."
+          },
+          {
+            "findingId": "r2-correctness-NIT-11-r2",
+            "reason": "Genuine and in range: refreshIfChanged (new in the diff) records no file identity after a failed Reload, so a malformed repos.json is re-stat'ed, re-read, re-parsed and re-logged on every Find()/Repos() call."
+          },
+          {
+            "findingId": "r2-code-style-NIT-18-r2",
+            "reason": "Genuine and in range: at the reviewed head, handleWelcomeBootstrap passes the os.OpenFile log error bare to respond.WithInternalServerError but wraps the cmd.Start error with the function prefix. The finding cites the post-fix CreateTemp form of the same line."
+          }
+        ]
+      }
+    ],
+    "scope": "full",
+    "total": 352
+  },
+  "metrics": [
+    {
+      "id": "smoke_pass",
+      "direction": "higher",
+      "label": "Smoke pass",
+      "source": "probe",
+      "unit": "bool"
+    },
+    {
+      "id": "wall_seconds",
+      "direction": "lower",
+      "label": "Wall time",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "active_seconds",
+      "direction": "lower",
+      "label": "Main-loop active",
+      "source": "telemetry",
+      "unit": "s"
+    },
+    {
+      "id": "output_tokens",
+      "direction": "lower",
+      "label": "Output tokens (all agents)",
+      "source": "telemetry",
+      "unit": "tokens"
+    },
+    {
+      "id": "cost_usd",
+      "direction": "lower",
+      "label": "Cost",
+      "source": "telemetry",
+      "unit": "usd"
+    },
+    {
+      "id": "permission_denials",
+      "direction": "lower",
+      "label": "Permission denials (all agents)",
+      "source": "telemetry",
+      "unit": "count"
+    },
+    {
+      "id": "check_failures",
+      "direction": "lower",
+      "label": "Enforce check failures",
+      "source": "heartbeat",
+      "unit": "count"
+    },
+    {
+      "id": "runs_killed",
+      "direction": "lower",
+      "label": "Runs killed by heartbeat",
+      "source": "heartbeat",
+      "unit": "count"
+    },
+    {
+      "id": "recall",
+      "direction": "higher",
+      "label": "Golden recall",
+      "source": "golden",
+      "unit": "ratio"
+    },
+    {
+      "id": "review_score",
+      "direction": "higher",
+      "label": "Review score (share of the savable minutes captured)",
+      "source": "golden",
+      "unit": "ratio"
+    },
+    {
+      "id": "lost_minutes",
+      "direction": "lower",
+      "label": "Lost minutes vs a perfect review",
+      "source": "golden",
+      "unit": "min"
+    },
+    {
+      "id": "escaped_minutes",
+      "direction": "lower",
+      "label": "Escaped minutes (missed and merged)",
+      "source": "golden",
+      "unit": "min"
+    },
+    {
+      "id": "false_positive_minutes",
+      "direction": "lower",
+      "label": "False-positive minutes",
+      "source": "golden",
+      "unit": "min"
+    },
+    {
+      "id": "false_positives",
+      "direction": "lower",
+      "label": "False positives",
+      "source": "golden",
+      "unit": "count"
+    },
+    {
+      "id": "misclassified",
+      "direction": "lower",
+      "label": "Misclassified severity",
+      "source": "golden",
+      "unit": "count"
+    },
+    {
+      "id": "step_miss_pct",
+      "direction": "lower",
+      "label": "Step misses",
+      "source": "judge",
+      "unit": "%"
+    },
+    {
+      "id": "step_unobserved",
+      "direction": "lower",
+      "label": "Unobservable entries",
+      "source": "judge",
+      "unit": "count"
+    }
+  ],
+  "metricValues": [
+    {
+      "metricId": "smoke_pass",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": true
+    },
+    {
+      "metricId": "wall_seconds",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 7999
+    },
+    {
+      "metricId": "active_seconds",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 1398
+    },
+    {
+      "metricId": "output_tokens",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 4289132
+    },
+    {
+      "metricId": "cost_usd",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 326.35874040000016
+    },
+    {
+      "metricId": "permission_denials",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 452
+    },
+    {
+      "metricId": "check_failures",
+      "note": "no enforced run in the session",
+      "runId": "opus-high-r1",
+      "value": null
+    },
+    {
+      "metricId": "runs_killed",
+      "note": "no enforced run in the session",
+      "runId": "opus-high-r1",
+      "value": null
+    },
+    {
+      "metricId": "recall",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 0.13636363636363635
+    },
+    {
+      "metricId": "review_score",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": -0.0005171042163882866
+    },
+    {
+      "metricId": "lost_minutes",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 12576.5
+    },
+    {
+      "metricId": "escaped_minutes",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 18958
+    },
+    {
+      "metricId": "false_positive_minutes",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 603
+    },
+    {
+      "metricId": "false_positives",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 11
+    },
+    {
+      "metricId": "misclassified",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 29
+    },
+    {
+      "metricId": "step_miss_pct",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 10.679611650485437
+    },
+    {
+      "metricId": "step_unobserved",
+      "note": "",
+      "runId": "opus-high-r1",
+      "value": 0
+    }
+  ],
+  "probes": [],
+  "rubric": [
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Never prompt",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-002"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Preloaded tools",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-003a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Paths, never content",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-003b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Workers return refs",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-003d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003c",
+      "axis": "self",
+      "phase": "",
+      "rule": "No dispatcher hunks",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-003c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-003e",
+      "axis": "self",
+      "phase": "",
+      "rule": "No copy-back",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-003e"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-EXEC-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Foreground commands",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-exec-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-014a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Budget invariance",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-014a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-014c",
+      "axis": "self",
+      "phase": "",
+      "rule": "No budget mentions",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-014c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-CTX-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Gate evidence",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-ctx-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DIR-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Falsifiability bar",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-dir-002"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-CTX-002b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Context gates",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-ctx-002b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-CTX-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane context",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-ctx-002a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Guard",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Full-file reads",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Chunk conduct",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-005b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Relevance filter",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-005c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Done rule",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-016b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Counter reset",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-016d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016f",
+      "axis": "self",
+      "phase": "",
+      "rule": "Round-1 full",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-016f"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-007b",
+      "axis": "self",
+      "phase": "",
+      "rule": "One artifact contract",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-007b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-SCOPE-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Scope first",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-scope-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-SCOPE-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Head pin",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-scope-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-002a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Explicit base",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-002a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Wrong-base heuristic",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Diff",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-011",
+      "axis": "self",
+      "phase": "",
+      "rule": "Test pairs",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-011"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Confirm scope",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-007a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Risk tiers",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-007a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-007b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Risk-map artifact",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-007b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-008b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Auto-partition",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-008b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Direction selection",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Round shrink",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-016c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-009",
+      "axis": "self",
+      "phase": "",
+      "rule": "Base health",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-009"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-NIGHTLY-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Run namespace",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-nightly-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-003d",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane manifests",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-003d"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROC-012",
+      "axis": "self",
+      "phase": "",
+      "rule": "Spec copy",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-proc-012"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Checklist agents",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-walk-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Extract checklist",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-walk-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-016",
+      "axis": "self",
+      "phase": "",
+      "rule": "Build and test",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-016"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Review-only lanes",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-005a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Coverage check",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-005a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Measured coverage",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-005b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Walk gate",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-walk-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-010",
+      "axis": "self",
+      "phase": "",
+      "rule": "Item citation",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-walk-010"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-022b",
+      "axis": "self",
+      "phase": "",
+      "rule": "One verdict each",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-022b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-023",
+      "axis": "self",
+      "phase": "",
+      "rule": "Concurrency limits",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-023"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-009e",
+      "axis": "self",
+      "phase": "",
+      "rule": "Station input inline",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-009e"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-010",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verdict intake",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-010"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-005a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane set",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-005a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-003b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Bracket unpacking",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-003b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-019",
+      "axis": "self",
+      "phase": "",
+      "rule": "Explicit worktrees",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-019"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fan-out",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-032",
+      "axis": "self",
+      "phase": "",
+      "rule": "Lane review",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-032"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-WALK-008",
+      "axis": "self",
+      "phase": "",
+      "rule": "Walk the checklist",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-walk-008"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Claims output",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-025",
+      "axis": "self",
+      "phase": "",
+      "rule": "Groupers",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-025"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-033",
+      "axis": "self",
+      "phase": "",
+      "rule": "Severity recompute",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-033"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Per-direction dedup",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-022a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Cross-direction dedup",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-022a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Refutation",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-026",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe claim",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-026"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-027",
+      "axis": "self",
+      "phase": "",
+      "rule": "Return verdict",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-027"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-011a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Verification pool",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-011a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-028",
+      "axis": "self",
+      "phase": "",
+      "rule": "Confirm batch",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-028"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-009a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Station barrier",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-009a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-014",
+      "axis": "self",
+      "phase": "",
+      "rule": "Reconciliation",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-014"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-014b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Routing",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-014b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-015",
+      "axis": "self",
+      "phase": "",
+      "rule": "Permanent checks",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-015"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-017",
+      "axis": "self",
+      "phase": "",
+      "rule": "DoD walk",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-017"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-018",
+      "axis": "self",
+      "phase": "",
+      "rule": "Handoff",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-018"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-020",
+      "axis": "self",
+      "phase": "",
+      "rule": "Funnel",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-020"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-021",
+      "axis": "self",
+      "phase": "",
+      "rule": "Cleanup",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-021"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-002",
+      "axis": "self",
+      "phase": "",
+      "rule": "Failed round",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-002"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-010",
+      "axis": "self",
+      "phase": "",
+      "rule": "Handoff conformance",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-010"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Human gate",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-005b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix scope",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-005b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix application",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-016",
+      "axis": "self",
+      "phase": "",
+      "rule": "Record applied",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-016"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix commit",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-011a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix check",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-011a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-011b",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe replay",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-011b"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-011c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Fix check stage",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-011c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-014",
+      "axis": "self",
+      "phase": "",
+      "rule": "Judge fixes",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-014"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-017",
+      "axis": "self",
+      "phase": "",
+      "rule": "Record fixed",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-017"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Clean-slate rounds",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-STATION-004c",
+      "axis": "self",
+      "phase": "",
+      "rule": "Known ledger",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-station-004c"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-MODES-016a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Coverage ledger",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-modes-016a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-ROUND-036",
+      "axis": "self",
+      "phase": "",
+      "rule": "Artifact prune",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-round-036"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-NIGHTLY-001a",
+      "axis": "self",
+      "phase": "",
+      "rule": "Unattended rounds",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-nightly-001a"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe persistence",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-probe-005"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Deterministic probes",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-probe-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Validity first",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-probe-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Probe verdict",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-probe-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-PROBE-006",
+      "axis": "self",
+      "phase": "",
+      "rule": "Manual path",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-probe-006"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Findings table",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-out-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-003",
+      "axis": "self",
+      "phase": "",
+      "rule": "Proposed fix",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-out-003"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Coverage",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-out-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-007",
+      "axis": "self",
+      "phase": "",
+      "rule": "Row order",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-out-007"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-OUT-008",
+      "axis": "self",
+      "phase": "",
+      "rule": "DoD table",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-out-008"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DELIVER-001",
+      "axis": "self",
+      "phase": "",
+      "rule": "Plan-file record",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-deliver-001"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DELIVER-004",
+      "axis": "self",
+      "phase": "",
+      "rule": "Re-review deltas",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-deliver-004"
+    },
+    {
+      "id": "SKILL-RAILROADREVIEW-DELIVER-005",
+      "axis": "self",
+      "phase": "",
+      "rule": "Section structure",
+      "source": "evals/railroad-review/2026-10-06-1f725c/SKILL.md#skill-railroadreview-deliver-005"
+    }
+  ],
+  "runs": [
+    {
+      "id": "opus-high-r1",
+      "claudeCodeVersion": "2.1.282",
+      "invalid": false,
+      "invalidReason": "",
+      "model": {
+        "id": "claude-opus-5-5",
+        "effort": "high",
+        "mode": ""
+      },
+      "output": "runs/A/diff.patch",
+      "skillMd": "evals/railroad-review/2026-10-06-1f725c/SKILL.md",
+      "transcript": "2494cad3-74f1-4418-99c8-7b3882e98f1d",
+      "variant": {
+        "disable": [],
+        "name": "opus-high"
+      }
+    }
+  ],
+  "schemaVersion": "2.13",
+  "scores": [
+    {
+      "evidence": [
+        "trace.md:128"
+      ],
+      "justification": "followed: No AskUserQuestion anywhere; the round-2 arg-validation failure and the replay failure were resolved in place and the run carried on (trace.md:131-132, 82).",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-002",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:47"
+      ],
+      "justification": "followed: Workflow was available from the first call; no mid-run tool load was needed.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:77"
+      ],
+      "justification": "partial: review.json read only through jq (trace.md:59, 61, 75) and ledger and risk map passed as paths. But the dispatcher also read probe files and a probe registry and hand-ran a probe (trace.md:77-81), reads outside gate presentation and fix routing.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003b",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed: Round and stage returns are relayed as counts and ids; claim bodies stay in the lane, verdict and review files. This is script-built and was inferred from the dispatcher's summaries.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:17"
+      ],
+      "justification": "followed: Only --numstat, --name-only, --stat and --quiet diffs (trace.md:17, 41, 70, 100, 102, 112, 143); the dispatcher never read a hunk.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: Workflow args carry refs, lists and the buildtest {build,tests} that the step requires verbatim. chunks.json and risk-map.json are authored by the dispatcher.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-003e",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:44"
+      ],
+      "justification": "followed: Every smine-rules call ran in the foreground, none piped or chained.",
+      "ruleId": "SKILL-RAILROADREVIEW-EXEC-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:124"
+      ],
+      "justification": "followed: After the session-limit abort the run resumed with refutation, dedup, verification and station intact (refuteLevel major, ignoreLevel none, trace.md:132).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-014a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: No budget field passed to any stage.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-014c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Code-style findings cite RULE ids, and permanent_checks propose ACDSL gates. This is lane-internal and inferred from the artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-CTX-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/correctness-server-lane1.json"
+      ],
+      "justification": "followed: Every lane finding carries non-empty evidence and a checklist id. Inferred from the artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-DIR-002",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:2"
+      ],
+      "justification": "followed: Read the global and railroad-review--main context files before any other call.",
+      "ruleId": "SKILL-RAILROADREVIEW-CTX-002b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: Enforced by the skill-context hook inside lanes.js; lane transcripts are not in the root trace.",
+      "ruleId": "SKILL-RAILROADREVIEW-CTX-002a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:15"
+      ],
+      "justification": "followed: smine-rules base computes the fork point; lanes run the merge-base ancestor check.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: Lane side is enforced by the read-gate hook (walk_complete true, coverage_gaps []); the dispatcher read no changed file.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Manifest-gated per chunk by smine-rules lanes and the read-gate hook.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Correctness lanes are smaller than code-style lanes (server 36 vs 48 files): test files excluded. Tests lanes carry their partners.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:126"
+      ],
+      "justification": "followed: Round-2 code-style lanes shrank to 6-9 files (done-after 1), while tests and correctness kept full sets.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/coverage.json"
+      ],
+      "justification": "followed: Files touched by the round-1 fix were re-reviewed in round 2 (e.g. cmd/bootstrap/run.sh last_round 2).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Round-1 lanes ran without --coverage over all 178 files.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016f",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: Every lane wrote a JSON artifact; coverage sidecars existed (the eval copy lists them as deleted).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-007b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:15"
+      ],
+      "justification": "followed: Explicit branch[b4981b8] scope used.",
+      "ruleId": "SKILL-RAILROADREVIEW-SCOPE-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:11"
+      ],
+      "justification": "followed: rev-parse HEAD before base, buildtest and lanes in both rounds (trace.md:11, 98).",
+      "ruleId": "SKILL-RAILROADREVIEW-SCOPE-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:15"
+      ],
+      "justification": "followed: Ran in both rounds (trace.md:101); commit used as baseCommit.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-002a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:17"
+      ],
+      "justification": "skipped: The diff is ~8k changed lines over 178 files, yet no plausibility check of the base appears. The base was user-pinned, so the risk was low.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-003",
+      "runId": "opus-high-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:17"
+      ],
+      "justification": "followed: numstat minus excludes. exclude was passed as --exclude to lanes and pairs and as excludes to every stage. Round 2 only re-counted with --name-only (trace.md:102).",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:18"
+      ],
+      "justification": "followed: Ran each round (trace.md:114).",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-011",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:10"
+      ],
+      "justification": "skipped: Inclusions and exclusions were never stated in chat; only passed as flags.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-005",
+      "runId": "opus-high-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:42"
+      ],
+      "justification": "followed: High tier listed per file; medium and low tiers given as covering patterns.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-007a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:42"
+      ],
+      "justification": "followed: Written each round (trace.md:117); never passed to a lane.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-007b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:39"
+      ],
+      "justification": "followed: 178 files exceed the 50-file bound, so the files were split into 4 chunks of 34-49 files with tests riding with their partners. The partition was stated only as a count (trace.md:56), and the mode was not named.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-008b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Bound exactly to code-style, correctness, tests and security; stated in risk-map.json's selection field.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:126"
+      ],
+      "justification": "followed: --coverage artifacts/coverage.json passed in round 2.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:44"
+      ],
+      "justification": "followed: Ran once in the foreground with the 600000 ms timeout and -basehealth branch, salvage, no overlay; green.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-009",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:44"
+      ],
+      "justification": "followed: runNs rr-2026-10-06-1f725c-a from run-id; every branch is prefixed claude-review/rr-2026-10-06-1f725c-a-.",
+      "ruleId": "SKILL-RAILROADREVIEW-NIGHTLY-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:51"
+      ],
+      "justification": "followed: Ran once per round after the checklist completed, with --ceiling 10 and --worktree-root. lanePlan, knownPath and idFloor were passed verbatim (trace.md:55, 132).",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-003d",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:23"
+      ],
+      "justification": "followed: Round 1 copied all 14 docs as spec-\u003cn\u003e-\u003cbasename\u003e. Round 2 copied the round-1 copies after checking that plans/ was unchanged (trace.md:112-113).",
+      "ruleId": "SKILL-RAILROADREVIEW-PROC-012",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:124"
+      ],
+      "justification": "partial: Invoked both rounds with the right args, with a primer hop before round 1 (trace.md:47-49). After the harness resume (a new prompt), the checklist was relaunched without a primer hop.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-004",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/checklist-correctness.json"
+      ],
+      "justification": "followed: 14 groups, one per spec, with numbered correctness-\u003cn\u003e items.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-005",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:45"
+      ],
+      "justification": "followed: Round 1 ran in the same message as base health, each with a 600000 ms timeout. Round 2 ran once (trace.md:118); its red result was passed verbatim as buildTest.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-016",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:97"
+      ],
+      "justification": "followed: Lane checkout_sha equals the pinned head, and cleanup removed all worktrees with none skipped. Lane-internal.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: All 32 lanes walk_complete; coverage_gaps [] in both rounds.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-005a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: Hook-written sidecars existed beside the artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-005b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: walk_complete true with walk entries present in every lane.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/correctness-go-core-lane1.json"
+      ],
+      "justification": "followed: Every lane finding carries a checklist id.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-010",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/verdicts"
+      ],
+      "justification": "followed: Round 1: 31 verdicts for 31 survivors (32 produced, 1 duplicate). Round 2: 33 for 33.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-022b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: 16 lanes spawned in one fan-out, no throttle (gate-enforced).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-023",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: The dispatcher passed only round.js args; it never assembled station input.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-009e",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Dispositions carry reason, probe and evidence.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-010",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:39"
+      ],
+      "justification": "followed: round-{r}/chunks.json written (round 2 extended at trace.md:105-111) and passed as --chunks.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-005a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: base, laneModel sonnet/laneEffort medium, stationModel opus/stationEffort medium, walkGroup→--ceiling 10, refuteLevel/ignoreLevel/autofixLevel camelCase.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-003b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:55"
+      ],
+      "justification": "followed: worktreeMode explicit, targetRepo the toplevel, worktreeRoot \u003cout\u003e/wt, overlayPatch set, prebuilt [bin/acdsl, bin/verifiers].",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-019",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:56"
+      ],
+      "justification": "followed: 16 lanes per round, each at the pinned head (checkout_sha 1f725ce / e5245d0).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/code-style-server-lane1.json"
+      ],
+      "justification": "followed: Claims with evidence written to the artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-032",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-2/correctness-go-core-lane1.json"
+      ],
+      "justification": "followed: walk_complete true in every lane.",
+      "ruleId": "SKILL-RAILROADREVIEW-WALK-008",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/tests-go-core-lane1.json"
+      ],
+      "justification": "followed: Every finding carries evidence. Lane-internal re-read not directly observable.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed: Dedup ran; the round-1 funnel shows 1 duplicate.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-025",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: Script step; the SEV tokens of lowered ids (e.g. MIN-11 to NIT-11) follow severity. No mismatch visible.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-033",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed: Script stage ran in both rounds.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed: Script stage ran in both rounds.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-022a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/verdicts"
+      ],
+      "justification": "followed: BLK and MAJ claims carry refuter verdicts with probes or manual-path artifacts.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:74"
+      ],
+      "justification": "followed: Probes persisted under round-1/probes.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-026",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/verdicts"
+      ],
+      "justification": "followed: One verdict file per survivor.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-027",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/verdicts"
+      ],
+      "justification": "followed: MIN and NIT claims second-confirmed by the pool.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-011a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-2/verdicts"
+      ],
+      "justification": "followed: Pool claims carry verdicts.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-028",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:57"
+      ],
+      "justification": "followed: review.json produced in both rounds.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-009a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/review.json"
+      ],
+      "justification": "followed: DoD notes cite the absence of a recorded decision for correctness-BLK-6-r1; intentional_deviations [].",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-014",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: Every ranked-plan entry is routed; the Makefile fix was routed human.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-014b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:153"
+      ],
+      "justification": "partial: The station named 11 permanent checks in review.json; the dispatcher's report never relayed or offered them.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-015",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: 40 [DoD] entries marked PASS, FAIL or N/A.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-017",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: round-{r}/review.json in both rounds.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-018",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: Funnel recorded and shown as one line; conservation lost 0 relayed (trace.md:57).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-020",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:96"
+      ],
+      "justification": "followed: One call after the fix pipeline each round, with the prefix, head, salvage, --run ids (both round-2 launches, trace.md:150) and --root/--overlay; skipped none relayed (trace.md:97).",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-021",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:132"
+      ],
+      "justification": "partial: The checklist crash was resumed via resumeFromRunId (trace.md:124), and the failed launch's run id was kept. But the round-2 round.js failure was relaunched directly, without the Round reset sequence (void ledger record, reset-round, re-pin), and no journal check followed the resume.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-002",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:59"
+      ],
+      "justification": "followed: Ledger validation passed, the jq -e ranked_plan prefix check ran in both rounds (trace.md:136), and conservation lost 0.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-010",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: smine-rules present --review in both rounds (trace.md:137); it did not block the fix pipeline.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: Fix set equals the ledger's autofix list (18 in round 1, 23 in round 2); BLK, MAJ and human-routed entries were left open.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-005b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:64"
+      ],
+      "justification": "followed: fix-apply.js with the whole autofix set in both rounds (trace.md:138); the dispatcher edited no repo file.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-005",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:67"
+      ],
+      "justification": "followed: Both rounds (trace.md:140).",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-016",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:68"
+      ],
+      "justification": "followed: format-patch to round-{r}/fixes and parentage verified (trace.md:69, 141-142).",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-006",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:72"
+      ],
+      "justification": "followed: Replay and fix check ran after each fix commit, before round 2 and before the end.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-011a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:145"
+      ],
+      "justification": "followed: Correct flags; round 2 replayed rounds 1 and 2. Red probes were treated as hits for the ledger, though the dispatcher additionally hand-diagnosed the replay as a harness failure.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-011b",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:93"
+      ],
+      "justification": "followed: Both rounds (trace.md:147).",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-011c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:95"
+      ],
+      "justification": "followed: The checker judged all applied fixes in both rounds. It judged code-style-MIN-9-r1 fixed although that fix broke make test (trace.md:153); that is an outcome-quality miss, not a skipped step.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-014",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:95"
+      ],
+      "justification": "skipped: Some applied ids had no probe: code-style-MIN-8/9-r1 in round 1, and code-style-MIN-21..24-r2, NIT-18/27-r2, tests-MIN-11/13/14-r2 and tests-NIT-12-r2 in round 2. So the checker's fixed set minus red probes was non-empty, yet the dispatcher wrongly reasoned it was empty and never ran --fix-state fixed (trace.md:149).",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-017",
+      "runId": "opus-high-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:132"
+      ],
+      "justification": "followed: Round 2 ran fresh lanes carrying only knownPath and ledgerPath.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:58"
+      ],
+      "justification": "followed: Ran each round as one call with --known, --coverage and --autofix-level minor (trace.md:135). It ran just before the presentation rather than after it; on the nightly route there is no gate decision to wait for.",
+      "ruleId": "SKILL-RAILROADREVIEW-STATION-004c",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:135"
+      ],
+      "justification": "followed: coverage.json maintained through smine-rules ledger --coverage.",
+      "ruleId": "SKILL-RAILROADREVIEW-MODES-016a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:151"
+      ],
+      "justification": "followed: Ran with --verbose after the final cleanup; only a read-only git status followed.",
+      "ruleId": "SKILL-RAILROADREVIEW-ROUND-036",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:153"
+      ],
+      "justification": "followed: Looped 2 rounds without a go, reported hitting the cap, and pruned last (trace.md:151).",
+      "ruleId": "SKILL-RAILROADREVIEW-NIGHTLY-001a",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:74"
+      ],
+      "justification": "followed: Scripts, fixtures, registries and .acdsl mirrors are under round-1/probes, indexed in review.json probes[].",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-005",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:61"
+      ],
+      "justification": "followed: 25 probes in round 1 and 18 in round 2. The rest are flagged manual after exhausted attempts (tool-policy denied bin/acdsl in some worktrees).",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:75"
+      ],
+      "justification": "followed: Probe index entries carry their fail fixture path.",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:75"
+      ],
+      "justification": "followed: Verdicts are recorded as acdsl RED file:line or GREEN; unprobeable claims are flagged probe \"none: \u003cwhy\u003e\".",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "artifacts/round-1/verdicts/code-style-min-9-r1.json"
+      ],
+      "justification": "partial: Manual path taken, but some verdicts (e.g. code-style-MIN-9-r1) carry no artifact (artifacts []).",
+      "ruleId": "SKILL-RAILROADREVIEW-PROBE-006",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: One row per finding with a proposed fix, rendered by smine-rules present.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-001",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: Every row carries a concrete fix.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-003",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:153"
+      ],
+      "justification": "partial: review.json carries coverage_gaps []. Neither the presentation nor the report states the files reviewed against the 178/183-file diff list.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-004",
+      "runId": "opus-high-r1",
+      "score": 0,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:60"
+      ],
+      "justification": "followed: Rows lead with BLOCKERs; ids keep the direction.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-007",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:137"
+      ],
+      "justification": "followed: DoD summary table present in both presentations.",
+      "ruleId": "SKILL-RAILROADREVIEW-OUT-008",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:153"
+      ],
+      "justification": "skipped: No session plan file was written or updated in either round.",
+      "ruleId": "SKILL-RAILROADREVIEW-DELIVER-001",
+      "runId": "opus-high-r1",
+      "score": -1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:112"
+      ],
+      "justification": "followed: Round 2 confirmed the specs unchanged, re-pinned the head and reported the five files added by the fix (trace.md:100, 103).",
+      "ruleId": "SKILL-RAILROADREVIEW-DELIVER-004",
+      "runId": "opus-high-r1",
+      "score": 1,
+      "source": "agent"
+    },
+    {
+      "evidence": [
+        "trace.md:137"
+      ],
+      "justification": "skipped: smine-rules present was run without --section; no review section was rendered.",
+      "ruleId": "SKILL-RAILROADREVIEW-DELIVER-005",
+      "runId": "opus-high-r1",
+      "score": -1,
+      "source": "agent"
+    }
+  ],
+  "setup": null,
+  "sharedTotals": [],
+  "totals": [
+    {
+      "axis": "self",
+      "max": 103,
+      "pct": 89.32038834951456,
+      "raw": 92,
+      "runId": "opus-high-r1"
+    }
+  ],
+  "verdict": {
+    "bestArm": "opus-high-r1",
+    "perRun": [
+      {
+        "failedThresholds": [
+          "review_score",
+          "false_positive_minutes"
+        ],
+        "pass": false,
+        "runId": "opus-high-r1"
+      }
+    ],
+    "reason": "threshold, smoke or variant failures 100% (1)",
+    "status": "fail",
+    "thresholds": {
+      "false_positive_minutes": 60,
+      "review_score": 0.5,
+      "smoke_pass": 1
+    }
+  }
+}

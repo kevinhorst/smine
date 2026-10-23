@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "finding_id": "SP-001",
+      "file": "cmd/worktrees/_lib/verdict.sh",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "filter_untracked (was count_untracked) silently adds exclusion of .serena/ and .DS_Store entries from the UNTRACKED column / removal-safety count, changing the remove-safety gate's behavior without any plan document, driver, decision, or test backing it.",
+      "fix": "Confirm this was intentional and, if so, add it to a plan/changelog so the remove-safety gate's widening has a paper trail."
+    },
+    {
+      "finding_id": "SP-002",
+      "file": "internal/acdsl/git.go",
+      "line": null,
+      "severity": "MAJOR",
+      "claim": "GitRevParse is declared, exported, and exercised only by git_test.go with no production caller, leaving a public API surface with no caller.",
+      "fix": "Either wire it in where the plan implied it was needed, or drop it."
+    },
+    {
+      "finding_id": "SP-003",
+      "file": "internal/server/presentation.go",
+      "line": null,
+      "severity": "MINOR",
+      "claim": "saveProfileSelection and internal/config/installenv.go both read from repo-relative paths rather than an injected root, adding second and third instances of the same implicit CWD==repo-root contract.",
+      "fix": "Add a one-line doc comment noting \"assumes CWD == repo root\" so a future caller does not get bitten silently."
+    },
+    {
+      "finding_id": "SP-004",
+      "file": null,
+      "line": null,
+      "severity": "MINOR",
+      "claim": "handleReposAdd's new git init -b main side effect runs unconditionally for any existing directory without .git, mutating a directory on disk with git init and no confirmation step.",
+      "fix": "Add a note in the UI copy if not already present."
+    },
+    {
+      "finding_id": "SP-005",
+      "file": null,
+      "line": null,
+      "severity": "MINOR",
+      "claim": "Several new German i18n catalog entries mix straight sentence punctuation with the more terse existing entries, and i18n prose quality is not mechanically checkable here.",
+      "fix": "Give it a proofreading pass by a native speaker before it reaches a real casual/German install."
+    }
+  ]
+}

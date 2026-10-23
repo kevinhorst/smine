@@ -1,0 +1,136 @@
+go build  -o ./bin/acdsl ./cmd/acdsl
+go build  -o ./bin/verifiers ./cmd/acdsl/verifiers/...
+cargo fmt --manifest-path cmd/agentwt/Cargo.toml -- --check
+cargo clippy --locked --manifest-path cmd/agentwt/Cargo.toml --all-targets --all-features -- -D warnings
+    Checking agentwt v0.1.0 (/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-3-A/cmd/agentwt)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.38s
+cargo check --locked --manifest-path cmd/agentwt/Cargo.toml --lib --no-default-features
+   Compiling rustix v1.1.5
+    Checking errno v0.3.14
+   Compiling syn v3.0.6
+   Compiling serde_derive_internals v0.30.0
+   Compiling thiserror-impl v2.0.21
+   Compiling serde_derive v1.0.229
+   Compiling ref-cast-impl v1.0.27
+   Compiling schemars_derive v1.2.2
+    Checking ref-cast v1.0.27
+    Checking thiserror v2.0.21
+    Checking gix-path v0.12.6
+    Checking gix-packetline v0.22.2
+    Checking gix-zlib v0.1.0
+    Checking tempfile v3.27.0
+    Checking gix-features v0.49.1
+    Checking gix-command v0.10.1
+    Checking gix-config-value v0.19.1
+    Checking gix-url v0.38.0
+    Checking gix-hash v0.26.2
+    Checking gix-fs v0.22.1
+    Checking gix-glob v0.27.1
+    Checking gix-transport v0.59.2
+    Checking serde v1.0.229
+    Checking gix-tempfile v24.0.0
+    Checking gix-hashtable v0.16.0
+    Checking gix-commitgraph v0.39.0
+    Checking gix-refspec v0.45.1
+    Checking gix-attributes v0.35.0
+    Checking gix-ignore v0.22.1
+    Checking gix-object v0.64.1
+    Checking gix-lock v24.0.0
+    Checking gix-shallow v0.13.0
+    Checking gix-pathspec v0.20.0
+    Checking schemars v1.2.2
+    Checking gix-revwalk v0.35.0
+    Checking gix-ref v0.67.1
+    Checking gix-filter v0.34.0
+    Checking gix-pack v0.74.2
+    Checking gix-traverse v0.61.0
+    Checking gix-revision v0.49.1
+    Checking gix-index v0.55.0
+    Checking gix-odb v0.84.0
+    Checking gix-discover v0.55.0
+    Checking gix-config v0.60.0
+    Checking gix-protocol v0.65.1
+    Checking gix-worktree v0.56.0
+    Checking gix-diff v0.67.1
+    Checking gix-dir v0.29.1
+    Checking gix-submodule v0.34.0
+    Checking gix-status v0.34.1
+    Checking gix-merge v0.20.1
+    Checking gix v0.87.1
+    Checking agentwt v0.1.0 (/Users/devuser/.cache/claude-routine/worktrees/skilleval-2026-09-26-694e74-3-A/cmd/agentwt)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.34s
+go mod verify
+all modules verified
+go vet ./...
+./bin/acdsl project -strip
+2026/09/26 17:13:19 shell: git dur=64ms err=false
+acdsl: stripped 0 file(s)
+./bin/acdsl check -report bin/audit-report.md
+2026/09/26 17:13:19 shell: git dur=44ms err=false
+2026/09/26 17:13:19 shell: git dur=44ms err=false
+2026/09/26 17:13:19 shell: git dur=87ms err=true
+2026/09/26 17:13:19 shell: git dur=147ms err=true
+2026/09/26 17:13:19 shell: git dur=78ms err=true
+2026/09/26 17:13:19 shell: git dur=54ms err=true
+2026/09/26 17:13:19 shell: git dur=45ms err=false
+2026/09/26 17:13:19 shell: git dur=43ms err=false
+2026/09/26 17:13:19 shell: git dur=41ms err=true
+2026/09/26 17:13:20 shell: git dur=78ms err=true
+2026/09/26 17:13:20 shell: git dur=53ms err=true
+2026/09/26 17:13:20 shell: git dur=39ms err=true
+2026/09/26 17:13:20 shell: git dur=85ms err=true
+2026/09/26 17:13:20 shell: git dur=57ms err=true
+2026/09/26 17:13:20 shell: git dur=40ms err=false
+2026/09/26 17:13:20 shell: git dur=45ms err=false
+2026/09/26 17:13:20 shell: git dur=92ms err=true
+2026/09/26 17:13:20 shell: git dur=147ms err=true
+2026/09/26 17:13:20 shell: git dur=13ms err=false
+2026/09/26 17:13:20 shell: git dur=16ms err=false
+2026/09/26 17:13:20 shell: git dur=16ms err=false
+2026/09/26 17:13:20 shell: git dur=28ms err=false
+2026/09/26 17:13:22 shell: testschema dur=1705ms err=false
+2026/09/26 17:13:22 shell: errorfprefix dur=1989ms err=false
+2026/09/26 17:13:22 shell: literalowner dur=2267ms err=false
+2026/09/26 17:13:23 shell: forbidcall dur=2580ms err=false
+2026/09/26 17:13:24 shell: linttags dur=2570ms err=false
+2026/09/26 17:13:25 shell: gofmtwrap dur=2809ms err=false
+2026/09/26 17:13:25 shell: funcsig dur=2734ms err=false
+2026/09/26 17:13:27 shell: skillmeta dur=1612ms err=false
+2026/09/26 17:13:27 shell: skillmeta dur=1816ms err=false
+2026/09/26 17:13:27 shell: skillmeta dur=2348ms err=false
+2026/09/26 17:13:27 shell: exhaustivewrap dur=4178ms err=false
+2026/09/26 17:13:29 shell: skillcontext dur=1828ms err=false
+2026/09/26 17:13:29 shell: skillmeta dur=13ms err=false
+2026/09/26 17:13:29 shell: skillmeta dur=11ms err=false
+2026/09/26 17:13:29 shell: skillmeta dur=11ms err=false
+2026/09/26 17:13:29 shell: skillmeta dur=35ms err=false
+2026/09/26 17:13:29 shell: skillentries dur=2157ms err=false
+2026/09/26 17:13:29 shell: skillmap dur=2483ms err=false
+2026/09/26 17:13:30 shell: severitytable dur=2657ms err=false
+2026/09/26 17:13:30 shell: jsonschemacheck dur=1635ms err=false
+2026/09/26 17:13:31 shell: skillmodelcheck dur=1738ms err=false
+2026/09/26 17:13:31 shell: skillplantemplate dur=1709ms err=false
+2026/09/26 17:13:31 shell: jsonschemacheck dur=20ms err=false
+2026/09/26 17:13:31 shell: jsonschemacheck dur=9ms err=false
+2026/09/26 17:13:31 shell: jsonschemacheck dur=19ms err=false
+2026/09/26 17:13:31 shell: jsonschemacheck dur=18ms err=false
+2026/09/26 17:13:31 shell: jsonschemacheck dur=31ms err=false
+2026/09/26 17:13:32 shell: bash32compat dur=1583ms err=false
+2026/09/26 17:13:32 shell: shellcheckwrap dur=2488ms err=false
+2026/09/26 17:13:32 shell: filebaseline dur=1517ms err=false
+2026/09/26 17:13:33 shell: evalgenbounds dur=1071ms err=false
+2026/09/26 17:13:34 shell: planformat dur=1292ms err=false
+2026/09/26 17:13:34 shell: rulescheck dur=2734ms err=false
+2026/09/26 17:13:34 shell: rulescheck dur=1927ms err=false
+2026/09/26 17:13:34 shell: idgrammar dur=1176ms err=false
+2026/09/26 17:13:35 shell: forbidphrase dur=1317ms err=false
+2026/09/26 17:13:35 shell: forbidphrase dur=1334ms err=false
+2026/09/26 17:13:40 shell: golangciwrap dur=6968ms err=true
+acdsl: runVerifier: ACDSL-GOLANG-LINT-001: verifier golangci failed: Run: bin/verifiers/golangciwrap in .: exit status 2
+2026/09/26 17:13:40 shell: golangci-lint dur=5799ms err=true
+golangciwrap: Run: golangci-lint in .: exit status 3
+Error: parallel golangci-lint is running
+The command is terminated due to an error: parallel golangci-lint is running
+
+
+make: *** [audit-gates] Error 2

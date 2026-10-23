@@ -1,0 +1,27 @@
+{
+  "finding_id": "correctness-MIN-72-r1",
+  "verdict": "confirmed",
+  "reason": "verdict.sh:511 stars a non-candidate (remote-tracking) FROM in IN on squash_contained \"$from\" \"$branch\", but the UNPICKED/squashed recount (469-483) only consults hash_explained_anywhere, which layer 4 (453-463) fills from local candidates only, and print_agent_worktrees_status.sh:179-184 builds squash_in from candidates only; the probe goes RED at verdict.sh:511. Reachable when the per-commit applied probe on FROM fails (overlapping commits re-pick with conflicts) and local main is not yet updated.",
+  "probe": "PROBE-CORRECTNESS-MIN-72-R1",
+  "script": "correctness-min-72-r1.sh",
+  "fixture": "probes/fixtures/correctness-min-72-r1/cmd/worktrees/_lib/verdict.sh",
+  "registry": "registry-correctness-min-72-r1.json",
+  "evidence": {
+    "probe_run": "bin/acdsl check -root <wt> -rule PROBE-CORRECTNESS-MIN-72-R1 -registry probes/registry-correctness-min-72-r1.json -> exit 1: cmd/worktrees/_lib/verdict.sh:511: remote FROM squash containment stars IN but never moves its commits from UNPICKED to squashed:n",
+    "read": [
+      "cmd/worktrees/_lib/verdict.sh:453-463 layer 4 iterates ordered_indices over candidates only",
+      "cmd/worktrees/_lib/verdict.sh:469-483 squashed_n incremented only when hash_explained_anywhere; else unpicked_n",
+      "cmd/worktrees/_lib/verdict.sh:511-517 squash_contained \"$from\" prepends \"$from*\" to IN for a non-candidate FROM, touches neither count",
+      "cmd/worktrees/print_agent_worktrees_status.sh:179-184 squash_in loops over candidates only; 211-214 then prints 'no twin on any local branch' for unpicked-notwin",
+      "print_agent_worktrees_status.sh:23-27 UNPICKED documented as 'genuinely untransferred work'"
+    ],
+    "validity": "fixture validity run not executable here: direct `/bin/bash <script>` / `bash <script>` are denied by tool-policy and `acdsl check -root <fixture dir>` needs a git repo; the real run's RED with the script's own message shows the probe is not blind."
+  },
+  "artifacts": [
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-min-72-r1.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/correctness-min-72-r1.acdsl",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/registry-correctness-min-72-r1.json",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/probes/fixtures/correctness-min-72-r1/cmd/worktrees/_lib/verdict.sh",
+    "/Users/devuser/.cache/claude-routine/worktrees/run-2026-10-05-1f725c-3-a-out/artifacts/round-1/scratch/correctness-min-72-r1/files.txt"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "direction": "correctness",
+  "lane": 1,
+  "chunk": "skills-smine",
+  "base": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+  "head": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "checkout_sha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+  "overlay_ok": true,
+  "aborted": false,
+  "notes": "Cross-chunk, not chased: the smine-batch/smine-style/dimension allowed-tools name the peek server mcp__Peek_MCP__*, but settings/claude_code/claude.json registers it as 'peek-mcp' (tools mcp__peek-mcp__*). This predates the change (same names at base), so it is not filed. Station may check whether headless --allowedTools derived from these manifests admits the real tool names.",
+  "walk": [
+    {"group": "spec-1-concept", "hits": [], "note": "correctness-4/5: the five dimension skills and smine-batch read the profile language. Consolidate takes language <lang> and never translates snippets, ids, dates or tags. Items 1-3 and 6-8 are outside this chunk."},
+    {"group": "spec-2-user_stories", "hits": [], "note": "correctness-10/14: casual presentation bullets in skills/context/memory/routines plus the consolidate sweep cover the jargon-free requirement. UI stories are outside this chunk."},
+    {"group": "spec-3-raw", "hits": [], "note": "Templates, hook, configserver and run.sh items are outside this chunk. No smine-skill requirement."},
+    {"group": "spec-3-raw (part 2)", "hits": [], "note": "Installer and CLAUDE.md items are outside this chunk."},
+    {"group": "spec-4-change-englishness", "hits": [], "note": "correctness-36/37/38 PASS: the Language contract plus version bumps are in all five skills. smine-skills keeps group titles verbatim and context/memory group titles stay untranslated. Consolidate's full sweep and amended grouping invariant are present (v1.3). correctness-39/40 have no surface here."},
+    {"group": "spec-5-change-nondev-automation", "hits": [], "note": "Sync, configserver and repos items are outside this chunk."},
+    {"group": "spec-5-change-nondev-automation (part 2)", "hits": ["correctness-MAJ-1"], "note": "correctness-49: the orchestrate skill is present. Its 'mark the proposal rejected' step on reverting an auto-applied change targets an entry smine-apply already removed. The bootstrap additionalDirectories reconciliation gap is in the known ledger. correctness-50-54 are outside this chunk."},
+    {"group": "spec-6-raw", "hits": [], "note": "ACDSL policy items are outside this chunk."},
+    {"group": "spec-7-raw", "hits": [], "note": "railroad-review items are outside this chunk."},
+    {"group": "spec-8-change-bootstrap-profile", "hits": ["correctness-INF-2"], "note": "correctness-74/75/80/81 PASS apart from known-ledger items (--repos not forwarded by session-mine.js, --last applied on top of --since). correctness-78/79: the origin: user stamp and the casual lockout are in smine-apply, smine-skills and smine-orchestrate. Concept audit: the Drift stage, tier override and --subagents trace to no spec."},
+    {"group": "spec-8-change-bootstrap-profile (part 2)", "hits": [], "note": "Sessions store, routes and repo form are outside this chunk."},
+    {"group": "spec-9-change-headless-bootstrap", "hits": [], "note": "correctness-90: orchestrate accepts 'bootstrap (since: d)'. correctness-94: smine-bootstrap appears only in historical changelog text. correctness-95: --last/--dev are passed through (the --since precedence issue is known)."},
+    {"group": "spec-9-change-headless-bootstrap (part 2)", "hits": [], "note": "correctness-98 PASS apart from the known repo-root issue. correctness-100: smine-style writes in the profile language and reports write failures. correctness-101: casual prose rule in four skills plus the consolidate sweep. correctness-102: concrete field list and since-floor in orchestrate. All bumped."},
+    {"group": "spec-10-change-viewer-fixes", "hits": [], "note": "Plan rules and fdesign items are outside this chunk."},
+    {"group": "spec-11-change-repos-routines-ui", "hits": [], "note": "Worktree/routines UI items are outside this chunk."},
+    {"group": "spec-12-raw", "hits": [], "note": "correctness-123/124 PASS: smine-style frontmatter/allowed-tools, sampling with the <2-turn skip, generator marker, 30-line cap, profile precedence, PII/verbatim/profanity invariants and the single output file are all present. Server items are outside this chunk."},
+    {"group": "spec-13-change-multi-profile-ports", "hits": [], "note": "peek-mcp/install items are outside this chunk."},
+    {"group": "spec-14-change-repo-cache", "hits": [], "note": "Registry/cache items are outside this chunk."}
+  ],
+  "findings": [
+    {
+      "finding_id": "correctness-MAJ-1",
+      "file": "skills/smine/smine-orchestrate/SKILL.md",
+      "line": 42,
+      "checklist": "correctness-49",
+      "severity": "MAJOR",
+      "effect": "incorrect",
+      "exposure": "rare",
+      "claim": "When the judge reverts an auto-applied change (L42, and the casual-lockout revert at L41) it is told to 'set its proposal entry to rejected', but smine-apply removes every implemented proposal (auto-applied included) from proposals/<kind>.json and archives it to archive/done.md with an (auto) marker. There is no proposal entry left to mark, so the reverted change stays recorded as implemented in done.md and the required 'mark the proposal rejected' outcome (correctness-49) never lands.",
+      "evidence": "Re-read smine-apply SKILL.md L31 (step 4 ends: 'Render the proposal into archive/done.md with a completion note, then remove it from <kind>.json in place'), L36 (auto-apply SAFE candidates are implemented 'per kind exactly as step 4') and L37 (done.md entries get an '(auto)' marker). Re-read smine-orchestrate SKILL.md L41-42: both revert paths say to set the proposal entry, or the driving proposal, to rejected. Neither file names archive/done.md → archive/rejected.md as the place to record the rejection. Sequence: in decide mode, smine-apply auto-applies a skills edit, so the entry is gone from skills.json and appended to done.md (auto). The wrapper commits. Orchestrate judges it bad, reverts the edit on the branch, then finds no entry in skills.json to set to rejected. After the merge, done.md still reports the change as implemented although the code no longer has it. done.md also feeds the dimension skills' permanent suppression and smine-apply's already-present check, so the false 'done' is never corrected.",
+      "fix": "In smine-orchestrate L41-42, record the rejection where apply left the proposal: move its archive/done.md entry to archive/rejected.md with status rejected, the reason and the decided date (fall back to setting status in <kind>.json only when the entry is still there)."
+    },
+    {
+      "finding_id": "correctness-INF-2",
+      "file": "skills/smine/smine/workflows/session-mine.js",
+      "line": 95,
+      "checklist": "correctness-74",
+      "severity": "INFO",
+      "effect": "debt",
+      "exposure": "eventually",
+      "claim": "Concept audit (ACTION-REVIEW-SPEC-005): three mechanisms this diff adds to the smine pipeline trace to none of the 14 supplied specs. They are the pre-run Drift stage (session-mine.js L95-110, smine changelog 1.12), the model/effort tier override spread into every agent() call (L31-35, changelog 1.13), and the --subagents flag with its Subagent-mining section (smine SKILL.md L32, smine-batch SKILL.md L29/L69-73, session-mine.js L29/L116). The smine-permissions dimension is excluded here because the known ledger already carries it.",
+      "evidence": "Grepped all 14 spec copies for '--subagents', 'drift stage', 'ledger drift', 'model/effort' and 'session_get': no match. The base-to-head diff of session-mine.js shows the Drift phase, DRIFT_SCHEMA, the tier spread and the subagents arg as additions. smine-batch's diff adds the --subagents arg and the 'Subagent mining (opt-in)' section.",
+      "fix": "none"
+    }
+  ],
+  "walk_complete": true
+}
