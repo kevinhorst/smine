@@ -1,8 +1,11 @@
 name: ci
 
+# A release/v* branch runs every release step except the two that publish (the GitHub release, the docs
+# deploy), so a release is rehearsed to the installer before its tag exists. The version is the ref's last
+# segment without its v: tag v2.0.5 and branch release/v2.0.5 alike.
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/v*']
     tags: ['v*.*.*']
   pull_request:
 
@@ -10,57 +13,82 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      # The golangci gate diffs against the local branch main; a tag or PR checkout has none.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make main resolvable off main
+        if: github.ref != 'refs/heads/main'
+        run: git branch main origin/main
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
       - name: Configure git for shell tests
         run: git config --global init.defaultBranch main
+      - name: Install gate tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
       - name: Run tests
         run: make test
 
-  # Build jobs only stage artifacts; nothing is published until every artifact
-  # exists — the release is atomic, attached in one shot by the publish job.
-  build:
-    if: startsWith(github.ref, 'refs/tags/v')
+  # The payload jobs only stage artifacts; nothing is published until every artifact exists — the release
+  # is atomic, attached in one shot by the publish job.
+  darwin-payload:
+    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release/v')
     needs: test
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [arm64, amd64]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Build release binaries
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            cmd/agentwt
+            cmd/heartbeat
+          key: darwin-${{ matrix.arch }}
+      - name: Build darwin payload
         run: |
-          make build-release GOOS=darwin GOARCH=arm64 VERSION="${GITHUB_REF_NAME#v}"
-          make build-release GOOS=darwin GOARCH=amd64 VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${GITHUB_REF_NAME##*/}"; VERSION="${VERSION#v}"
+          make payload GOOS=darwin GOARCH=${{ matrix.arch }} VERSION="$VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-payload-${{ matrix.arch }}
+          path: dist/*.tar.gz
+
+  windows-payload:
+    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release/v')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - name: Build windows payload
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          mkdir -p dist/bin/verifiers
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H=windowsgui -X main.version=$VERSION" -o dist/bin/configserver.exe ./cmd/configserver
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H=windowsgui" -o dist/bin/routinewrap.exe ./cmd/routinewrap
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/bin/acdsl.exe ./cmd/acdsl
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/bin/rules.exe ./cmd/rules
-          for d in cmd/acdsl/verifiers/*/; do
-            name=$(basename "$d")
-            GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o "dist/bin/verifiers/$name.exe" "./$d"
-          done
+          VERSION="${GITHUB_REF_NAME##*/}"; VERSION="${VERSION#v}"
+          make payload-bin GOOS=windows GOARCH=amd64 VERSION="$VERSION" PAYLOAD_DIR=dist
       - name: Fetch third-party payloads (pinned)
         run: |
           curl -fsSL -o dist/jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-amd64.exe
-          curl -fsSL -o dist/peek-mcp.exe https://github.com/kevinhorst/peek-mcp/releases/download/v1.2.2/peek-mcp-windows-amd64.exe
+          PEEK_MCP_VERSION="$(tr -d '[:space:]' < PEEK_MCP_VERSION)"
+          curl -fsSL -o dist/peek-mcp.exe "https://github.com/kevinhorst/peek-mcp/releases/download/v${PEEK_MCP_VERSION}/peek-mcp-windows-amd64.exe"
       - uses: actions/upload-artifact@v4
         with:
           name: windows-payload
           path: dist/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: release-binaries
-          path: bin/release/
 
   installer:
-    needs: build
+    needs: windows-payload
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +96,17 @@ jobs:
         with:
           name: windows-payload
           path: dist
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build agentwt.exe
+        shell: pwsh
+        run: |
+          cargo build --release --locked --manifest-path cmd/agentwt/Cargo.toml
+          Copy-Item cmd\agentwt\target\release\agentwt.exe dist\bin\agentwt.exe
+      - name: Build heartbeat.exe
+        shell: pwsh
+        run: |
+          cargo build --release --locked --manifest-path cmd/heartbeat/Cargo.toml
+          Copy-Item cmd\heartbeat\target\release\heartbeat.exe dist\bin\heartbeat.exe
       - name: Stage source tree
         shell: pwsh
         run: |
@@ -76,23 +115,38 @@ jobs:
       - name: Compile installer
         shell: pwsh
         run: |
-          $version = $env:GITHUB_REF_NAME.TrimStart('v')
-          iscc /DAppVersion=$version installer\windows\smine.iss
+          $version = ($env:GITHUB_REF_NAME -split '/')[-1].TrimStart('v')
+          iscc /DAppVersion=$version "/DSrcTree=$env:GITHUB_WORKSPACE\dist\srctree" installer\windows\smine.iss
       - uses: actions/upload-artifact@v4
         with:
           name: installer
           path: dist/smine-setup.exe
 
+  docs:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy docs to Firebase Hosting (smine.info)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMINE }}
+          projectId: smine-f5938
+          channelId: live
+
   publish:
-    needs: [build, installer]
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, darwin-payload, installer]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: release-binaries
-          path: bin/release
+          pattern: darwin-payload-*
+          merge-multiple: true
+          path: dist
       - uses: actions/download-artifact@v4
         with:
           name: installer
@@ -101,6 +155,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            bin/release/*
+            dist/*.tar.gz
             dist/smine-setup.exe
           generate_release_notes: true
