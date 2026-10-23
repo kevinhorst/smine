@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.smine.routine.backlog-idea</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__REPO_DIR__/bin/routine</string>
+		<string>run</string>
+		<string>__REPO_DIR__/routines/backlog-idea</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>ROUTINE_MAX_BUDGET_USD</key>
+		<string>10</string>
+		<key>ROUTINE_MODEL</key>
+		<string>claude-opus-5-5[1m]</string>
+	</dict>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-backlog-idea.err.log</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-backlog-idea.out.log</string>
+</dict>
+</plist>

@@ -1,0 +1,4 @@
+{
+  "kind": "single",
+  "prompt": "/spec-drift --nightly cap: 40"
+}

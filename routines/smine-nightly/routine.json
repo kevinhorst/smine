@@ -1,0 +1,5 @@
+{
+  "kind": "smine-nightly",
+  "prompt": "/smine --nightly",
+  "group": "smine"
+}

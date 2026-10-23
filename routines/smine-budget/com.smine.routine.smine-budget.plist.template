@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.smine.routine.smine-budget</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__REPO_DIR__/bin/routine</string>
+		<string>run</string>
+		<string>__REPO_DIR__/routines/smine-budget</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>ROUTINE_TIMEOUT_S</key>
+		<string>1800</string>
+	</dict>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-smine-budget.err.log</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-smine-budget.out.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Minute</key>
+		<integer>7</integer>
+	</dict>
+</dict>
+</plist>

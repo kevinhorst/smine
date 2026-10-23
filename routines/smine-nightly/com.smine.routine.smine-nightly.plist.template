@@ -6,25 +6,20 @@
 	<string>com.smine.routine.smine-nightly</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/bin/bash</string>
-		<string>__REPO_DIR__/routines/smine-nightly/run.sh</string>
+		<string>__REPO_DIR__/bin/routine</string>
+		<string>run</string>
+		<string>__REPO_DIR__/routines/smine-nightly</string>
 	</array>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>ROUTINE_CADENCE_DAYS</key>
 		<string></string>
 		<key>ROUTINE_MAX_BUDGET_USD</key>
-		<string>15</string>
-		<key>ROUTINE_MAX_OPEN_BRANCHES</key>
-		<string>5</string>
-		<key>SMINE_APPLY_CAP</key>
-		<string>3</string>
-		<key>SMINE_AUTO_APPLY</key>
-		<string>never</string>
+		<string>300</string>
+		<key>ROUTINE_MODEL</key>
+		<string>claude-opus-5-5[1m]</string>
 		<key>SMINE_MAX_PROPOSALS_MINED</key>
-		<string></string>
-		<key>SMINE_MAX_PROPOSALS_PER_DIMENSION</key>
-		<string></string>
+		<string>5</string>
 		<key>SMINE_AGENTS</key>
 		<string>claude,codex</string>
 		<key>SMINE_SUBAGENTS</key>

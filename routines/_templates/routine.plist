@@ -6,16 +6,22 @@
 	<string>com.smine.routine.NAME</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/bin/bash</string>
-		<string>/ABSOLUTE/PATH/routines/NAME/run.sh</string>
+		<string>__REPO_DIR__/bin/routine</string>
+		<string>run</string>
+		<string>__REPO_DIR__/routines/NAME</string>
 	</array>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>ROUTINE_CADENCE_DAYS</key>
 		<string></string>
-		<!-- ROUTINE_TIMEOUT_S: Windows-only backstop deadline enforced by
-		     routinewrap.exe; defaults to 46800s (13h) when omitted. -->
+		<!-- ROUTINE_TIMEOUT_S: run backstop deadline enforced by the routine
+		     runner on every platform; defaults to 46800s (13h) when omitted. -->
 	</dict>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-NAME.err.log</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/claude-routine-NAME.out.log</string>
+	<!-- StartCalendarInterval: omit for a dispatch-only routine (Run Now, Backlog board). -->
 	<key>StartCalendarInterval</key>
 	<dict>
 		<key>Hour</key>
