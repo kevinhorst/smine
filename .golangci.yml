@@ -1,0 +1,125 @@
+# Claim-aligned golangci config: every linter context/rules/go.md names in a
+# "Covered by" bullet is enabled here (lint-tags / ACDSL-GOLANG-DOCS-001
+# checks exactly that), scoped by exclusions so introduction lands green.
+# The acdsl golangci gate (ACDSL-GOLANG-LINT-001) wraps the same run.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - copyloopvar
+    - depguard
+    - errorlint
+    - exhaustruct
+    - forbidigo
+    - funcorder
+    - goconst
+    - gocritic
+    - grouper
+    - mnd
+    - modernize
+    - perfsprint
+    - revive
+    - staticcheck
+    - testifylint
+    - varnamelen
+    - wrapcheck
+  settings:
+    # struct-method off: go.md RULE-GOLANG-FILE-001 orders private methods
+    # before public ones, the opposite of funcorder's exported-first check;
+    # only the constructor placement is checked.
+    funcorder:
+      constructor: true
+      struct-method: false
+    # require-error off: go.md RULE-GOLANG-ASSERT-001 keeps require for setup
+    # steps that must abort, never for error assertions.
+    testifylint:
+      disable:
+        - require-error
+    # golangci v2 defaults plus -ST1005: go.md RULE-GOLANG-ERR-001 starts
+    # every error string with a Receiver.Method prefix, which ST1005 rejects
+    # as a capitalized first word whenever the method name is lowercase.
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        - -ST1005
+    depguard:
+      rules:
+        mocks:
+          deny:
+            - pkg: github.com/golang/mock
+              desc: mocking frameworks are forbidden (use cfapi-style stubs)
+            - pkg: go.uber.org/mock
+              desc: mocking frameworks are forbidden (use cfapi-style stubs)
+            - pkg: github.com/stretchr/testify/mock
+              desc: mocking frameworks are forbidden (use cfapi-style stubs)
+    revive:
+      rules:
+        # skip-initialism-name-checks: the repo cases acronyms as ordinary
+        # words (Id, Json — go.md RULE-GOLANG-NAME-002), a deliberate override
+        # of the Go initialisms convention.
+        - name: var-naming
+          arguments: [[], [], [{ skip-initialism-name-checks: true }]]
+        - name: receiver-naming
+        - name: context-as-argument
+        - name: function-result-limit
+          arguments: [3]
+        - name: max-control-nesting
+          arguments: [4]
+        - name: early-return
+        - name: indent-error-flow
+    varnamelen:
+      ignore-names:
+        - id
+        - db
+        - ip
+        - err
+        - ok
+        - tx
+        - wg
+        - i
+        - j
+        - k
+        - v
+        - n
+        - w
+        - r
+    wrapcheck:
+      ignore-package-globs:
+        - github.com/kevinhorst/smine/*
+    mnd:
+      ignored-numbers:
+        - "0o644"
+        - "0o755"
+  exclusions:
+    rules:
+      - path-except: _test_data\.go$
+        linters:
+          - exhaustruct
+      # Test fixture strings repeat by design (go.md CONST-001 scoping).
+      - path: _test\.go$
+        linters:
+          - goconst
+      # CLI commands print to stdout by contract; forbidigo guards libraries.
+      - path: ^cmd/
+        linters:
+          - forbidigo
+
+formatters:
+  enable:
+    - goimports
+
+# Differential gate, per the go style guide's enforcement doctrine: findings
+# only on lines changed since the merge base — legacy code is absorbed, the
+# code you touch must conform.
+issues:
+  new-from-merge-base: main
+
+run:
+  timeout: 5m

@@ -1,6 +1,17 @@
+# Every text file checks out and archives as LF on every platform: the Windows installer ships the tree
+# through git archive on a runner whose core.autocrlf is true, and a CRLF <leaf>.cue fails the CUE parser
+# (non-matching whitespace for multiline strings) at the install's skill deploy.
+* text=auto eol=lf
 # CRLF checkout breaks every bash script under Git Bash ($'\r': command not found).
 *.sh text eol=lf
 *.plist text eol=lf
 *.template text eol=lf
+# Embedded HTML templates render byte for byte; a CRLF checkout puts \r\n into
+# every page and breaks the server tests' substring checks on Windows.
+*.html text eol=lf
 # Batch launchers want CRLF for robustness under cmd.exe.
 *.bat text eol=crlf
+# Skill model (<leaf>.cue) version bumps merge through `smine-rules merge-skillcue`, registered as merge.skillcue by the installer
+# and the cell image; without the driver git falls back to its text merge.
+skills/*/*.cue merge=skillcue
+skills/*/*/*.cue merge=skillcue

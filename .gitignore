@@ -11,9 +11,7 @@
 *.xml
 *.iml
 /.idea/
-
-# machine-specific repo registry (D27)
-/repos.json
+.serena/
 
 # per-install ports and home overrides, written by install.sh / -install
 /install.env
@@ -21,15 +19,13 @@
 # routine runtime state (machine-specific)
 routines/*/.lock
 routines/*/results.jsonl
+routines/*/runs/
 routines/*/.cadence-stamp
+routines/*/.style-stamp
 routines/*/.run-now-prompt
 # materialized from *.plist.template by install.sh; edited in place by the config server
 routines/*/com.smine.routine.*.plist
 
-# proposal vote sidecars (server-written, consumed by the smine-nightly apply stage)
-proposals/votes.jsonl
-proposals/votes-processing-*.jsonl
-proposals/votes-archive.jsonl
 
 # scratch candidate list from a failed smine nightly (never a tracked artifact)
 sessions/.candidates.txt
@@ -37,8 +33,6 @@ sessions/.candidates.txt
 bin/*
 
 .codex/environments
-
-.serena
 
 # never track compiled binaries
 /configserver
@@ -49,3 +43,31 @@ cmd/configserver/main
 # per-machine local Claude settings (skill-visibility overlay incl. routine
 # worktrees — publish's add -A must never commit it)
 .claude/settings.local.json
+!cmd/toolpolicy/testdata/**/settings.local.json
+
+# per-machine permission rules of a plan dir, frozen by the tool-policy gate
+# at the end of the plan's design run — never committed
+plans/*/*/permissions.json
+
+# arm-session scratch in the skill-eval routine worktree: lane/base-health
+# worktrees of the target repo land here as embedded repos — publish's add -A
+# must never commit them as gitlinks (2026-09-04 run)
+/pool/
+/.railroad-scratch/
+
+# run-scoped routine scratch in the group worktree (steer IPC, cell-pid
+# registry) — publish's add -A must never commit them
+/.steer-prompt
+/.steer-delivered
+/.cell-pids
+/.smine-run/
+/dist/
+
+# generated from context/{actions,rules,facts}/*.md + context/aspects.json by
+# the contextdocs renderer (make generate, worktree creation, config server)
+/context/context.json
+
+# raw session transcripts in eval run artifacts — full prompts and repo
+# excerpts, never published (release sync 2026-10-22)
+evals/**/stream.jsonl
+evals/**/trace.md
