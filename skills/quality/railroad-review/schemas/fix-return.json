@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "required": [
+    "applied",
+    "failed",
+    "base",
+    "commits"
+  ],
+  "properties": {
+    "applied": {
+      "type": "array",
+      "description": "finding ids for which a change landed in a commit",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failed": {
+      "type": "array",
+      "description": "finding ids for which no change could be made — a denied write, code that no longer exists — each with the reason",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "why"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "base": {
+      "type": "string",
+      "description": "the full 40-character SHA of HEAD before the first fix commit (git rev-parse HEAD after applying, before committing); empty when nothing was applied"
+    },
+    "commits": {
+      "type": "array",
+      "description": "the full 40-character SHAs of the fix commits package-commit made, oldest first; empty when nothing was applied",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

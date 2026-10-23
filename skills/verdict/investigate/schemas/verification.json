@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "required": [
+    "claim_verdicts",
+    "needs_measurement_queries",
+    "funnel_note"
+  ],
+  "properties": {
+    "claim_verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "claim",
+          "verdict"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "claim": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "holds",
+              "refuted",
+              "needs-measurement"
+            ],
+            "description": "unreachable primary artifact stays needs-measurement, never holds"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "primary_source": {
+            "type": "string",
+            "description": "the actual artifact fetched — never a prior run summary"
+          }
+        }
+      }
+    },
+    "needs_measurement_queries": {
+      "type": "array",
+      "description": "concrete queries the user can run in prod; their results return as binding facts",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "query"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "where_to_run": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "funnel_note": {
+      "type": "string",
+      "description": "observation across the FULL funnel, not just the metric the question started with"
+    }
+  }
+}

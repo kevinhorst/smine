@@ -1,0 +1,27 @@
+diff --git a/internal/smokedrift/README.md b/internal/smokedrift/README.md
+new file mode 100644
+--- /dev/null
++++ b/internal/smokedrift/README.md
+@@ -0,0 +1,3 @@
++# smokedrift
++
++`Clamp(value, low, high int) int` returns `low` when `value < low`, `high` when `value > high`, and `value` otherwise.
+diff --git a/internal/smokedrift/clamp.go b/internal/smokedrift/clamp.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokedrift/clamp.go
+@@ -0,0 +1,14 @@
++// Package smokedrift is spec-drift's smoke fixture; nothing imports it.
++package smokedrift
++
++// Clamp bounds value to low..high.
++func Clamp(value, low, high int) int {
++	switch {
++	case value < low:
++		return low
++	case value > high:
++		return low
++	default:
++		return value
++	}
++}

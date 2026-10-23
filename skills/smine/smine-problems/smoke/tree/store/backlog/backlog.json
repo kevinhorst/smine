@@ -1,0 +1,19 @@
+{
+  "archive": {
+    "done": [],
+    "rejected": []
+  },
+  "changelog": [
+    {
+      "date": "2026-10-02",
+      "delta": "Smoke fixture created"
+    }
+  ],
+  "sections": [
+    {
+      "items": [],
+      "name": "Icebox"
+    }
+  ],
+  "updated": "2026-10-02"
+}

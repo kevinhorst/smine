@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "required": [
+    "verdicts",
+    "verdict_path"
+  ],
+  "properties": {
+    "verdicts": {
+      "type": "array",
+      "description": "one verdict per claim of the batch, every claim_id of the batch exactly once",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "verdict",
+          "reason",
+          "evidence"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "debunked",
+              "unverified"
+            ],
+            "description": "confirmed (survived refutation, evidence in hand) | debunked (refuted) | unverified (not settleable from the repo)"
+          },
+          "reason": {
+            "type": "string",
+            "description": "one line: debunked — what refuted it; unverified — the concrete missing precondition; confirmed — the decisive evidence"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "path:line, or the command run plus its output"
+          }
+        }
+      }
+    },
+    "verdict_path": {
+      "type": "string",
+      "description": "absolute path of the batch verdict file written"
+    }
+  }
+}

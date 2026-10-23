@@ -1,0 +1,36 @@
+diff --git a/internal/smokecov/sign.go b/internal/smokecov/sign.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokecov/sign.go
+@@ -0,0 +1,14 @@
++// Package smokecov is coverage-increase's smoke fixture; nothing imports it.
++package smokecov
++
++// Sign names the sign of n.
++func Sign(n int) string {
++	switch {
++	case n < 0:
++		return "negative"
++	case n == 0:
++		return "zero"
++	default:
++		return "positive"
++	}
++}
+diff --git a/internal/smokecov/sign_test.go b/internal/smokecov/sign_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokecov/sign_test.go
+@@ -0,0 +1,12 @@
++package smokecov
++
++import (
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++)
++
++func TestSign(t *testing.T) {
++	sign := Sign(0)
++	assert.Equal(t, "zero", sign)
++}

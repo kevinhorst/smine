@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "required": [
+    "run_id",
+    "ranked_hypotheses",
+    "load_bearing_claims",
+    "artifact_path"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "ranked_hypotheses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rank",
+          "hypothesis"
+        ],
+        "properties": {
+          "rank": {
+            "type": "integer"
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "load_bearing_claims": {
+      "type": "array",
+      "description": "claims the ranking rests on, each with the primary source that would confirm or refute it",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "source_refs"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "primary artifacts a verifier can fetch — files, URLs, query targets"
+          }
+        }
+      }
+    },
+    "artifact_path": {
+      "type": "string"
+    }
+  }
+}

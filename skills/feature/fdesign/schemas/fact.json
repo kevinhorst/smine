@@ -1,0 +1,63 @@
+{
+  "type": "object",
+  "required": [
+    "area",
+    "facts"
+  ],
+  "properties": {
+    "area": {
+      "type": "string"
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fact",
+          "location",
+          "needed_for"
+        ],
+        "properties": {
+          "fact": {
+            "type": "string",
+            "description": "one verified fact about the current tree"
+          },
+          "location": {
+            "type": "string",
+            "description": "path:line, or the command run plus the output line proving it"
+          },
+          "needed_for": {
+            "type": "string",
+            "description": "the question the fact answers"
+          }
+        }
+      }
+    },
+    "stale": {
+      "type": "array",
+      "description": "statements in docs, context or skill text that the tree contradicts, and facts those texts lack",
+      "items": {
+        "type": "object",
+        "required": [
+          "location",
+          "statement",
+          "correction"
+        ],
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "path:line of the statement, or the section that lacks the fact"
+          },
+          "statement": {
+            "type": "string",
+            "description": "the statement quoted, or what is missing"
+          },
+          "correction": {
+            "type": "string",
+            "description": "the text as the tree makes it read"
+          }
+        }
+      }
+    }
+  }
+}

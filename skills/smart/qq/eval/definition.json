@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "4.0",
+  "skill": "qq",
+  "invocation": {
+    "text": "what does make audit run?"
+  },
+  "environment": {
+    "checkoutRef": "f1be0a48"
+  },
+  "budgets": {
+    "armUsd": 2,
+    "armTimeoutS": 900,
+    "windowUsd": 150
+  },
+  "model": "sonnet",
+  "effort": "low"
+}

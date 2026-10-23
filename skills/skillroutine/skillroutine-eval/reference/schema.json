@@ -6,7 +6,11 @@
   "required": ["schemaVersion", "eval", "rubric", "runs", "scores", "totals"],
   "additionalProperties": false,
   "properties": {
-    "schemaVersion": { "const": "2.0" },
+    "schemaVersion": { "enum": ["2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13"] },
+    "setup": {
+      "type": ["object", "null"],
+      "description": "v2.3 — the run manifest verbatim, written by the retired shell fold into historical run dirs; the Go fold never sets it. Shape is runner-owned; null when absent."
+    },
     "eval": {
       "type": "object",
       "required": ["skill", "skillMdPath", "date"],
@@ -16,18 +20,24 @@
         "skillMdPath": { "type": "string", "description": "repo-relative path of the source SKILL.md" },
         "date": { "type": "string", "description": "ISO date of the evaluation" },
         "manifest": { "type": "string", "description": "path of the manifest used" },
-        "notes": { "type": "string", "description": "eval-level caveats, e.g. discrepancies against a prior hand-built scoring" }
+        "notes": { "type": "string", "description": "eval-level caveats, e.g. discrepancies against a prior hand-built scoring" },
+        "notesBullets": {
+          "type": "array",
+          "description": "v2.4 — the constrained display form of notes: mechanical facts only, rendered below the verdict",
+          "maxItems": 5,
+          "items": { "type": "string", "maxLength": 120 }
+        }
       }
     },
     "rubric": {
       "type": "array",
-      "minItems": 1,
+      "description": "axis-scored evals carry one row per rule; a golden-driven (v2.1) or mechanical-metrics-only eval leaves it empty",
       "items": {
         "type": "object",
         "required": ["id", "axis", "rule", "source"],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^((SKILL|ACTION|RULE|FACT)-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]{3}|C[0-9]+)$" },
+          "id": { "type": "string", "pattern": "^((SKILL|ACTION|RULE|FACT)-[A-Z0-9]+(-[A-Z0-9]+)*-[0-9]{3}[a-z]?|C[0-9]+)$" },
           "axis": { "enum": ["self", "context", "output"] },
           "phase": { "type": "string", "description": "skill phase the rule belongs to, e.g. P0" },
           "rule": { "type": "string" },
@@ -47,6 +57,9 @@
           "output": { "type": "string", "description": "path of the run's output artifact" },
           "skillMd": { "type": "string", "description": "path of the rendered SKILL.md this run loaded — self rows are its entries" },
           "transcript": { "type": "string", "description": "session JSONL path or peek session id" },
+          "claudeCodeVersion": { "type": "string", "description": "v2.13 — the Claude Code CLI version the cell ran under, from the stream's init record; absent for a Desktop arm or a run folded before it" },
+          "invalid": { "type": "boolean", "description": "v2.7 — the run is no valid comparison point (variant did not take, arm failed)" },
+          "invalidReason": { "type": "string" },
           "variant": {
             "type": "object",
             "required": ["name", "disable"],
@@ -112,8 +125,8 @@
           "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
           "label": { "type": "string" },
           "unit": { "type": "string" },
-          "direction": { "enum": ["higher", "lower"] },
-          "source": { "enum": ["probe", "telemetry", "user"] }
+          "direction": { "enum": ["higher", "lower", ""], "description": "empty = neutral telemetry, no better/worse direction" },
+          "source": { "enum": ["probe", "telemetry", "user", "golden", "judge", "heartbeat", "scorer"], "description": "v2.7 — golden: scored against a golden; judge: set by a pinned judge agent; v2.10 — heartbeat: read from the arm's enforced runs in runtime.json; v2.11 — scorer: the definition's scorer command, id score_<name>" }
         }
       }
     },
@@ -162,6 +175,240 @@
           "max": { "type": "integer" },
           "pct": { "type": "number" }
         }
+      }
+    },
+    "golden": {
+      "type": "object",
+      "description": "v2.1 — per-run scoring against a confirmed golden file; present only for golden-driven (definition) evals",
+      "additionalProperties": false,
+      "required": ["goldenId", "goldenFile", "goldenVersion", "total", "perRun"],
+      "properties": {
+        "goldenId": { "type": "string" },
+        "goldenFile": { "type": "string" },
+        "goldenVersion": { "type": "integer", "description": "v2.3 — the golden file's goldenVersion; required since v2.4 — recall is never comparable across versions" },
+        "scope": { "enum": ["full", "contextless"], "description": "v2.7 — the golden's scoring scope; scores are never comparable across scopes" },
+        "normalized": {
+          "type": "object",
+          "description": "v2.4 — re-scoring against a later golden version via the golden-id lineage (written by the lineage pass retired in skillroutine-eval 7.0.0; historical runs only); the original perRun scoring stays untouched beside it",
+          "additionalProperties": false,
+          "required": ["goldenVersion", "totalWeight", "perRun"],
+          "properties": {
+            "goldenVersion": { "type": "integer", "description": "the golden version normalized against" },
+            "totalWeight": { "type": "number", "description": "severity-weighted total of that golden" },
+            "perRun": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["runId", "weightedRecall", "weightedRecallPromoted", "promotedVerified", "note"],
+                "properties": {
+                  "runId": { "type": "string" },
+                  "weightedRecall": { "type": "number", "description": "matched golden ids mapped through the lineage, weighted, over totalWeight" },
+                  "weightedRecallPromoted": { "type": "number", "description": "weightedRecall plus the run's uncataloged findings later promoted into the golden" },
+                  "promotedVerified": { "type": "boolean", "description": "false when the promotion link cannot be traced to this run's finding ids" },
+                  "note": { "type": "string", "description": "the lineage chain used and any credit caveat" },
+                  "efficiency": {
+                    "type": "object",
+                    "description": "v2.6 — efficiency-normalized score. Round-indexed form (run has rounds_telemetry, golden has production.roundLadder): perRound compares each test round against the ladder row at the same saturation depth (seed depth + round, capped at the ladder end), each score the geomean of token and active-time rate ratios; marginal = promoted-only yield vs the row's newWeight (the number for ledger-seeded runs), discovery = matched+promoted yield vs newWeight+refoundWeight (the number for fresh arms); compositeMarginal/compositeDiscovery are token-budget-weighted means, composite stays null, axes = [\"perRound\"]. Fallback: composite = the cumulative outputTokens axis vs production.totals. 1.0 = the campaign's own pace. Tokens arm-only; active seconds = summed per-agent transcript spans.",
+                    "additionalProperties": false,
+                    "required": ["composite", "axes", "baseline", "note"],
+                    "properties": {
+                      "composite": { "type": ["number", "null"], "description": "cumulative outputTokens axis in fallback form; null in round-indexed form (read compositeMarginal/compositeDiscovery)" },
+                      "compositeMarginal": { "type": ["number", "null"], "description": "token-budget-weighted mean of perRound marginal scores" },
+                      "compositeDiscovery": { "type": ["number", "null"], "description": "token-budget-weighted mean of perRound discovery scores" },
+                      "rounds": { "type": ["number", "null"] },
+                      "outputTokens": { "type": ["number", "null"] },
+                      "wall": { "type": ["number", "null"] },
+                      "axes": { "type": "array", "items": { "enum": ["rounds", "outputTokens", "wall", "perRound"] } },
+                      "baseline": {
+                        "type": ["object", "null"],
+                        "additionalProperties": false,
+                        "properties": {
+                          "rounds": { "type": ["number", "null"] },
+                          "outputTokens": { "type": ["number", "null"] },
+                          "wallS": { "type": ["number", "null"] }
+                        }
+                      },
+                      "perRound": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": ["round", "alignedTo", "marginal", "discovery", "note"],
+                          "properties": {
+                            "round": { "type": "integer" },
+                            "alignedTo": { "type": "integer", "description": "global ladder round compared against" },
+                            "outputTokens": { "type": ["number", "null"] },
+                            "activeSeconds": { "type": ["number", "null"] },
+                            "marginal": { "$ref": "#/$defs/efficiencyScore" },
+                            "discovery": { "$ref": "#/$defs/efficiencyScore" },
+                            "note": { "type": "string", "description": "past-ladder-end cap or seeded-baseline caveat" }
+                          }
+                        }
+                      },
+                      "note": { "type": "string", "description": "form used, seed depth, unattributable-yield caveat" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "total": { "type": "integer", "description": "golden finding count" },
+        "nullMinutes": { "type": "number", "minimum": 0, "description": "v2.8 — no review: every golden entry missed and merged, minutes × escape multiplier" },
+        "oracleMinutes": { "type": "number", "minimum": 0, "description": "v2.8 — perfect review: every golden entry found at its severity and fixed by a human" },
+        "perRun": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["runId", "matched", "missed", "falsePositives", "misclassified"],
+            "properties": {
+              "runId": { "type": "string" },
+              "matched": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["goldenId", "findingId"],
+                  "properties": {
+                    "goldenId": { "type": "string" },
+                    "findingId": { "type": "string" },
+                    "note": { "type": "string" }
+                  }
+                }
+              },
+              "missed": { "type": "array", "items": { "type": "string" }, "description": "golden ids no run finding matched" },
+              "fixEscapes": { "type": "array", "items": { "type": "string" }, "description": "v2.8 — matched golden ids whose applied fix left the defect in the arm's final tree" },
+              "falsePositives": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["findingId", "reason"],
+                  "properties": {
+                    "findingId": { "type": "string" },
+                    "reason": { "type": "string" }
+                  }
+                }
+              },
+              "uncataloged": {
+                "type": "array",
+                "description": "v2.2 — run findings adjudicated genuine and in range but absent from the golden; neutral, never scored against the run",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["findingId", "reason"],
+                  "properties": {
+                    "findingId": { "type": "string" },
+                    "reason": { "type": "string" }
+                  }
+                }
+              },
+              "misclassified": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["goldenId", "findingId", "expected", "actual"],
+                  "properties": {
+                    "goldenId": { "type": "string" },
+                    "findingId": { "type": "string" },
+                    "expected": { "type": "string" },
+                    "actual": { "type": "string" }
+                  }
+                }
+              },
+              "severities": {
+                "type": "array",
+                "description": "v2.12 — the scorer's per-severity counts and priced minutes; a false positive counts under its claimed severity; absent on an invalid run",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["severity", "entries", "found", "missed", "falsePositives", "foundMinutes", "escapedMinutes", "falsePositiveMinutes"],
+                  "properties": {
+                    "severity": { "type": "string" },
+                    "entries": { "type": "integer", "minimum": 0, "description": "golden entries of this severity" },
+                    "found": { "type": "integer", "minimum": 0, "description": "golden entries matched by a run finding" },
+                    "missed": { "type": "integer", "minimum": 0, "description": "golden entries no run finding matched" },
+                    "falsePositives": { "type": "integer", "minimum": 0 },
+                    "foundMinutes": { "type": "number", "minimum": 0, "description": "handling minutes of the found entries: fixed, applied, or priced at the reported severity" },
+                    "escapedMinutes": { "type": "number", "minimum": 0, "description": "missed, fix-escaped and dismissed entries at the escape multiplier" },
+                    "falsePositiveMinutes": { "type": "number", "minimum": 0 },
+                    "outcomes": {
+                      "type": "object",
+                      "description": "v2.13 — every golden entry of the severity in exactly one outcome; the tallies sum to entries and to foundMinutes + escapedMinutes",
+                      "additionalProperties": false,
+                      "required": ["atPrice", "wrongSeverity", "fixed", "fixUnverified", "fixFailed", "dismissed", "missed"],
+                      "properties": {
+                        "atPrice": { "$ref": "#/$defs/outcomeTally", "description": "found, left open, reported at a severity of the same price: the price" },
+                        "wrongSeverity": { "$ref": "#/$defs/outcomeTally", "description": "found, left open, reported at a severity of another price: the price plus the price distance" },
+                        "fixed": { "$ref": "#/$defs/outcomeTally", "description": "found, machine fix confirmed: the fix price" },
+                        "fixUnverified": { "$ref": "#/$defs/outcomeTally", "description": "found, machine fix applied but never confirmed: the fix price plus the price" },
+                        "fixFailed": { "$ref": "#/$defs/outcomeTally", "description": "found and machine-fixed, the defect still in the final tree: the escape price" },
+                        "dismissed": { "$ref": "#/$defs/outcomeTally", "description": "found, a human-side entry reported below the triage line: the escape price" },
+                        "missed": { "$ref": "#/$defs/outcomeTally", "description": "no run finding matched: the escape price" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "description": "v2.1 — the finished verdict of the run against the definition's thresholds; nothing left for the reader",
+      "additionalProperties": false,
+      "required": ["status", "reason", "perRun"],
+      "properties": {
+        "status": { "enum": ["pass", "fail", "mixed", "no-golden"] },
+        "reason": { "type": "string" },
+        "bestArm": { "type": "string" },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "metricId -> bound applied to this eval (copied from the definition's verdict.thresholds)"
+        },
+        "perRun": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["runId", "pass", "failedThresholds"],
+            "properties": {
+              "runId": { "type": "string" },
+              "pass": { "type": "boolean" },
+              "failedThresholds": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "outcomeTally": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "minutes"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "minutes": { "type": "number", "minimum": 0 }
+      }
+    },
+    "efficiencyScore": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["score", "yieldWeight", "baselineWeight"],
+      "properties": {
+        "score": { "type": ["number", "null"], "description": "geomean of the available rate ratios; null when neither axis has telemetry" },
+        "tokensRatio": { "type": ["number", "null"] },
+        "activeRatio": { "type": ["number", "null"] },
+        "yieldWeight": { "type": "number" },
+        "baselineWeight": { "type": "number" },
+        "baselineUnderstated": { "type": "boolean", "description": "discovery only: true when the aligned ladder round was ledger-seeded (refoundWeight is leakage-only)" }
       }
     }
   }

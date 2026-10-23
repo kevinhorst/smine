@@ -1,0 +1,39 @@
+{
+  "id": "00000000-0000-0000-0000-0000000000a1",
+  "agent": "claude",
+  "cost": {
+    "activeSeconds": 400,
+    "denials": 0,
+    "inputTokens": 900000,
+    "outputTokens": 8000,
+    "prompts": 1,
+    "turns": 12,
+    "wallSeconds": 900
+  },
+  "findings": [],
+  "frustration": [
+    {
+      "quote": "it broke again on the first real run",
+      "trigger": "a provenance check failed after a skill edit nobody ran"
+    }
+  ],
+  "invoked_skills": [
+    "fimplement"
+  ],
+  "lastActive": "2026-10-01T10:00:00Z",
+  "permissions": {
+    "granted": [
+      {
+        "command": "make audit",
+        "decision": "prompted_once",
+        "tool": "Bash"
+      }
+    ],
+    "telemetry_present": true
+  },
+  "repo": "claude-configs",
+  "signal": "enforce check failed on the first real run after a skill edit",
+  "title": "Skill edit deployed without a run",
+  "type": "Implement",
+  "week": "2026-W40"
+}

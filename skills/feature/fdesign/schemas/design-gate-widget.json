@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "fdesign design-gate widget data",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gate",
+    "decisions"
+  ],
+  "properties": {
+    "gate": {
+      "enum": [
+        "full",
+        "delta"
+      ]
+    },
+    "tldr": {
+      "$ref": "#/$defs/items"
+    },
+    "totals": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "in",
+        "out",
+        "notChanged"
+      ],
+      "properties": {
+        "in": {
+          "$ref": "#/$defs/items"
+        },
+        "out": {
+          "$ref": "#/$defs/items"
+        },
+        "notChanged": {
+          "$ref": "#/$defs/items"
+        }
+      }
+    },
+    "dropped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^D[0-9]+$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "brief",
+          "decision",
+          "consequences",
+          "why",
+          "adds"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^D[0-9]+$"
+          },
+          "change": {
+            "enum": [
+              "new",
+              "changed"
+            ]
+          },
+          "brief": {
+            "$ref": "#/$defs/cell"
+          },
+          "decision": {
+            "$ref": "#/$defs/cell"
+          },
+          "consequences": {
+            "$ref": "#/$defs/cell"
+          },
+          "why": {
+            "$ref": "#/$defs/cell"
+          },
+          "adds": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "adds",
+              "reuses"
+            ],
+            "properties": {
+              "adds": {
+                "type": "string"
+              },
+              "reuses": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "gate": {
+            "const": "full"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "tldr",
+          "scope",
+          "totals"
+        ],
+        "properties": {
+          "dropped": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "gate": {
+            "const": "delta"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "tldr": false,
+          "scope": false,
+          "totals": false,
+          "decisions": {
+            "items": {
+              "required": [
+                "change"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "line"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "text"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

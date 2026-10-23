@@ -1,0 +1,120 @@
+{
+  "$defs": {
+    "voice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionsRead", "userTurnsRead", "languageMix", "register", "patterns", "skipped"],
+      "properties": {
+        "sessionsRead": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "sessions of this batch whose user turns were read"
+        },
+        "userTurnsRead": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "user turns read across those sessions"
+        },
+        "languageMix": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "label, e.g. German with English technical terms"
+        },
+        "register": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["formality", "terseness", "directness", "hedging"],
+          "properties": {
+            "formality": {
+              "enum": ["informal", "neutral", "formal", "mixed"]
+            },
+            "terseness": {
+              "enum": ["terse", "medium", "elaborate", "mixed"]
+            },
+            "directness": {
+              "enum": ["direct", "neutral", "indirect", "mixed"]
+            },
+            "hedging": {
+              "enum": ["none", "low", "medium", "high"]
+            }
+          }
+        },
+        "patterns": {
+          "type": "array",
+          "maxItems": 20,
+          "description": "recurring phrasings and preferences as short neutral labels, never a quote",
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "skipped": {
+          "type": "array",
+          "description": "session ids of this batch not read: unreadable, or fewer than 2 user turns",
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "taste": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourcesActuallyRead", "chosen", "rejected", "tilts"],
+      "properties": {
+        "sourcesActuallyRead": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "counts of the sources opened and read, never the paths handed over",
+          "required": ["decisionsTables", "archivePlans", "proposalRejections", "backlogRejections"],
+          "properties": {
+            "decisionsTables": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "archivePlans": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "proposalRejections": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "backlogRejections": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "chosen": {
+          "type": "array",
+          "maxItems": 30,
+          "description": "mechanisms the user chose, as labels",
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "rejected": {
+          "type": "array",
+          "maxItems": 30,
+          "description": "shapes the user rejected and recurring rejection reasons, as labels",
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "tilts": {
+          "type": "array",
+          "maxItems": 20,
+          "description": "trade-off tilts, e.g. fewest concepts over smallest diff",
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      }
+    }
+  }
+}

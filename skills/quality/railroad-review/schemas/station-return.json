@@ -1,0 +1,117 @@
+{
+  "type": "object",
+  "required": [
+    "handoff_json",
+    "recommendation",
+    "funnel",
+    "disposition_counts",
+    "ranked"
+  ],
+  "properties": {
+    "handoff_json": {
+      "type": "string",
+      "description": "absolute path of the round's review.json — the single full copy of the station's product"
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "APPROVE",
+        "CONDITIONAL",
+        "REJECT"
+      ]
+    },
+    "funnel": {
+      "type": "object",
+      "required": [
+        "produced",
+        "confirmed",
+        "unverified",
+        "duplicates",
+        "rejected",
+        "debunked"
+      ],
+      "properties": {
+        "produced": {
+          "type": "integer"
+        },
+        "confirmed": {
+          "type": "integer"
+        },
+        "unverified": {
+          "type": "integer"
+        },
+        "duplicates": {
+          "type": "integer"
+        },
+        "rejected": {
+          "type": "integer"
+        },
+        "debunked": {
+          "type": "integer"
+        }
+      }
+    },
+    "disposition_counts": {
+      "type": "object",
+      "description": "the literal counts of review.json's dispositions array, drafts included",
+      "required": [
+        "confirmed",
+        "unverified",
+        "rejected",
+        "debunked",
+        "duplicate_of"
+      ],
+      "properties": {
+        "confirmed": {
+          "type": "integer"
+        },
+        "unverified": {
+          "type": "integer"
+        },
+        "rejected": {
+          "type": "integer"
+        },
+        "debunked": {
+          "type": "integer"
+        },
+        "duplicate_of": {
+          "type": "integer"
+        }
+      }
+    },
+    "ranked": {
+      "type": "array",
+      "description": "one ref per review.json ranked_plan entry, in order — the script derives ranked_count and the blocking count from it",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "severity",
+          "known"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "BLOCKER",
+              "MAJOR",
+              "MINOR",
+              "NIT",
+              "INFO"
+            ]
+          },
+          "known": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "pin_error": {
+      "type": "string",
+      "description": "the git output of a failed FIRST ACTION pin (checkout or base ancestor check); absent or empty when the pin held — when set, no review.json exists and every other field is a placeholder"
+    }
+  }
+}

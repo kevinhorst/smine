@@ -1,0 +1,88 @@
+{
+  "type": "object",
+  "required": [
+    "baseline",
+    "refuted_register",
+    "net_new_findings",
+    "experiment_plan"
+  ],
+  "properties": {
+    "baseline": {
+      "type": "string",
+      "description": "one merged baseline; every statement labeled fact (verified) vs hypothesis (unverified)"
+    },
+    "refuted_register": {
+      "type": "array",
+      "description": "R1..Rn — dead ends, each with its refuting evidence, so nobody re-investigates them",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "hypothesis",
+          "refuting_evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "refuting_evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "net_new_findings": {
+      "type": "array",
+      "description": "genuinely-new findings credited to the run that produced them",
+      "items": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "finding"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "finding": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "experiment_plan": {
+      "type": "array",
+      "description": "discrimination plan — one variable per test cell, a control arm, pre-registered failure criteria",
+      "items": {
+        "type": "object",
+        "required": [
+          "variable",
+          "failure_criteria"
+        ],
+        "properties": {
+          "variable": {
+            "type": "string",
+            "description": "the single variable this cell changes"
+          },
+          "control_arm": {
+            "type": "string"
+          },
+          "failure_criteria": {
+            "type": "string",
+            "description": "pre-registered — what result would falsify the hypothesis"
+          }
+        }
+      }
+    },
+    "open_measurements": {
+      "type": "array",
+      "description": "needs-measurement claims still awaiting the user's prod results before they become binding facts",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

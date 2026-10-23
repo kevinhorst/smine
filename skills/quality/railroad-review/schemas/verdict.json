@@ -1,0 +1,52 @@
+{
+  "finding_id": {
+    "type": "string"
+  },
+  "verdict": {
+    "type": "string",
+    "enum": [
+      "confirmed",
+      "debunked",
+      "unverified"
+    ],
+    "description": "confirmed (survived refutation, artifact in hand) | debunked (refuted) | unverified (survives but not demonstrable here)"
+  },
+  "reason": {
+    "type": "string",
+    "description": "one line: debunked — what refuted it; unverified — the concrete missing precondition; confirmed — the decisive artifact"
+  },
+  "probe": {
+    "type": "string",
+    "description": "ACDSL repos: the probe rule id that decided the verdict, or \"none: <why unprobeable after 2 attempts>\"; \"manual: <kind>\" otherwise"
+  },
+  "script": {
+    "type": "string",
+    "description": "the probe executable, path relative to the round's probes/ dir — absent on the manual path"
+  },
+  "fixture": {
+    "type": "string",
+    "description": "the minimal fail fixture the probe went RED on in the validity check, path under the round dir — absent on the manual path"
+  },
+  "registry": {
+    "type": "string",
+    "description": "the probe's merged registry, path relative to the round's probes/ dir — absent on the manual path"
+  },
+  "effect": {
+    "type": "string",
+    "enum": ["destructive", "incorrect", "degraded", "debt", "cosmetic"],
+    "description": "confirmed only, optional: the refuter's own answer when it differs from the candidate's"
+  },
+  "exposure": {
+    "type": "string",
+    "enum": ["always", "often", "rare", "eventually"],
+    "description": "confirmed only, optional: as effect"
+  },
+  "verdict_path": {
+    "type": "string",
+    "description": "absolute path of round-{r}/verdicts/<finding-slug>.json — the full verdict with evidence (what was run/read, decisive lines) and artifacts (absolute paths written under the round dir)"
+  },
+  "evidence": {
+    "type": "string",
+    "description": "returned verdict only, one string: the verdict file's decisive line — its evidence.probe_run, else its first evidence.read entry"
+  }
+}

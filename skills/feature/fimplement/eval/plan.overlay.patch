@@ -1,0 +1,206 @@
+diff --git a/plans/2026-09-25-flagged-cp-prompt-wip-a36dd5b/design/raw.md b/plans/2026-09-25-flagged-cp-prompt-wip-a36dd5b/design/raw.md
+new file mode 100644
+index 00000000..bfb8546c
+--- /dev/null
++++ b/plans/2026-09-25-flagged-cp-prompt-wip-a36dd5b/design/raw.md
+@@ -0,0 +1,200 @@
++# Flagged cp prompts despite the allow rule — Diagnosis
++
++## TLDR
++- Every `cp -R` in the plan-archive run showed a native Claude Code permission prompt, even though `Bash(cp *)` is allowed and the target is a registered additional directory.
++- The tool-policy hook hands every allow-rule match back to the engine (decision `none`) so that the engine's own checks still run. One of those checks, "cp with flags requires manual approval", asks for approval no matter what the allow rules say. So the handoff ends in a prompt, which breaks the "nothing prompts" closed world.
++- Fix: the hook allows a flagged `cp` itself when every flag is a short cluster of safe letters (never `-t` or a long option) and every path is inside the write roots. It returns `allow` instead of `none`, so the engine's flag check never runs.
++
++## Context
++- **Symptom:** session "Plan archive through September 24th - Checkout" (2026-09-25, 19:55–20:15). Each `cp -R <plans/…-wip-…> <agent-plans/claude-configs/…-done-…>` raised the native prompt "cp command with flags requires manual approval". It prompted in default mode and in acceptEdits mode alike.
++- **Environment:** main checkout of claude-configs, deployed hook `~/.claude/hooks/bin/toolpolicy`, Claude Code 2.1.280 (bundled with Desktop).
++- **What still works:** every read-only Bash call and every `git …` call in the same session was decided by the hook (`source: hook`) without a prompt.
++- **Reproduction:** any flagged `cp` whose paths are inside the write roots and which matches `Bash(cp *)`. Example: `cp -R plans/X ~/GolandProjects/agent-plans/claude-configs/Y`.
++
++## Baseline (verified)
++
++| ID | Fact | Needed for | Location |
++|---|---|---|---|
++| F1! | All 4 flagged `cp -R` calls reached the native prompt: `user_temporary` accepts, `user_reject` denials, and none has `source: hook`. The other ~75 Bash calls were `source: hook` | [Root cause](#root-cause) | peek `session_events`, title "Plan archive through September 24th - Checkout" |
++| F2! | `Bash(cp *)` is in the deployed allow list | [Root cause](#root-cause) | ~/.claude/settings.json `permissions.allow` |
++| F3! | The target root `/Users/devuser/GolandProjects/agent-plans/claude-configs/` is an `additionalDirectories` entry, so it is a write root | [Ruled out](#ruled-out) | [.claude/settings.local.json:7](.claude/settings.local.json:7), [grants.go:111](cmd/toolpolicy/grants.go:111) |
++| F4! | Engine text: "`<cmd>` with flags requires manual approval to ensure path safety … some flags like --target-directory=PATH can bypass path validation". It is present in 2.1.275 and 2.1.280, so it is not new | [Root cause](#root-cause) | CLI binary, byte offset 77232361 |
++| F5! | On a settings match, `decideByRules` returns `decisionNone` "so its own checks still run". On a skill-grant-only match it returns `decisionAllow` | [Root cause](#root-cause) | [decide.go:226](cmd/toolpolicy/decide.go:226) |
++| F6! | Under acceptEdits, an in-scope `cp` also returns `decisionNone` | [Root cause](#root-cause) | [decide.go:201](cmd/toolpolicy/decide.go:201), [decide.go:407](cmd/toolpolicy/decide.go:407) |
++| F7 | `argCause` skips every token that starts with `-`, so `--target-directory=<path>` is never checked against the protected set | [Other findings](#other-findings), [Changes](#changes) | [decide.go:70](cmd/toolpolicy/decide.go:70) |
++| F8 | The hook's own deny text promises "Nothing prompts in this environment" | [Classification](#classification) | [decide.go:36](cmd/toolpolicy/decide.go:36) |
++
++## Root cause
++1. The model issues `cp -R <src> <agent-plans/…>`. This is a single literal call, and no path is protected.
++2. Default mode: `decideBash` → `decideByRules`. `Bash(cp *)` matches, so the hook returns `none` ([F5](#baseline-verified)). acceptEdits mode: `isAcceptEditsFileCommand` is true because both paths are inside the write roots ([F3](#baseline-verified)), so the hook also returns `none` ([F6](#baseline-verified)).
++3. `none` passes the call to the engine's permission pipeline. The engine's path validation for `cp` refuses to validate any flagged form, because a flag like `--target-directory` could redirect the write. It returns *ask*, independent of the allow rule ([F4](#baseline-verified)).
++4. The ask becomes the native prompt, once per `cp` ([F1](#baseline-verified)). Unflagged calls and git calls never reach this check, which explains why the rest of the session ran without prompts.
++
++This explains every fact: the prompts in both modes, the allow rule present, the target inside the roots, and only `cp` affected.
++
++## Classification
++Code bug in `cmd/toolpolicy`. The design assumes that handing a rule match to the engine (`none`) never asks. The engine's flag check disproves that assumption, and the result breaks the closed-world promise ([F8](#baseline-verified)).
++
++## Other findings
++- **Flag-token blind spot:** `argCause` ignores flag tokens ([F7](#baseline-verified)). `cp --target-directory=~/.claude/hooks x` is caught today only by the engine's flag check, not by the hook. The fix below keeps this case closed: long options and `-t` never qualify, so such calls still get `none`.
++- **plan-archive has no `allowed-tools` line:** AGENTS.md requires one on bounded-surface skills. This did not cause the symptom, because a settings match wins before any skill grant is checked ([F5](#baseline-verified)).
++
++## Ruled out
++- **Target outside the working directories:** killed by [F3](#baseline-verified). The target root is an additional directory, and the prompt text names flags, not the path.
++- **Missing allow rule:** killed by [F2](#baseline-verified).
++- **New engine regression:** killed by [F4](#baseline-verified). The same text is in 2.1.275.
++
++## Changes
++
++| File | Kind | Entry |
++|---|---|---|
++| `settings/claude_code/tool-policy.json` | modified | [Policy data](#policy-data-modified) |
++| `cmd/toolpolicy/policy.go` | modified | [Safe path-flag check](#safe-path-flag-check-modified) |
++| `cmd/toolpolicy/decide.go` | modified | [Allow safe flagged cp](#allow-safe-flagged-cp-modified) |
++| `cmd/toolpolicy/decide_test.go` | modified | [Tests](#tests-modified) |
++
++### Policy data (modified)
++location: `settings/claude_code/tool-policy.json`
++
++- New key `path_flag_heads`: each head the engine refuses to path-check once it carries a flag, mapped to the short-option letters that cannot redirect a write.
++- Only `cp` is listed. `mv` is the only other command with a target-directory form, but no prompt for it was observed. Adding it later is a one-line data change after a probe.
++
++```json
++  "path_flag_heads": {
++    "cp": "HLPRXacfnprv"
++  },
++```
++
++### Safe path-flag check (modified)
++location: `cmd/toolpolicy/policy.go`
++
++```diff
++ type Policy struct {
++ 	AcceptEditsHeads   []string            `json:"accept_edits_heads"`
++ 	...
++ 	PassthroughTools   []string            `json:"passthrough_tools"`
+++	PathFlagHeads      map[string]string   `json:"path_flag_heads"`
++ 	ProtectedPaths     []string            `json:"protected_paths"`
++```
++
++```go
++// isSafePathFlagCall reports whether call is a path_flag_heads command that
++// carries at least one flag, every flag a short cluster of the head's listed
++// letters — no long option, no target-directory form.
++func (p *Policy) isSafePathFlagCall(call *resolvedCall) bool {
++	letters, isPathFlagHead := p.PathFlagHeads[call.head]
++	if !isPathFlagHead {
++		return false
++	}
++
++	hasFlag := false
++	for _, arg := range call.args {
++		if !strings.HasPrefix(arg, "-") {
++			continue
++		}
++		cluster := strings.TrimPrefix(arg, "-")
++		if cluster == "" || strings.Trim(cluster, letters) != "" {
++			return false
++		}
++		hasFlag = true
++	}
++	return hasFlag
++}
++```
++
++### Allow safe flagged cp (modified)
++location: `cmd/toolpolicy/decide.go`
++
++```diff
++ func decideBash(input *HookInput, policy *Policy, grants *Grants, home string, statePath string) Verdict {
++ 	// ...
++ 	if call, isSingle := singleLiteralCall(input.ToolInput.Command, policy); isSingle {
++ 		if cause := protected.argCause(input.Cwd, home, call); cause != "" {
++ 			return denyVerdict(toolNameBash, input, cause)
++ 		}
+++		if isPathFlagCallAllowed(input, policy, grants, home, call) {
+++			return Verdict{Decision: decisionAllow, Reason: pathFlagAllowReason}
+++		}
++ 	}
++ 	if isAcceptEditsFileCommand(input, policy, grants, home) {
++```
++
++```diff
++ 	pipelineAllowReason = "two-segment pipeline of allowed commands (bash-policy)"
+++	pathFlagAllowReason = "flagged file command with safe flags inside the write roots (bash-policy)"
++```
++
++```diff
++ func isAcceptEditsFileCommand(input *HookInput, policy *Policy, grants *Grants, home string) bool {
++ 	// ...
++-	roots := writeRoots(input, policy, grants, home)
++-	for _, arg := range call.args {
++-		if strings.HasPrefix(arg, "-") {
++-			continue
++-		}
++-		if !IsInsideRoots(input.Cwd, arg, roots) {
++-			return false
++-		}
++-	}
++-	return true
+++	return arePathArgsInsideRoots(input.Cwd, call.args, writeRoots(input, policy, grants, home))
++ }
++```
++
++```go
++// arePathArgsInsideRoots reports whether every non-flag argument resolves
++// inside roots.
++func arePathArgsInsideRoots(cwd string, args []string, roots []string) bool {
++	for _, arg := range args {
++		if strings.HasPrefix(arg, "-") {
++			continue
++		}
++		if !IsInsideRoots(cwd, arg, roots) {
++			return false
++		}
++	}
++	return true
++}
++
++// isPathFlagCallAllowed pre-empts the engine's flag bail: the engine asks for
++// any flagged cp even under a matching allow rule, so a call the gate would
++// hand over — acceptEdits scope or a settings allow match — is allowed here
++// when its flags are safe and every path lies inside the write roots.
++func isPathFlagCallAllowed(input *HookInput, policy *Policy, grants *Grants, home string, call *resolvedCall) bool {
++	if !policy.isSafePathFlagCall(call) {
++		return false
++	}
++	if !arePathArgsInsideRoots(input.Cwd, call.args, writeRoots(input, policy, grants, home)) {
++		return false
++	}
++
++	isAcceptEditsScope := input.PermissionMode == permissionModeAcceptEdits && policy.isAcceptEditsHead(call.head)
++	isRuleAllowed := grants.matchAllow(toolNameBash, &input.ToolInput) != nil
++	return isAcceptEditsScope || isRuleAllowed
++}
++```
++
++### Tests (modified)
++location: `cmd/toolpolicy/decide_test.go`
++
++mirrors: the `accept-edits-*` cases at [decide_test.go:208](cmd/toolpolicy/decide_test.go:208)
++
++| Location.Method | Cases | Comment |
++|---|---|---|
++| `TestDecide` | `cp-recursive-in-roots-rule-allow`: default mode, `cp -R build/a build/b`, settings `Bash(cp *)` → allow<br>`accept-edits-cp-recursive-allow`: acceptEdits, no rule → allow<br>`cp-recursive-outside-roots-none`: `cp -R build/a /tmp/b` with rule → none<br>`cp-target-directory-none`: `cp --target-directory=build/b build/a` with rule → none<br>`cp-t-flag-none`: `cp -t build/b build/a` with rule → none<br>`cp-recursive-onto-hooks-deny`: `cp -R build/x ~/.claude/hooks/y` → deny (protected path)<br>`default-mode-cp-recursive-no-rule-deny`: no rule, default mode → deny | Protected-path deny still runs before the new branch |
++| `TestPolicy_isSafePathFlagCall` | `-R`, `-Rp` pass<br>`-t`, `--target-directory=x`, bare `-` fail<br>no flag fails<br>head `mv` fails | Table-driven per the go.md TESTS section |
++
++## Verification
++- [ ] Run `go test ./cmd/toolpolicy/...`: expect PASS, including the new cases.
++- [ ] Run `make audit > <scratchpad>/audit.log` and read the log: expect green.
++- [ ] Redeploy the hook through the repo's install target. In a fresh main-checkout session, run `/plan-archive` on the remaining ≤ 2026-09-24 dirs: expect zero native prompts, and peek `session_events` showing each `cp -R` as `source: hook`.
++- [ ] Degenerate case: `cp --target-directory=<scratchpad>/x <scratchpad>/y` still gets `none` from the hook (the engine asks). This proves long options stay behind the engine check.
++
++## Changelog
++
++| Date | Trigger | What changed |
++|---|---|---|
++| — | initial | plan created |
++| 2026-09-25 | local: implementation | `TestPolicy_isSafePathFlagCall` lives in `cmd/toolpolicy/decide_test.go`, since the package has no policy_test.go and the planned-files table names only decide_test.go |
++| 2026-09-25 | local: red audit | `make audit` failed on `TestBacklogItem/dispatch-card-when-matched` in `internal/server/backlog_test.go`. Cause: the fixture reused the real `com.smine.routine.smine-nightly` label, which is loaded on this machine, so the Dispatch button was not disabled. Fix: renamed the fixture label to `com.smine.routine-fixture.smine-nightly`, which is never loaded |
++| 2026-09-25 | local: verification | Unit cases and `make audit` are green. The live hook path is unverified: the session cannot deploy into `~/.claude/hooks` (protected) or run a scratch binary (no allow rule). Needs the operator's `cmd/sync/sync_hooks.sh`, then a `/plan-archive` run |

@@ -1,0 +1,1 @@
+- [Smoke fixtures](smoke-fixtures.md) — where a skill's smoke input lives

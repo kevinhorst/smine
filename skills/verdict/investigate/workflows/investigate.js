@@ -38,39 +38,83 @@ if (typeof args.artifactsDir !== 'string' || !args.artifactsDir || !args.artifac
 }
 const artifactsDir = args.artifactsDir
 const priorArtifact = typeof args.priorArtifact === 'string' && args.priorArtifact ? args.priorArtifact : null
-
-const INVESTIGATOR_SCHEMA = {
-  type: 'object',
-  required: ['run_id', 'ranked_hypotheses', 'load_bearing_claims', 'artifact_path'],
-  properties: {
-    run_id: { type: 'string' },
-    ranked_hypotheses: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['rank', 'hypothesis'],
-        properties: {
-          rank: { type: 'integer' },
-          hypothesis: { type: 'string' },
-          rationale: { type: 'string' },
-        },
-      },
-    },
-    load_bearing_claims: {
-      type: 'array',
-      description: 'claims the ranking rests on, each with the primary source that would confirm or refute it',
-      items: {
-        type: 'object',
-        required: ['claim', 'source_refs'],
-        properties: {
-          claim: { type: 'string' },
-          source_refs: { type: 'array', items: { type: 'string' }, description: 'primary artifacts a verifier can fetch — files, URLs, query targets' },
-        },
-      },
-    },
-    artifact_path: { type: 'string' },
-  },
+// GEN:models
+// Subagent model vocabulary — generated from availableModels and
+// forbidden_subagent_models by the workflow generator (internal/models).
+const SUBAGENT_MODELS = ["opus", "sonnet"]
+const DEFAULT_SUBAGENT_MODEL = "opus"
+const assertModel = (name, value) => {
+  if (!SUBAGENT_MODELS.includes(value)) throw new Error(`${name} "${value}" is not a subagent model (${SUBAGENT_MODELS.join(' | ')}) — unresolved tokens silently run the session model, forbidden ones are stopped by heartbeat`)
+  return value
 }
+// GEN:end
+
+// fan-out, verifier and merge agents share one explicit model — never the caller session's
+const model = assertModel('model', args.model || DEFAULT_SUBAGENT_MODEL)
+
+// GEN:schemas investigator
+const INVESTIGATOR_SCHEMA = {
+  "type": "object",
+  "required": [
+    "run_id",
+    "ranked_hypotheses",
+    "load_bearing_claims",
+    "artifact_path"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "ranked_hypotheses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rank",
+          "hypothesis"
+        ],
+        "properties": {
+          "rank": {
+            "type": "integer"
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "load_bearing_claims": {
+      "type": "array",
+      "description": "claims the ranking rests on, each with the primary source that would confirm or refute it",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "source_refs"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "primary artifacts a verifier can fetch — files, URLs, query targets"
+          }
+        }
+      }
+    },
+    "artifact_path": {
+      "type": "string"
+    }
+  }
+}
+// GEN:end
 
 // Each run gets a distinct id; if a prior artifact is supplied it enters as investigation #1.
 const runIds = []
@@ -101,6 +145,7 @@ const investigators = await parallel(runIds.map(runId => () => {
     label: runId,
     phase: 'Fan-out',
     agentType: 'general-purpose',
+    model,
     schema: INVESTIGATOR_SCHEMA,
   })
 }))
@@ -112,40 +157,79 @@ if (!surviving.length) {
   return { investigators: [], failed: dead, verification: null, baseline: null }
 }
 
+// GEN:schemas verification
 const VERIFICATION_SCHEMA = {
-  type: 'object',
-  required: ['claim_verdicts', 'needs_measurement_queries', 'funnel_note'],
-  properties: {
-    claim_verdicts: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['run_id', 'claim', 'verdict'],
-        properties: {
-          run_id: { type: 'string' },
-          claim: { type: 'string' },
-          verdict: { type: 'string', enum: ['holds', 'refuted', 'needs-measurement'], description: 'unreachable primary artifact stays needs-measurement, never holds' },
-          evidence: { type: 'string' },
-          primary_source: { type: 'string', description: 'the actual artifact fetched — never a prior run summary' },
-        },
-      },
+  "type": "object",
+  "required": [
+    "claim_verdicts",
+    "needs_measurement_queries",
+    "funnel_note"
+  ],
+  "properties": {
+    "claim_verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "claim",
+          "verdict"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "claim": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "holds",
+              "refuted",
+              "needs-measurement"
+            ],
+            "description": "unreachable primary artifact stays needs-measurement, never holds"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "primary_source": {
+            "type": "string",
+            "description": "the actual artifact fetched — never a prior run summary"
+          }
+        }
+      }
     },
-    needs_measurement_queries: {
-      type: 'array',
-      description: 'concrete queries the user can run in prod; their results return as binding facts',
-      items: {
-        type: 'object',
-        required: ['claim', 'query'],
-        properties: {
-          claim: { type: 'string' },
-          query: { type: 'string' },
-          where_to_run: { type: 'string' },
-        },
-      },
+    "needs_measurement_queries": {
+      "type": "array",
+      "description": "concrete queries the user can run in prod; their results return as binding facts",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "query"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "where_to_run": {
+            "type": "string"
+          }
+        }
+      }
     },
-    funnel_note: { type: 'string', description: 'observation across the FULL funnel, not just the metric the question started with' },
-  },
+    "funnel_note": {
+      "type": "string",
+      "description": "observation across the FULL funnel, not just the metric the question started with"
+    }
+  }
 }
+// GEN:end
 
 phase('Re-verify')
 const allClaims = surviving.flatMap(r => (r.load_bearing_claims || []).map(c => ({ run_id: r.run_id, ...c })))
@@ -182,7 +266,7 @@ const shards = await parallel(batches.map((batch, i) => () => agent(
   `Investigator artifacts:\n${JSON.stringify(surviving.map(r => ({ run_id: r.run_id, artifact_path: r.artifact_path })), null, 2)}\n\n` +
   `Load-bearing claims to verify (your batch):\n${JSON.stringify(batch, null, 2)}\n\n` +
   `Return the structured output only.`,
-  { label: `re-verify#${i + 1}`, phase: 'Re-verify', agentType: 'general-purpose', effort: 'medium', schema: VERIFICATION_SCHEMA },
+  { label: `re-verify#${i + 1}`, phase: 'Re-verify', agentType: 'general-purpose', model, effort: 'medium', schema: VERIFICATION_SCHEMA },
 )))
 
 const liveShards = shards.filter(Boolean)
@@ -193,53 +277,96 @@ const verification = {
   funnel_note: liveShards.map((s, i) => `[shard ${i + 1}] ${s.funnel_note}`).join('\n'),
 }
 
+// GEN:schemas baseline
 const BASELINE_SCHEMA = {
-  type: 'object',
-  required: ['baseline', 'refuted_register', 'net_new_findings', 'experiment_plan'],
-  properties: {
-    baseline: { type: 'string', description: 'one merged baseline; every statement labeled fact (verified) vs hypothesis (unverified)' },
-    refuted_register: {
-      type: 'array',
-      description: 'R1..Rn — dead ends, each with its refuting evidence, so nobody re-investigates them',
-      items: {
-        type: 'object',
-        required: ['id', 'hypothesis', 'refuting_evidence'],
-        properties: {
-          id: { type: 'string' },
-          hypothesis: { type: 'string' },
-          refuting_evidence: { type: 'string' },
-        },
-      },
+  "type": "object",
+  "required": [
+    "baseline",
+    "refuted_register",
+    "net_new_findings",
+    "experiment_plan"
+  ],
+  "properties": {
+    "baseline": {
+      "type": "string",
+      "description": "one merged baseline; every statement labeled fact (verified) vs hypothesis (unverified)"
     },
-    net_new_findings: {
-      type: 'array',
-      description: 'genuinely-new findings credited to the run that produced them',
-      items: {
-        type: 'object',
-        required: ['run_id', 'finding'],
-        properties: { run_id: { type: 'string' }, finding: { type: 'string' } },
-      },
+    "refuted_register": {
+      "type": "array",
+      "description": "R1..Rn — dead ends, each with its refuting evidence, so nobody re-investigates them",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "hypothesis",
+          "refuting_evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "refuting_evidence": {
+            "type": "string"
+          }
+        }
+      }
     },
-    experiment_plan: {
-      type: 'array',
-      description: 'discrimination plan — one variable per test cell, a control arm, pre-registered failure criteria',
-      items: {
-        type: 'object',
-        required: ['variable', 'failure_criteria'],
-        properties: {
-          variable: { type: 'string', description: 'the single variable this cell changes' },
-          control_arm: { type: 'string' },
-          failure_criteria: { type: 'string', description: 'pre-registered — what result would falsify the hypothesis' },
-        },
-      },
+    "net_new_findings": {
+      "type": "array",
+      "description": "genuinely-new findings credited to the run that produced them",
+      "items": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "finding"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "finding": {
+            "type": "string"
+          }
+        }
+      }
     },
-    open_measurements: {
-      type: 'array',
-      description: 'needs-measurement claims still awaiting the user\'s prod results before they become binding facts',
-      items: { type: 'string' },
+    "experiment_plan": {
+      "type": "array",
+      "description": "discrimination plan — one variable per test cell, a control arm, pre-registered failure criteria",
+      "items": {
+        "type": "object",
+        "required": [
+          "variable",
+          "failure_criteria"
+        ],
+        "properties": {
+          "variable": {
+            "type": "string",
+            "description": "the single variable this cell changes"
+          },
+          "control_arm": {
+            "type": "string"
+          },
+          "failure_criteria": {
+            "type": "string",
+            "description": "pre-registered — what result would falsify the hypothesis"
+          }
+        }
+      }
     },
-  },
+    "open_measurements": {
+      "type": "array",
+      "description": "needs-measurement claims still awaiting the user's prod results before they become binding facts",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
 }
+// GEN:end
 
 phase('Merge')
 const baseline = await agent(
@@ -256,7 +383,7 @@ const baseline = await agent(
   `4. A discrimination/experiment plan: one variable per test cell, a control arm, pre-registered failure criteria.\n` +
   `5. open_measurements: the needs-measurement claims still awaiting the user's prod results.\n` +
   `Return the structured output only.`,
-  { label: 'merge', phase: 'Merge', agentType: 'general-purpose', effort: 'high', schema: BASELINE_SCHEMA },
+  { label: 'merge', phase: 'Merge', agentType: 'general-purpose', model, effort: 'high', schema: BASELINE_SCHEMA },
 )
 
 return { investigators: surviving, failed: dead, verification, baseline }

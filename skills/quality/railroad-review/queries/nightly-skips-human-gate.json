@@ -1,0 +1,8 @@
+{
+  "name": "nightly-skips-human-gate",
+  "assume": [
+    "mode = nightly"
+  ],
+  "reach": "SKILL-RAILROADREVIEW-MODES-001",
+  "expect": "unsat"
+}

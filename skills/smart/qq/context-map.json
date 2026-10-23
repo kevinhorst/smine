@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0",
+  "skill": "qq",
+  "lanes": {
+    "default": ["RULE-SKILL-016"],
+    "harness": ["FACT-CLAUDE-HARNESS-*"],
+    "cache": ["FACT-CLAUDE-CACHE-*"],
+    "usage": ["FACT-CLAUDE-USAGE-*"],
+    "claude": ["FACT-CLAUDE-*"],
+    "repo": ["FACT-REPO-*"],
+    "doctrine": ["ACTION-*"],
+    "skills": ["RULE-SKILL-*"],
+    "plans": ["RULE-PLAN-*"],
+    "commits": ["RULE-COMMIT-*"],
+    "go": ["RULE-GOLANG-*"],
+    "sql": ["RULE-SQL-*"],
+    "python": ["RULE-PYTHON-*"]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "type": "object",
+  "required": [
+    "direction",
+    "lane",
+    "aborted",
+    "artifact_json",
+    "checkout_sha",
+    "walk_complete",
+    "walk_open",
+    "claim_refs"
+  ],
+  "properties": {
+    "direction": {
+      "type": "string",
+      "description": "the railroad-review direction this lane walked"
+    },
+    "lane": {
+      "type": "integer",
+      "description": "this lane's 1-based index within its direction"
+    },
+    "aborted": {
+      "type": "boolean",
+      "description": "true when the premise check failed and the lane stopped without reviewing — an aborted lane never counts as a finished review"
+    },
+    "artifact_json": {
+      "type": "string",
+      "description": "absolute path of the JSON findings artifact written under the round dir"
+    },
+    "checkout_sha": {
+      "type": "string",
+      "description": "full HEAD SHA of the lane worktree, from git rev-parse after the SECOND ACTION pin — recorded in the artifact JSON too"
+    },
+    "overlay_ok": {
+      "type": "boolean",
+      "description": "overlay runs only: true exactly when git apply -R --check of the review-context overlay exits 0 in the lane worktree — recorded in the artifact JSON too"
+    },
+    "walk_complete": {
+      "type": "boolean",
+      "description": "true exactly when the artifact's walk_complete flag was accepted by the read-gate — every checklist pair answered"
+    },
+    "walk_open": {
+      "type": "integer",
+      "description": "number of checklist pairs (file × group, or group) still without a walk entry; 0 when complete"
+    },
+    "claim_refs": {
+      "type": "array",
+      "description": "one ref per finding in the artifact — everything the pipeline computes on; the write-up (claim, evidence) stays in the artifact file",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "file",
+          "line",
+          "severity",
+          "effect",
+          "exposure",
+          "fix"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "description": "the artifact's finding id: <direction>-<SEV>-<n>"
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "BLOCKER",
+              "MAJOR",
+              "MINOR",
+              "NIT",
+              "INFO"
+            ],
+            "description": "the severity-table row for effect/exposure; INFO exactly when fix is \"none\" — recomputed at dedup entry"
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "destructive",
+              "incorrect",
+              "degraded",
+              "debt",
+              "cosmetic"
+            ]
+          },
+          "exposure": {
+            "type": "string",
+            "enum": [
+              "always",
+              "often",
+              "rare",
+              "eventually"
+            ]
+          },
+          "fix": {
+            "type": "string",
+            "description": "the concrete fix, one sentence or a short diff sketch; \"none\" for INFO"
+          },
+          "checklist": {
+            "type": "string",
+            "description": "the checklist item this finding answers — a context entry id on rule directions, <direction>-<n> on correctness and contracts"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "missing context files, excluded scope, anomalies"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "round.js stage args",
+  "description": "The args the dispatcher passes to round.js once per round; round.js hands the stage subsets to its child workflows.",
+  "type": "object",
+  "required": ["base", "head", "baseCommit", "headCommit", "artifactsDir", "runNs", "round"],
+  "properties": {
+    "base": {"type": "string", "description": "the review base ref"},
+    "head": {"type": "string", "description": "the review head ref"},
+    "baseCommit": {"type": "string", "description": "the pinned base commit"},
+    "headCommit": {"type": "string", "description": "the pinned head commit"},
+    "artifactsDir": {"type": "string", "description": "the run's artifacts dir, absolute"},
+    "runNs": {"type": "string", "description": "this run's namespace, minted in Dispatch"},
+    "round": {"type": "integer", "minimum": 1, "description": "the station-protocol round number, 1-based"},
+    "workflowsDir": {"type": "string", "description": "this skill's deployed workflows/ dir, absolute; round.js only"},
+    "buildTest": {"type": "object", "description": "{build, tests} at the review head"},
+    "baseHealth": {"type": "object", "description": "{build, tests} at the base, for the station"},
+    "specPaths": {"type": "array", "items": {"type": "string"}, "description": "round-dir spec copies, else empty"},
+    "lanePlan": {"type": "array", "items": {"type": "object"}, "description": "the lanes call's lane plan; lanes stage"},
+    "idFloor": {"type": "integer", "description": "the finding-id floor the lanes call prints; lanes stage"},
+    "knownPath": {"type": "string", "description": "the round's known-findings ledger; every stage"},
+    "laneModel": {"type": "string", "description": "lane agent model from the lanes arg"},
+    "laneEffort": {"type": "string", "description": "lane agent effort from the lanes arg"},
+    "worktreeMode": {"type": "string", "description": "explicit-worktree route key"},
+    "targetRepo": {"type": "string", "description": "explicit-worktree route key"},
+    "worktreeRoot": {"type": "string", "description": "explicit-worktree route key"},
+    "overlayPatch": {"type": "string", "description": "the overlay-patch arg path, empty without it"},
+    "prebuilt": {"type": "string", "description": "the prebuilt arg, empty without it"},
+    "excludes": {"type": "array", "items": {"type": "string"}, "description": "the exclude arg as an array, empty when absent"}
+  }
+}

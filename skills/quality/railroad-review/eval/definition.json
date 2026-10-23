@@ -1,0 +1,155 @@
+{
+  "schemaVersion": "4.0",
+  "skill": "railroad-review",
+  "invocation": {
+    "args": [
+      {
+        "name": "directions",
+        "value": "code-style correctness tests security"
+      },
+      {
+        "name": "lanes",
+        "value": "2[opus:medium]"
+      },
+      {
+        "name": "scope",
+        "value": "branch[{base}]"
+      },
+      {
+        "name": "exclude",
+        "value": "{exclude}"
+      },
+      {
+        "name": "spec",
+        "value": [
+          "plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/concept/concept.md",
+          "plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/concept/user_stories.md",
+          "plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/design/raw.md",
+          "plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/design/change-englishness.md",
+          "plans/v1-2-1/2026-08-24-language-style-setting-wip-ef09567/design/change-nondev-automation.md",
+          "plans/v1-2-1/2026-08-26-acdsl-policy-modes-done-a7cd7bf/design/raw.md",
+          "plans/v1-2-1/2026-08-26-railroad-review-observability-wip-5158764/design/raw.md",
+          "plans/v1-2-1/2026-08-27-bootstrap-profile-improvements-wip-397f906/design/change-bootstrap-profile.md",
+          "plans/v1-2-1/2026-08-27-bootstrap-profile-improvements-wip-397f906/design/change-headless-bootstrap.md",
+          "plans/v1-2-1/2026-08-27-plan-format-viewer-fixes-wip-1cdbf2b/design/change-viewer-fixes.md",
+          "plans/v1-2-1/2026-08-27-repos-routines-improvements-wip-4afbe98/design/change-repos-routines-ui.md",
+          "plans/v1-2-1/2026-08-27-smine-profile-settings-wip-ca34568/design/raw.md",
+          "plans/v1-2-1/2026-08-30-peek-multiple-profiles-wip-78bfb3e/design/change-multi-profile-ports.md",
+          "plans/v1-2-1/2026-08-30-repo-cache-reload-wip-46c8d9e/design/change-repo-cache.md"
+        ]
+      },
+      {
+        "name": "autofix-level",
+        "value": "minor"
+      },
+      {
+        "name": "refute-level",
+        "value": "major"
+      },
+      {
+        "name": "ignore-level",
+        "value": "none"
+      },
+      {
+        "name": "station",
+        "value": "opus:medium"
+      },
+      {
+        "name": "nightly"
+      },
+      {
+        "name": "rounds",
+        "value": "2"
+      },
+      {
+        "name": "run-id",
+        "value": "{runId}"
+      },
+      {
+        "name": "overlay-patch",
+        "value": "{overlayPatch}"
+      },
+      {
+        "name": "prebuilt",
+        "value": "{prebuilt}"
+      },
+      {
+        "name": "verbose"
+      }
+    ],
+    "open": [
+      "autofix-level",
+      "lanes",
+      "station",
+      "rounds"
+    ]
+  },
+  "environment": {
+    "targetRepo": "smine",
+    "range": {
+      "baseSha": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+      "headSha": "1f725cedc5c8b092c8a3d7e408793ef72840ec7e",
+      "baseLabel": "1.1.4",
+      "headLabel": "1.2.1 + golden-input plans",
+      "excludePaths": [
+        "sessions/",
+        "evals/",
+        "proposals/",
+        "plans/"
+      ]
+    },
+    "overlay": "eval/golden/smine-1.1.4-1.2.1.g2.overlay.patch",
+    "contextIndex": "context/review-index.json",
+    "prebuild": {
+      "command": [
+        "make",
+        "build-audit"
+      ],
+      "outputs": [
+        "bin/acdsl",
+        "bin/verifiers"
+      ]
+    }
+  },
+  "findings": {
+    "glob": "known.json",
+    "claimKeys": [
+      "claim"
+    ]
+  },
+  "scoring": "eval/golden/scoring.json",
+  "budgets": {
+    "armUsd": 1000,
+    "armTimeoutS": 7200,
+    "windowUsd": 1000
+  },
+  "prerequisites": [
+    "eval/golden/smine-1.1.4-1.2.1.g2.overlay.patch"
+  ],
+  "goldens": [
+    {
+      "id": "smine-1.1.4-1.2.1-g2",
+      "goldenVersion": 1,
+      "scope": "full",
+      "file": "eval/golden/smine-1.1.4-1.2.1.g2.v1.json",
+      "contextlessFile": "eval/golden/smine-1.1.4-1.2.1.g2.v1.contextless.json",
+      "input": "smine repo 1.1.4..1.2.1 + golden-input plans (b4981b8..1f725ce, sessions/ evals/ proposals/ plans/ excluded), g2 environment: overlay v2 context pack, prebuilt gate binaries; production runs start from the seed's known findings with autofix-level none; the v1-line goldens are archived and compared against only after minting",
+      "produce": {
+        "seedFile": "eval/golden/smine-1.1.4-1.2.1.g2.seed.json",
+        "args": [
+          {
+            "name": "autofix-level",
+            "value": "none"
+          },
+          {
+            "name": "known",
+            "value": "{seed}"
+          }
+        ]
+      },
+      "test": {
+        "args": []
+      }
+    }
+  ]
+}

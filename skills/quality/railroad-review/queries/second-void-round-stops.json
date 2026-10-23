@@ -1,0 +1,8 @@
+{
+  "name": "second-void-round-stops",
+  "assume": [
+    "void_rounds >= 2"
+  ],
+  "reach": "SKILL-RAILROADREVIEW-STATION-002b",
+  "expect": "sat"
+}

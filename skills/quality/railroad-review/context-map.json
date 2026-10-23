@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0",
+  "skill": "railroad-review",
+  "lanes": {
+    "default": ["ACTION-CONCEPT-HOT-*", "ACTION-IMPL-INTEG-*", "ACTION-NAV-010", "ACTION-NAV-011", "ACTION-REVIEW-*", "RULE-SKILL-012", "RULE-SKILL-013", "RULE-SKILL-014", "FACT-REPO-*"],
+    "code-style": ["ACTION-REVIEW-QUALITY-*", "RULE-GOLANG-*", "RULE-PYTHON-*", "RULE-RUST-*", "RULE-SQL-*"],
+    "correctness": ["ACTION-REVIEW-SPEC-*"],
+    "critical": ["ACTION-CONCEPT-HOT-*"],
+    "data-integrity": ["ACTION-IMPL-INTEG-*"],
+    "contracts": ["ACTION-REVIEW-DEPLOY-002"],
+    "tests": ["ACTION-REVIEW-TEST-*", "FACT-REPO-TEST-*"],
+    "security": ["ACTION-REVIEW-LOG-004", "ACTION-REVIEW-LOG-005", "ACTION-REVIEW-SEC-*", "FACT-REPO-SEC-*"]
+  }
+}

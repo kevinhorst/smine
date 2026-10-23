@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": [
+    "path",
+    "groups",
+    "items"
+  ],
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "absolute path of the checklist-<direction>.json the agent wrote"
+    },
+    "groups": {
+      "type": "integer",
+      "description": "number of groups written"
+    },
+    "items": {
+      "type": "integer",
+      "description": "number of items written across all groups"
+    }
+  }
+}

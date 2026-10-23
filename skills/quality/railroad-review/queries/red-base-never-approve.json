@@ -1,0 +1,8 @@
+{
+  "name": "red-base-never-approve",
+  "assume": [
+    "base_build_red"
+  ],
+  "check": "recommendation = APPROVE",
+  "expect": "unsat"
+}

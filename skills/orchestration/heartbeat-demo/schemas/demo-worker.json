@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "required": [
+    "artifact"
+  ],
+  "properties": {
+    "artifact": {
+      "type": "string",
+      "description": "absolute path of the artifact.json the worker wrote"
+    }
+  }
+}

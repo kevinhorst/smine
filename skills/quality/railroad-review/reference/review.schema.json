@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "railroad-review round handoff (review.json)",
+  "description": "The station's consolidated round review — the single handoff artifact. Twin of schemas/consolidation.json; update both together.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dispositions",
+    "ranked_plan",
+    "unverified",
+    "funnel",
+    "permanent_checks",
+    "build_test",
+    "base_health",
+    "debunked",
+    "resolved",
+    "intentional_deviations",
+    "coverage_gaps",
+    "escalations",
+    "definition_of_done",
+    "recommendation",
+    "handoff_json",
+    "probes",
+    "probes_dir"
+  ],
+  "properties": {
+    "dispositions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "disposition"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "disposition": {
+            "type": "string",
+            "enum": ["confirmed", "unverified", "rejected-with-reason", "duplicate-of", "debunked"]
+          },
+          "reason": { "type": "string" },
+          "duplicate_of": { "type": "string" },
+          "probe": { "type": "string" },
+          "evidence": { "type": "string", "description": "the verdict's decisive line — probe run or first evidence read" }
+        },
+        "if": {
+          "required": ["disposition"],
+          "properties": { "disposition": { "enum": ["confirmed", "debunked"] } }
+        },
+        "then": { "required": ["evidence"] }
+      }
+    },
+    "ranked_plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "severity", "file", "line", "fix", "route", "route_reason"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "severity": {
+            "type": "string",
+            "enum": ["BLOCKER", "MAJOR", "MINOR", "NIT", "INFO"]
+          },
+          "effect": {
+            "type": "string",
+            "enum": ["destructive", "incorrect", "degraded", "debt", "cosmetic"]
+          },
+          "exposure": {
+            "type": "string",
+            "enum": ["always", "often", "rare", "eventually"]
+          },
+          "claim": { "type": "string" },
+          "fix": { "type": "string" },
+          "route": {
+            "type": "string",
+            "enum": ["human", "auto-fix"]
+          },
+          "route_reason": { "type": "string" },
+          "known": { "type": "boolean" },
+          "known_id": { "type": "string" },
+          "artifact": { "type": "string", "description": "the lane artifact path" },
+          "artifact_id": { "type": "string", "description": "the finding's id inside that artifact" }
+        }
+      }
+    },
+    "unverified": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "reason"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "funnel": {
+      "type": "object",
+      "required": ["produced", "confirmed", "unverified", "duplicates", "rejected", "debunked"],
+      "properties": {
+        "produced": { "type": "integer" },
+        "confirmed": { "type": "integer" },
+        "unverified": { "type": "integer" },
+        "duplicates": { "type": "integer" },
+        "rejected": { "type": "integer" },
+        "debunked": { "type": "integer" }
+      }
+    },
+    "permanent_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "check"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "check": { "type": "string" }
+        }
+      }
+    },
+    "build_test": {
+      "type": "object",
+      "required": ["build", "tests"],
+      "properties": {
+        "build": { "type": "string" },
+        "tests": { "type": "string" }
+      }
+    },
+    "base_health": {
+      "type": "object",
+      "description": "smine-rules buildtest's result at the review base, copied through verbatim",
+      "required": ["build", "tests"],
+      "properties": {
+        "build": { "type": "string" },
+        "tests": { "type": "string" }
+      }
+    },
+    "debunked": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "reason"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "resolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "fixing_commit"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "fixing_commit": { "type": "string" }
+        }
+      }
+    },
+    "intentional_deviations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "canonicalize_as"],
+        "properties": {
+          "claim": { "type": "string" },
+          "canonicalize_as": { "type": "string" }
+        }
+      }
+    },
+    "coverage_gaps": {
+      "type": "array",
+      "description": "manifest paths of lanes that did not finish — their files are the uncovered assignments",
+      "items": { "type": "string" }
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "why"],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "why": { "type": "string" }
+        }
+      }
+    },
+    "definition_of_done": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["criterion", "status"],
+        "properties": {
+          "criterion": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["PASS", "FAIL", "N/A"]
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["APPROVE", "CONDITIONAL", "REJECT"]
+    },
+    "handoff_json": { "type": "string" },
+    "probes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "script", "fixture", "registry", "verdict", "finding_id"],
+        "properties": {
+          "id": { "type": "string" },
+          "script": { "type": "string" },
+          "fixture": { "type": "string" },
+          "registry": { "type": "string" },
+          "verdict": { "type": "string" },
+          "finding_id": { "type": "string" }
+        }
+      }
+    },
+    "probes_dir": { "type": "string" }
+  }
+}

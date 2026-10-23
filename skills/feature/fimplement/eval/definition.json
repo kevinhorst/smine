@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "4.0",
+  "skill": "fimplement",
+  "invocation": {
+    "text": "plans/2026-09-25-flagged-cp-prompt-wip-a36dd5b/design/raw.md"
+  },
+  "environment": {
+    "targetRepo": "claude-configs",
+    "checkoutRef": "a36dd5b4",
+    "overlay": "eval/plan.overlay.patch"
+  },
+  "budgets": {
+    "armUsd": 30,
+    "armTimeoutS": 7200,
+    "windowUsd": 150
+  },
+  "prerequisites": [
+    "eval/plan.overlay.patch"
+  ],
+  "check": [
+    "make",
+    "audit"
+  ],
+  "reference": "9e49be5e",
+  "model": "opus",
+  "effort": "high"
+}

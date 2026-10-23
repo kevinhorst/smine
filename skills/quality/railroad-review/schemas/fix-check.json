@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "required": [
+    "fixed",
+    "hits"
+  ],
+  "properties": {
+    "fixed": {
+      "type": "array",
+      "description": "finding ids whose defect no longer exists at the post-fix head, by a change that adds nothing the claim does not need",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hits": {
+      "type": "array",
+      "description": "what is not fixed: a defect still present, a new mechanism or fallback, a weakened guard or test, or a changed file no entry accounts for",
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "why"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "description": "the finding the hit belongs to; absent for a change no entry accounts for"
+          },
+          "file": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

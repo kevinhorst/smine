@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": [
+    "verdicts"
+  ],
+  "properties": {
+    "verdicts": {
+      "type": "array",
+      "description": "exactly one verdict per candidate, in input order, finding_id echoed",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "verdict",
+          "reason",
+          "probe",
+          "verdict_path"
+        ],
+        "properties": "$VERDICT_PROPS"
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+diff --git a/internal/smokereview/clamp.go b/internal/smokereview/clamp.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokereview/clamp.go
+@@ -0,0 +1,15 @@
++// Package smokereview is the change under review in railroad-review's smoke
++// fixture; nothing imports it.
++package smokereview
++
++// Clamp bounds value to the inclusive range low..high.
++func Clamp(value, low, high int) int {
++	switch {
++	case value < low:
++		return low
++	case value > high:
++		return high
++	default:
++		return value
++	}
++}
+diff --git a/internal/smokereview/clamp_test.go b/internal/smokereview/clamp_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokereview/clamp_test.go
+@@ -0,0 +1,58 @@
++package smokereview
++
++import (
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++)
++
++func TestClamp(t *testing.T) {
++	type testCase struct {
++		_id       string
++		_expected int
++
++		high  int
++		low   int
++		value int
++	}
++
++	tests := make([]*testCase, 0)
++
++	// below-low
++	tests = append(tests, &testCase{
++		_id:       "below-low",
++		_expected: 1,
++
++		high:  5,
++		low:   1,
++		value: -3,
++	})
++
++	// above-high
++	tests = append(tests, &testCase{
++		_id:       "above-high",
++		_expected: 5,
++
++		high:  5,
++		low:   1,
++		value: 9,
++	})
++
++	// inside-range
++	tests = append(tests, &testCase{
++		_id:       "inside-range",
++		_expected: 3,
++
++		high:  5,
++		low:   1,
++		value: 3,
++	})
++
++	// Run tests
++	for _, test := range tests {
++		t.Run(test._id, func(t *testing.T) {
++			clamped := Clamp(test.value, test.low, test.high)
++			assert.LessOrEqual(t, clamped, test.high)
++		})
++	}
++}

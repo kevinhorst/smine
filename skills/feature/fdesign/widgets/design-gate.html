@@ -1,0 +1,286 @@
+<style>
+.g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.col{border:0.5px solid var(--border);border-radius:12px;padding:10px;min-height:120px}
+.col.over{border-color:var(--border-accent);background:var(--bg-accent)}
+.it{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:0.5px solid var(--border);border-radius:var(--radius);padding:6px 10px 14px;margin-top:6px;font-size:14px;line-height:1.4;cursor:grab;background:var(--surface-2)}
+.lh{display:flex;justify-content:space-between;align-items:center}
+.lh i{font-size:16px;margin-right:4px}
+.gi-in{color:#00ebaa}
+.gi-out{color:var(--text-danger)}
+.gi-nc{color:var(--text-muted)}
+.mv{position:absolute;right:6px;bottom:3px;font-size:14px}
+.mv.to-out{color:var(--text-danger)}
+.mv.to-in{color:#00ebaa}
+.mv.to-nc{color:var(--text-muted)}
+.star{color:var(--text-warning);font-weight:500;margin-left:6px}
+.it .s{font-size:13px;color:var(--text-secondary)}
+.it .x{flex:1 1 auto;min-width:0}
+.it .b{display:flex;flex:none}
+.it button{border:none;padding:2px 4px;font-size:16px;color:var(--text-muted)}
+.it button.on{color:var(--text-primary)}
+.it input{width:100%;margin-top:6px;font-size:13px}
+.lbl{font-size:13px;color:var(--text-secondary)}
+.dc{border:0.5px solid var(--border);border-radius:12px;padding:12px;margin-top:10px}
+.dc.ok{border:1.5px solid #00ebaa;border-left-width:5px}
+.dc.no{border:1.5px solid var(--text-danger);border-left-width:5px}
+.dc.adj{border:1.5px solid var(--text-warning);border-left-width:5px}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px}
+.dh button{font-size:13px;padding:2px 10px;margin-left:6px}
+.dh button.on-ok{background:#00ebaa;color:#0b0b0b;border-color:#00ebaa;font-weight:500}
+.dh button.on-no{background:var(--fill-danger,var(--text-danger));color:var(--on-danger,#ffffff);border-color:var(--fill-danger,var(--text-danger));font-weight:500}
+.dh button.on-adj{background:var(--fill-warning,var(--text-warning));color:var(--on-warning,#0b0b0b);border-color:var(--fill-warning,var(--text-warning));font-weight:500}
+.dg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;font-size:14px;line-height:1.5}
+.dg .t{font-weight:500}
+.ad{font-size:13px;color:var(--text-secondary);margin-top:10px;padding-top:8px;border-top:0.5px solid var(--border)}
+.tot{font-size:13px;color:var(--text-secondary);background:var(--surface-1);border-radius:var(--radius);padding:8px 12px;margin-top:8px}
+.err{font-size:13px;color:var(--text-danger);min-height:18px;margin-top:6px}
+.hd{display:flex;justify-content:flex-start;align-items:center;margin-top:-10px}
+.brand{font-size:15px;font-weight:500;color:#00ebaa}
+.tl{font-size:14px;line-height:1.5;margin-top:6px}
+.tl .t{font-weight:500}
+.tl .s{color:var(--text-secondary)}
+.chg{font-size:12px;color:var(--text-warning);margin-left:8px}
+</style>
+<h2 class="sr-only">Design gate: read the TLDR, move, add, remove or comment on scope items, mark each decision OK, adjust or reject, then send the result as feedback</h2>
+<div style="padding:1rem 0">
+<div class="hd"><span class="brand">smine.</span></div>
+<div id="full">
+<h3 style="margin-top:18px">TLDR</h3>
+<div id="tldr"></div>
+<h3 style="margin-top:12px">Scope</h3>
+<div class="g" id="cols"></div>
+<div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+<input id="nt" type="text" placeholder="New scope item" style="flex:1 1 auto;min-width:0;width:auto">
+<select id="ng" style="flex:0 0 150px;width:150px"><option>In</option><option>Out</option><option>Not changed</option></select>
+<button type="button" id="add" style="flex:none">Add</button>
+</div>
+<div class="err" id="err"></div>
+</div>
+<h3 style="margin-top:12px" id="dh3">Decisions</h3>
+<div id="drop"></div>
+<div class="tot" id="tot"></div>
+<div id="decs"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+<span class="lbl" id="sum"></span>
+<span><button type="button" id="reset" style="margin-right:8px">Reset</button><button type="button" id="send">Send as feedback ↗</button></span>
+</div>
+<div class="err" id="serr" style="text-align:right"></div>
+</div>
+<script>
+const DATA = {};
+const delta=DATA.gate==="delta";
+if(delta){document.getElementById("full").style.display="none";document.getElementById("dh3").textContent="Changed decisions";}
+if(!DATA.totals)document.getElementById("tot").style.display="none";
+const GROUPS=[["In","in","ti-check","gi-in"],["Out","out","ti-x","gi-out"],["Not changed","notChanged","ti-minus","gi-nc"]];
+const MOVES={"In":["ti-arrow-down-left","to-in","moved in"],"Out":["ti-arrow-up-right","to-out","moved out"],"Not changed":["ti-arrow-right","to-nc","moved to not changed"]};
+const scope=DATA.scope||{};
+const D=DATA.decisions||[];
+const items=[];
+GROUPS.forEach(function(group){
+(scope[group[1]]||[]).forEach(function(item){items.push({t:item.title,s:item.line,g:group[0],o:group[0],a:false,r:false,c:"",e:false});});
+});
+const st={},cm={},er={},resets=[];
+let drag=-1,focus=null,focusEl=null;
+const cols=document.getElementById("cols"),decs=document.getElementById("decs"),err=document.getElementById("err"),serr=document.getElementById("serr"),sum=document.getElementById("sum"),nt=document.getElementById("nt");
+document.getElementById("tot").textContent=DATA.totals||"";
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
+const tldr=document.getElementById("tldr");
+(DATA.tldr||[]).forEach(function(t){
+const r=el("div","tl");
+r.appendChild(el("span","t",t.title));
+r.appendChild(el("span","s"," — "+t.line));
+tldr.appendChild(r);
+});
+const drop=document.getElementById("drop");
+(DATA.dropped||[]).forEach(function(d){
+const r=el("div","tl");
+r.appendChild(el("span","t",d.id+" "+d.title));
+r.appendChild(el("span","s"," — dropped: "+d.reason));
+drop.appendChild(r);
+});
+function renderScope(){
+cols.replaceChildren();
+GROUPS.forEach(function(group){
+const g=group[0];
+const c=el("div","col");
+const lh=el("div","lh");
+lh.appendChild(el("span","lbl",g));
+const gi=el("i","ti "+group[2]+" "+group[3]);
+gi.setAttribute("aria-hidden","true");
+lh.appendChild(gi);
+c.appendChild(lh);
+c.addEventListener("dragover",function(ev){ev.preventDefault();c.classList.add("over");});
+c.addEventListener("dragleave",function(){c.classList.remove("over");});
+c.addEventListener("drop",function(ev){ev.preventDefault();if(drag>=0){items[drag].g=g;drag=-1;renderScope();}});
+items.forEach(function(it,i){
+if(it.r||it.g!==g)return;
+const d=el("div","it");
+d.draggable=true;
+d.addEventListener("dragstart",function(ev){drag=i;ev.dataTransfer.setData("text/plain",String(i));});
+const tx=el("div","x");
+const tt=el("div","",it.t);
+const ss=el("span","star","*");
+ss.setAttribute("aria-label","adjusted");
+ss.style.display=it.c?"":"none";
+tt.appendChild(ss);
+tx.appendChild(tt);
+if(it.s)tx.appendChild(el("div","s",it.s));
+if(it.e){
+const ci=el("input");
+ci.type="text";
+ci.placeholder="Comment";
+ci.value=it.c;
+ci.setAttribute("aria-label","Comment on "+it.t);
+ci.draggable=false;
+ci.addEventListener("dragstart",function(ev){ev.preventDefault();ev.stopPropagation();});
+ci.addEventListener("input",function(){it.c=ci.value.trim();ss.style.display=it.c?"":"none";});
+tx.appendChild(ci);
+if(focus===it)focusEl=ci;
+}
+d.appendChild(tx);
+const bx=el("div","b");
+const cb=el("button",it.e?"on":"");
+cb.type="button";
+cb.setAttribute("aria-label",(it.e?"Drop comment on ":"Comment on ")+it.t);
+cb.setAttribute("aria-pressed",String(it.e));
+const cc=el("i","ti ti-message");
+cc.setAttribute("aria-hidden","true");
+cb.appendChild(cc);
+cb.addEventListener("click",function(){it.e=!it.e;it.c="";focus=it.e?it:null;renderScope();});
+bx.appendChild(cb);
+const x=el("button");
+x.type="button";
+x.setAttribute("aria-label","Remove "+it.t);
+const ic=el("i","ti ti-x");
+ic.setAttribute("aria-hidden","true");
+x.appendChild(ic);
+x.addEventListener("click",function(){it.r=true;renderScope();});
+bx.appendChild(x);
+d.appendChild(bx);
+const mv=!it.a&&it.g!==it.o?MOVES[g]:null;
+if(mv){
+const mi=el("i","ti "+mv[0]+" mv "+mv[1]);
+mi.setAttribute("aria-label",mv[2]);
+d.appendChild(mi);
+}
+c.appendChild(d);
+});
+cols.appendChild(c);
+});
+if(focusEl)focusEl.focus();
+focus=null;focusEl=null;
+}
+function cell(label,pair){
+const c=el("div");
+c.appendChild(el("div","lbl",label));
+c.appendChild(el("div","t",pair.title));
+c.appendChild(el("div","",pair.text));
+return c;
+}
+const MARKS=[["ok","OK","on-ok"],["adj","Adjust","on-adj"],["no","Reject","on-no"]];
+function marked(m){return D.filter(function(d){return st[d.id]===m;}).length;}
+function count(){
+const a=marked("ok"),j=marked("adj"),b=marked("no");
+sum.textContent=a+" OK, "+j+" to adjust, "+b+" rejected, "+(D.length-a-j-b)+" not marked";
+}
+D.forEach(function(d){
+const card=el("div","dc");
+const h=el("div","dh");
+const hid=el("span","lbl",d.id);
+const sr=el("span","star","*");
+sr.setAttribute("aria-label","adjusted");
+sr.style.display="none";
+hid.appendChild(sr);
+if(d.change)hid.appendChild(el("span","chg",d.change));
+h.appendChild(hid);
+const bs=el("span");
+const ce=el("div","err");
+er[d.id]=ce;
+const bts=MARKS.map(function(m){
+const b=el("button","",m[1]);
+b.type="button";
+b.addEventListener("click",function(){st[d.id]=st[d.id]===m[0]?"":m[0];ce.textContent="";serr.textContent="";paint();});
+bs.appendChild(b);
+return b;
+});
+function paint(){
+MARKS.forEach(function(m,i){
+const on=st[d.id]===m[0];
+card.classList.toggle(m[0],on);
+bts[i].classList.toggle(m[2],on);
+bts[i].setAttribute("aria-pressed",String(on));
+});
+sr.style.display=st[d.id]==="adj"?"":"none";
+count();
+}
+h.appendChild(bs);
+card.appendChild(h);
+const g=el("div","dg");
+g.appendChild(cell("Brief",d.brief));
+g.appendChild(cell("Decision",d.decision));
+g.appendChild(cell("Consequences",d.consequences));
+g.appendChild(cell("Why",d.why));
+card.appendChild(g);
+card.appendChild(el("div","ad",d.adds.adds+" · "+d.adds.reuses));
+const ci=el("input");
+ci.type="text";
+ci.placeholder="Comment";
+ci.setAttribute("aria-label","Comment on "+d.decision.title);
+ci.style.cssText="width:100%;margin-top:10px";
+ci.addEventListener("input",function(){cm[d.id]=ci.value.trim();ce.textContent="";serr.textContent="";});
+card.appendChild(ci);
+card.appendChild(ce);
+decs.appendChild(card);
+resets.push(function(){st[d.id]="";cm[d.id]="";ci.value="";ce.textContent="";paint();});
+});
+document.getElementById("reset").addEventListener("click",function(){
+for(let i=items.length-1;i>=0;i--){if(items[i].a)items.splice(i,1);}
+items.forEach(function(it){it.g=it.o;it.r=false;it.c="";it.e=false;});
+resets.forEach(function(f){f();});
+nt.value="";err.textContent="";serr.textContent="";
+renderScope();
+count();
+});
+document.getElementById("add").addEventListener("click",function(){
+const t=nt.value.trim();
+if(!t){err.textContent="Enter a scope item first";return;}
+items.push({t:t,s:"",g:document.getElementById("ng").value,o:"",a:true,r:false,c:"",e:false});
+nt.value="";
+renderScope();
+});
+nt.addEventListener("input",function(){err.textContent="";});
+document.getElementById("send").addEventListener("click",function(){
+const open=[];
+D.forEach(function(d){
+const isOpen=st[d.id]==="adj"&&!cm[d.id];
+if(isOpen){er[d.id].textContent="Say what to adjust before sending";open.push(d.id);}
+});
+serr.textContent=open.length?"Say what to adjust on "+open.join(", ")+" before sending":"";
+if(open.length)return;
+const lines=[delta?"Design gate feedback (changed decisions)":"Design gate feedback"];
+let edits=0;
+if(!delta){
+items.forEach(function(it){
+if(it.a&&!it.r){lines.push('Scope: added "'+it.t+'" to '+it.g);edits++;}
+else if(!it.a&&it.r){lines.push('Scope: removed "'+it.t+'" from '+it.o);edits++;}
+else if(!it.a&&it.g!==it.o){lines.push('Scope: moved "'+it.t+'" from '+it.o+" to "+it.g);edits++;}
+});
+if(!edits)lines.push("Scope: unchanged");
+items.forEach(function(it){if(it.c&&!it.r)lines.push('Scope comment: "'+it.t+'" — '+it.c);});
+}
+const name=function(d){return d.decision.title+" ("+d.id+")";};
+const reason=function(d){return cm[d.id]?" — "+cm[d.id]:"";};
+const yes=D.filter(function(d){return st[d.id]==="ok";}).map(name);
+lines.push("Decisions OK: "+(yes.length?yes.join(", "):"none"));
+D.forEach(function(d){
+if(st[d.id]==="no")lines.push("Decision rejected: "+name(d)+reason(d));
+else if(st[d.id]==="adj")lines.push("Decision adjust: "+name(d)+reason(d));
+else if(cm[d.id])lines.push("Decision comment: "+name(d)+reason(d));
+});
+const no=D.filter(function(d){return !st[d.id];}).map(name);
+lines.push("Decisions not marked: "+(no.length?no.join(", "):"none"));
+sendPrompt(lines.join("\n"));
+});
+renderScope();
+count();
+</script>

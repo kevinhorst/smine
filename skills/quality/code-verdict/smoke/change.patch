@@ -1,0 +1,22 @@
+diff --git a/internal/smokeverdict/counter.go b/internal/smokeverdict/counter.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokeverdict/counter.go
+@@ -0,0 +1,17 @@
++// Package smokeverdict is code-verdict's smoke fixture; nothing imports it.
++package smokeverdict
++
++import "sync"
++
++// CountWords counts each word, one goroutine per word.
++func CountWords(words []string) map[string]int {
++	counts := make(map[string]int)
++	var wg sync.WaitGroup
++	for _, word := range words {
++		wg.Go(func() {
++			counts[word]++
++		})
++	}
++	wg.Wait()
++	return counts
++}

@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "backlog store",
+  "description": "The /backlog skill's store — one JSON file per dest (<dest>/backlog.json), the sole format. Active items live in sections (epics, Icebox); done and rejected rows in archive; every board, skill or routine-runner write appends a changelog row. active and next id are derived (count of items; highest id across sections and archive plus one).",
+  "type": "object",
+  "required": ["archive", "changelog", "sections", "updated"],
+  "additionalProperties": false,
+  "definitions": {
+    "id": { "type": "string", "pattern": "^B-[0-9]{3,}$" },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "item": {
+      "type": "object",
+      "required": ["id", "added", "deps", "description", "evidence", "link", "pri", "route", "size", "status", "theme", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "added": { "$ref": "#/definitions/date", "description": "date the item entered the store" },
+        "deps": { "type": "array", "items": { "$ref": "#/definitions/id" }, "description": "item ids this item waits on" },
+        "description": { "type": "string", "minLength": 1, "pattern": "\\S", "description": "the dump's own lines for this item, verbatim and trimmed, then one 'Done when:' line; merges append later dump text under a date prefix; never title-only" },
+        "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "pointers named in the dump or the conversation — commits, files, sessions, docs; machine writers put 'commit <sha>' first, then bare session ids; a session pointer is the id or 'session <8+ hex prefix>', optionally '#<finding index>' to name one finding of its record" },
+        "link": { "type": "string", "description": "plan dir, PR, or the dispatched run's dated branch the routine runner writes; empty until then" },
+        "mined": {
+          "type": "object",
+          "required": ["date", "sessions"],
+          "additionalProperties": false,
+          "description": "set when the smine nightly mined this item from session records: the session of the run that mined it, the mining date and the session ids it came from",
+          "properties": {
+            "by": { "type": "string", "minLength": 1, "description": "session id of the run that mined the row; absent on rows mined before it was recorded" },
+            "date": { "$ref": "#/definitions/date" },
+            "sessions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "pri": { "enum": ["critical", "high", "medium", "low"] },
+        "route": { "type": "string", "description": "/idea | /concept | /fexplore | /fdesign | /skillroutine-create | direct | experiment, with args (e.g. '/fdesign','/skillroutine-create skill'); empty for track-only items" },
+        "size": { "enum": ["S", "M", "L", "XL"] },
+        "status": { "enum": ["raw", "shaped", "planning", "implementing", "review", "testing", "done", "parked", "rejected"] },
+        "theme": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120, "description": "the user's own wording, trimmed, at most 120 runes" }
+      }
+    },
+    "archiveRow": {
+      "type": "object",
+      "required": ["id", "date", "description", "link", "reason", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$", "description": "set on a proposal rejected on the Proposals page: its change commit; the reason is the user's" },
+        "date": { "$ref": "#/definitions/date" },
+        "description": { "type": "string", "minLength": 1 },
+        "link": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1, "description": "resolution on done rows, rejection reason on rejected rows" },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "properties": {
+    "archive": {
+      "type": "object",
+      "required": ["done", "rejected"],
+      "additionalProperties": false,
+      "properties": {
+        "done": { "type": "array", "items": { "$ref": "#/definitions/archiveRow" } },
+        "rejected": { "type": "array", "items": { "$ref": "#/definitions/archiveRow" } }
+      }
+    },
+    "changelog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["date", "delta"],
+        "additionalProperties": false,
+        "properties": {
+          "date": { "$ref": "#/definitions/date" },
+          "delta": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["items", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/definitions/item" } },
+          "name": { "type": "string", "minLength": 1, "description": "an epic name, unique in the store, or 'Icebox'" }
+        }
+      }
+    },
+    "updated": { "$ref": "#/definitions/date" }
+  }
+}

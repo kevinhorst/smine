@@ -1,0 +1,371 @@
+{
+  "type": "object",
+  "required": [
+    "dispositions",
+    "ranked_plan",
+    "unverified",
+    "funnel",
+    "permanent_checks",
+    "build_test",
+    "base_health",
+    "debunked",
+    "resolved",
+    "intentional_deviations",
+    "coverage_gaps",
+    "escalations",
+    "definition_of_done",
+    "recommendation",
+    "handoff_json",
+    "probes",
+    "probes_dir"
+  ],
+  "properties": {
+    "dispositions": {
+      "type": "array",
+      "description": "every claim and every duplicate, each with exactly one disposition — nothing may lack one",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "disposition"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "unverified",
+              "rejected-with-reason",
+              "duplicate-of",
+              "debunked"
+            ],
+            "description": "confirmed (second confirmation passed) | unverified (survived refutation but not demonstrable here — kept, flagged) | rejected-with-reason | duplicate-of | debunked (refuted)"
+          },
+          "reason": {
+            "type": "string",
+            "description": "required for rejected-with-reason, debunked, unverified (the concrete missing precondition), and for any disposition that overrides the handed-in verdict"
+          },
+          "duplicate_of": {
+            "type": "string",
+            "description": "the surviving finding_id, required for duplicate-of"
+          },
+          "probe": {
+            "type": "string",
+            "description": "the verdict's probe field carried over: a probe rule id, \"none: <why>\", or \"manual: <kind>\""
+          },
+          "evidence": {
+            "type": "string",
+            "description": "the verdict's decisive line — probe run or first evidence read"
+          }
+        },
+        "if": {
+          "required": [
+            "disposition"
+          ],
+          "properties": {
+            "disposition": {
+              "enum": [
+                "confirmed",
+                "debunked"
+              ]
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "ranked_plan": {
+      "type": "array",
+      "description": "the confirmed findings as one ranked fix plan, each with a route; severity and its effect/exposure cells carried verbatim",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "severity",
+          "effect",
+          "exposure",
+          "file",
+          "line",
+          "fix",
+          "route",
+          "route_reason"
+        ],
+        "properties": "$FINDING_PROPS"
+      }
+    },
+    "unverified": {
+      "type": "array",
+      "description": "findings kept but not demonstrable in this environment — each with the concrete missing precondition, never a bare \"not demonstrated\"",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "reason"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "funnel": {
+      "type": "object",
+      "description": "the claim funnel across the round — stated as one line in the gate presentation",
+      "required": [
+        "produced",
+        "confirmed",
+        "unverified",
+        "duplicates",
+        "rejected",
+        "debunked"
+      ],
+      "properties": {
+        "produced": {
+          "type": "integer"
+        },
+        "confirmed": {
+          "type": "integer"
+        },
+        "unverified": {
+          "type": "integer"
+        },
+        "duplicates": {
+          "type": "integer"
+        },
+        "rejected": {
+          "type": "integer"
+        },
+        "debunked": {
+          "type": "integer"
+        }
+      }
+    },
+    "permanent_checks": {
+      "type": "array",
+      "description": "for each confirmed finding that is a recurring class rather than a one-off: the durable check that would catch the class (ACDSL rule, lint rule, assertion, golden file, test) — the dispatcher offers to add them, never adds unasked; empty when every finding is a one-off",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "check"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "check": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "build_test": {
+      "type": "object",
+      "description": "the rules tool's buildtest result at the review head, copied through verbatim",
+      "required": [
+        "build",
+        "tests"
+      ],
+      "properties": {
+        "build": {
+          "type": "string"
+        },
+        "tests": {
+          "type": "string"
+        }
+      }
+    },
+    "base_health": {
+      "type": "object",
+      "description": "the rules tool's buildtest result at the review base, copied through verbatim",
+      "required": [
+        "build",
+        "tests"
+      ],
+      "properties": {
+        "build": {
+          "type": "string"
+        },
+        "tests": {
+          "type": "string"
+        }
+      }
+    },
+    "debunked": {
+      "type": "array",
+      "description": "findings refuted by their second confirmation",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "reason"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "resolved": {
+      "type": "array",
+      "description": "findings already fixed out of band — finding to fixing-commit provenance",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "fixing_commit"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "fixing_commit": {
+            "type": "string",
+            "description": "the commit hash that fixed it"
+          }
+        }
+      }
+    },
+    "intentional_deviations": {
+      "type": "array",
+      "description": "deviations to canonicalize rather than fix",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "canonicalize_as"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "canonicalize_as": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "coverage_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "manifest paths of lanes that did not finish — their files are the uncovered assignments"
+    },
+    "definition_of_done": {
+      "type": "array",
+      "description": "the DoD walk — happens here in consolidation, it is not a direction",
+      "items": {
+        "type": "object",
+        "required": [
+          "criterion",
+          "status"
+        ],
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "PASS | FAIL | N/A"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "description": "suspected but undemonstrated defects in migrations, auth, concurrency, money, a public API contract, or persisted data — surfaced FIRST in every presentation of the round, never one unverified line among many; empty when none",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "why"
+        ],
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "APPROVE",
+        "CONDITIONAL",
+        "REJECT"
+      ],
+      "description": "APPROVE (no blocking finding — new, MINOR or worse, above ignore-level; NIT and INFO never block) | CONDITIONAL (blocking findings, mergeable once fixed) | REJECT (fundamental rework)"
+    },
+    "handoff_json": {
+      "type": "string",
+      "description": "absolute path of the round's consolidated review.json — the single handoff artifact; no review.md exists"
+    },
+    "probes": {
+      "type": "array",
+      "description": "one entry per probe the refuters and verifiers authored — THE probe→fixture→verdict index, mapped from the verdicts' probe/script/fixture fields; there is no sidecar verdicts file. Empty in non-ACDSL repos or when no probes were authored",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "script",
+          "fixture",
+          "registry",
+          "verdict",
+          "finding_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "the probe rule id (e.g. PROBE-R4-03)"
+          },
+          "script": {
+            "type": "string",
+            "description": "the probe executable, path relative to probes_dir"
+          },
+          "fixture": {
+            "type": "string",
+            "description": "the minimal fail fixture the probe went RED on in the validity check, path relative to probes_dir"
+          },
+          "registry": {
+            "type": "string",
+            "description": "the probe's merged registry, path relative to probes_dir"
+          },
+          "verdict": {
+            "type": "string",
+            "description": "the real-tree result: \"RED on <file:line>\" | \"GREEN\""
+          },
+          "finding_id": {
+            "type": "string",
+            "description": "the finding this probe settled"
+          }
+        }
+      }
+    },
+    "probes_dir": {
+      "type": "string",
+      "description": "absolute path of round-{r}/probes/ when any probe was authored — empty string otherwise"
+    }
+  }
+}

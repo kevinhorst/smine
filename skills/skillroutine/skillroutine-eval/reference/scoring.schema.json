@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "golden family scoring",
+  "description": "How findings match a golden family, what each severity costs in minutes, and the verdict bounds — one file beside the goldens, shared by every definition scored against them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["judgeGuide", "minutes", "escapeMultiplier", "triageLine", "fixFactor", "thresholds"],
+  "properties": {
+    "judgeGuide": { "type": "string", "minLength": 1 },
+    "minutes": {
+      "type": "object",
+      "description": "fix minutes per severity — the unavoidable work a correctly found and classified finding costs",
+      "required": ["BLOCKER", "MAJOR", "MINOR", "NIT", "INFO"],
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    },
+    "escapeMultiplier": {
+      "type": "object",
+      "description": "factor on a severity's minutes when its defect is missed and merged",
+      "required": ["BLOCKER", "MAJOR", "MINOR", "NIT", "INFO"],
+      "additionalProperties": { "type": "number", "minimum": 1 }
+    },
+    "triageLine": {
+      "type": "string",
+      "enum": ["BLOCKER", "MAJOR", "MINOR", "NIT", "INFO"],
+      "description": "lowest severity a human handles; a finding truly at or above it but reported below it is never looked at and counts as escaped"
+    },
+    "fixFactor": {
+      "type": "object",
+      "description": "per severity, the share of its minutes that reviewing a machine fix costs; a fix the fix check did not confirm costs that review plus the full minutes; an open finding costs full minutes",
+      "required": ["BLOCKER", "MAJOR", "MINOR", "NIT", "INFO"],
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "thresholds": {
+      "type": "object",
+      "propertyNames": { "enum": ["recall", "review_score", "lost_minutes", "escaped_minutes", "false_positive_minutes", "false_positives", "misclassified"] },
+      "additionalProperties": { "type": "number" }
+    }
+  }
+}

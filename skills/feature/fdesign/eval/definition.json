@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "4.0",
+  "skill": "fdesign",
+  "invocation": {
+    "text": "Add a -json flag to cmd/skilleval fold that prints the written eval.json to stdout"
+  },
+  "environment": {
+    "targetRepo": "claude-configs",
+    "checkoutRef": "f1be0a48"
+  },
+  "budgets": {
+    "armUsd": 30,
+    "armTimeoutS": 7200,
+    "windowUsd": 150
+  },
+  "model": "opus",
+  "effort": "high"
+}

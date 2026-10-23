@@ -1,0 +1,3170 @@
+[
+  {
+    "claim": "The headless bootstrap wrapper overwrites the main checkout's .claude/settings.local.json with the bare skill-overrides overlay, destroying operator keys that sync_skills.sh deliberately preserves by merging.",
+    "file": "cmd/bootstrap/run.sh",
+    "finding_id": "G2-001",
+    "fix": "",
+    "line": 74,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "Round cleanup passes claude-review/* branch names to remove_agent_worktrees.sh, whose only target arm accepts claude/* | claude-routines/*, so every lane/refuter/station worktree and branch is left behind.",
+    "file": "skills/quality/railroad-review/workflows/railroad-review.js",
+    "finding_id": "G2-002",
+    "fix": "",
+    "line": 138,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "The casual-audience SMINE_AUTO_APPLY=decide default never fires on a launchd run: run.sh defaults to decide only when the variable is empty, but the plist template install.sh copies pins it to never.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-003",
+    "fix": "",
+    "line": 45,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "handleWelcomeBootstrap writes the multi-hour bootstrap child's output to os.TempDir()/smine-bootstrap.log and never logs the pid, while spec-5 requires a log under the routine logs dir plus a logged pid.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-004",
+    "fix": "",
+    "line": 71,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "The new permissions kind (step 4 appends the proposal's rule to permissions.allow) is reachable from step 5 auto-apply, whose candidate set in always mode with no dimensions is every proposed entry, so allow rules can widen without a vote.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-005",
+    "fix": "",
+    "line": 32,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The policy base is resolved from the working (branch-editable) policy's base_ref, so an agent branch can pick its own base (base_ref=HEAD or an unresolvable ref plus mode free) and neuter the gated/strict gate.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-006",
+    "fix": "",
+    "line": 197,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "GitChangedFiles uses git diff --name-only with default rename detection, so a renamed-away declaration file reports only its new path and ruleDelta never sees the removed base-side rules.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-007",
+    "fix": "",
+    "line": 47,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The orchestrate-stage reconcile copies every repos.json path into ~/.claude/settings.json additionalDirectories with no record of whether the operator granted access, so a repo added with the grant unticked is granted on the next nightly.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-008",
+    "fix": "",
+    "line": 303,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "surfaceDelta compares raw working-tree bytes to git show blob bytes, so on a CRLF checkout (core.autocrlf=true) unchanged policy surface files are reported as changed.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-009",
+    "fix": "",
+    "line": 315,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The diff deletes the four permissions.ask rules for Edit/Write on *.acdsl and acdsl/** from the deployed settings template; no spec asks for it and the policy guard exits 0 in free mode, so nothing replaces the confirmation.",
+    "file": "settings/claude_code/settings.json",
+    "finding_id": "G2-010",
+    "fix": "",
+    "line": 105,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "handleProfileSave persists the new audience before taking the skills-sync lock and decides whether to sync by comparing against the stored audience, so a retry after a 409 or a failed skills.Sync skips the sync.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-011",
+    "fix": "",
+    "line": 88,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "handleReposAdd runs git init -b main on a plain folder before the registry's duplicate-name rejection, so a rejected duplicate add still mutates the folder.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-012",
+    "fix": "",
+    "line": 585,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The literal route GET /sessions/archive shadows GET /sessions/{scope} for a mining folder named 'archive', which neither Repo.Validate nor sessions.validateScopeName reserves.",
+    "file": "internal/server/server.go",
+    "finding_id": "G2-013",
+    "fix": "",
+    "line": 319,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "Repo.Validate caps Label with len(r.Label), a byte count, while the form's maxlength and error text count characters, so an 80-character label with umlauts is rejected.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-014",
+    "fix": "",
+    "line": 37,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "install.ps1 treats a missing shellcheck as a hard prerequisite (appended to $missing, which throws without winget or when declined) instead of the non-fatal warning correctness-127 requires.",
+    "file": "install.ps1",
+    "finding_id": "G2-015",
+    "fix": "",
+    "line": 20,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The Trim stage enforcing --max-proposals-mined counts and trims only proposals/{routines,context,skills}.json although smine-permissions is now a proposal dimension writing proposals/permissions.json, so the global cap is exceeded.",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-016",
+    "fix": "",
+    "line": 176,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "smine-batch applies --last on top of --since instead of letting --since win, and session-mine.js forwards both flags, so /smine --since D --last n mines only n sessions.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-017",
+    "fix": "",
+    "line": 44,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The session-mine workflow never forwards --repos to smine-batch: its args contract and mineArgs omit repos, though --repos is smine-batch's only folder-routing input.",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-018",
+    "fix": "",
+    "line": 116,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "config-ui-fidelity-gate.js declares it is invoked by /fimplement before the first commit and the fimplement changelog promises it, but no skill invokes it, so the gate never runs.",
+    "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "finding_id": "G2-019",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "foreign-toolchain-pretag.js says /package-commit invokes it before a release tag and the changelog promises a blocking pre-tag compile, but package-commit has no tag step and never invokes it.",
+    "file": "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "finding_id": "G2-020",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The skill-eval routine's new fexplore defaults point ROUTINE_EVAL_QUALITY_CONTEXT at plans/archived/applied_probe_safety/design/exploration.md, which exists in no ref; the fexplore brief's concept path is equally absent.",
+    "file": "routines/skill-eval/com.smine.routine.skill-eval.plist.template",
+    "finding_id": "G2-021",
+    "fix": "",
+    "line": 27,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "routines/README.md documents a skill-eval-fexplore routine (table row, kickstart recipe) whose directory commit 1575690 deleted; the row also splits the table with a blank line.",
+    "file": "routines/README.md",
+    "finding_id": "G2-022",
+    "fix": "",
+    "line": 18,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The new build-install target's help line is labeled '## build:', so make help prints build twice and never lists build-install.",
+    "file": "Makefile",
+    "finding_id": "G2-023",
+    "fix": "",
+    "line": 81,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "subsystem-grounding.js declares /fdesign invokes it for multi-subsystem drivers, but fdesign SKILL.md never names it, so the workflow is unreachable.",
+    "file": "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "finding_id": "G2-024",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "After smine-permissions became a fifth dimension, the dimension lists at smine SKILL.md L20, L33, L49 and smine-batch SKILL.md L104 still name only four.",
+    "file": "skills/smine/smine/SKILL.md",
+    "finding_id": "G2-025",
+    "fix": "",
+    "line": 33,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The rootCause doc comment now sits above func worktreeSessions, leaving rootCause undocumented and worktreeSessions with a misleading doc.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-026",
+    "fix": "",
+    "line": 174,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "Profile parsing/dev-mode resolution, skill-overlay copy and repos-roster logic are duplicated between cmd/bootstrap/run.sh and routines/smine-nightly/run.sh.",
+    "file": "cmd/bootstrap/run.sh",
+    "finding_id": "G2-027",
+    "fix": "",
+    "line": 54,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "build-install depends on build, and install.sh:77 runs make build again unconditionally, so every build-install builds twice.",
+    "file": "Makefile",
+    "finding_id": "G2-028",
+    "fix": "",
+    "line": 83,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "skills/README.md § Workflows hand-keeps five workflow sections also kept in docs/workflows.md; this change updated only docs/workflows.md, so the copies have already drifted.",
+    "file": "skills/README.md",
+    "finding_id": "G2-029",
+    "fix": "",
+    "line": 84,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The archive, unarchive and delete handlers set HX-Redirect even when the store operation fails; htmx navigates away and the error never renders.",
+    "file": "internal/server/sessions.go",
+    "finding_id": "G2-030",
+    "fix": "",
+    "line": 177,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "On an orchestrate rejection the untracked, non-ignored .orchestrate-report trips the whole-tree clean check before it is removed, so the stage reports status 70 instead of a rejection.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-031",
+    "fix": "",
+    "line": 328,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The fidelity gate passes only when save_button_count === 1 for every touched template, failing form-less templates and profile.html, which spec-12 gives two save buttons.",
+    "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "finding_id": "G2-032",
+    "fix": "",
+    "line": 81,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The clean-tree precondition applies to both modes, but bootstrap mode exists to judge uncommitted pipeline output left by cmd/bootstrap/run.sh.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-033",
+    "fix": "",
+    "line": 18,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "routineSession's cwd/prefix matching has no test.",
+    "file": "internal/server/routines.go",
+    "finding_id": "G2-034",
+    "fix": "",
+    "line": 236,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The routine-detail run history (data-stamp, run band, truncated result) has no test; spec-11 TestRoutineDetailRunHistory is absent.",
+    "file": "internal/server/templates/routine_detail.html",
+    "finding_id": "G2-035",
+    "fix": "",
+    "line": 34,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "No /repos/add test adds a path that already holds .git; spec-5's 'git dir untouched' case is missing.",
+    "file": "internal/server/repos_test.go",
+    "finding_id": "G2-036",
+    "fix": "",
+    "line": 829,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The delete handler's statusCache.Delete is unasserted.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-037",
+    "fix": "",
+    "line": 610,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "styleTestTarget and POST /profile/test have no test.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-038",
+    "fix": "",
+    "line": 181,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "handleWelcomeBootstrapStatus and resolveBootstrapSession have no test.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-039",
+    "fix": "",
+    "line": 115,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "No test checks that every {{t \"…\"}} key in the templates exists in germanCatalog, which spec-12 requires.",
+    "file": "internal/server/i18n.go",
+    "finding_id": "G2-040",
+    "fix": "",
+    "line": 108,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "No test covers the legacy audience value non-developer, which spec-8 requires to read as developer.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-041",
+    "fix": "",
+    "line": 26,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "policyBase's origin/HEAD resolution branch is never reached by any test.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-042",
+    "fix": "",
+    "line": 210,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The unchanged-file case passes against an always-reload refreshIfChanged, so it does not prove the no-reload path.",
+    "file": "internal/repos/registry_test.go",
+    "finding_id": "G2-043",
+    "fix": "",
+    "line": 176,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "SyncAll's default-disabled gate is untested; only the marker scan has tests.",
+    "file": "internal/routines/bootstrap_darwin.go",
+    "finding_id": "G2-044",
+    "fix": "",
+    "line": 45,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "sync_settings.sh now expands {{PEEK_CONTROL_PORT}}, but test_sync_settings.sh asserts no expansion.",
+    "file": "cmd/sync/sync_settings.sh",
+    "finding_id": "G2-045",
+    "fix": "",
+    "line": 61,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The new acdsl-policy-guard hook has no shell test.",
+    "file": "cmd/hooks/acdsl-policy-guard.sh",
+    "finding_id": "G2-046",
+    "fix": "",
+    "line": 42,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The casual/developer gating in the nightly wrapper has no shell test; spec-9's nightly-threading test does not exist.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-047",
+    "fix": "",
+    "line": 43,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "Batch JSONs now land under repo-named folders, outside ACDSL-JSON-002's unchanged ^sessions/(personal|work)/json/ anchor, so the new permissions block is never schema-checked.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-048",
+    "fix": "",
+    "line": 34,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "smine-permissions writes proposals/permissions.json, which ACDSL-JSON-001's anchor does not match, so the new kind is never schema-checked.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-049",
+    "fix": "",
+    "line": 31,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The permissions capture records granted/denied command lines verbatim into committed batch JSON and proposals, with no redaction of secret-bearing argv.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-050",
+    "fix": "",
+    "line": 58,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "Already-released fimplement changelog versions 1.21-1.23 were renumbered and reused for new entries.",
+    "file": "skills/feature/fimplement/changelog.json",
+    "finding_id": "G2-051",
+    "fix": "",
+    "line": 3,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "skills/README.md keeps stale session-mine args and still names the retired claude/railroad-* branch namespace.",
+    "file": "skills/README.md",
+    "finding_id": "G2-052",
+    "fix": "",
+    "line": 64,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New \"2006-01-02\" layout literals instead of time.DateOnly.",
+    "file": "internal/server/welcome.go",
+    "finding_id": "G2-053",
+    "fix": "",
+    "line": 292,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new git-init step nests three ifs deep inside the op closure.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-054",
+    "fix": "",
+    "line": 583,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New booleans refresh and worktreeStatusPage.Cached are not predicate-named.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-055",
+    "fix": "",
+    "line": 320,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new reload-failure log line lacks the Func: Message form.",
+    "file": "internal/server/sessions.go",
+    "finding_id": "G2-056",
+    "fix": "",
+    "line": 209,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "handleSessionsArchiveTab copies handleSessionsScope's scope-name loop.",
+    "file": "internal/server/sessions.go",
+    "finding_id": "G2-057",
+    "fix": "",
+    "line": 129,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Type statusEntry is declared before statusCache, against alphabetical type-block order.",
+    "file": "internal/server/statuscache.go",
+    "finding_id": "G2-058",
+    "fix": "",
+    "line": 11,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The mu comment restates its placement and quotes a rule instead of recording intent.",
+    "file": "internal/server/statuscache.go",
+    "finding_id": "G2-059",
+    "fix": "",
+    "line": 21,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "profileTestAnswer/handleProfileTest duplicate welcome.go's claude-envelope parse and handler switch.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-060",
+    "fix": "",
+    "line": 223,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A 9-argument shell.Run call sits on one line.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-061",
+    "fix": "",
+    "line": 147,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Boolean local audienceChanged is not predicate-named.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-062",
+    "fix": "",
+    "line": 88,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New writeFileAtomic duplicates saveAutoApplyRules' tmp+fsx.ReplaceFile writer.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-063",
+    "fix": "",
+    "line": 200,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Config field presentationProfile.DevMode is a bare boolean, not Is<X>Active.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-064",
+    "fix": "",
+    "line": 22,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "bootstrapEnv parameters are not in alphabetical order.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-065",
+    "fix": "",
+    "line": 169,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A 6-argument exec.CommandContext with a nested filepath.Join sits on one line.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-066",
+    "fix": "",
+    "line": 82,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A multiline 5-argument Sprintf puts two args per line and closes on an argument line.",
+    "file": "internal/server/overview.go",
+    "finding_id": "G2-067",
+    "fix": "",
+    "line": 458,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Bool expandMarkers (local and param) is not predicate-named.",
+    "file": "internal/server/config_sync.go",
+    "finding_id": "G2-068",
+    "fix": "",
+    "line": 116,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestPresentationStore_SaveProfileSelection's t.Run body declares setup and branches before the call.",
+    "file": "internal/server/presentation_test.go",
+    "finding_id": "G2-069",
+    "fix": "",
+    "line": 348,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "t.Run bodies hold declarations and require.NoError.",
+    "file": "internal/server/profilesettings_test.go",
+    "finding_id": "G2-070",
+    "fix": "",
+    "line": 152,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "If conditions at 89 and 98 hold two && operators each.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-071",
+    "fix": "",
+    "line": 89,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Single-line 6-argument stateNoteFor calls with a nested Sprintf.",
+    "file": "internal/server/proposals.go",
+    "finding_id": "G2-072",
+    "fix": "",
+    "line": 453,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Grouping comments in bootstrapEnv, which is neither a test nor Validate.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-073",
+    "fix": "",
+    "line": 172,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Grouping comments in the handleProfileSave HTTP handler.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-074",
+    "fix": "",
+    "line": 71,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New error message starts lower-case against the dominant capitalized form.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-075",
+    "fix": "",
+    "line": 586,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestProposalsGroupTitlesNonDeveloper is the last NonDeveloper spelling after the casual rename.",
+    "file": "internal/server/presentation_test.go",
+    "finding_id": "G2-076",
+    "fix": "",
+    "line": 223,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "statuses is declared inside the t.Run body.",
+    "file": "internal/server/repos_test.go",
+    "finding_id": "G2-077",
+    "fix": "",
+    "line": 287,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No blank line after the err guard.",
+    "file": "internal/server/config_sync.go",
+    "finding_id": "G2-078",
+    "fix": "",
+    "line": 121,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No blank line after the guard blocks ending at 64 and 185.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-079",
+    "fix": "",
+    "line": 65,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "RunSync's body is a parallel copy of Run's, differing only in timeout and prefix.",
+    "file": "internal/shell/shell.go",
+    "finding_id": "G2-080",
+    "fix": "",
+    "line": 50,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "LoadFragment's body is a parallel copy of Load's, differing only by ExpandInstallMarkers.",
+    "file": "internal/config/config.go",
+    "finding_id": "G2-081",
+    "fix": "",
+    "line": 212,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "GitBranch re-issues git rev-parse --abbrev-ref HEAD beside the new shellGitAbbrevRef.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-082",
+    "fix": "",
+    "line": 26,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "ArchivedFolders repeats Store.Reload's MdReports predicate verbatim.",
+    "file": "internal/sessions/sessions.go",
+    "finding_id": "G2-083",
+    "fix": "",
+    "line": 335,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "fmt.Errorf lacks the validateScopeName: prefix.",
+    "file": "internal/sessions/sessions.go",
+    "finding_id": "G2-084",
+    "fix": "",
+    "line": 227,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "In-body comment restates the doc comment.",
+    "file": "internal/sessions/sessions.go",
+    "finding_id": "G2-085",
+    "fix": "",
+    "line": 224,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "If condition holds two && operators.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-086",
+    "fix": "",
+    "line": 95,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Single-line 7-argument shell.Run calls (458, 463).",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-087",
+    "fix": "",
+    "line": 458,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A composite literal is inlined as a call argument.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-088",
+    "fix": "",
+    "line": 126,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Repo.Validate hard-codes \"archived\", which internal/sessions owns as archivedDirName.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-089",
+    "fix": "",
+    "line": 48,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "If condition carries two boolean operators.",
+    "file": "internal/routines/bootstrap_darwin.go",
+    "finding_id": "G2-090",
+    "fix": "",
+    "line": 81,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "\"enabled\"/\"disabled\" domain states repeated as bare literals.",
+    "file": "internal/routines/bootstrap_darwin.go",
+    "finding_id": "G2-091",
+    "fix": "",
+    "line": 41,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "overrideLabels returns map[string]string for a closed enabled/disabled set.",
+    "file": "internal/routines/bootstrap_darwin.go",
+    "finding_id": "G2-092",
+    "fix": "",
+    "line": 69,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Diagnostic literal fields are not in alphabetical order.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-093",
+    "fix": "",
+    "line": 224,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "LoadPolicy's absent branch repeats parsePolicy's defaults literal.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-094",
+    "fix": "",
+    "line": 383,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "dist.go stats policy.json after LoadPolicy already mapped absence to defaults.",
+    "file": "internal/acdsl/dist.go",
+    "finding_id": "G2-095",
+    "fix": "",
+    "line": 240,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "EvalDir.Dir's comment says basename while it now holds a nested relative path.",
+    "file": "internal/evals/evals.go",
+    "finding_id": "G2-096",
+    "fix": "",
+    "line": 37,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The load-and-append loop body is duplicated for flat and nested listings.",
+    "file": "internal/evals/evals.go",
+    "finding_id": "G2-097",
+    "fix": "",
+    "line": 257,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New var otherTriggerKeys and type scheduleInfo sit after free functions.",
+    "file": "internal/routines/plist.go",
+    "finding_id": "G2-098",
+    "fix": "",
+    "line": 78,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "An if-guarded install.env write sits inside the t.Run body.",
+    "file": "internal/config/installenv_test.go",
+    "finding_id": "G2-099",
+    "fix": "",
+    "line": 61,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestLoadPolicy's t.Run body has a setup guard and conditional asserts.",
+    "file": "internal/acdsl/policy_test.go",
+    "finding_id": "G2-100",
+    "fix": "",
+    "line": 134,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "GitRevParse has no non-test caller.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-101",
+    "fix": "",
+    "line": 78,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "One-line append(policyDiagnostic(..., fmt.Sprintf(...))) nested calls.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-102",
+    "fix": "",
+    "line": 93,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The PEEK_CONTROL_PORT key literal is repeated with no named constant.",
+    "file": "internal/config/installenv.go",
+    "finding_id": "G2-103",
+    "fix": "",
+    "line": 20,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New registrySnapshot type sits above registryFile, breaking alphabetical type order.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-104",
+    "fix": "",
+    "line": 214,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New ArchivedFolders if condition has two && operators.",
+    "file": "internal/sessions/sessions.go",
+    "finding_id": "G2-105",
+    "fix": "",
+    "line": 337,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Reworked TestOverrideLabels uses an anonymous []struct case table.",
+    "file": "internal/routines/launchctl_darwin_test.go",
+    "finding_id": "G2-106",
+    "fix": "",
+    "line": 20,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New first-party type peekID spells ID while the repo spells Id.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-107",
+    "fix": "",
+    "line": 216,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "peekID's exported fields are not alphabetical.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-108",
+    "fix": "",
+    "line": 217,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "peekID.ControlPort is never read.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-109",
+    "fix": "",
+    "line": 220,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Type peekID is declared after free function main.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-110",
+    "fix": "",
+    "line": 216,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "peekIdentity errors lack the function prefix and external errors are returned unwrapped.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-111",
+    "fix": "",
+    "line": 231,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "else-if follows a returning branch.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-112",
+    "fix": "",
+    "line": 254,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "startPeek parameters after ctx are not alphabetical.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-113",
+    "fix": "",
+    "line": 245,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "One-line 7-arg startPeek call and 6-arg log.Printf.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-114",
+    "fix": "",
+    "line": 128,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "One-line 7-arg startPeek call in the new test.",
+    "file": "cmd/configserver/main_test.go",
+    "finding_id": "G2-115",
+    "fix": "",
+    "line": 107,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Response variable named resp, against the repo's response spelling.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-116",
+    "fix": "",
+    "line": 225,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The drop-filter jq program is repeated and REPO_LOCAL_SETTINGS is reassigned.",
+    "file": "cmd/sync/sync_skills.sh",
+    "finding_id": "G2-117",
+    "fix": "",
+    "line": 287,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Identical squash-containment git-log line in both case arms.",
+    "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+    "finding_id": "G2-118",
+    "fix": "",
+    "line": 203,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The pointer comment re-lists filter_untracked's exclusions and has already drifted.",
+    "file": "cmd/worktrees/remove_agent_worktrees.sh",
+    "finding_id": "G2-119",
+    "fix": "",
+    "line": 68,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Added startPeek log lines lack the Func: Context: Message form.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-120",
+    "fix": "",
+    "line": 252,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "writeInstallEnv parameters are not alphabetical.",
+    "file": "cmd/configserver/install_windows.go",
+    "finding_id": "G2-121",
+    "fix": "",
+    "line": 139,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Header husk list omits .serena, which line 91 now allows.",
+    "file": "cmd/hooks/worktree-sessionstart.sh",
+    "finding_id": "G2-122",
+    "fix": "",
+    "line": 19,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "eval_verdicts doc omits the squashed:n field it now emits.",
+    "file": "cmd/worktrees/_lib/verdict.sh",
+    "finding_id": "G2-123",
+    "fix": "",
+    "line": 406,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The __row comment names 2 env vars while 4 are required.",
+    "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+    "finding_id": "G2-124",
+    "fix": "",
+    "line": 64,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "required_files doc says 'main conversation only' though subagents now owe invoked-skill spills.",
+    "file": "cmd/hooks/read-gate.sh",
+    "finding_id": "G2-125",
+    "fix": "",
+    "line": 70,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "`grep ... && fail` under set -e, contrary to the repo's shell doctrine.",
+    "file": "cmd/tests/test_bootstrap_wrapper.sh",
+    "finding_id": "G2-126",
+    "fix": "",
+    "line": 47,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The Casual presentation bullets are pasted byte-identical into four smine dimension skills.",
+    "file": "skills/smine/smine-context/SKILL.md",
+    "finding_id": "G2-127",
+    "fix": "",
+    "line": 32,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "smine-permissions uses a three-part version 0.1.0 unlike every other skill.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-128",
+    "fix": "",
+    "line": 5,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The skill body names a specific person.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-129",
+    "fix": "",
+    "line": 55,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Template guidance gains RULE-PLAN ids, which skill prose must not carry.",
+    "file": "skills/feature/fdesign/SKILL.md",
+    "finding_id": "G2-130",
+    "fix": "",
+    "line": 127,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Bare skill-internal ids instead of title links.",
+    "file": "skills/quality/dod-report/SKILL.md",
+    "finding_id": "G2-131",
+    "fix": "",
+    "line": 64,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "An 11-key args object is inlined in one code span, past the 6-item limit.",
+    "file": "skills/smine/smine/SKILL.md",
+    "finding_id": "G2-132",
+    "fix": "",
+    "line": 49,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Seven terminal outcomes enumerated inline, past the 6-item limit.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-133",
+    "fix": "",
+    "line": 43,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "blocking_errors is the only snake_case JS local in the repo.",
+    "file": "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "finding_id": "G2-134",
+    "fix": "",
+    "line": 66,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Stage A/B/C comments name phases that meta.phases calls Ground and Fold.",
+    "file": "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "finding_id": "G2-135",
+    "fix": "",
+    "line": 56,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Workflow position line lacks the README.md § Skill map link the skill format requires.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-136",
+    "fix": "",
+    "line": 19,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Workflow position line lacks the README.md § Skill map link the skill format requires.",
+    "file": "skills/smine/smine-style/SKILL.md",
+    "finding_id": "G2-137",
+    "fix": "",
+    "line": 19,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Wrapping the empty-state text in t moved the sentence period, changing developer output.",
+    "file": "internal/server/templates/_batch_list.html",
+    "finding_id": "G2-138",
+    "fix": "",
+    "line": 13,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A comment still names the retired Non-developer mode.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-139",
+    "fix": "",
+    "line": 140,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "MINE_SCHEMA's batchesWritten example names the retired sessions/work scope.",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-140",
+    "fix": "",
+    "line": 77,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "profileTestAnswer has no test.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-141",
+    "fix": "",
+    "line": 223,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No casual-profile test proves developer routes still render when requested directly.",
+    "file": "internal/server/server_test.go",
+    "finding_id": "G2-142",
+    "fix": "",
+    "line": 49,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No test asserts the translated overview tile details.",
+    "file": "internal/server/overview.go",
+    "finding_id": "G2-143",
+    "fix": "",
+    "line": 230,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The folder-dialog owner Show/Activate fix is unasserted; reverting it stays green.",
+    "file": "internal/contextdocs/sync.go",
+    "finding_id": "G2-144",
+    "fix": "",
+    "line": 95,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No stub moves HEAD off the dated branch, so the symbolic-ref clause never decides an outcome.",
+    "file": "routines/_lib/worktree.sh",
+    "finding_id": "G2-145",
+    "fix": "",
+    "line": 171,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No test checks the --claude-home/--control-port argv passed to peek.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-146",
+    "fix": "",
+    "line": 260,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The merge-instead-of-overwrite path never runs against an operator key.",
+    "file": "cmd/sync/sync_skills.sh",
+    "finding_id": "G2-147",
+    "fix": "",
+    "line": 279,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new .serena husk case is untested.",
+    "file": "cmd/hooks/worktree-sessionstart.sh",
+    "finding_id": "G2-148",
+    "fix": "",
+    "line": 91,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new remote-FROM squash_contained clause is unexercised.",
+    "file": "cmd/worktrees/_lib/verdict.sh",
+    "finding_id": "G2-149",
+    "fix": "",
+    "line": 511,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "spec-7 items correctness-82/83 (lane invocation with --no-context) do not hold; railroad-review changelog 8.4 records the deliberate reversal.",
+    "file": "skills/quality/railroad-review/workflows/railroad-review.js",
+    "finding_id": "G2-150",
+    "fix": "",
+    "line": 202,
+    "round": 0,
+    "severity": "INFO"
+  },
+  {
+    "claim": "The smine-permissions dimension (skill, fan-out dimension, batch permissions block, smine-apply route) traces to none of the 14 supplied specs.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-151",
+    "fix": "",
+    "line": 1,
+    "round": 0,
+    "severity": "INFO"
+  },
+  {
+    "claim": "runInstall (and install.sh) install the presentation profile only after runSyncs/sync_skills.sh ran, so a fresh casual install takes sync_skills' developer branch, writes no skillOverrides and no routine overlay, and every smine skill stays visible until some later re-sync — contrary to correctness-49.",
+    "file": "cmd/configserver/install_windows.go",
+    "finding_id": "G2-152",
+    "fix": "",
+    "line": 105,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "The nightly stage-3 additionalDirectories append (run.sh L302-308) is erased every orchestrated night: /smine-orchestrate (L318) runs sync_settings.sh, whose sync_file copies the template (additionalDirectories empty) over ~/.claude/settings.json, so the next night's stage 1 runs without --repos — contrary to correctness-60 (append, never remove).",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-153",
+    "fix": "",
+    "line": 302,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "classViolations exempts a changed rule by its WORKING lifetime, so a branch that appends lifetime=\"task\" to a protected doctrine rule's marker gets zero CheckPolicy diagnostics in gated and strict mode, and the default doctrine-only check stops running the rule — a branch can switch off any protected gate, contradicting CheckPolicy's 'a branch cannot weaken the mode'.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-154",
+    "fix": "",
+    "line": 89,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The claude 'apply overrides' direction copies the live settings.json verbatim over the repo fragment, replacing the {{PEEK_CONTROL_PORT}} marker spec-13 introduced with this install's literal port; marker handling exists only on revert and compare paths.",
+    "file": "internal/server/config_sync.go",
+    "finding_id": "G2-155",
+    "fix": "",
+    "line": 50,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "install.sh writes PEEK_*_HOME unquoted into install.env, which install.sh and sync_settings.sh source under set -e; a home path containing a space parses as a command and aborts the install and every later settings sync.",
+    "file": "install.sh",
+    "finding_id": "G2-156",
+    "fix": "",
+    "line": 30,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "spec-6 requires GitRevParse's error to carry git's stderr, but it runs rev-parse --verify --quiet and wraps only shell.Run's exit error, discarding the output.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-157",
+    "fix": "",
+    "line": 79,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The new casual lockout reads ~/.claude/context/global/presentation-profile.md while the unchanged Safety rule forbids any read outside the worktree; an agent honoring Safety never learns the audience and the casual gate fails open.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-158",
+    "fix": "",
+    "line": 50,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The --no-batch cursor takes the minimum across five ledgers including analyzed-permissions.txt, which no pre-existing folder holds; the missing-ledger fallback resolves to the oldest batch, so after upgrade --no-batch re-routes batch 01 instead of the next unrouted batch.",
+    "file": "skills/smine/smine/SKILL.md",
+    "finding_id": "G2-159",
+    "fix": "",
+    "line": 44,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "handleProfileSave's audience-change branch (skills-sync lock, skills.Sync, 409 on held lock, 500 on failed sync) has no observable test; deleting the whole if audienceChanged block keeps the suite green.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-160",
+    "fix": "",
+    "line": 96,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "acdsl-policy-guard matches the protected surface by literal prefix of the unnormalized path and resolves the policy root from cwd, so ./acdsl/policy.json, x/../acdsl/policy.json, ACDSL/policy.json (case-insensitive APFS) and writes from a session rooted in another repo pass with no deny.",
+    "file": "cmd/hooks/acdsl-policy-guard.sh",
+    "finding_id": "G2-161",
+    "fix": "",
+    "line": 40,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The Bash rule derivation Bash(<program> <subcommand> *) has no exec-wrapper exclusion, so two sessions granting bash -c '<x>' yield a proposed Bash(bash -c *) arbitrary-execution allow rule, contradicting the skill's own 'never a rule broader than the evidence'.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-162",
+    "fix": "",
+    "line": 45,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The rewritten session-mine section says Drift skips sessions/proposals/ while session-mine.js skips archived/, and its args line omits since/last/dev/subagents/maxMinedTotal/maxMinedPerDimension.",
+    "file": "docs/workflows.md",
+    "finding_id": "G2-163",
+    "fix": "",
+    "line": 46,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "CheckPolicy's free-mode escape for an unresolvable base (policy.go:331-334) has no test; deleting the guard keeps the suite green while acdsl check in a repo with no resolvable base and no policy.json would exit 2.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-164",
+    "fix": "",
+    "line": 332,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "shell.RunSync has no test in internal/shell; its 10-minute deadline and RunSync: error prefix are never asserted.",
+    "file": "internal/shell/shell.go",
+    "finding_id": "G2-165",
+    "fix": "",
+    "line": 50,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "writePolicy's fallback (source policy without dist_mode ships its own mode) is never exercised; the only shipping test uses the real policy.json with dist_mode=gated.",
+    "file": "internal/acdsl/dist.go",
+    "finding_id": "G2-166",
+    "fix": "",
+    "line": 243,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestReposDelete lacks spec-14's cross-instance case (repo stays deleted after a second NewRegistry on the same repos.json writes); covered only at the registry layer.",
+    "file": "internal/server/repos_test.go",
+    "finding_id": "G2-167",
+    "fix": "",
+    "line": 689,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The Load->LoadFragment switches in claudeRows, hooksFragmentDiff and renderPermissions have no marker test; reverting any of them keeps the suite green while /config/claude would flag the env row overridden on every install.",
+    "file": "internal/server/config.go",
+    "finding_id": "G2-168",
+    "fix": "",
+    "line": 101,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "filter_untracked's any-depth .DS_Store exclusion is never exercised: both droppings tests write only a top-level .DS_Store, already matched by the older pattern.",
+    "file": "cmd/worktrees/_lib/verdict.sh",
+    "finding_id": "G2-169",
+    "fix": "",
+    "line": 135,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "test_squash_transfer_reads_contained asserts only grep -q 'squashed:' while spec-11 names squashed:2, and the fixture actually yields applied:1,squashed:1 — the count is neither asserted nor as specified.",
+    "file": "cmd/tests/test_print_agent_worktrees_status.sh",
+    "finding_id": "G2-170",
+    "fix": "",
+    "line": 492,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The bootstrap wrapper's --repos roster from settings.json additionalDirectories (with .git filter) is never exercised; the fake HOME has no settings.json.",
+    "file": "cmd/bootstrap/run.sh",
+    "finding_id": "G2-171",
+    "fix": "",
+    "line": 78,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The if condition at policy.go:315 holds two && operators.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-172",
+    "fix": "",
+    "line": 315,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Three classViolations calls (372-374) pass five arguments on one line.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-173",
+    "fix": "",
+    "line": 372,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New policy.go function signatures are not sorted alphabetically after ctx (9 sites).",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-174",
+    "fix": "",
+    "line": 82,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "\"acdsl/policy.json\" and \"acdsl/registry.json\" repeat as bare literals without named constants.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-175",
+    "fix": "",
+    "line": 64,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Unexported installEnvValues follows exported ExpandInstallMarkers in a new file.",
+    "file": "internal/config/installenv.go",
+    "finding_id": "G2-176",
+    "fix": "",
+    "line": 18,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New shellGitAbbrevRef sorts before the preceding shellGitGrepCached in the unexported function group.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-177",
+    "fix": "",
+    "line": 26,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New const labelMaxLength is declared after var namePattern.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-178",
+    "fix": "",
+    "line": 27,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Constant-literal nestedRunPattern is compiled inside a function on every call, unlike every other first-party regexp.",
+    "file": "internal/evals/evals.go",
+    "finding_id": "G2-179",
+    "fix": "",
+    "line": 248,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Bool config field Policy.AllowTaskContracts is not named Is<X>Active.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-180",
+    "fix": "",
+    "line": 40,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "testCase booleans _taskExempt and absent do not read as predicates.",
+    "file": "internal/acdsl/policy_test.go",
+    "finding_id": "G2-181",
+    "fix": "",
+    "line": 79,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New bools Routine.DefaultDisabled/Unscheduled and scheduleInfo.Supported/Unscheduled are not predicate-named.",
+    "file": "internal/routines/routines.go",
+    "finding_id": "G2-182",
+    "fix": "",
+    "line": 97,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Task-state literals NotFound and Disabled repeat across sched_windows.go without named constants.",
+    "file": "internal/routines/sched_windows.go",
+    "finding_id": "G2-183",
+    "fix": "",
+    "line": 157,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Registry.save errors use the bare \"save:\" prefix instead of \"Registry.save:\".",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-184",
+    "fix": "",
+    "line": 124,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New Archive/Delete scope tests script several error branches sequentially in one body without a testCase table.",
+    "file": "internal/sessions/sessions_test.go",
+    "finding_id": "G2-185",
+    "fix": "",
+    "line": 208,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The peek SessionIndex probe uses an inline 5*time.Second while the package names this bound probeTimeout.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-186",
+    "fix": "",
+    "line": 152,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Default bootstrap lookback hard-coded as AddDate(0, 0, -30).",
+    "file": "internal/server/welcome.go",
+    "finding_id": "G2-187",
+    "fix": "",
+    "line": 292,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "DefaultStylePath repeats DefaultPresentationPath's home lookup and .claude/context/global join verbatim.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-188",
+    "fix": "",
+    "line": 229,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The three new archive/delete/unarchive handlers repeat one opResult + store op + HX-Redirect + render body.",
+    "file": "internal/server/sessions.go",
+    "finding_id": "G2-189",
+    "fix": "",
+    "line": 177,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The skills-sync failure error lacks the Component.Method: prefix.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-190",
+    "fix": "",
+    "line": 105,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "proposalViews (181) and groupViews (203) calls pass six arguments on one line.",
+    "file": "internal/server/proposals.go",
+    "finding_id": "G2-191",
+    "fix": "",
+    "line": 181,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "bootstrapRun.running and bootstrapView.Running are not predicate-named.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-192",
+    "fix": "",
+    "line": 26,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Four testCase literals omit the asserted meta field _expectedDevMode.",
+    "file": "internal/server/profilesettings_test.go",
+    "finding_id": "G2-193",
+    "fix": "",
+    "line": 59,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new peek stop-listener loop copies the configserver lsof/kill/kill -0 poll block.",
+    "file": "install.sh",
+    "finding_id": "G2-194",
+    "fix": "",
+    "line": 173,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The marker-expansion sed is duplicated in sync_file (61) and merge_mcp_servers (114); the diff added the same expression to both.",
+    "file": "cmd/sync/sync_settings.sh",
+    "finding_id": "G2-195",
+    "fix": "",
+    "line": 61,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "skill-invoke-gate.sh copies read-gate.sh's exact-cat tokenizer and guide-membership loop verbatim.",
+    "file": "cmd/hooks/skill-invoke-gate.sh",
+    "finding_id": "G2-196",
+    "fix": "",
+    "line": 62,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Both new squash tests inline the identical agent-step/merge --squash fixture.",
+    "file": "cmd/tests/test_print_agent_worktrees_status.sh",
+    "finding_id": "G2-197",
+    "fix": "",
+    "line": 504,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The orchestrate command substitution re-does cd \"$repo_root\" although cwd is already $repo_root since line 272.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-198",
+    "fix": "",
+    "line": 318,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The header still says 'Two stages' and never mentions the new orchestrate stage.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-199",
+    "fix": "",
+    "line": 3,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new candidates digest re-filters for-each-ref with its own claude(-routines)? regex after load_candidates already filled candidates[].",
+    "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+    "finding_id": "G2-200",
+    "fix": "",
+    "line": 318,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "PROPOSAL_DIMENSIONS equals DIMENSIONS, so its .has(name) conjunct at L137 is always true (dead filter).",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-201",
+    "fix": "",
+    "line": 45,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new workflow names the retired fchange skill ('fchange/fdesign plan') at L3/L60/L87.",
+    "file": "skills/feature/fdesign/workflows/subsystem-grounding.js",
+    "finding_id": "G2-202",
+    "fix": "",
+    "line": 3,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "meta.whenToUse lists 7 args keys while the script's contract has 13.",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-203",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new 'Never translate' sentences enumerate 8-10 items inline, past the 6-item cap.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-204",
+    "fix": "",
+    "line": 35,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "CTX-002 names its enforcing hooks inline under [review] with no Hook: pointer bullet.",
+    "file": "skills/quality/railroad-review/SKILL.md",
+    "finding_id": "G2-205",
+    "fix": "",
+    "line": 159,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "fdesign changelog 3.7 (2026-08-22) sits above 3.6 (2026-08-27), breaking newest-first date order.",
+    "file": "skills/feature/fdesign/changelog.json",
+    "finding_id": "G2-206",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "package-commit changelog 3.3 (2026-08-22) sits above 3.2 (2026-08-23).",
+    "file": "skills/git/package-commit/changelog.json",
+    "finding_id": "G2-207",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "smine-apply changelog 1.26 (2026-08-20) sits above 1.25 (2026-08-23).",
+    "file": "skills/smine/smine-apply/changelog.json",
+    "finding_id": "G2-208",
+    "fix": "",
+    "line": 14,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "smine changelog 1.13 (2026-08-22) and 1.12 (2026-08-21) sit above 1.11 (2026-08-23).",
+    "file": "skills/smine/smine/changelog.json",
+    "finding_id": "G2-209",
+    "fix": "",
+    "line": 19,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Concept audit: the routine default-disabled marker, Unscheduled state, RunResult.Result/Subtype with History's started-row filter (and further go-core concepts) trace to none of the 14 supplied specs.",
+    "file": "internal/routines/routines.go",
+    "finding_id": "G2-210",
+    "fix": "",
+    "line": 97,
+    "round": 0,
+    "severity": "INFO"
+  },
+  {
+    "claim": "Every casual project add/delete shows developer/engine text: runRepoOp(registryLockKey, ...) makes the op-result Subject the lock key \"_registry\", and since casual adds always grant, the output line is \"added <name> (<path>) + additionalDirectories grant\" — jargon spec-1/2 say the casual user never reads.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-211",
+    "fix": "",
+    "line": 605,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "install.ps1 forwards the profile as two argv words (-presentation-profile $PresentationProfile); with the default empty value Windows PowerShell 5.1 drops the empty argument, configserver.exe gets a trailing flag with no value, flag.Parse exits 2 and every default from-source Windows install fails.",
+    "file": "install.ps1",
+    "finding_id": "G2-212",
+    "fix": "",
+    "line": 64,
+    "round": 0,
+    "severity": "BLOCKER"
+  },
+  {
+    "claim": "ruleDelta reads the working side of changed declaration files from disk while acdsl check loads rules only from FileUniverse; `git rm --cached acdsl/rules.acdsl` plus a .git/info/exclude entry disables every central rule while CheckPolicy reports zero removed rules in a gated/strict repo.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-213",
+    "fix": "",
+    "line": 248,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "GitChangedFiles tokenizes git diff --name-only / ls-files --others output with strings.Fields and without -z, so a declaration file whose path has a space or non-ASCII byte never reaches ruleDelta under its real name and contributes no rules on either side; gated/strict branches can change protected rules in such a file unreported.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-214",
+    "fix": "",
+    "line": 57,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "policyBase recognizes the base branch only by stripping a literal \"origin/\" prefix, so with base_ref \"upstream/main\" or \"refs/heads/main\" a human on the base branch itself is treated as a boundary and uncommitted surface changes on main are flagged, contradicting correctness-71.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-215",
+    "fix": "",
+    "line": 215,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "On a casual German install the Projekte add form includes _repo_path.html whose \"Choose folder…\", \"chosen:\" and \"picker failed\" literals bypass t and have no germanCatalog entry.",
+    "file": "internal/server/templates/repos_index.html",
+    "finding_id": "G2-216",
+    "fix": "",
+    "line": 7,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "Duty 5 assumes the invoking wrapper already appended registry paths to permissions.additionalDirectories and bootstrap mode claims duties 3-7 are identical, but cmd/bootstrap/run.sh only reads additionalDirectories; bootstrap never reconciles, against correctness-60.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-217",
+    "fix": "",
+    "line": 61,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "Duty 4 re-syncs a context pack only for targets carrying docs/context.json, while sync_context.sh writes and records packs under <target>/<context-dir>/; a pack deployed with --context-dir context is never re-synced.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-218",
+    "fix": "",
+    "line": 57,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The self-mining exclusion drops sessions inside 'the run's repo root', but nightly mining runs from a routine worktree under ~/.cache, so the operator's sessions in the main checkout and its .claude/worktrees/ escape the exclusion with dev mode off.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-219",
+    "fix": "",
+    "line": 42,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The step-4 casual lockout checks only skills-kind proposals; context-kind routes (acdsl-context declaration amendments, eviction from a skill's context:) also edit shipped skill files, which smine-orchestrate L41 treats as a hard breach on casual installs — the proposal is archived as implemented and the change reverted or the night rejected.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-220",
+    "fix": "",
+    "line": 31,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The Drift stage's sessions/<scope>/analyzed-*.txt glob now also matches smine-batch's per-folder analyzed-sessions.txt, which holds skipped ids the dimension ledgers omit, so every skipped session is reported as drift on every run.",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-221",
+    "fix": "",
+    "line": 100,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "TestWelcomeBootstrapConcurrent passes without the running guard: its server has no TokenDir, so the token guard also answers 409 and the test asserts only the status.",
+    "file": "internal/server/welcome_test.go",
+    "finding_id": "G2-222",
+    "fix": "",
+    "line": 234,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The verdict cache made test_steady_state_runs_no_probes vacuous: the traced runs at 557/560 hit the cache written by the run at 556, so evaluate_branch never runs.",
+    "file": "cmd/tests/test_print_agent_worktrees_status.sh",
+    "finding_id": "G2-223",
+    "fix": "",
+    "line": 560,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "New LoadFragment returns \"reading %s: %w\" and \"parsing %s: %w\" without the LoadFragment: prefix.",
+    "file": "internal/config/config.go",
+    "finding_id": "G2-224",
+    "fix": "",
+    "line": 218,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new nested-run scan nests its success path under `if err == nil {`, three control levels deep.",
+    "file": "internal/evals/evals.go",
+    "finding_id": "G2-225",
+    "fix": "",
+    "line": 251,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Free function validateScopeName sits inside Store's method block.",
+    "file": "internal/sessions/sessions.go",
+    "finding_id": "G2-226",
+    "fix": "",
+    "line": 223,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestFingerprint's run git closure duplicates the one inside gitRepoWithAgentWorktrees.",
+    "file": "internal/repos/registry_test.go",
+    "finding_id": "G2-227",
+    "fix": "",
+    "line": 288,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestLoadPolicy cases unknown-mode and malformed-json omit the declared _shouldPass meta field.",
+    "file": "internal/acdsl/policy_test.go",
+    "finding_id": "G2-228",
+    "fix": "",
+    "line": 117,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The SyncAll doc comment was not reflowed: L17 reads only '// Called once at'.",
+    "file": "internal/routines/bootstrap_darwin.go",
+    "finding_id": "G2-229",
+    "fix": "",
+    "line": 17,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The Windows SyncAll doc comment states unregistered -> register+enable unconditionally while the body skips default-disabled routines.",
+    "file": "internal/routines/sched_windows.go",
+    "finding_id": "G2-230",
+    "fix": "",
+    "line": 136,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New early-return guard blocks at L43-45 and L92-94 are followed by code with no blank line.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-231",
+    "fix": "",
+    "line": 92,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The package doc names only the flat evals layouts while LoadForSkill reads and ManifestStub emits the nested evals/<skill>/<date>-<hash>/ layout.",
+    "file": "internal/evals/evals.go",
+    "finding_id": "G2-232",
+    "fix": "",
+    "line": 4,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New handleSessionsArchiveTab is placed after handleSessionsBatch, breaking alphabetical handler order.",
+    "file": "internal/server/sessions.go",
+    "finding_id": "G2-233",
+    "fix": "",
+    "line": 127,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The claude-revert predicate is spelled twice in one closure (L50 and its negation at L70).",
+    "file": "internal/server/config_sync.go",
+    "finding_id": "G2-234",
+    "fix": "",
+    "line": 50,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The newTestServer construction block is repeated 9 times with no helper.",
+    "file": "internal/server/profilesettings_test.go",
+    "finding_id": "G2-235",
+    "fix": "",
+    "line": 53,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The audience-gated snippet <summary> expression is copied verbatim from _proposal_card.html:81.",
+    "file": "internal/server/templates/_session_list.html",
+    "finding_id": "G2-236",
+    "fix": "",
+    "line": 35,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "class=\"wt-kinds\" has no stylesheet rule or script reference — a dead class.",
+    "file": "internal/server/templates/repos_index.html",
+    "finding_id": "G2-237",
+    "fix": "",
+    "line": 48,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "cmd.Start of bash running cmd/bootstrap/run.sh is reported as \"Failed to start claude\".",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-238",
+    "fix": "",
+    "line": 90,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Five TestLoadPresentationProfile literals omit the asserted meta field _expectedDevMode while another literal sets the same zero value.",
+    "file": "internal/server/presentation_test.go",
+    "finding_id": "G2-239",
+    "fix": "",
+    "line": 28,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The <h1> re-derives the Repos/Projects title that handleReposIndex already sets as .Title.",
+    "file": "internal/server/templates/repos_index.html",
+    "finding_id": "G2-240",
+    "fix": "",
+    "line": 3,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The header's removal criterion omits squash containment, which this diff made a removal ground.",
+    "file": "cmd/worktrees/remove_agent_worktrees.sh",
+    "finding_id": "G2-241",
+    "fix": "",
+    "line": 15,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new 'Known documentation gap' section carries an unticketed 'reconcile before shipping' action item while line 158 still cites the absent RULE-GOLANG-POINTER-003.",
+    "file": "docs/acdsl-go-tools.md",
+    "finding_id": "G2-242",
+    "fix": "",
+    "line": 151,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "hash_explained_anywhere sits 156 lines above the explained_pairs global it iterates and its siblings.",
+    "file": "cmd/worktrees/_lib/verdict.sh",
+    "finding_id": "G2-243",
+    "fix": "",
+    "line": 112,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "squash_contained \"$from\" runs a git merge-tree before the candidate check, dead work for a local FROM.",
+    "file": "cmd/worktrees/_lib/verdict.sh",
+    "finding_id": "G2-244",
+    "fix": "",
+    "line": 511,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "peekIdentity takes no ctx and uses client.Get although its caller startPeek holds the signal ctx.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-245",
+    "fix": "",
+    "line": 223,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Two back-to-back args = append(args, ...) calls where one variadic append carries both flag pairs.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-246",
+    "fix": "",
+    "line": 263,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "phase('Gate') is called inside a barrier-less pipeline() stage, flipping the global phase once per template while other Render agents still run.",
+    "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "finding_id": "G2-247",
+    "fix": "",
+    "line": 73,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The six-field failed-gate result literal is spelled out twice (L64-71 and L88-95).",
+    "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "finding_id": "G2-248",
+    "fix": "",
+    "line": 88,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The purpose paragraph and description still list the v1.0 'exactly four questions' beside the v1.1 State / Why / Validation & testing / DoD template.",
+    "file": "skills/quality/dod-report/SKILL.md",
+    "finding_id": "G2-249",
+    "fix": "",
+    "line": 13,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new skill reuses smine-context's retired name smine-style, and smine-context L29 still cites 'the smine-style rename'.",
+    "file": "skills/smine/smine-style/SKILL.md",
+    "finding_id": "G2-250",
+    "fix": "",
+    "line": 2,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Step 4 restates the origin: user stamp rule that skillroutine-create L36 now owns.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-251",
+    "fix": "",
+    "line": 31,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A one-repo sync_public.sh --exclude assertion landed unconditionally in the generic fimplement skill; no sync_public.sh exists in this repo.",
+    "file": "skills/feature/fimplement/SKILL.md",
+    "finding_id": "G2-252",
+    "fix": "",
+    "line": 62,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The bullet heading says 'merge base ref' (git's fork-point term) for the merged ref.",
+    "file": "skills/git/merge-resolve/SKILL.md",
+    "finding_id": "G2-253",
+    "fix": "",
+    "line": 51,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The Setup ToolSearch-load list omits mcp__Peek_MCP__session_get, which allowed-tools grants and Subagent mining calls.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-254",
+    "fix": "",
+    "line": 33,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The single ACDSL-JSON-003 fail fixture carries both the mode and the unknown-key defect, so additionalProperties:false is pinned by nothing.",
+    "file": "acdsl/testdata/ACDSL-JSON-003/fail/policy.json",
+    "finding_id": "G2-255",
+    "fix": "",
+    "line": 2,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "runCheck's merge of policy diagnostics into output and exit code has no test.",
+    "file": "cmd/acdsl/main.go",
+    "finding_id": "G2-256",
+    "fix": "",
+    "line": 137,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "ruleDelta's deleted-declaration-file path is never exercised by a test.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-257",
+    "fix": "",
+    "line": 248,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Every invalid-name scope assertion passes with validateScopeName removed, and UnarchiveScope has no invalid-name case.",
+    "file": "internal/sessions/sessions_test.go",
+    "finding_id": "G2-258",
+    "fix": "",
+    "line": 222,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The request-time reloadSessions in handleOverview has no test; New() already reloads.",
+    "file": "internal/server/overview.go",
+    "finding_id": "G2-259",
+    "fix": "",
+    "line": 85,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The fingerprintErr == nil term in the status cache decision has no test.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-260",
+    "fix": "",
+    "line": 357,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The permissions kind's default dimension harness-friction is never asserted.",
+    "file": "internal/server/proposals.go",
+    "finding_id": "G2-261",
+    "fix": "",
+    "line": 39,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The gate's string-content first-user-message branch is never exercised; every test transcript uses array content.",
+    "file": "cmd/hooks/skill-invoke-gate.sh",
+    "finding_id": "G2-262",
+    "fix": "",
+    "line": 29,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No test drives sync_hooks.sh, so the EOF-answers-n prune guard is unpinned.",
+    "file": "cmd/sync/sync_hooks.sh",
+    "finding_id": "G2-263",
+    "fix": "",
+    "line": 31,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Every test_bootstrap_wrapper.sh case is a dry run, so the token gate, results logging, status propagation and dirty-tree postcondition never execute.",
+    "file": "cmd/bootstrap/run.sh",
+    "finding_id": "G2-264",
+    "fix": "",
+    "line": 164,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "sameOriginGuard, the only middleware in front of the new /profile/style, /welcome/bootstrap and /sessions/archive/{name}/delete sinks, has no loopback Host allowlist and trusts Sec-Fetch-Site same-origin, leaving a DNS-rebinding path to state-changing and deleting handlers.",
+    "file": "internal/server/server.go",
+    "finding_id": "G2-265",
+    "fix": "",
+    "line": 338,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The new default/archived reservation lives in Repo.Validate, which readRegistrySnapshot applies to every stored entry, so an existing repos.json holding a repo named default or archived fails every registry read (Reload, Add, Remove) instead of only refusing new registrations.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-266",
+    "fix": "",
+    "line": 48,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "Policy diagnostics deviate from the spec-6 format: the gated verifier message (105) omits the added|modified action, the strict message (93) omits 'outside <detail>', and Why (228) is a constant that never names the resolved base ref.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-267",
+    "fix": "",
+    "line": 105,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "stateNoteFor appends the English 'click to filter this set' / 'click to clear the filter' suffix outside translate(), so German installs render a mixed-language tooltip, breaking spec-4 DR4.",
+    "file": "internal/server/proposals.go",
+    "finding_id": "G2-268",
+    "fix": "",
+    "line": 585,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "germanCatalog has no entry for the new permissions kind heading or its fixed group title 'Allowlist additions', so proposals.html renders both in English on a German profile.",
+    "file": "internal/server/i18n.go",
+    "finding_id": "G2-269",
+    "fix": "",
+    "line": 67,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "routine_worktree_create runs routine_chain_sync_main (unattended /merge-resolve) before smine-nightly/run.sh copies skill-overrides.json into the worktree's .claude/settings.local.json, so a casual profile's 'off' override for merge-resolve does not apply to that run.",
+    "file": "routines/_lib/worktree.sh",
+    "finding_id": "G2-270",
+    "fix": "",
+    "line": 171,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "A standalone sync_settings.sh run copies the override-free template over ~/.claude/settings.json, dropping the skillOverrides sync_skills.sh wrote; same cp-over-live root cause as known correctness-BLK-8-r2 (additionalDirectories).",
+    "file": "cmd/sync/sync_settings.sh",
+    "finding_id": "G2-271",
+    "fix": "",
+    "line": 69,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "Both orchestrate revert paths mark the proposal entry rejected in <kind>.json, but smine-apply has already moved implemented and auto-applied proposals into archive/done.md, so the rejection has no entry to land on.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-272",
+    "fix": "",
+    "line": 42,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The 6h bootstrap deadline kills only the direct bash child (exec.CommandContext, no process group, no cmd.Cancel), so a claude stage child keeps running while the UI reports the bootstrap as no longer running.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-273",
+    "fix": "",
+    "line": 82,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "A remote (non-candidate) FROM that squash-contains the branch is starred IN, but the recount and the status script's squash_in list consult local candidates only, so its commits stay UNPICKED.",
+    "file": "cmd/worktrees/_lib/verdict.sh",
+    "finding_id": "G2-274",
+    "fix": "",
+    "line": 511,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "gate.pass is derived from violations.length alone, so a template row reporting pass:false with an empty violations array passes the gate; nothing pins the aggregation.",
+    "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "finding_id": "G2-275",
+    "fix": "",
+    "line": 96,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "policyBase passes bare candidate names to git merge-base, which resolves refs/tags/<name> before refs/remotes/<name>; a branch-created tag origin/main makes HEAD the base and CheckPolicy reports nothing.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-276",
+    "fix": "",
+    "line": 201,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "docs/workflows.md documents claude/railroad-* lane, refuter and station branch names and cleanup filter, while railroad-review.js builds claude-review/*.",
+    "file": "docs/workflows.md",
+    "finding_id": "G2-277",
+    "fix": "",
+    "line": 65,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The peek control port default 42442 is declared twice: DefaultPeekControlPort in installenv.go and the -peek-control-port flag default in cmd/configserver/main.go.",
+    "file": "internal/config/installenv.go",
+    "finding_id": "G2-278",
+    "fix": "",
+    "line": 9,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "writeInstallEnv writes a bare \"install.env\" literal while the Go reader names the same file separately as installEnvPath.",
+    "file": "cmd/configserver/install_windows.go",
+    "finding_id": "G2-279",
+    "fix": "",
+    "line": 145,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The listItem-to-Session literal is spelled out in both SessionIndex and SessionsById and has already drifted (GitBranch only in SessionIndex).",
+    "file": "internal/peek/peek.go",
+    "finding_id": "G2-280",
+    "fix": "",
+    "line": 144,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "installEnvValues returns map[string]string for install.env although its key set is fixed and its one consumer reads a single key, so a typed model is declarable.",
+    "file": "internal/config/installenv.go",
+    "finding_id": "G2-281",
+    "fix": "",
+    "line": 24,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Fingerprint hard-codes refs/heads/claude/ and refs/heads/claude-routines/ while WorktreeCounts in the same file takes the prefixes as a parameter; a third copy sits in ops.go.",
+    "file": "internal/repos/registry.go",
+    "finding_id": "G2-282",
+    "fix": "",
+    "line": 458,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The revert-expands-install-markers subtest re-inlines newSectionServer's setup, and the install.env + t.Chdir fixture is duplicated at 121-123 and 142-144.",
+    "file": "internal/server/config_sync_test.go",
+    "finding_id": "G2-283",
+    "fix": "",
+    "line": 125,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New saveProfileSelection(audience, language, devMode) and writeFileAtomic(path, content) declare parameters out of alphabetical order.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-284",
+    "fix": "",
+    "line": 88,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "styleTestTarget repeats welcome.go checkNightlyRoutine's routines.Scan + IndexFunc(nightlyRoutineName) lookup.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-285",
+    "fix": "",
+    "line": 189,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A []repos.WorktreeStatus composite literal is passed inline to statusCache.Store.",
+    "file": "internal/server/repos_test.go",
+    "finding_id": "G2-286",
+    "fix": "",
+    "line": 523,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New statusCache.DropBranches(repoName, branches) and Store(repoName, fingerprint, statuses) declare parameters out of alphabetical order.",
+    "file": "internal/server/statuscache.go",
+    "finding_id": "G2-287",
+    "fix": "",
+    "line": 68,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A []repos.WorktreeStatus composite literal is passed inline to cache.Store, unlike the file's other Store calls.",
+    "file": "internal/server/statuscache_test.go",
+    "finding_id": "G2-288",
+    "fix": "",
+    "line": 61,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new Archive folder form reuses class reload-form, named for the Reload-from-disk control this diff removed from the page.",
+    "file": "internal/server/templates/sessions_index.html",
+    "finding_id": "G2-289",
+    "fix": "",
+    "line": 20,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "A 5-argument fmt.Sprintf in saveProfileSelection sits on one line.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-290",
+    "fix": "",
+    "line": 105,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The changed timing log.Printf now carries 5 arguments with nested calls on one line.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-291",
+    "fix": "",
+    "line": 419,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "routines/README.md still describes smine-nightly as three stages and never names the orchestrate stage, ROUTINE_ORCHESTRATE or SMINE_DEV_MODE.",
+    "file": "routines/README.md",
+    "finding_id": "G2-292",
+    "fix": "",
+    "line": 14,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The append_result comment lists stages (smine|apply) while callers also pass smine-consolidate and orchestrate.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-293",
+    "fix": "",
+    "line": 75,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The t_slash fixture is assigned and never read.",
+    "file": "cmd/tests/test_skill_invoke_gate.sh",
+    "finding_id": "G2-294",
+    "fix": "",
+    "line": 42,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "docs/workflows.md documents foreign-toolchain-pretag's return as {gate, builds}; the script returns {tagRef, gate, builds}.",
+    "file": "docs/workflows.md",
+    "finding_id": "G2-295",
+    "fix": "",
+    "line": 106,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "README.md L224 and L295 still describe dod-report as '4 questions + [DoD] walk' / why-validated-tested after dod-report 1.1 moved to State / Why / Validation & testing / DoD.",
+    "file": "README.md",
+    "finding_id": "G2-296",
+    "fix": "",
+    "line": 224,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The L74 Rules bullet restates the step-2 Bash(*) and whole-server mcp__server constraints owned by L45-46.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-297",
+    "fix": "",
+    "line": 74,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The step-4 permissions branch says 'never touch deny/ask' and again 'allow-rules only, never a deny/ask edit' in one clause.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-298",
+    "fix": "",
+    "line": 31,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "allowed-tools grants Bash(mv *) although no duty in the body moves a file.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-299",
+    "fix": "",
+    "line": 7,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "L73 restates the --subagents cost note from the L29 Args bullet as rationale in the skill body.",
+    "file": "skills/smine/smine-batch/SKILL.md",
+    "finding_id": "G2-300",
+    "fix": "",
+    "line": 73,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The bootstrap bullet states seeding-volume leniency twice.",
+    "file": "skills/smine/smine-orchestrate/SKILL.md",
+    "finding_id": "G2-301",
+    "fix": "",
+    "line": 24,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No test supplies presentation-profile.de.md, so the casual+de template-seeding branch of saveProfileSelection is never exercised.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-302",
+    "fix": "",
+    "line": 98,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Every policy test commit is a main-branch setup commit before checkout -b work, so no CheckPolicy or ruleDelta test covers a change committed on the work branch.",
+    "file": "internal/acdsl/policy_test.go",
+    "finding_id": "G2-303",
+    "fix": "",
+    "line": 50,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No test calls batchBands with languageGerman or asserts the German Batch / Batch %d-%d strings.",
+    "file": "internal/server/sessions.go",
+    "finding_id": "G2-304",
+    "fix": "",
+    "line": 219,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Every status-script stub exits 0, so the err == nil guard on statusCache.Store is never exercised.",
+    "file": "internal/server/repos.go",
+    "finding_id": "G2-305",
+    "fix": "",
+    "line": 362,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "bootstrapEnv rejects a single quote in extra-prompt, but TestBootstrapEnv has no single-quote case.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-306",
+    "fix": "",
+    "line": 183,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The archive tab's rendered delete form is never asserted; the delete route is only POSTed directly.",
+    "file": "internal/server/templates/sessions_archive.html",
+    "finding_id": "G2-307",
+    "fix": "",
+    "line": 24,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No test asserts the /profile form binding (dev_mode checked/disabled, language and audience selected) from a stored profile.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-308",
+    "fix": "",
+    "line": 158,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The bootstrap since/max form defaults computed in welcome.go are never asserted by a test.",
+    "file": "internal/server/welcome.go",
+    "finding_id": "G2-309",
+    "fix": "",
+    "line": 292,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No status test pairs a same-subject twin with a squash landing, so the unpicked arm's 'via squash' annotation is never exercised.",
+    "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+    "finding_id": "G2-310",
+    "fix": "",
+    "line": 202,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "run_wrapper inherits ambient SMINE_DEV_MODE, BOOTSTRAP_SINCE and BOOTSTRAP_N, so an exported value flips the defaults-case assertions.",
+    "file": "cmd/tests/test_bootstrap_wrapper.sh",
+    "finding_id": "G2-311",
+    "fix": "",
+    "line": 40,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The only truncated-cache fixture writes 'garbage', which fails the key clause first, so the 5-line completeness clause never decides a test outcome.",
+    "file": "cmd/tests/test_print_agent_worktrees_status.sh",
+    "finding_id": "G2-312",
+    "fix": "",
+    "line": 606,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "No cache test moves origin/main after warming the cache, so the $from_tip key part (the only one that sees a remote FROM move) is untested.",
+    "file": "cmd/worktrees/print_agent_worktrees_status.sh",
+    "finding_id": "G2-313",
+    "fix": "",
+    "line": 266,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "policyBase decides isBoundary by branch name (branch != baseName) instead of spec-6's HEAD == base tip comparison; the L189-192 comment records this as deliberate.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-314",
+    "fix": "",
+    "line": 216,
+    "round": 0,
+    "severity": "INFO"
+  },
+  {
+    "claim": "session-mine.js adds a Drift stage, a model/effort tier override and --subagents forwarding that none of the 14 specs names.",
+    "file": "skills/smine/smine/workflows/session-mine.js",
+    "finding_id": "G2-315",
+    "fix": "",
+    "line": 95,
+    "round": 0,
+    "severity": "INFO"
+  },
+  {
+    "claim": "Moving the worktree-table kind/base filter client-side made the header select-all checkbox (and any row checked before a filter change) select rows the active filter hides, so Remove / Remove Worktree acts on worktrees and branches the user filtered out of view. At base the filter was server-side (rows outside the filter were never rendered), so select-all could only ever pick visible rows.",
+    "file": "internal/server/templates/repo_detail.html",
+    "finding_id": "G2-316",
+    "fix": "",
+    "line": 67,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The shell consumers parse the presentation profile with sed and compare to the literal casual without stripping a trailing CR; .gitattributes does not pin settings/claude_code/presentation-profile.de.md, so a Windows/CRLF checkout yields audience 'casual\\r' and sync_skills.sh takes the developer branch, while smine-nightly/run.sh never applies the casual defaults and passes 'language de\\r' to consolidate.",
+    "file": "cmd/sync/sync_skills.sh",
+    "finding_id": "G2-317",
+    "fix": "",
+    "line": 259,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The casual jargon sweep moves displaced technical content 'into target/anchor/code/snippet fields', but a proposal's only anchor field is gate.anchor (internal/proposals/proposals.go:49-53), the ACDSL anchor regex smine-apply turns into the authored rule line; a reworded ID/path landing there makes step 4(a) append a rule governing the wrong files, against correctness-5 (gate fields never reworded). Same sink wording in the four dimension skills' L33 and smine-orchestrate L40.",
+    "file": "skills/smine/smine-consolidate/SKILL.md",
+    "finding_id": "G2-318",
+    "fix": "",
+    "line": 51,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "Step 3 promises a rule parked in settings.disabled.json never resurfaces, but reads it as the sibling of settings/claude_code/settings.json, which never exists; the config server parks rules in config.DisabledPath(~/.claude/settings.json) = ~/.claude/settings.disabled.json, so a parked rule granted again in later sessions is re-proposed.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-319",
+    "fix": "",
+    "line": 55,
+    "round": 0,
+    "severity": "MAJOR"
+  },
+  {
+    "claim": "The gate prompt parameterizes the stylesheet via cssPath for check (1) on L77 but hard-codes 'style.css' for check (2) on L78, and the GATE_SCHEMA unstyled_input_types description (L43) repeats the literal; with any other cssPath the gate judges selectors and input types against two different stylesheets.",
+    "file": "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+    "finding_id": "G2-320",
+    "fix": "",
+    "line": 78,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The new casual-presentation rule forbids file paths and rule/FACT/ACDSL IDs in change, but the same skill mandates machine-read change strings made of exactly those (eviction set projected=\"false\" on <ID> / remove <ID> from <skill> context:, declare <entry-ID> in ... acdsl-context:), with no exemption like smine-permissions grants; smine-consolidate's casual sweep then rewrites change and breaks smine-apply step 4(d) dispatch. Same class in smine-skills L65.",
+    "file": "skills/smine/smine-context/SKILL.md",
+    "finding_id": "G2-321",
+    "fix": "",
+    "line": 33,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "On a casual install the step-4 casual lockout only sets disposition casual-locked; the proposal stays proposed with no autoApplyHeld, so step-5 auto-apply re-picks it every night, filling cap slots before the lockout fires and re-ledgering it each run; smine-skills never drops pre-existing locked entries and smine-consolidate can re-home them.",
+    "file": "skills/smine/smine-apply/SKILL.md",
+    "finding_id": "G2-322",
+    "fix": "",
+    "line": 31,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "The acdsl policy guard only sees Write/Edit/NotebookEdit file paths, while the deployed settings template auto-allows Bash(cp *) under acceptEdits, so in a strict or gated repo an agent overwrites acdsl/policy.json with one Bash call and gets neither a deny nor a prompt (CheckPolicy still catches it at check time).",
+    "file": "cmd/hooks/acdsl-policy-guard.sh",
+    "finding_id": "G2-323",
+    "fix": "",
+    "line": 14,
+    "round": 0,
+    "severity": "MINOR"
+  },
+  {
+    "claim": "After an optimistic removal empties the table with no filter active, the page shows 'No agent branches matching the active filter.' although no filter is set.",
+    "file": "internal/server/templates/repo_detail.html",
+    "finding_id": "G2-324",
+    "fix": "",
+    "line": 117,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The two new pages set their browser <title> from untranslated literals — the Profile page ('Profile') and the sessions archive tab ('Sessions — archive', sessions.go:137) — so a German profile shows English tab titles while sibling handlers translate theirs.",
+    "file": "internal/server/profilesettings.go",
+    "finding_id": "G2-325",
+    "fix": "",
+    "line": 168,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Concept audit: ACTION-IMPL-TEST-001, the skill-eval retarget from concept to fexplore, the routine_worktree_create HEAD-on-dated-branch guard plus merge-directly prompt, and the SMINE_SUBAGENTS knob trace to none of the 14 supplied specs.",
+    "file": "context/actions/implementing.md",
+    "finding_id": "G2-326",
+    "fix": "",
+    "line": 107,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new Policy struct (7 fields, three slices) is passed and returned by value through every new policy function, although RULE-GOLANG-POINTER-001 requires structs by pointer except small immutable value types.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-327",
+    "fix": "",
+    "line": 329,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New policy.go code names its error variables resolveErr (211), readErr (248, 307), showErr (251) and baseErr (330) instead of err, against RULE-GOLANG-ERR-003.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-328",
+    "fix": "",
+    "line": 211,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New writePolicy names its os.Stat error statErr (255) rather than err, against RULE-GOLANG-ERR-003; err is free to shadow in that if-init scope.",
+    "file": "internal/acdsl/dist.go",
+    "finding_id": "G2-329",
+    "fix": "",
+    "line": 255,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The five new git.go helpers order parameters after ctx non-alphabetically (root before ref/base/rev/path), against RULE-GOLANG-CALL-003.",
+    "file": "internal/acdsl/git.go",
+    "finding_id": "G2-330",
+    "fix": "",
+    "line": 26,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New helper keepNewest(sessions, key, candidate) lists its parameters out of alphabetical order (RULE-GOLANG-CALL-003).",
+    "file": "internal/peek/peek.go",
+    "finding_id": "G2-331",
+    "fix": "",
+    "line": 192,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "New writePolicy(root, dest string) orders its parameters non-alphabetically (RULE-GOLANG-CALL-003).",
+    "file": "internal/acdsl/dist.go",
+    "finding_id": "G2-332",
+    "fix": "",
+    "line": 235,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "policyBase repeats the domain literal \"origin/HEAD\" (196, 210) and hard-codes the \"origin/\" remote prefix (215) instead of named constants (RULE-GOLANG-CONST-001).",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-333",
+    "fix": "",
+    "line": 196,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "Two new error strings in policy.go start their message lower-case after the Function: prefix (L186 parsePolicy, L218 policyBase), against RULE-GOLANG-LOG-001.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-334",
+    "fix": "",
+    "line": 186,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The added if !startPeek(...) block (L128-131) sits at control level 3, while RULE-GOLANG-NEST-001 requires new code at 2 levels.",
+    "file": "cmd/configserver/main.go",
+    "finding_id": "G2-335",
+    "fix": "",
+    "line": 128,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "parseSchedule's new no-StartCalendarInterval branch nests three levels (if !ok -> range otherTriggerKeys -> if present, L109-116), against RULE-GOLANG-NEST-001.",
+    "file": "internal/routines/plist.go",
+    "finding_id": "G2-336",
+    "fix": "",
+    "line": 111,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The added case \"unknown state ignored\" (L47) and the renamed \"probe fixture: enabled and disabled labels both captured\" (L26) are not kebab-case test ids (RULE-GOLANG-TEST-006).",
+    "file": "internal/routines/launchctl_darwin_test.go",
+    "finding_id": "G2-337",
+    "fix": "",
+    "line": 47,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "stripFrontMatter guards `len(lines) == 0 || ...` after strings.Split with a non-empty separator, which always returns at least one element, so the len check is dead.",
+    "file": "internal/server/presentation.go",
+    "finding_id": "G2-338",
+    "fix": "",
+    "line": 186,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The Windows prerequisites table lists the from-source winget prerequisites as 'Git for Windows, Go, jq', but install.ps1 now also detects shellcheck and winget-installs koalaman.shellcheck; the README copy disagrees with the script.",
+    "file": "README.md",
+    "finding_id": "G2-339",
+    "fix": "",
+    "line": 76,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "EVID-002 and EVID-005 open with italic report-section labels while the rewritten EVID-003/004 open with bare 'Validated/Tested (feeds ...)' labels; four sibling entries use two label shapes.",
+    "file": "skills/quality/dod-report/SKILL.md",
+    "finding_id": "G2-340",
+    "fix": "",
+    "line": 42,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The new skill's allowed-tools pre-approves Bash(jq *) but no step uses jq; the grant is dead and widens the pre-approved surface.",
+    "file": "skills/smine/smine-style/SKILL.md",
+    "finding_id": "G2-341",
+    "fix": "",
+    "line": 7,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The Build stage comment says '(pipeline, no barrier)', but L44 awaits the whole single-stage pipeline() before L58 starts Gate, so the stage is a barrier; the comment states the opposite of the code.",
+    "file": "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+    "finding_id": "G2-342",
+    "fix": "",
+    "line": 42,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The L75 Rules bullet forbids colon forms in rule strings, but L47 of the same skill prescribes WebFetch(domain:<host>) and the live allowlist carries colon forms; a WebFetch or Skill(x:*) candidate meets two contradicting instructions.",
+    "file": "skills/smine/smine-permissions/SKILL.md",
+    "finding_id": "G2-343",
+    "fix": "",
+    "line": 75,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The gated verifier-allowlist check on the modified class (classViolations(..., \"modified\", true)) has no test; flipping it to false keeps the suite green while a gated branch can re-point an editable-scope rule to an unsanctioned verifier unreported.",
+    "file": "internal/acdsl/policy.go",
+    "finding_id": "G2-344",
+    "fix": "",
+    "line": 373,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "writeInstallEnv, the Windows writer of install.env, has no test, so nothing pins its KEY=VALUE output to the reader ExpandInstallMarkers (PEEK_CONTROL_PORT).",
+    "file": "cmd/configserver/install_windows.go",
+    "finding_id": "G2-345",
+    "fix": "",
+    "line": 139,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "TestStartPeek's only mismatch case differs in both claude-home and codex-home, so the per-home identity check at main.go:248 is unpinned (&& -> || stays green).",
+    "file": "cmd/configserver/main_test.go",
+    "finding_id": "G2-346",
+    "fix": "",
+    "line": 61,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The template funcs t / langAttr / isDeveloperAudience now read presentationStore live so a Profile save takes effect without restart, but no test saves a profile over HTTP and then renders a page; reverting to a New()-time snapshot keeps the suite green.",
+    "file": "internal/server/server.go",
+    "finding_id": "G2-347",
+    "fix": "",
+    "line": 163,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The routine row's new Unscheduled branch ('not scheduled' cell at L28, data-reschedule=\"1\" at L14) has no server render test; deleting either arm keeps the suite green.",
+    "file": "internal/server/templates/_routine_row.html",
+    "finding_id": "G2-348",
+    "fix": "",
+    "line": 28,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "handleWelcomeBootstrap's request-validation wiring (bootstrapEnv error -> 400 before any spawn) has no handler test.",
+    "file": "internal/server/bootstrap.go",
+    "finding_id": "G2-349",
+    "fix": "",
+    "line": 52,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "spec-8 names the repos_test case 'add with reserved name default/archived -> rejected'; repos_test.go only posts name=default, archived is never sent through POST /repos/add.",
+    "file": "internal/server/repos_test.go",
+    "finding_id": "G2-350",
+    "fix": "",
+    "line": 664,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "The gate's first-user-message-only marker scope is unpinned: every test transcript holds exactly one user line, so widening the jq to all user lines (incl. tool_result lines) keeps the suite green.",
+    "file": "cmd/hooks/skill-invoke-gate.sh",
+    "finding_id": "G2-351",
+    "fix": "",
+    "line": 28,
+    "round": 0,
+    "severity": "NIT"
+  },
+  {
+    "claim": "spec-5 requires a stage-3 postcondition test (test_routine_worktree.sh extension, runbook stage3-postconditions), but no test drives the run.sh:327-339 block; deleting the dirty-tree check or swapping merged/kept stays green.",
+    "file": "routines/smine-nightly/run.sh",
+    "finding_id": "G2-352",
+    "fix": "",
+    "line": 328,
+    "round": 0,
+    "severity": "NIT"
+  }
+]

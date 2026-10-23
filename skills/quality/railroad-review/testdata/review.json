@@ -1,0 +1,9 @@
+{
+  "ranked_plan": [
+    {"finding_id": "critical-BLK-1-r1", "severity": "BLOCKER", "file": "a.go", "line": 1, "fix": "f", "route": "human"},
+    {"finding_id": "correctness-MAJ-1-r1", "severity": "MAJOR", "file": "b.go", "line": 2, "fix": "f", "route": "human"},
+    {"finding_id": "code-style-MIN-1-r1", "severity": "MINOR", "file": "c.go", "line": 3, "fix": "f", "route": "auto-fix"},
+    {"finding_id": "tests-NIT-1-r1", "severity": "NIT", "file": "d.go", "line": 4, "fix": "f", "route": "auto-fix"},
+    {"finding_id": "security-MAJ-2-r1", "severity": "MAJOR", "file": "e.go", "line": 5, "fix": "f", "route": "human", "known": true}
+  ]
+}

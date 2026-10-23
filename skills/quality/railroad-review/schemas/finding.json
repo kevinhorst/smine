@@ -1,0 +1,77 @@
+{
+  "finding_id": {
+    "type": "string",
+    "description": "stable id, unique across directions: <direction>-<SEV>-<n> with SEV in BLK/MAJ/MIN/NIT/INF, e.g. critical-BLK-1"
+  },
+  "file": {
+    "type": "string"
+  },
+  "line": {
+    "type": "integer"
+  },
+  "severity": {
+    "type": "string",
+    "enum": [
+      "BLOCKER",
+      "MAJOR",
+      "MINOR",
+      "NIT",
+      "INFO"
+    ],
+    "description": "the severity-table row for effect/exposure; INFO exactly when fix is \"none\""
+  },
+  "effect": {
+    "type": "string",
+    "enum": ["destructive", "incorrect", "degraded", "debt", "cosmetic"],
+    "description": "what goes wrong if this ships as-is — destructive: data lost or corrupted, a security boundary crossed, an irreversible migration; incorrect: a wrong result, a crash, a broken promise, or a required behavior that is absent (checklist cites the item); degraded: works but slower, noisier, leakier, harder to operate — users or operators feel it; debt: only developers feel it — maintainability, tests, tooling; cosmetic: no functional effect"
+  },
+  "exposure": {
+    "type": "string",
+    "enum": ["always", "often", "rare", "eventually"],
+    "description": "how much of normal operation hits it — always: every use; often: a common configuration, input class or state, named in evidence; rare: an unusual but real input, state or timing, named; eventually: nobody today — needs code that does not exist or an unreachable state"
+  },
+  "claim": {
+    "type": "string",
+    "description": "the defect and why it violates the direction standard"
+  },
+  "fix": {
+    "type": "string",
+    "description": "concrete proposed fix — one sentence or a short diff sketch"
+  },
+  "evidence": {
+    "type": "string",
+    "description": "the lane's confirmation pass — what was re-read and why the claim holds; the claim's first confirmation (in question until the station re-verifies); lane artifacts only — ranked_plan entries omit it"
+  },
+  "checklist": {
+    "type": "string",
+    "description": "the checklist item this finding answers — a context entry id on rule directions, <direction>-<n> on correctness and contracts; a walk-item FAIL always cites its item here, never a prose quote"
+  },
+  "route": {
+    "type": "string",
+    "enum": [
+      "human",
+      "auto-fix"
+    ],
+    "description": "station-assigned fix route on ranked_plan entries only: human (needs author judgment, surfaced at the gate) | auto-fix (applied by the fix-apply stage)"
+  },
+  "route_reason": {
+    "type": "string",
+    "description": "ranked_plan entries only: one sentence why the route — the judgment a human must make, or why the fix is mechanical"
+  },
+  "known": {
+    "type": "boolean",
+    "description": "ranked_plan entries only: true when the claim matches a KNOWN-FINDINGS ledger entry — carried from a prior round, never blocking, never routed for a fix this round"
+  },
+  "known_id": {
+    "type": "string",
+    "description": "ranked_plan entries only, with known: the finding_id of the ledger row the claim matched"
+  },
+  "artifact": {
+    "type": "string",
+    "description": "ranked_plan entries only: the lane artifact path"
+  },
+  "artifact_id": {
+    "type": "string",
+    "description": "ranked_plan entries only: the finding's id inside that artifact"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "required": [
+    "groups"
+  ],
+  "properties": {
+    "groups": {
+      "type": "array",
+      "description": "every input claim appears in exactly one group; singletons included",
+      "items": {
+        "type": "object",
+        "required": [
+          "survivor_id",
+          "member_ids"
+        ],
+        "properties": {
+          "survivor_id": {
+            "type": "string",
+            "description": "the best-argued claim of the group — most concrete trigger, strongest evidence; never picked by text length"
+          },
+          "member_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "all finding_ids in the group, survivor included"
+          }
+        }
+      }
+    }
+  }
+}

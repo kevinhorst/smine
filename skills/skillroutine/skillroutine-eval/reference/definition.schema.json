@@ -1,0 +1,382 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill eval definition (schema 4.0)",
+  "description": "A skill's eval/definition.json — the one eval interface: go run ./cmd/skilleval init builds every eval and A/B run from all of it. Invocation (the skill's args as data), environment (target repo, range or checkout commit, overlay), budgets, and the skill's scoring: golden-scored (findings declaration, goldens, the golden family's scoring file — scoring rules live there, never here) or a scorer command. The evaluated skill is never modified for the eval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "skill",
+    "invocation",
+    "environment",
+    "budgets"
+  ],
+  "dependencies": {
+    "goldens": [
+      "scoring",
+      "findings"
+    ]
+  },
+  "not": {
+    "required": [
+      "goldens",
+      "scorer"
+    ]
+  },
+  "properties": {
+    "schemaVersion": {
+      "enum": [
+        "4.0"
+      ]
+    },
+    "skill": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "the skill's command line as data: cmd/skilleval composes /<skill> <text> <args in order>, each arg as `name: value` or a bare flag name. The run's golden kind adds goldens[0].produce.args or goldens[0].test.args, the run's set changes only the args open names; layers merge by name. Placeholders in values: {base} {head} {exclude} {prebuilt} filled by init, {runId} {artifactsDir} {overlayPatch} {seed} by the arm runner. A definition with findings gets one appended handshake naming the artifact dir.",
+      "anyOf": [
+        {
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "required": [
+            "args"
+          ]
+        }
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "free text after the skill name, before the args"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/arg"
+          }
+        },
+        "open": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "description": "arg names a run may set; an open arg's declared value holds no placeholder"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "range"
+          ]
+        },
+        {
+          "required": [
+            "checkoutRef"
+          ]
+        }
+      ],
+      "properties": {
+        "targetRepo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "description": "repo-registry name (~/.claude/smine/repos.json) of the clone the arm worktrees are cut from — a name, never a path; absent = the eval repo itself"
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseSha",
+            "headSha"
+          ],
+          "properties": {
+            "baseSha": {
+              "type": "string",
+              "minLength": 7
+            },
+            "headSha": {
+              "type": "string",
+              "minLength": 7
+            },
+            "baseLabel": {
+              "type": "string"
+            },
+            "headLabel": {
+              "type": "string"
+            },
+            "excludePaths": {
+              "type": "array",
+              "description": "pathspecs left out of the reviewed diff: the arm command gets them as {exclude}, the golden judge as its diff pathspec",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "checkoutRef": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$",
+          "description": "hex commit every arm worktree starts from; default range.headSha; its first six digits name the run dir"
+        },
+        "overlay": {
+          "type": "string",
+          "description": "skill-dir-relative patch applied to every arm worktree"
+        },
+        "contextIndex": {
+          "type": "string",
+          "description": "worktree-relative context index the overlay ships; the arm exports it to the context hooks as SKILL_CONTEXT_INDEX"
+        },
+        "prebuild": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "outputs"
+          ],
+          "description": "build run once in every arm worktree at provision; the arm command gets the outputs as {prebuilt}",
+          "properties": {
+            "command": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "outputs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "glob",
+        "claimKeys"
+      ],
+      "description": "where a run's findings live for golden judging — the eval never imposes an output contract on the arm",
+      "properties": {
+        "glob": {
+          "type": "string",
+          "description": "artifacts-dir-relative glob; the newest matching file is read — a cumulative ledger for a multi-round skill"
+        },
+        "arrayKey": {
+          "type": "string",
+          "description": "top-level key of the findings array in that file; absent = the file is the array"
+        },
+        "claimKeys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "keys tried in order for a finding's claim"
+        }
+      }
+    },
+    "scoring": {
+      "type": "string",
+      "description": "skill-dir-relative path of the golden family's scoring.json (judge guide, severity minutes, escape multipliers, triage line, fix factors, thresholds)"
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "armUsd",
+        "armTimeoutS"
+      ],
+      "description": "arm ceiling — --max-budget-usd and the arm timeout — plus the usage window init's window check measures arms × armUsd against",
+      "properties": {
+        "armUsd": {
+          "type": "number"
+        },
+        "armTimeoutS": {
+          "type": "integer"
+        },
+        "windowUsd": {
+          "type": "number",
+          "description": "rolling-window spend ceiling, default 150 (SKILLEVAL_WINDOW_BUDGET_USD overrides)"
+        }
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "skill-dir-relative files that must exist before a run; init refuses the run naming each missing one"
+    },
+    "goldens": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "file",
+          "input"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "goldenVersion": {
+            "type": "integer",
+            "description": "version of the golden's finding set; bumps only via re-adjudication, labels recall comparability"
+          },
+          "file": {
+            "type": "string",
+            "description": "skill-dir-relative golden file path; the file's content is skill-owned"
+          },
+          "contextlessFile": {
+            "type": "string",
+            "description": "skill-dir-relative contextless environment sibling of file"
+          },
+          "scope": {
+            "enum": [
+              "full",
+              "contextless"
+            ],
+            "description": "scoring-scope label stamped into eval.json (default full); scores are never comparable across scopes"
+          },
+          "input": {
+            "type": "string",
+            "description": "human description of the fixed input the golden was confirmed on"
+          },
+          "produce": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "what a golden: produce run adds",
+            "properties": {
+              "seedFile": {
+                "type": "string",
+                "description": "skill-dir-relative known findings the runner hands to the skill; its run-dir copy fills {seed}"
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/arg"
+                }
+              }
+            }
+          },
+          "test": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "what a golden: test run adds",
+            "properties": {
+              "args": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/arg"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "check": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "3.1 — argv run in each arm worktree after its run; its exit code is the check_pass metric"
+    },
+    "reference": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "3.1 — known-good commit; provision writes it as reference.patch, the A/B compare judge reads it"
+    },
+    "scorer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "argv run in each arm worktree after the check; stdout is one JSON object {\"metrics\": {\"<name>\": <number>}}, names [a-z][a-z0-9_]*"
+        }
+      },
+      "description": "3.1 — the skill's own scoring when it has no golden; its metrics land in result.json scores and in eval.json as score_<name>"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "3.1 — model of the declared configuration, --model verbatim; default opus"
+    },
+    "effort": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "description": "3.1 — effort of the declared configuration; default high"
+    },
+    "replicas": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "3.1 — runs per eval; the eval skill's replicas arg overrides it; default 1"
+    }
+  },
+  "definitions": {
+    "arg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "value": {
+          "description": "a string, or a list of strings joined by spaces; absent = a flag",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

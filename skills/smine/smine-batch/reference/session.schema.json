@@ -1,0 +1,761 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "smine session record",
+  "description": "One mined session: the record the smine-batch miner writes at sessions/<repo>/<YYYY-Www>/<id>.json; make sessions ARGS=\"check <json>\" normalizes, redacts, validates and rewrites it canonically.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "agent",
+    "repo",
+    "week",
+    "lastActive",
+    "title",
+    "findings"
+  ],
+  "if": {
+    "required": [
+      "format"
+    ]
+  },
+  "then": {
+    "properties": {
+      "findings": {
+        "items": {
+          "required": [
+            "dimension",
+            "summary",
+            "headline"
+          ],
+          "properties": {
+            "summary": {
+              "maxLength": 400
+            },
+            "quotes": {
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "findings": {
+        "items": {
+          "properties": {
+            "quotes": {
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "snippet": {
+      "type": "object",
+      "required": [
+        "kind",
+        "code"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "violation",
+            "fix",
+            "context"
+          ]
+        },
+        "lang": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "verbatim from transcript/plan/diff — never reconstructed"
+        },
+        "source": {
+          "enum": [
+            "transcript",
+            "plan",
+            "diff"
+          ]
+        }
+      }
+    },
+    "quote": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": [
+            "text",
+            "turn"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "turn": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "1-based index of the transcript turn the quote is taken from, as peek's session_get orders them"
+            }
+          }
+        }
+      ]
+    },
+    "injected": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "global": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skill": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "skill",
+              "ids"
+            ],
+            "properties": {
+              "skill": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "via": {
+                "enum": [
+                  "marker",
+                  "gate"
+                ]
+              }
+            }
+          }
+        },
+        "lang": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "lang",
+              "ids"
+            ],
+            "properties": {
+              "lang": {
+                "type": "string"
+              },
+              "guide": {
+                "type": "string"
+              },
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "coverage": {
+                "enum": [
+                  "complete",
+                  "partial"
+                ]
+              },
+              "total_lines": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "acdsl_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "ids"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "plan_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pack_reads": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "subagent_context": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "format": {
+      "type": "integer",
+      "const": 2,
+      "description": "record format: 2 requires a headline per finding, caps summary at 400 runes and types quotes as {text, turn}"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repo": {
+      "type": "string",
+      "minLength": 1,
+      "description": "roster repo name or unknown"
+    },
+    "type": {
+      "type": "string",
+      "description": "session type tag, e.g. Fix, Implementation, Feature-Design"
+    },
+    "signal": {
+      "type": "string",
+      "description": "signal/verdict column verbatim, e.g. 'yes (high)', 'exemplar'"
+    },
+    "skipped": {
+      "type": "boolean"
+    },
+    "skipReason": {
+      "type": "string"
+    },
+    "dataGaps": {
+      "type": "string",
+      "description": "compaction boundaries, missing turns, rendering losses"
+    },
+    "invoked_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "skill names invoked during the session, from the report's 'Skills invoked:' line"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "dimension",
+          "summary"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "dimension": {
+            "enum": [
+              "skill-candidate",
+              "workflow-candidate",
+              "routine-candidate",
+              "skill-report-card",
+              "feature-design",
+              "memory",
+              "rule",
+              "doc-drift",
+              "harness-friction",
+              "exemplar",
+              "context-use",
+              "other"
+            ]
+          },
+          "headline": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "one plain sentence for a reader who was not in the session; no ids, shas, paths, line numbers, code spans or parenthesised counts"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/quote"
+            }
+          },
+          "snippets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/snippet"
+            }
+          },
+          "contextUse": {
+            "type": "object",
+            "required": [
+              "kind",
+              "ruleId"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "violated-despite-present",
+                  "needed-not-present",
+                  "present-irrelevant"
+                ]
+              },
+              "channel": {
+                "type": "string",
+                "description": "skill-context | global-context | lang | acdsl | plan | pack-read | subagent | none"
+              },
+              "ruleId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "per-session permission decisions from session_events (permission_granted/permission_denied) and the optional telemetry permissions view; absent when the session had no permission activity",
+      "properties": {
+        "granted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tool",
+              "command"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "tool": {
+                "type": "string",
+                "description": "the tool that was prompted and granted, e.g. Bash, WebFetch, an mcp__ server tool"
+              },
+              "command": {
+                "type": "string",
+                "description": "the concrete command/argument (Bash command line, fetched domain, tool input) with every secret span replaced by [REDACTED:<kind>] at check; empty when the harness exposed no detail"
+              },
+              "decision": {
+                "enum": [
+                  "prompted_once",
+                  "prompted_always",
+                  "granted_event"
+                ],
+                "description": "prompted_once/prompted_always from the telemetry permissions view; granted_event when only the event stream carried the grant"
+              }
+            }
+          }
+        },
+        "denied": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tool",
+              "command"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string",
+                "description": "the concrete command/argument (Bash command line, fetched domain, tool input) with every secret span replaced by [REDACTED:<kind>] at check; empty when the harness exposed no detail"
+              }
+            }
+          },
+          "description": "prompted-and-rejected tool/command pairs — negative evidence only, never a deny/ask proposal"
+        },
+        "telemetry_present": {
+          "type": "boolean",
+          "description": "true when the telemetry permissions view was available for this session (auto-allowed vs prompted counts); false when only the event stream was mined"
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turns",
+        "wallSeconds",
+        "activeSeconds",
+        "inputTokens",
+        "outputTokens",
+        "prompts",
+        "denials"
+      ],
+      "description": "measured session cost from peek session_events — counters, time and usage totals plus permission prompt and rejection counts; never derived from transcript sums",
+      "properties": {
+        "turns": {
+          "type": "integer"
+        },
+        "wallSeconds": {
+          "type": "integer"
+        },
+        "activeSeconds": {
+          "type": "integer"
+        },
+        "inputTokens": {
+          "type": "integer",
+          "description": "input plus cache-read plus cache-creation tokens"
+        },
+        "outputTokens": {
+          "type": "integer"
+        },
+        "prompts": {
+          "type": "integer",
+          "description": "prompted_once plus prompted_always"
+        },
+        "denials": {
+          "type": "integer",
+          "description": "rejected"
+        }
+      }
+    },
+    "frustration": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "quote"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "quote": {
+            "type": "string"
+          },
+          "trigger": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "positive": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "quote"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "quote": {
+            "type": "string"
+          },
+          "trigger": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agent": {
+      "enum": [
+        "claude",
+        "codex"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "description": "used-context record (Claude sessions); absent for Codex and pre-1.20 files",
+      "properties": {
+        "injected": {
+          "$ref": "#/definitions/injected"
+        },
+        "acdsl_rules": {
+          "$ref": "#/definitions/acdsl_rules"
+        },
+        "plan_rules": {
+          "$ref": "#/definitions/plan_rules"
+        },
+        "pack_reads": {
+          "$ref": "#/definitions/pack_reads"
+        },
+        "subagent_context": {
+          "$ref": "#/definitions/subagent_context"
+        },
+        "git_branch": {
+          "type": "string"
+        },
+        "agent": {
+          "enum": [
+            "claude",
+            "codex"
+          ]
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "agents": {
+          "type": "array",
+          "description": "one row per transcript: the root and every subagent, with the injections each received",
+          "items": {
+            "type": "object",
+            "required": [
+              "agent_id",
+              "kind",
+              "items",
+              "totals"
+            ],
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "root",
+                  "subagent",
+                  "workflow"
+                ]
+              },
+              "model": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "spawn_depth": {
+                "type": "integer"
+              },
+              "type": {
+                "type": "string"
+              },
+              "context": {
+                "type": "object",
+                "description": "the injections this agent's own transcript received, in the session context shapes",
+                "properties": {
+                  "injected": {
+                    "$ref": "#/definitions/injected"
+                  },
+                  "acdsl_rules": {
+                    "$ref": "#/definitions/acdsl_rules"
+                  },
+                  "plan_rules": {
+                    "$ref": "#/definitions/plan_rules"
+                  },
+                  "pack_reads": {
+                    "$ref": "#/definitions/pack_reads"
+                  },
+                  "subagent_context": {
+                    "$ref": "#/definitions/subagent_context"
+                  }
+                }
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "path"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "reads": {
+                      "type": "integer"
+                    },
+                    "writes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "label",
+                    "source",
+                    "chars",
+                    "lines"
+                  ],
+                  "properties": {
+                    "approx": {
+                      "type": "boolean"
+                    },
+                    "chars": {
+                      "type": "integer"
+                    },
+                    "counter": {
+                      "enum": [
+                        "anthropic",
+                        "o200k_base"
+                      ]
+                    },
+                    "end_line": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "lines": {
+                      "type": "integer"
+                    },
+                    "preview": {
+                      "type": "string"
+                    },
+                    "range": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "start_line": {
+                      "type": "integer"
+                    },
+                    "tokens": {
+                      "type": "integer"
+                    },
+                    "uncounted": {
+                      "enum": [
+                        "cap",
+                        "disabled",
+                        "queued",
+                        "rate",
+                        "size"
+                      ]
+                    }
+                  }
+                }
+              },
+              "totals": {
+                "type": "object",
+                "properties": {
+                  "chars": {
+                    "type": "integer"
+                  },
+                  "items": {
+                    "type": "integer"
+                  },
+                  "lines": {
+                    "type": "integer"
+                  },
+                  "tokens": {
+                    "type": "integer"
+                  },
+                  "uncounted": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "totals": {
+          "type": "object",
+          "properties": {
+            "chars": {
+              "type": "integer"
+            },
+            "items": {
+              "type": "integer"
+            },
+            "lines": {
+              "type": "integer"
+            },
+            "tokens": {
+              "type": "integer"
+            },
+            "uncounted": {
+              "type": "integer"
+            }
+          }
+        },
+        "touched_files": {
+          "type": "object",
+          "properties": {
+            "reads": {
+              "type": "integer"
+            },
+            "writes": {
+              "type": "integer"
+            }
+          }
+        },
+        "honored": {
+          "type": "integer"
+        }
+      }
+    },
+    "week": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-W[0-9]{2}$"
+    },
+    "lastActive": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "synthesized": {
+      "type": "string",
+      "format": "date"
+    }
+  }
+}

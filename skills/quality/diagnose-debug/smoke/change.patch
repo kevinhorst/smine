@@ -1,0 +1,38 @@
+diff --git a/internal/smokedebug/average.go b/internal/smokedebug/average.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokedebug/average.go
+@@ -0,0 +1,15 @@
++// Package smokedebug is diagnose-debug's smoke fixture; nothing imports it.
++package smokedebug
++
++// Average returns the arithmetic mean of values, 0 for none.
++func Average(values []int) float64 {
++	if len(values) == 0 {
++		return 0
++	}
++
++	sum := 0
++	for _, value := range values {
++		sum += value
++	}
++	return float64(sum / len(values))
++}
+diff --git a/internal/smokedebug/average_test.go b/internal/smokedebug/average_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/smokedebug/average_test.go
+@@ -0,0 +1,13 @@
++package smokedebug
++
++import (
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++)
++
++func TestAverage(t *testing.T) {
++	values := []int{2, 3}
++	average := Average(values)
++	assert.InDelta(t, 2.5, average, 1e-9)
++}
