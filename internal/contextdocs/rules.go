@@ -1,22 +1,25 @@
 package contextdocs
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/kevinhorst/smine/internal/reach"
 
+	"github.com/kevinhorst/smine/internal/contextrequired"
 	"github.com/kevinhorst/smine/internal/fsx"
 )
 
-// Entry kinds — the identity grammar's first segment (polarity lives in the
-// statement, never in the kind).
+// Polarity lives in the statement, never in the kind.
 const (
 	RuleKindAction = "action"
 	RuleKindFact   = "fact"
@@ -29,16 +32,30 @@ const (
 	RuleOriginOverlay  = "overlay"
 )
 
-// BaselineHeaderMarker identifies a synced baseline file inside a deployed
-// target's context folder; an entry file without it is a repo-owned overlay.
+// An entry file without it is a repo-owned overlay.
 const BaselineHeaderMarker = "synced from smine"
 
-// ContextFileName is the generated machine-readable file at the context root.
+// ContextFileName is the generated, untracked machine-readable file at the context root.
 const ContextFileName = "context.json"
 
-// RuleAspect is one member of the closed taxonomy vocabulary. Class places
-// it on the identity grammar's axes: "scope" (the applies-to segment) or
-// "topic" (the optional third segment).
+// AspectsFileName is the tracked taxonomy source; its presence marks a context root that generates ContextFileName.
+const AspectsFileName = "aspects.json"
+
+// SourceContextDir is the context root of a repo that authors the context system.
+const SourceContextDir = "context"
+
+// ContextDirDefaultKey names the deployed context dir in the hook environment; docs when unset.
+const ContextDirDefaultKey = "AGENT_CONTEXT_DIR_DEFAULT"
+
+const deployedDirName = "docs"
+
+// Aspect classes: the applies-to segment and the optional third segment of an entry id.
+const (
+	AspectClassScope = "scope"
+	AspectClassTopic = "topic"
+)
+
+// Class is AspectClassScope or AspectClassTopic.
 type RuleAspect struct {
 	Name  string `json:"name"`
 	Scope string `json:"scope"`
@@ -46,96 +63,153 @@ type RuleAspect struct {
 	Lang  string `json:"lang,omitempty"` // rules/<lang>.md guide basename for language scopes; empty = not language-bound
 }
 
-// LoadAspects reads the closed aspect vocabulary from the aspects array of
-// dir/context.json — the taxonomy has no file of its own.
 func LoadAspects(dir string) ([]RuleAspect, error) {
-	data, err := os.ReadFile(filepath.Join(dir, ContextFileName))
+	data, err := os.ReadFile(filepath.Join(dir, AspectsFileName))
 	if err != nil {
 		return nil, fmt.Errorf("LoadAspects: %w", err)
 	}
-	var parsed struct {
-		Aspects []RuleAspect `json:"aspects"`
-	}
-	if err := json.Unmarshal(data, &parsed); err != nil {
+	var aspects []RuleAspect
+	if err := json.Unmarshal(data, &aspects); err != nil {
 		return nil, fmt.Errorf("LoadAspects: %w", err)
 	}
-	return parsed.Aspects, nil
+	return aspects, nil
 }
 
-// WriteContextFile regenerates dir/context.json from the markdown entries
-// with the given aspects — the aspect editor's write path, byte-identical to
-// cmd/rules generate. Temp file + rename so a crashed write never truncates.
-func WriteContextFile(dir string, aspects []RuleAspect) error {
+// Name-sorted, so two branches adding different aspects touch different lines.
+func RenderAspects(aspects []RuleAspect) ([]byte, error) {
+	sorted := slices.Clone(aspects)
+	slices.SortFunc(sorted, func(a, b RuleAspect) int { return strings.Compare(a.Name, b.Name) })
+
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(sorted); err != nil {
+		return nil, fmt.Errorf("RenderAspects: %w", err)
+	}
+	return buffer.Bytes(), nil
+}
+
+func SaveAspects(dir string, aspects []RuleAspect) error {
+	data, err := RenderAspects(aspects)
+	if err != nil {
+		return fmt.Errorf("SaveAspects: %w", err)
+	}
+	if err := fsx.WriteFileAtomic(data, filepath.Join(dir, AspectsFileName), 0o644); err != nil {
+		return fmt.Errorf("SaveAspects: %w", err)
+	}
+	return nil
+}
+
+// Byte-identical to cmd/rules generate; temp file + rename so a crashed write never truncates.
+func WriteContextFile(dir string) error {
 	set, err := ParseContext(dir, false)
 	if err != nil {
 		return fmt.Errorf("WriteContextFile: %w", err)
 	}
-	data, err := RenderContextJson(set, aspects)
+	aspects, err := LoadAspects(dir)
 	if err != nil {
 		return fmt.Errorf("WriteContextFile: %w", err)
 	}
-	tmpPath := filepath.Join(dir, ContextFileName+".tmp")
-	if err := os.WriteFile(tmpPath, data, 0o644); err != nil {
+	data, err := RenderContextJson(set, aspects, reach.ThisRepo)
+	if err != nil {
 		return fmt.Errorf("WriteContextFile: %w", err)
 	}
-	if err := fsx.ReplaceFile(tmpPath, filepath.Join(dir, ContextFileName)); err != nil {
+	if err := fsx.WriteFileAtomic(data, filepath.Join(dir, ContextFileName), 0o644); err != nil {
 		return fmt.Errorf("WriteContextFile: %w", err)
 	}
 	return nil
 }
 
-// ruleEnforcements are the valid enforcement tags on ACTION entries.
-var ruleEnforcements = map[string]bool{
-	"gate":   true,
-	"hook":   true,
-	"lint":   true,
-	"manual": true,
-	"review": true,
+// Regenerate writes dir's context file; a dir without the aspects source, or holding a deployed index, is left alone.
+func Regenerate(dir string) error {
+	if _, err := os.Stat(filepath.Join(dir, AspectsFileName)); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if IsDeployedIndex(filepath.Join(dir, ContextFileName)) {
+		return nil
+	}
+	if err := WriteContextFile(dir); err != nil {
+		return fmt.Errorf("Regenerate: %w", err)
+	}
+	return nil
 }
 
-// ruleMarkers are the valid marker tags — an optional second backticked tag
-// after the enforcement tag that flags an entry as a member of a named set.
+// Channel and role tag literals — named once, the taxonomy's own vocabulary.
+const (
+	channelGate   = "gate"
+	channelHook   = "hook"
+	channelLint   = "lint"
+	channelProse  = "prose"
+	channelSchema = "schema"
+	roleStop      = "stop"
+)
+
+// At most one role and one channel tag.
+const maxTagsPerSlot = 2
+
+// ruleChannels are the valid enforcement-channel tags: what proves adherence.
+var ruleChannels = map[string]bool{
+	channelGate:   true,
+	channelHook:   true,
+	channelLint:   true,
+	channelProse:  true,
+	channelSchema: true,
+}
+
+// What provably changes when the entry is removed; only ACTION entries carry a role today.
+var ruleRoles = map[string]bool{
+	roleStop: true,
+}
+
+// Channels whose Hook:/Gate:/Schema: bullet is checked against reality.
+var pointerChannels = map[string]bool{
+	channelHook:   true,
+	channelGate:   true,
+	channelSchema: true,
+}
+
+// An optional second backticked tag flagging an entry as a member of a named set.
 var ruleMarkers = map[string]bool{
 	"DoD": true,
 }
 
-// RuleExample is one fenced example block inside an entry — Lang is the fence
-// info string ("go", "sql", "" for a bare fence), Code the verbatim body.
+// Lang is the fence info string, "" for a bare fence.
 type RuleExample struct {
 	Code string `json:"code"`
 	Lang string `json:"lang,omitempty"`
 }
 
-// RuleContent is the authored body of an entry as typed fields — the delivery
-// form hooks render, so the .md is authoring only. Tagged bullets fill the
-// named fields; untagged bullets keep authoring order in Bullets (nested
-// continuation lines joined); prose lines land in Notes; fences in Examples.
+// The delivery form hooks render, so the .md is authoring only.
 type RuleContent struct {
 	Applies   string        `json:"applies,omitempty"`
 	Bullets   []string      `json:"bullets,omitempty"`
 	Evidence  string        `json:"evidence,omitempty"`
 	Examples  []RuleExample `json:"examples,omitempty"`
+	Gate      string        `json:"gate,omitempty"`
+	Hook      string        `json:"hook,omitempty"`
 	Location  string        `json:"location,omitempty"`
 	Notes     []string      `json:"notes,omitempty"`
+	Schema    string        `json:"schema,omitempty"`
 	Statement string        `json:"statement"`
 	Why       string        `json:"why,omitempty"`
 }
 
-// RuleEntry is one ACTION/FACT entry parsed from a rules markdown file —
-// id grammar KIND-SCOPE[-TOPIC]-NNN.
+// Id grammar KIND-SCOPE[-TOPIC]-NNN.
 type RuleEntry struct {
 	Id          string      `json:"id"`
-	Kind        string      `json:"kind"`
-	Scope       string      `json:"scope"`
-	Topic       string      `json:"topic,omitempty"`
-	Number      int         `json:"-"`
-	Enforcement string      `json:"enforcement,omitempty"`
-	Markers     []string    `json:"markers,omitempty"`
 	Content     RuleContent `json:"content"`
-	Reach       string      `json:"reach"`
-	Version     string      `json:"version"`
-	Source      string      `json:"source"`
+	Enforcement string      `json:"enforcement,omitempty"`
+	Kind        string      `json:"kind"`
+	Markers     []string    `json:"markers,omitempty"`
+	Number      int         `json:"-"`
 	Origin      string      `json:"origin"`
+	Reach       string      `json:"reach"`
+	Role        string      `json:"role,omitempty"`
+	Scope       string      `json:"scope"`
+	Source      string      `json:"source"`
+	Topic       string      `json:"topic,omitempty"`
+	Version     string      `json:"version"`
 }
 
 // RuleTombstone is one retired-entry row from a "## Tombstones" table.
@@ -146,9 +220,6 @@ type RuleTombstone struct {
 	Source      string `json:"source"`
 }
 
-// RuleGuide is one language guide: a rules file that declares the files it
-// governs via a "**Files:** `glob`, `glob`" line. Name is the file name without
-// .md, Path is relative to the context dir (rules/go.md), Files are the globs.
 // The read-gate hook matches touched paths against Files to require the guide.
 type RuleGuide struct {
 	Files  []string `json:"files"`
@@ -157,27 +228,70 @@ type RuleGuide struct {
 	Source string   `json:"source"`
 }
 
-// RuleSet holds every entry, tombstone, and guide parsed from one rules directory.
+// The reach repo is this repo for a source tree, none for a deployed tree (reach-filtered at sync).
 type RuleSet struct {
 	Entries    []RuleEntry     `json:"entries"`
 	Tombstones []RuleTombstone `json:"tombstones"`
 	Guides     []RuleGuide     `json:"guides"`
+	Self       string          `json:"-"`
 }
 
 var (
+	// Group 5 captures one or two adjacent bracketed tags, role first; splitContextTags splits them.
 	ruleEntryPattern = regexp.MustCompile(
-		`^\*\*(FACT|ACTION|RULE)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-([0-9]{3})\*\*(?: \x60\[([a-z]+)\]\x60)?(?: \x60\[([A-Za-z]+)\]\x60)? — (.+)$`)
+		`^\*\*(FACT|ACTION|RULE)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-([0-9]{3})\*\*(?: \x60((?:\[[a-z]+\])+)\x60)?(?: \x60\[([A-Za-z]+)\]\x60)? — (.+)$`)
 	ruleEntryPrefixPattern = regexp.MustCompile(`^\*\*(FACT|ACTION|RULE)-`)
-	ruleBulletPattern      = regexp.MustCompile(`^\* (Why|Applies|Evidence|Location|Version|Reach): (.+)$`)
+	ruleBulletPattern      = regexp.MustCompile(`^\* (Why|Applies|Evidence|Location|Version|Reach|Hook|Gate|Schema): (.+)$`)
 	ruleFilesPattern       = regexp.MustCompile(`^\*\*Files:\*\* (.+)$`)
 	ruleFilesGlobPattern   = regexp.MustCompile("`([^`]+)`")
+	ruleTagPattern         = regexp.MustCompile(`\[([a-z]+)\]`)
+	statementListPattern   = regexp.MustCompile(`^\d+\. `)
 )
 
-// ParseRulesDir parses every .md file in dir into a RuleSet. With
-// detectOrigin, a file whose first line carries BaselineHeaderMarker is
-// baseline and any other file is a repo-owned overlay (deployed-pack mode);
-// without it every file is baseline (source-repo mode). Fenced code blocks
-// are skipped, so authoring docs can hold example entries.
+// A role implies channel "prose"; assumes checkTagSlotShape already passed.
+func splitContextTags(tags []string) (role, channel string) {
+	for _, tag := range tags {
+		switch {
+		case ruleRoles[tag] && role == "":
+			role = tag
+		case ruleChannels[tag] && channel == "":
+			channel = tag
+		}
+	}
+	if role != "" && channel == "" {
+		channel = channelProse
+	}
+	return role, channel
+}
+
+func checkTagSlotShape(tags []string) string {
+	if len(tags) > maxTagsPerSlot {
+		return fmt.Sprintf("tag slot [%s] holds more than 2 tags", strings.Join(tags, "]["))
+	}
+	seenRole, seenChannel := false, false
+	for index, tag := range tags {
+		switch {
+		case ruleRoles[tag]:
+			if seenRole {
+				return fmt.Sprintf("two role tags in [%s]", strings.Join(tags, "]["))
+			}
+			if index != 0 {
+				return fmt.Sprintf("role tag [%s] must come first", tag)
+			}
+			seenRole = true
+		case ruleChannels[tag]:
+			if seenChannel {
+				return fmt.Sprintf("two channel tags in [%s]", strings.Join(tags, "]["))
+			}
+			seenChannel = true
+		default:
+			return fmt.Sprintf("unknown tag [%s]", tag)
+		}
+	}
+	return ""
+}
+
+// Fenced code blocks are skipped, so authoring docs can hold example entries.
 func ParseRulesDir(dir string, detectOrigin bool) (RuleSet, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -208,16 +322,17 @@ func ParseRulesDir(dir string, detectOrigin bool) (RuleSet, error) {
 	return set, nil
 }
 
-// ParseContext parses a context tree: actions/ and rules/ as entry files plus
-// facts/ as repo-owned overlay files. Any directory may be absent; an entirely
-// missing context dir is an error. detectOrigin is true for deployed targets
-// (baseline-header detection) and false for the source repo (all baseline).
+// Any subdirectory may be absent; an entirely missing context dir is an error.
 func ParseContext(contextDir string, detectOrigin bool) (RuleSet, error) {
 	if _, err := os.Stat(contextDir); err != nil {
 		return RuleSet{}, fmt.Errorf("ParseContext: %w", err)
 	}
 
 	var merged RuleSet
+	if !detectOrigin {
+		merged.Self = reach.ThisRepo
+	}
+
 	for _, dir := range []string{"actions", "rules"} {
 		entryDir := filepath.Join(contextDir, dir)
 		if _, statErr := os.Stat(entryDir); statErr != nil {
@@ -251,8 +366,25 @@ func ParseContext(contextDir string, detectOrigin bool) (RuleSet, error) {
 	return merged, nil
 }
 
-// ParseFactsDir parses every .md file in a repo-owned facts directory with
-// overlay origin — facts never ship in the synced baseline.
+// ResolveContextDir: explicit wins; else context/ holding context.json; else the deployed dir holding it; else an error naming both.
+func ResolveContextDir(explicit, deployedName string) (string, bool, error) {
+	if explicit != "" {
+		return explicit, false, nil
+	}
+	if deployedName == "" {
+		deployedName = deployedDirName
+	}
+
+	if _, err := os.Stat(filepath.Join(SourceContextDir, ContextFileName)); err == nil {
+		return SourceContextDir, false, nil
+	}
+	if _, err := os.Stat(filepath.Join(deployedName, ContextFileName)); err == nil {
+		return deployedName, true, nil
+	}
+	return "", false, fmt.Errorf("ResolveContextDir: No context dir — neither %s/%s nor %s/%s exists", SourceContextDir, ContextFileName, deployedName, ContextFileName)
+}
+
+// Facts never ship in the synced baseline, so they parse with overlay origin.
 func ParseFactsDir(dir string) (RuleSet, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -276,9 +408,6 @@ func ParseFactsDir(dir string) (RuleSet, error) {
 	return set, nil
 }
 
-// parseRulesFile appends the file's entries and tombstones to set. It walks
-// the file line-wise: entry headlines open an entry, known bullets fill it,
-// a "## Tombstones" heading switches to table parsing.
 func parseRulesFile(content, source, origin string, set *RuleSet) error {
 	var currentEntry *RuleEntry
 	isInFence := false
@@ -344,13 +473,22 @@ func parseRulesFile(content, source, origin string, set *RuleSet) error {
 			if match[6] != "" {
 				markers = []string{match[6]}
 			}
+			var rawTags []string
+			for _, tag := range ruleTagPattern.FindAllStringSubmatch(match[5], -1) {
+				rawTags = append(rawTags, tag[1])
+			}
+			if shapeErr := checkTagSlotShape(rawTags); shapeErr != "" {
+				return fmt.Errorf("parseRulesFile: %s:%d: %s", source, lineNumber+1, shapeErr)
+			}
+			role, channel := splitContextTags(rawTags)
 			set.Entries = append(set.Entries, RuleEntry{
 				Id:          id,
 				Kind:        strings.ToLower(match[1]),
 				Scope:       match[2],
 				Topic:       match[3],
 				Number:      number,
-				Enforcement: match[5],
+				Enforcement: channel,
+				Role:        role,
 				Markers:     markers,
 				Content:     parseEntryContent(strings.TrimSpace(match[7]), lines[lineNumber+1:entryContentEnd(lines, lineNumber)]),
 				Reach:       reach.Global,
@@ -383,11 +521,7 @@ func parseRulesFile(content, source, origin string, set *RuleSet) error {
 	return nil
 }
 
-// entryContentEnd returns the exclusive end index of the full authored block
-// opening at start: everything up to the next entry headline, "## " heading,
-// or "---" rule — fenced examples included (unlike entryBlockEnd, which
-// stops at the bullets for reach filtering). Fence interiors never terminate
-// the block, so a "---" or "## " inside an example stays part of it.
+// The block runs to the next entry, heading or rule; fence interiors never end it.
 func entryContentEnd(lines []string, start int) int {
 	isInFence := false
 	for index := start + 1; index < len(lines); index++ {
@@ -407,13 +541,14 @@ func entryContentEnd(lines []string, start int) int {
 	return len(lines)
 }
 
-// parseEntryContent types the body lines of one entry: tagged bullets fill the
-// named fields (Version/Reach are entry metadata and are skipped here),
-// untagged top-level bullets become Bullets with their indented continuation
-// lines joined, fenced blocks become Examples, and remaining prose lines land
-// in Notes. Blank lines separate, nothing else is dropped.
+// Version and Reach are entry metadata and skipped here; nothing but blank lines is dropped.
 func parseEntryContent(statement string, body []string) RuleContent {
-	content := RuleContent{Statement: statement}
+	headline := []string{statement}
+	for len(body) > 0 && isStatementContinuation(body[0]) {
+		headline = append(headline, strings.TrimSpace(body[0]))
+		body = body[1:]
+	}
+	content := RuleContent{Statement: strings.Join(headline, " ")}
 	var fence *RuleExample
 	for _, line := range body {
 		if strings.HasPrefix(line, "```") {
@@ -441,6 +576,12 @@ func parseEntryContent(statement string, body []string) RuleContent {
 				content.Evidence = value
 			case "Location":
 				content.Location = value
+			case "Hook":
+				content.Hook = value
+			case "Gate":
+				content.Gate = value
+			case "Schema":
+				content.Schema = value
 			}
 			continue
 		}
@@ -458,8 +599,18 @@ func parseEntryContent(statement string, body []string) RuleContent {
 	return content
 }
 
-// parseTombstoneRow parses one markdown table row into a tombstone. Header
-// and separator rows report isRow false.
+func isStatementContinuation(line string) bool {
+	if strings.TrimSpace(line) == "" || strings.HasPrefix(line, " ") {
+		return false
+	}
+	for _, prefix := range []string{"* ", "- ", "|", "#", "```", ">"} {
+		if strings.HasPrefix(line, prefix) {
+			return false
+		}
+	}
+	return !statementListPattern.MatchString(line)
+}
+
 func parseTombstoneRow(line, source string) (tombstone RuleTombstone, isRow bool) {
 	trimmed := strings.TrimSpace(line)
 	if !strings.HasPrefix(trimmed, "|") {
@@ -481,17 +632,146 @@ func parseTombstoneRow(line, source string) (tombstone RuleTombstone, isRow bool
 	}, true
 }
 
-// ValidateRules checks a parsed set against the registry contract and the
-// given aspect vocabulary, returning one message per violation.
-func ValidateRules(set RuleSet, aspects []RuleAspect) []string {
+// Works whether the entry came from parsing or direct construction (tests).
+func validateTags(entry RuleEntry) string {
+	if entry.Role != "" && !ruleRoles[entry.Role] {
+		return fmt.Sprintf("%s: %s: unknown role tag [%s]", entry.Source, entry.Id, entry.Role)
+	}
+	if entry.Enforcement != "" && !ruleChannels[entry.Enforcement] {
+		return fmt.Sprintf("%s: %s: unknown channel tag [%s]", entry.Source, entry.Id, entry.Enforcement)
+	}
+	return ""
+}
+
+func validateChannelClaim(entry RuleEntry, repoRoot string, acdslIds map[string]bool) string {
+	if !pointerChannels[entry.Enforcement] {
+		return ""
+	}
+	switch entry.Enforcement {
+	case channelHook:
+		if entry.Content.Hook == "" {
+			return fmt.Sprintf("%s: %s: [hook] requires a Hook: bullet naming the enforcing script", entry.Source, entry.Id)
+		}
+		if _, err := os.Stat(filepath.Join(repoRoot, "cmd/hooks", entry.Content.Hook)); err != nil {
+			return fmt.Sprintf("%s: %s: Hook: %s not found under cmd/hooks/", entry.Source, entry.Id, entry.Content.Hook)
+		}
+	case channelGate:
+		if entry.Content.Gate == "" {
+			return fmt.Sprintf("%s: %s: [gate] requires a Gate: bullet naming the ACDSL rule id", entry.Source, entry.Id)
+		}
+		if !acdslIds[entry.Content.Gate] {
+			return fmt.Sprintf("%s: %s: Gate: %s not declared in acdsl/rules.acdsl", entry.Source, entry.Id, entry.Content.Gate)
+		}
+	case channelSchema:
+		if entry.Content.Schema == "" {
+			return fmt.Sprintf("%s: %s: [schema] requires a Schema: bullet naming the schema file", entry.Source, entry.Id)
+		}
+		if _, err := os.Stat(filepath.Join(repoRoot, entry.Content.Schema)); err != nil {
+			return fmt.Sprintf("%s: %s: Schema: %s not found", entry.Source, entry.Id, entry.Content.Schema)
+		}
+	}
+	return ""
+}
+
+// acdslIdPattern matches a declaration id in acdsl/*.acdsl files.
+var acdslIdPattern = regexp.MustCompile(`//acdsl:(\S+)`)
+
+// A missing file yields an empty set, so the Gate: claim fails loudly rather than passing silently.
+func loadAcdslIds(repoRoot string) map[string]bool {
+	ids := map[string]bool{}
+	entries, err := os.ReadDir(filepath.Join(repoRoot, "acdsl"))
+	if err != nil {
+		return ids
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".acdsl") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(repoRoot, "acdsl", entry.Name()))
+		if err != nil {
+			continue
+		}
+		for _, match := range acdslIdPattern.FindAllStringSubmatch(string(data), -1) {
+			ids[match[1]] = true
+		}
+	}
+	return ids
+}
+
+func validateFactEntry(entry RuleEntry) []string {
 	var violations []string
+	if entry.Enforcement != "" || entry.Role != "" {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: FACT entries carry no role or channel tag", entry.Source, entry.Id))
+	}
+	if len(entry.Markers) > 0 {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: FACT entries carry no marker tag", entry.Source, entry.Id))
+	}
+	if entry.Content.Location == "" {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: FACT entries require a Location bullet", entry.Source, entry.Id))
+	}
+	if entry.Origin == RuleOriginBaseline {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: FACT entries are repo-owned — facts never ship in the synced baseline", entry.Source, entry.Id))
+	}
+	return violations
+}
+
+func validateActionEntry(entry RuleEntry, repoRoot string, acdslIds map[string]bool) []string {
+	var violations []string
+	if tagViolation := validateTags(entry); tagViolation != "" {
+		violations = append(violations, tagViolation)
+	} else if entry.Enforcement == "" {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: ACTION entries require a channel tag", entry.Source, entry.Id))
+	} else if claimViolation := validateChannelClaim(entry, repoRoot, acdslIds); claimViolation != "" {
+		violations = append(violations, claimViolation)
+	}
+	if entry.Content.Applies == "" {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: ACTION entries require an Applies bullet", entry.Source, entry.Id))
+	}
+	if entry.Origin == RuleOriginBaseline && entry.Number > 99 {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: baseline entries use numbers 001-099", entry.Source, entry.Id))
+	}
+	if entry.Origin == RuleOriginOverlay && entry.Number < 100 {
+		violations = append(violations, fmt.Sprintf(
+			"%s: %s: overlay entries use numbers 100+", entry.Source, entry.Id))
+	}
+	return violations
+}
+
+func validateRuleEntry(entry RuleEntry, repoRoot string, acdslIds map[string]bool) []string {
+	if entry.Role != "" {
+		return []string{fmt.Sprintf(
+			"%s: %s: RULE entries carry no role tag — role applies to ACTION only", entry.Source, entry.Id)}
+	}
+	if tagViolation := validateTags(entry); tagViolation != "" {
+		return []string{tagViolation}
+	}
+	if entry.Enforcement == "" {
+		return []string{fmt.Sprintf(
+			"%s: %s: RULE entries require a channel tag", entry.Source, entry.Id)}
+	}
+	if claimViolation := validateChannelClaim(entry, repoRoot, acdslIds); claimViolation != "" {
+		return []string{claimViolation}
+	}
+	return nil
+}
+
+func ValidateRules(set RuleSet, aspects []RuleAspect, repoRoot string) []string {
+	var violations []string
+	acdslIds := loadAcdslIds(repoRoot)
 
 	scopeNames, topicNames := map[string]bool{}, map[string]bool{}
 	for _, aspect := range aspects {
 		switch aspect.Class {
-		case "scope":
+		case AspectClassScope:
 			scopeNames[aspect.Name] = true
-		case "topic":
+		case AspectClassTopic:
 			topicNames[aspect.Name] = true
 		}
 	}
@@ -505,7 +785,7 @@ func ValidateRules(set RuleSet, aspects []RuleAspect) []string {
 	for _, entry := range set.Entries {
 		if !reach.Valid(entry.Reach) {
 			violations = append(violations, fmt.Sprintf(
-				"%s: %s: Reach must be global, none, or a comma-separated repo-name list", entry.Source, entry.Id))
+				"%s: %s: Reach must be global, always, none, or a comma-separated repo-name list", entry.Source, entry.Id))
 		}
 		if entry.Scope == "SMINE" && entry.Reach != reach.ThisRepo {
 			violations = append(violations, fmt.Sprintf(
@@ -514,6 +794,10 @@ func ValidateRules(set RuleSet, aspects []RuleAspect) []string {
 		if entry.Scope == "REPO" && entry.Reach == reach.Global {
 			violations = append(violations, fmt.Sprintf(
 				"%s: %s: scope REPO facts describe one repo — Reach: that repo's roster name, never global", entry.Source, entry.Id))
+		}
+		if entry.Scope == "REPO" && entry.Reach == reach.Always {
+			violations = append(violations, fmt.Sprintf(
+				"%s: %s: scope REPO facts describe one repo — never always-injected", entry.Source, entry.Id))
 		}
 		if previousSource, isSeen := seenIds[entry.Id]; isSeen {
 			violations = append(violations, fmt.Sprintf(
@@ -543,50 +827,11 @@ func ValidateRules(set RuleSet, aspects []RuleAspect) []string {
 
 		switch entry.Kind {
 		case RuleKindFact:
-			if entry.Enforcement != "" {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: FACT entries carry no enforcement tag", entry.Source, entry.Id))
-			}
-			if len(entry.Markers) > 0 {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: FACT entries carry no marker tag", entry.Source, entry.Id))
-			}
-			if entry.Content.Location == "" {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: FACT entries require a Location bullet", entry.Source, entry.Id))
-			}
-			if entry.Origin == RuleOriginBaseline {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: FACT entries are repo-owned — facts never ship in the synced baseline", entry.Source, entry.Id))
-			}
+			violations = append(violations, validateFactEntry(entry)...)
 		case RuleKindAction:
-			if entry.Enforcement == "" {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: ACTION entries require an enforcement tag", entry.Source, entry.Id))
-			} else if !ruleEnforcements[entry.Enforcement] {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: unknown enforcement tag [%s]", entry.Source, entry.Id, entry.Enforcement))
-			}
-			if entry.Content.Applies == "" {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: ACTION entries require an Applies bullet", entry.Source, entry.Id))
-			}
-			if entry.Origin == RuleOriginBaseline && entry.Number > 99 {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: baseline entries use numbers 001-099", entry.Source, entry.Id))
-			}
-			if entry.Origin == RuleOriginOverlay && entry.Number < 100 {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: overlay entries use numbers 100+", entry.Source, entry.Id))
-			}
+			violations = append(violations, validateActionEntry(entry, repoRoot, acdslIds)...)
 		case RuleKindRule:
-			if entry.Enforcement == "" {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: RULE entries require an enforcement tag", entry.Source, entry.Id))
-			} else if !ruleEnforcements[entry.Enforcement] {
-				violations = append(violations, fmt.Sprintf(
-					"%s: %s: unknown enforcement tag [%s]", entry.Source, entry.Id, entry.Enforcement))
-			}
+			violations = append(violations, validateRuleEntry(entry, repoRoot, acdslIds)...)
 		}
 	}
 
@@ -594,35 +839,118 @@ func ValidateRules(set RuleSet, aspects []RuleAspect) []string {
 	return violations
 }
 
-// ContextFile is the generated context.json content — every entry, tombstone,
-// and the aspect taxonomy in one machine-readable file. A deployed target's
-// copy additionally carries a "deploy" section with its sync settings; the
-// generator never writes one, and readers here never need it.
+// ValidateBudgets reports every language guide and the rendered always pack over the required-reading budget.
+func ValidateBudgets(contextDir string, set RuleSet) []string {
+	var violations []string
+	for _, guide := range set.Guides {
+		info, err := os.Stat(guide.Source)
+		if err != nil {
+			violations = append(violations, fmt.Sprintf("%s: %v", guide.Path, err))
+			continue
+		}
+
+		if info.Size() > contextrequired.ReadBudgetBytes {
+			violations = append(violations, fmt.Sprintf(
+				"%s: guide is %d bytes, over the required-reading budget of %d", guide.Source, info.Size(), contextrequired.ReadBudgetBytes))
+		}
+	}
+
+	packed, err := PackAlwaysDir(contextDir)
+	if err != nil {
+		return append(violations, fmt.Sprintf("always pack: %v", err))
+	}
+
+	if len(packed) > contextrequired.ReadBudgetBytes {
+		violations = append(violations, fmt.Sprintf(
+			"always pack: %d bytes, over the required-reading budget of %d", len(packed), contextrequired.ReadBudgetBytes))
+	}
+	return violations
+}
+
+// DeployRecordDir is the state-dir folder holding one build per registry repo.
+const DeployRecordDir = "context"
+
+// ContextDeploy records how a deployed index was built; its presence marks the index as deployed.
+type ContextDeploy struct {
+	Acdsl      bool     `json:"acdsl"`
+	ContextDir string   `json:"contextDir"`
+	Langs      []string `json:"langs"`
+	Markdown   bool     `json:"markdown"`
+	Role       string   `json:"role"`
+	Task       bool     `json:"task"`
+	WriteRepo  bool     `json:"writeRepo"`
+}
+
+// A deployed copy carries the deploy record first; a source index has none.
 type ContextFile struct {
+	Deploy     *ContextDeploy  `json:"deploy,omitempty"`
+	Self       string          `json:"self,omitempty"`
 	Entries    []RuleEntry     `json:"entries"`
 	Tombstones []RuleTombstone `json:"tombstones"`
 	Guides     []RuleGuide     `json:"guides"`
 	Aspects    []RuleAspect    `json:"aspects"`
 }
 
-// RenderContextJson renders the committed context.json file content; aspects
-// are name-sorted so every writer produces identical bytes.
-func RenderContextJson(set RuleSet, aspects []RuleAspect) ([]byte, error) {
-	sort.Slice(aspects, func(left, right int) bool {
-		return aspects[left].Name < aspects[right].Name
+// RuleSet is the index as the walk and lane builders consume it; a deployed repo carries the index and no sources.
+func (f *ContextFile) RuleSet() RuleSet {
+	set := RuleSet{Entries: f.Entries, Guides: f.Guides, Self: f.Self, Tombstones: f.Tombstones}
+	return set
+}
+
+// Render sorts aspects and guides by name and prints the index as cmd/rules generate does.
+func (f *ContextFile) Render() ([]byte, error) {
+	sort.Slice(f.Aspects, func(left, right int) bool {
+		return f.Aspects[left].Name < f.Aspects[right].Name
 	})
-	sort.Slice(set.Guides, func(left, right int) bool {
-		return set.Guides[left].Name < set.Guides[right].Name
+	sort.Slice(f.Guides, func(left, right int) bool {
+		return f.Guides[left].Name < f.Guides[right].Name
 	})
+	data, err := json.MarshalIndent(f, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("ContextFile.Render: %w", err)
+	}
+	return append(data, '\n'), nil
+}
+
+func DeployRecordPath(stateDir string, name string) string {
+	return filepath.Join(stateDir, DeployRecordDir, name, ContextFileName)
+}
+
+// A missing or unreadable file is a source index: regeneration is the repair.
+func IsDeployedIndex(path string) bool {
+	index, err := LoadContextFile(path)
+	if err != nil {
+		return false
+	}
+	return index.Deploy != nil
+}
+
+// LoadContextFile reads one rendered context index.
+func LoadContextFile(path string) (*ContextFile, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("LoadContextFile: %w", err)
+	}
+
+	index := &ContextFile{}
+	if err := json.Unmarshal(data, index); err != nil {
+		return nil, fmt.Errorf("LoadContextFile: Failed to decode %s: %w", path, err)
+	}
+	return index, nil
+}
+
+// Deployed indexes pass self "": they are already reach-filtered and carry no stamp.
+func RenderContextJson(set RuleSet, aspects []RuleAspect, self string) ([]byte, error) {
 	contextFile := ContextFile{
+		Self:       self,
 		Entries:    set.Entries,
 		Tombstones: set.Tombstones,
 		Guides:     set.Guides,
 		Aspects:    aspects,
 	}
-	data, err := json.MarshalIndent(contextFile, "", "  ")
+	data, err := contextFile.Render()
 	if err != nil {
 		return nil, fmt.Errorf("RenderContextJson: %w", err)
 	}
-	return append(data, '\n'), nil
+	return data, nil
 }

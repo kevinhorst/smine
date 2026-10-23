@@ -13,7 +13,7 @@ func TestLoadAndValidate(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, entries)
 
-		validTypes := []string{"string", "bool", "number", "enum", "array", "object", "table"}
+		validTypes := []string{"string", "bool", "number", "enum", "array", "map", "object", "table"}
 		for _, e := range entries {
 			assert.NotEmpty(t, e.Key, "entry without key")
 			assert.Contains(t, []string{"claude", "codex"}, e.Target, "key %s", e.Key)

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
+	"strings"
 
-	"github.com/kevinhorst/smine/internal/fsx"
 	"howett.net/plist"
 )
 
-// mapInterval converts one StartCalendarInterval dict; howett/plist decodes
-// integers as uint64 (F13). Unknown keys are a hard error — never guess a
-// schedule.
+// mapInterval expects uint64 integers, as howett/plist decodes them.
 func mapInterval(dict map[string]any) (CalendarInterval, error) {
 	interval := CalendarInterval{}
 	for key, raw := range dict {
@@ -39,8 +39,7 @@ func mapInterval(dict map[string]any) (CalendarInterval, error) {
 	return interval, nil
 }
 
-// mapIntervals accepts launchd's both shapes: a single dict or an array of
-// dicts.
+// mapIntervals accepts launchd's both shapes: a single dict or an array of dicts.
 func mapIntervals(raw any) ([]CalendarInterval, error) {
 	switch value := raw.(type) {
 	case map[string]any:
@@ -72,9 +71,7 @@ func mapIntervalArray(items []any) ([]CalendarInterval, error) {
 	return intervals, nil
 }
 
-// otherTriggerKeys are the launchd trigger mechanisms the routine contract
-// does not support; their presence distinguishes an unsupported schedule from
-// a plist that simply has no schedule set yet.
+// otherTriggerKeys tell an unsupported schedule apart from a plist with no schedule set yet.
 var otherTriggerKeys = []string{
 	"KeepAlive",
 	"QueueDirectories",
@@ -84,16 +81,15 @@ var otherTriggerKeys = []string{
 	"WatchPaths",
 }
 
+// runnerKnobPrefixes exclude skill inputs: they travel as prompt args, so a run equals the interactive invocation.
+var runnerKnobPrefixes = []string{"ROUTINE_", "SMINE_"}
+
 type scheduleInfo struct {
 	Intervals   []CalendarInterval
 	Supported   bool
 	Unscheduled bool
 }
 
-// parseSchedule decodes the plist and maps StartCalendarInterval; a plist
-// without the key and without any other launchd trigger is a routine with no
-// schedule set yet (Unscheduled), while any other trigger mechanism is
-// unsupported for next-run (D24, D26).
 func parseSchedule(plistPath string) (*scheduleInfo, error) {
 	data, err := os.ReadFile(plistPath)
 	if err != nil {
@@ -126,9 +122,6 @@ func parseSchedule(plistPath string) (*scheduleInfo, error) {
 	return info, nil
 }
 
-// PlistMeta reads the routine directory's single plist and returns its label
-// and environment — the routinewrap launcher's view. Parsing reuses parseEnv
-// so no second plist decoder exists.
 func PlistMeta(dir string) (string, map[string]string, error) {
 	matches, err := filepath.Glob(filepath.Join(dir, "*.plist"))
 	if err != nil {
@@ -155,6 +148,9 @@ func PlistMeta(dir string) (string, map[string]string, error) {
 	env, err := parseEnv(plistPath)
 	if err != nil {
 		return "", nil, err
+	}
+	if err := ValidateEnvKeys(env); err != nil {
+		return "", nil, fmt.Errorf("PlistMeta: %s: %w", plistPath, err)
 	}
 	return label, env, nil
 }
@@ -206,25 +202,13 @@ func SetEnv(env map[string]string, plistPath string) error {
 		content["EnvironmentVariables"] = env
 	}
 
-	rewritten, err := plist.MarshalIndent(content, plist.XMLFormat, "\t")
-	if err != nil {
-		return fmt.Errorf("SetEnv: Failed to encode %s: %w", plistPath, err)
+	if err := writePlistAtomic(content, plistPath); err != nil {
+		return fmt.Errorf("SetEnv: %w", err)
 	}
-
-	tmpPath := plistPath + ".tmp"
-	if err := os.WriteFile(tmpPath, rewritten, 0o644); err != nil {
-		return fmt.Errorf("SetEnv: Failed to write %s: %w", tmpPath, err)
-	}
-	if err := fsx.ReplaceFile(tmpPath, plistPath); err != nil {
-		return fmt.Errorf("SetEnv: Failed to replace %s: %w", plistPath, err)
-	}
-
 	return nil
 }
 
-// Reschedule replaces exactly StartCalendarInterval with the single form
-// interval and rewrites the plist atomically (tmp+rename, F19); every other
-// key round-trips untouched (D22, H3).
+// Reschedule round-trips every key other than StartCalendarInterval untouched.
 func Reschedule(interval CalendarInterval, plistPath string) error {
 	data, err := os.ReadFile(plistPath)
 	if err != nil {
@@ -237,18 +221,25 @@ func Reschedule(interval CalendarInterval, plistPath string) error {
 	}
 	content["StartCalendarInterval"] = interval.toDict()
 
-	rewritten, err := plist.MarshalIndent(content, plist.XMLFormat, "\t")
-	if err != nil {
-		return fmt.Errorf("Reschedule: Failed to encode %s: %w", plistPath, err)
+	if err := writePlistAtomic(content, plistPath); err != nil {
+		return fmt.Errorf("Reschedule: %w", err)
 	}
-
-	tmpPath := plistPath + ".tmp"
-	if err := os.WriteFile(tmpPath, rewritten, 0o644); err != nil {
-		return fmt.Errorf("Reschedule: Failed to write %s: %w", tmpPath, err)
-	}
-	if err := fsx.ReplaceFile(tmpPath, plistPath); err != nil {
-		return fmt.Errorf("Reschedule: Failed to replace %s: %w", plistPath, err)
-	}
-
 	return nil
+}
+
+// ValidateEnvKeys rejects plist env keys that are no runner knob.
+func ValidateEnvKeys(env map[string]string) error {
+	var foreign []string
+	for key := range env {
+		isKnob := slices.ContainsFunc(runnerKnobPrefixes, func(prefix string) bool { return strings.HasPrefix(key, prefix) })
+		if !isKnob {
+			foreign = append(foreign, key)
+		}
+	}
+	if len(foreign) == 0 {
+		return nil
+	}
+
+	sort.Strings(foreign)
+	return fmt.Errorf("ValidateEnvKeys: Plist env keys %s are no runner knobs (ROUTINE_*, SMINE_*) — pass skill inputs as prompt args", strings.Join(foreign, ", "))
 }

@@ -2,24 +2,26 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
-	"os"
+	"net/url"
+	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kevinhorst/smine/internal/acdsl"
-	"github.com/kevinhorst/smine/internal/checklist"
+	"github.com/kevinhorst/smine/internal/backlog"
+	"github.com/kevinhorst/smine/internal/budget"
+	"github.com/kevinhorst/smine/internal/components"
 	"github.com/kevinhorst/smine/internal/config"
-	"github.com/kevinhorst/smine/internal/proposals"
+	"github.com/kevinhorst/smine/internal/contextdocs"
 	"github.com/kevinhorst/smine/internal/repos"
 	"github.com/kevinhorst/smine/internal/routines"
 	"github.com/kevinhorst/smine/internal/sessions"
 	"github.com/kevinhorst/smine/internal/skills"
 )
-
-const statusDone = "Done"
 
 type overviewPage struct {
 	Page  string
@@ -28,25 +30,26 @@ type overviewPage struct {
 }
 
 type overviewTile struct {
-	Id      string
-	Detail  string
-	Filters []tileFilter
-	Href    string
-	Label   string
-	Split   *tileSplit
-	Trend   *tileTrend
-	Value   string
+	Id       string
+	Detail   string
+	Filters  []tileFilter
+	Href     string
+	Label    string
+	LazyHref string // fragment that replaces the tile after the page renders; empty = rendered inline
+	Plans    []usagePlanOption
+	Split    *tileSplit
+	Trend    *tileTrend
+	Value    string
 }
 
-// tileFilter is one window link on the Frustration / Positive card (D3).
+// tileFilter is one period link on the Frustration / Positive or the Usage tile.
 type tileFilter struct {
 	Active bool
 	Label  string
 	URL    string
 }
 
-// tileSplit renders a card whose two values are the links (the card body is
-// not an anchor); markup lives in the template.
+// tileSplit makes the two values the links; the card body is not an anchor.
 type tileSplit struct {
 	FrustrationHref  string
 	FrustrationValue string
@@ -59,8 +62,7 @@ type tileTrend struct {
 	Bars []trendBar
 }
 
-// trendBar is one <rect> of the grouped bar chart, pre-formatted for the
-// 100x28 viewBox.
+// trendBar is pre-formatted for the 100x28 viewBox.
 type trendBar struct {
 	Class  string
 	Height string
@@ -72,8 +74,7 @@ type trendBar struct {
 // trendWindow is the number of most recent batches the "10" window shows.
 const trendWindow = 10
 
-// Batch windows for the Frustration / Positive card (D3); windowDefault is
-// what an absent or unknown ?window= resolves to (D2).
+// windowDefault is what an absent or unknown ?window= resolves to.
 const (
 	windowAll     = "all"
 	windowLast    = "last"
@@ -81,66 +82,70 @@ const (
 	windowDefault = windowTen
 )
 
+// usagePresets are the Usage page's first three presets.
+var usagePresets = []int{1, 7, 30}
+
 func (s *Server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	s.reloadSessions()
+	usageDays, window := parseUsageDays(r), parseWindow(r)
 	var tiles []overviewTile
-	// Casual installs see only the session and proposal tiles — the
-	// remaining tiles expose engine internals (plan D6).
+	// Casual installs see only the session and proposal tiles; the rest expose engine internals.
 	if !s.presentation.isDeveloperAudience() {
-		tiles = append(tiles, s.sessionTiles(parseWindow(r))...)
+		tiles = append(tiles, s.sessionTiles(usageDays, window)...)
 		tiles = append(tiles, s.proposalsTile())
 		data := overviewPage{Page: pageOverview, Tiles: tiles, Title: translate(s.presentation.language(), "Overview")}
 		s.renderFragment(w, tmplOverview, data)
 		return
 	}
-	if welcome, show := s.welcomeTile(r.Context()); show {
-		tiles = append(tiles, welcome)
-	}
-	tiles = append(tiles, s.sessionTiles(parseWindow(r))...)
+	tiles = append(tiles, welcomePlaceholderTile())
+	tiles = append(tiles, s.sessionTiles(usageDays, window)...)
 	tiles = append(tiles, s.settingsTiles()...)
+	if s.hasUsage() {
+		tiles = append(tiles, s.usageOverviewTile(time.Now(), usageDays, window))
+	}
 	tiles = append(tiles, s.skillTiles()...)
 	tiles = append(tiles, s.repoTile())
 	tiles = append(tiles, s.contextTile(r.Context()))
-	tiles = append(tiles, s.proposalsTile())
-	tiles = append(tiles, s.routineTile(r.Context()))
-	tiles = append(tiles, toolsTile())
-	tiles = append(tiles, s.checklistTile())
+	if s.hasProposals() {
+		tiles = append(tiles, s.proposalsTile())
+	}
+	if s.records.has(s.machine, components.Routines) {
+		tiles = append(tiles, s.routineTile(r.Context()))
+		tiles = append(tiles, s.backlogTile())
+	}
 
 	data := overviewPage{Page: pageOverview, Tiles: tiles, Title: "Overview"}
 	s.renderFragment(w, tmplOverview, data)
 }
 
-// checklistTile reports done/total progress; a parse failure degrades the
-// tile, never the page (D18).
-func (s *Server) checklistTile() overviewTile {
-	parsedChecklist, err := checklist.Parse(s.checklistPath)
-	// A fresh clone has no checklist doc (private artifact) — the tile
-	// shows zero progress, same empty state as the checklist page.
-	if errors.Is(err, os.ErrNotExist) {
-		parsedChecklist, err = &checklist.Checklist{}, nil
-	}
+// backlogTile reads the store alone; a parse failure degrades the tile.
+func (s *Server) backlogTile() overviewTile {
+	store, err := s.loadBacklog()
 	if err != nil {
-		return errorTile(err, "/docs/checklist", "checklist", "Checklist")
+		return errorTile(err, "/backlog", "backlog", "Backlog")
 	}
 
-	done := 0
-	for _, entry := range parsedChecklist.Entries {
-		if entry.Status == statusDone {
-			done++
+	critical, pipeline := 0, 0
+	for _, item := range store.Items() {
+		if item.Pri == priCritical {
+			critical++
+		}
+		if slices.Contains(backlog.PipelineStatuses, item.Status) {
+			pipeline++
 		}
 	}
 
 	tile := overviewTile{
-		Id:    "checklist",
-		Href:  "/docs/checklist",
-		Label: "Checklist",
-		Value: fmt.Sprintf("%d/%d done", done, len(parsedChecklist.Entries)),
+		Id:     "backlog",
+		Detail: fmt.Sprintf("%d critical · %d in pipeline", critical, pipeline),
+		Href:   "/backlog",
+		Label:  "Backlog",
+		Value:  fmt.Sprintf("%d active", len(store.Items())),
 	}
 	return tile
 }
 
-// contextTile summarizes the context loop: prose entries vs acdsl rules and
-// how much of the prose is gate-covered (entries cited by ≥1 rule's why).
+// contextTile counts an entry as gate-covered when at least one rule's why cites it.
 func (s *Server) contextTile(ctx context.Context) overviewTile {
 	entries := s.loadRegistryEntries()
 	discovery, err := acdsl.DiscoverRules(ctx, ".")
@@ -180,45 +185,75 @@ func (s *Server) contextTile(ctx context.Context) overviewTile {
 	return tile
 }
 
-func (s *Server) sessionTiles(window string) []overviewTile {
-	analyzed, batches := 0, 0
-	lastDate, lastHref := "", "/sessions"
-	frustrationDate, frustrationHref := "", "/sessions"
-	positiveDate, positiveHref := "", "/sessions"
+const sessionsHref = "/sessions"
+
+// sessionTileScan accumulates the overview's session tiles over every week.
+type sessionTileScan struct {
+	analyzed          int
+	frustrationActive string
+	frustrationHref   string
+	lastActive        string
+	lastHref          string
+	positiveActive    string
+	positiveHref      string
+	weeks             int
+}
+
+func newSessionTileScan() *sessionTileScan {
+	scan := &sessionTileScan{frustrationHref: sessionsHref, lastHref: sessionsHref, positiveHref: sessionsHref}
+	return scan
+}
+
+func (t *sessionTileScan) addSession(session *sessions.Session, weekHref string) {
+	if session.Skipped {
+		return
+	}
+	t.analyzed++
+	if session.LastActive > t.lastActive {
+		t.lastActive, t.lastHref = session.LastActive, weekHref
+	}
+
+	isNewerFrustration := len(session.Frustration) > 0 && session.LastActive > t.frustrationActive
+	if isNewerFrustration {
+		t.frustrationActive = session.LastActive
+		t.frustrationHref = sessionAnchorHref(dimFrustration, session.Id, weekHref)
+	}
+	isNewerPositive := len(session.Positive) > 0 && session.LastActive > t.positiveActive
+	if isNewerPositive {
+		t.positiveActive = session.LastActive
+		t.positiveHref = sessionAnchorHref(dimPositive, session.Id, weekHref)
+	}
+}
+
+func (t *sessionTileScan) addWeek(week *sessions.Week) {
+	t.weeks++
+	weekHref := fmt.Sprintf("/sessions/%s/%s", week.Scope, week.Key)
+	for index := range week.Sessions {
+		t.addSession(&week.Sessions[index], weekHref)
+	}
+}
+
+func dateOf(timestamp string) string {
+	if len(timestamp) < len(time.DateOnly) {
+		return timestamp
+	}
+	return timestamp[:len(time.DateOnly)]
+}
+
+func sessionAnchorHref(dimension, id, weekHref string) string {
+	return fmt.Sprintf("%s?dimension=%s&open=%s#session-%s", weekHref, dimension, id, id)
+}
+
+func (s *Server) sessionTiles(usageDays int, window string) []overviewTile {
+	language := s.presentation.language()
+	scan := newSessionTileScan()
 	for _, scope := range s.sessions.Scopes() {
-		for _, batch := range scope.Batches {
-			batches++
-			if batch.Batch.AnalyzedDate >= lastDate {
-				lastDate = batch.Batch.AnalyzedDate
-				lastHref = fmt.Sprintf("/sessions/%s/%d", scope.Name, batch.Batch.Number)
-			}
-			lastFrustrationId, lastPositiveId := "", ""
-			for _, session := range batch.Sessions {
-				if session.Skipped {
-					continue
-				}
-				analyzed++
-				if len(session.Frustration) > 0 {
-					lastFrustrationId = session.Id
-				}
-				if len(session.Positive) > 0 {
-					lastPositiveId = session.Id
-				}
-			}
-			if lastFrustrationId != "" && batch.Batch.AnalyzedDate >= frustrationDate {
-				frustrationDate = batch.Batch.AnalyzedDate
-				frustrationHref = fmt.Sprintf("/sessions/%s/%d?dimension=%s&open=%s#session-%s",
-					scope.Name, batch.Batch.Number, dimFrustration, lastFrustrationId, lastFrustrationId)
-			}
-			if lastPositiveId != "" && batch.Batch.AnalyzedDate >= positiveDate {
-				positiveDate = batch.Batch.AnalyzedDate
-				positiveHref = fmt.Sprintf("/sessions/%s/%d?dimension=%s&open=%s#session-%s",
-					scope.Name, batch.Batch.Number, dimPositive, lastPositiveId, lastPositiveId)
-			}
+		for _, week := range scope.Weeks {
+			scan.addWeek(week)
 		}
 	}
 
-	points := windowPoints(s.sessions.SentimentByBatch(), window)
+	points := windowPoints(s.sessions.SentimentByWeek(), window)
 	frustration, positive := 0, 0
 	for _, point := range points {
 		frustration += point.Frustration
@@ -227,41 +262,31 @@ func (s *Server) sessionTiles(window string) []overviewTile {
 
 	sessionsTile := overviewTile{
 		Id:     "sessions",
-		Detail: fmt.Sprintf("%d %s", batches, translate(s.presentation.language(), "batches")),
-		Href:   "/sessions",
+		Detail: joinDetail(fmt.Sprintf("%d %s", scan.weeks, translate(language, "weeks")), lastAnalysisDetail(dateOf(scan.lastActive), language)),
+		Href:   scan.lastHref,
 		Label:  "Sessions analyzed",
-		Value:  fmt.Sprintf("%d", analyzed),
-	}
-	analysisTile := overviewTile{
-		Id:     "last-analysis",
-		Detail: "newest batch",
-		Href:   lastHref,
-		Label:  "Last analysis",
-		Value:  lastDate,
+		Value:  strconv.Itoa(scan.analyzed),
 	}
 	sentimentEntriesTile := overviewTile{
 		Id:     "frustration-positive",
-		Detail: signalDetail(max(frustrationDate, positiveDate), s.presentation.language()),
+		Detail: signalDetail(dateOf(max(scan.frustrationActive, scan.positiveActive)), language),
 		Label:  "Frustration / Positive",
 		Split: &tileSplit{
-			FrustrationHref:  frustrationHref,
+			FrustrationHref:  scan.frustrationHref,
 			FrustrationValue: fmt.Sprintf("%d", frustration),
-			PositiveHref:     positiveHref,
+			PositiveHref:     scan.positiveHref,
 			PositiveValue:    fmt.Sprintf("%d", positive),
 		},
 	}
-	if trend, delta, ok := sentimentTrend(s.presentation.language(), points); ok {
-		sentimentEntriesTile.Filters = windowFilters(window)
+	if trend, delta, ok := sentimentTrend(language, points); ok {
+		sentimentEntriesTile.Filters = windowFilters(usageDays, window)
 		sentimentEntriesTile.Trend = trend
 		sentimentEntriesTile.Detail = joinDetail(sentimentEntriesTile.Detail, delta)
 	}
-	return []overviewTile{sessionsTile, analysisTile, sentimentEntriesTile}
+	return []overviewTile{sessionsTile, sentimentEntriesTile}
 }
 
-// sentimentTrend renders the windowed batches as a grouped bar chart for the
-// merged Frustration / Positive card; ok is false when no batches are loaded
-// (chart and filter row are omitted, the split card stays). delta compares
-// the newest batch's frustration count to its predecessor (D5).
+// sentimentTrend's delta compares the newest batch's frustration count to its predecessor.
 func sentimentTrend(language string, points []sessions.SentimentPoint) (*tileTrend, string, bool) {
 	if len(points) == 0 {
 		return nil, "", false
@@ -280,14 +305,12 @@ func sentimentTrend(language string, points []sessions.SentimentPoint) (*tileTre
 	delta := ""
 	if len(points) >= 2 {
 		latest, previous := points[len(points)-1], points[len(points)-2]
-		delta = fmt.Sprintf(translate(language, "%+d vs batch %d"), latest.Frustration-previous.Frustration, previous.BatchNumber)
+		delta = fmt.Sprintf(translate(language, "%+d vs week %s"), latest.Frustration-previous.Frustration, previous.Week)
 	}
 	return trend, delta, true
 }
 
-// trendBars lays out one frustration + one positive bar per batch in the
-// 100x28 viewBox with 2px vertical padding; maxValue is the shared scale.
-// A zero value yields a zero-height (invisible) rect (D7).
+// trendBars keeps a zero value as a zero-height rect so the bar slots stay aligned.
 func trendBars(frustration []int, maxValue int, positive []int) []trendBar {
 	const width, height, pad = 100.0, 28.0, 2.0
 	slot := width / float64(len(frustration))
@@ -309,6 +332,15 @@ func trendBars(frustration []int, maxValue int, positive []int) []trendBar {
 		appendBar("trend-positive", index, 0.55, positive[index])
 	}
 	return bars
+}
+
+// parseUsageDays falls back to the Usage page's default for an absent or unknown ?usage=.
+func parseUsageDays(r *http.Request) int {
+	days, err := strconv.Atoi(r.URL.Query().Get("usage"))
+	if err != nil || !slices.Contains(usagePresets, days) {
+		return budget.DefaultDays
+	}
+	return days
 }
 
 func parseWindow(r *http.Request) string {
@@ -340,23 +372,45 @@ func windowPoints(points []sessions.SentimentPoint, window string) []sessions.Se
 	return points
 }
 
-// windowFilters builds the card's window links; the default window links to
-// the bare overview URL (D3).
-func windowFilters(window string) []tileFilter {
+func windowFilters(usageDays int, window string) []tileFilter {
 	filters := make([]tileFilter, 0, 3)
 	for _, value := range []string{windowLast, windowTen, windowAll} {
-		url := "/?window=" + value
-		if value == windowDefault {
-			url = "/"
-		}
 		filter := tileFilter{
 			Active: value == window,
 			Label:  value,
-			URL:    url,
+			URL:    overviewURL(usageDays, value),
 		}
 		filters = append(filters, filter)
 	}
 	return filters
+}
+
+func usageFilters(usageDays int, window string) []tileFilter {
+	filters := make([]tileFilter, 0, len(usagePresets))
+	for _, days := range usagePresets {
+		filter := tileFilter{
+			Active: days == usageDays,
+			Label:  presetLabel(days),
+			URL:    overviewURL(days, window),
+		}
+		filters = append(filters, filter)
+	}
+	return filters
+}
+
+// overviewURL omits defaults, so the plain Overview stays "/".
+func overviewURL(usageDays int, window string) string {
+	values := url.Values{}
+	if usageDays != budget.DefaultDays {
+		values.Set("usage", strconv.Itoa(usageDays))
+	}
+	if window != windowDefault {
+		values.Set("window", window)
+	}
+	if len(values) == 0 {
+		return "/"
+	}
+	return "/?" + values.Encode()
 }
 
 // joinDetail joins non-empty detail fragments with the tile separator (D5).
@@ -370,8 +424,13 @@ func joinDetail(parts ...string) string {
 	return strings.Join(kept, " · ")
 }
 
-// signalDetail labels a signal tile with the batch date its link jumps to
-// (D6); batches without analyzedDate yield no detail line.
+func lastAnalysisDetail(date, language string) string {
+	if date == "" {
+		return ""
+	}
+	return fmt.Sprintf(translate(language, "last %s"), date)
+}
+
 func signalDetail(date, language string) string {
 	if date == "" {
 		return ""
@@ -379,25 +438,28 @@ func signalDetail(date, language string) string {
 	return fmt.Sprintf(translate(language, "last signal %s"), date)
 }
 
-// settingsTiles derives every settings.json-backed tile from one loadBoth
-// call: hooks, MCP, disabled counts, model.
+// settingsTiles derives every settings.json-backed tile from one loadBoth call.
 func (s *Server) settingsTiles() []overviewTile {
 	main, disabled, err := s.loadBoth()
 	if err != nil {
 		return []overviewTile{errorTile(err, "/config/claude", "hooks", "Claude settings")}
 	}
 
+	parked, err := s.disabledHooks.Snapshot()
+	if err != nil {
+		return []overviewTile{errorTile(err, "/config/hooks", "hooks", "Hooks")}
+	}
+
 	var tiles []overviewTile
-	tiles = append(tiles, hooksTile(main, disabled))
+	tiles = append(tiles, hooksTile(main, disabled, parked))
 	tiles = append(tiles, s.mcpTile(main))
-	tiles = append(tiles, modelTile(main))
 	return tiles
 }
 
 func (s *Server) skillTiles() []overviewTile {
 	list, err := skills.Scan(s.skillsRepo, s.skillsHome)
 	if err != nil {
-		return []overviewTile{errorTile(err, "/scripts/skills", "skills", "Skills")}
+		return []overviewTile{errorTile(err, "/scripts/skills", "skills", skillsTitle)}
 	}
 
 	repoCount, localCount, outOfSync, workflowScripts := 0, 0, 0, 0
@@ -417,74 +479,49 @@ func (s *Server) skillTiles() []overviewTile {
 		Id:     "skills",
 		Detail: fmt.Sprintf("active / repo · %d out of sync · %d workflows", outOfSync, workflowScripts),
 		Href:   "/scripts/skills",
-		Label:  "Skills",
+		Label:  skillsTitle,
 		Value:  fmt.Sprintf("%d/%d", localCount, repoCount),
 	}
 	return []overviewTile{skillsTile}
 }
 
-// proposalsTile counts actual proposals — status-bearing entries only, the
-// same rule the proposals filters use; rerouted/considered notes don't count.
-// Detail shows the accepted/rejected split under the page's effective-state
-// rule: a pending vote wins over the stored status (D1/D3).
 func (s *Server) proposalsTile() overviewTile {
-	files, _, err := proposals.Load(s.proposalsDir)
-	if err != nil {
-		return errorTile(err, "/proposals", "proposals", "Proposals")
-	}
-	votes, err := proposals.LoadVotes(s.votesPath())
-	if err != nil {
-		votes = nil
-	}
-
-	total := 0
-	counts := map[string]int{}
-	for _, file := range files {
-		for _, group := range file.Groups {
-			for index := range group.Proposals {
-				if group.Proposals[index].Status == "" {
-					continue
-				}
-				total++
-				counts[effectiveState(&group.Proposals[index], file.Kind, votes)]++
-			}
-		}
-	}
-	accepted := counts["accepted"] + counts["applied"] + counts["building"]
-	open := total - accepted - counts["rejected"] - counts["postponed"]
-
+	open := s.openProposals()
+	language := s.presentation.language()
+	detail := translate(language, "open change commits — pick or reject on the Proposals page")
 	tile := overviewTile{
-		Id: "proposals",
-		Detail: fmt.Sprintf("%d %s · %d %s",
-			accepted, translate(s.presentation.language(), "accepted"),
-			counts["rejected"], translate(s.presentation.language(), "rejected")),
-		Href:  "/proposals",
-		Label: "Proposals",
-		Value: fmt.Sprintf("%d %s", open, translate(s.presentation.language(), "open")),
+		Id:     "proposals",
+		Detail: detail,
+		Href:   "/proposals",
+		Label:  "Proposals",
+		Value:  fmt.Sprintf("%d %s", open.Count, translate(language, "open")),
 	}
 	return tile
 }
 
-// repoTile counts registered repos and their real agent worktrees (D3/D8);
-// the registry is in memory and counting is stat-cheap — no git execution.
+// repoTile runs no git: worktree counting is stat-only, the synced count reads each repo's context index.
 func (s *Server) repoTile() overviewTile {
 	registered := s.repoRegistry.Repos()
-	worktrees := 0
+	sourceIndexPath := filepath.Join(s.contextDir, repos.ContextFileName)
+	synced, worktrees := 0, 0
 	for _, repo := range registered {
 		worktrees += repos.CountPoolWorktrees(repo.Path)
+		presence := repos.DetectContext(repo.Path, contextdocs.DeployRecordPath(s.stateDir, repo.Name))
+		coverage, coverageErr := repos.DetectContextCoverage(sourceIndexPath, repo.Name, presence)
+		if isContextSynced(presence, coverage, coverageErr) {
+			synced++
+		}
 	}
 	return overviewTile{
 		Id:     "repos",
-		Detail: fmt.Sprintf("%d worktrees", worktrees),
+		Detail: fmt.Sprintf("%d synced · %d worktrees", synced, worktrees),
 		Href:   "/repos",
 		Label:  "Repos",
 		Value:  fmt.Sprintf("%d", len(registered)),
 	}
 }
 
-// routineTile reports active/total (active = loaded in launchd, the same
-// per-request probe the routines index does); broken or unprobeable routines
-// count as not active. A scan failure degrades the tile (D9).
+// routineTile counts broken or unprobeable routines as not active.
 func (s *Server) routineTile(ctx context.Context) overviewTile {
 	list, err := routines.Scan(s.routinesDir)
 	if err != nil {
@@ -509,19 +546,78 @@ func (s *Server) routineTile(ctx context.Context) overviewTile {
 	}
 }
 
-// welcomeTile summarizes the setup checks; runSetupChecks bounds its own
-// peek probe, so a down peek cannot stall the dashboard. The tile hides once
-// every check is green — the Welcome surface disappears when setup is done —
-// unless the install opted in with --init-welcome (debugging).
-func (s *Server) welcomeTile(ctx context.Context) (overviewTile, bool) {
-	checks := s.runSetupChecks(ctx)
-	ok := 0
+// usageOverviewTile shows the Usage page's Cost tile for one preset period over the first selected source.
+func (s *Server) usageOverviewTile(now time.Time, usageDays int, window string) overviewTile {
+	query := usageQuery{days: usageDays, source: s.usageSources()[0]}
+	href := query.url(usagePath)
+	view, err := s.loadUsage(now, query)
+	if err != nil {
+		return errorTile(err, href, "usage", labelUsage)
+	}
+
+	shares := view.planShares()
+	cost := view.cell(pairCost, &view.total.cost, budget.CostTolerance).Values[0]
+	tile := overviewTile{
+		Id:      "usage",
+		Detail:  joinDetail(usageCostDetail(cost), usageFableDetail(shares)),
+		Filters: usageFilters(usageDays, window),
+		Href:    href,
+		Label:   labelUsage,
+		Plans:   planOptions(view.plan),
+		Value:   usagePlanValue(shares),
+	}
+	if view.storeErr != "" {
+		tile.Detail, tile.Value = view.storeErr, usageDash
+	}
+	return tile
+}
+
+// usageCostDetail drops the dash of an empty period, which the tile value already shows.
+func usageCostDetail(cost string) string {
+	if cost == usageDash {
+		return ""
+	}
+	return cost + " API equivalent"
+}
+
+func usageFableDetail(shares planShares) string {
+	if shares.fable == 0 {
+		return ""
+	}
+	return fmt.Sprintf("Fable %.0f%% weekly", shares.fable)
+}
+
+// usagePlanValue is "<5-hour window> / <weekly>" in percent, the window alone for a plan without a weekly share.
+func usagePlanValue(shares planShares) string {
+	if shares.weighed == 0 {
+		return usageDash
+	}
+	if !shares.hasWeekly {
+		return fmt.Sprintf("%.0f%%", shares.window)
+	}
+	return fmt.Sprintf("%.0f%% / %.0f%%", shares.window, shares.weekly)
+}
+
+// handleOverviewWelcomeTile always answers the tile, so the Overview keeps one fixed tile set.
+func (s *Server) handleOverviewWelcomeTile(w http.ResponseWriter, r *http.Request) {
+	s.renderFragment(w, tmplOverviewTile, s.welcomeTile(r.Context()))
+}
+
+// welcomeTile loads as a fragment because its peek probe can take the whole timeout while peek is cold.
+func (s *Server) welcomeTile(ctx context.Context) overviewTile {
+	selected, healthy := 0, 0
 	detail := "all green"
-	for _, check := range checks {
-		if check.Ok {
-			ok++
-		} else if detail == "all green" {
-			detail = "next: " + check.Name
+	for _, row := range s.welcomeComponents(ctx).Rows {
+		switch row.State {
+		case componentOn:
+			selected++
+			healthy++
+		case componentDown:
+			selected++
+			if detail == "all green" {
+				detail = "next: " + row.Title
+			}
+		case componentOff, componentUnavailable:
 		}
 	}
 
@@ -530,15 +626,27 @@ func (s *Server) welcomeTile(ctx context.Context) (overviewTile, bool) {
 		Detail: detail,
 		Href:   "/welcome",
 		Label:  "Setup",
-		Value:  fmt.Sprintf("%d/%d checks", ok, len(checks)),
+		Value:  fmt.Sprintf("%d/%d components", healthy, selected),
 	}
-	return tile, ok < len(checks) || s.initWelcome
+	return tile
+}
+
+// welcomePlaceholderTile keeps the tile's saved drag position until the fragment replaces it.
+func welcomePlaceholderTile() overviewTile {
+	tile := overviewTile{
+		Id:       "welcome",
+		Href:     "/welcome",
+		Label:    "Setup",
+		LazyHref: "/overview/welcome-tile",
+		Value:    "…",
+	}
+	return tile
 }
 
 func countWorkflowScripts(files []string) int {
 	count := 0
 	for _, file := range files {
-		if strings.HasPrefix(file, "workflows/") && strings.HasSuffix(file, ".js") {
+		if strings.HasPrefix(file, "workflows"+string(filepath.Separator)) && strings.HasSuffix(file, ".js") {
 			count++
 		}
 	}
@@ -555,15 +663,9 @@ func errorTile(err error, href, id, label string) overviewTile {
 	}
 }
 
-// hooksTile reports enabled/total hook groups; its detail line carries the
-// disabled counts across hooks, permissions, and MCP servers (the retired
-// Disabled-entries card folded in, D7).
-func hooksTile(main, disabled *config.Settings) overviewTile {
+// hooksTile counts the parked groups of hooks.disabled.json; its detail line carries the disabled counts of the retired Disabled-entries card.
+func hooksTile(main, disabled *config.Settings, parked map[string][]config.HookGroup) overviewTile {
 	mainHooks, err := main.Hooks()
-	if err != nil {
-		return errorTile(err, "/config/claude", "hooks", "Hooks")
-	}
-	disabledHooks, err := disabled.Hooks()
 	if err != nil {
 		return errorTile(err, "/config/claude", "hooks", "Hooks")
 	}
@@ -582,7 +684,7 @@ func hooksTile(main, disabled *config.Settings) overviewTile {
 		total += len(groups)
 	}
 	disabledHookCount := 0
-	for _, groups := range disabledHooks {
+	for _, groups := range parked {
 		disabledHookCount += len(groups)
 	}
 	total += disabledHookCount
@@ -591,7 +693,7 @@ func hooksTile(main, disabled *config.Settings) overviewTile {
 	return overviewTile{
 		Id:     "hooks",
 		Detail: fmt.Sprintf("disabled: %d hooks · %d permissions · %d MCP", disabledHookCount, permCount, len(disabledMcp)),
-		Href:   "/config/claude?open=hooks#hooks",
+		Href:   "/config/hooks",
 		Label:  "Hooks",
 		Value:  fmt.Sprintf("%d/%d enabled", enabled, total),
 	}
@@ -621,35 +723,6 @@ func (s *Server) mcpTile(main *config.Settings) overviewTile {
 		Href:   "/config/claude?open=mcp#mcp",
 		Label:  "MCP servers",
 		Value:  fmt.Sprintf("%d/%d enabled", len(enabled), len(known)),
-	}
-	return tile
-}
-
-func modelTile(main *config.Settings) overviewTile {
-	model, err := main.Model()
-	if err != nil {
-		return errorTile(err, "/config/claude", "model", "Model")
-	}
-	if model == "" {
-		model = "(default)"
-	}
-
-	tile := overviewTile{
-		Id:    "model",
-		Href:  "/config/claude?open=model#model",
-		Label: "Model",
-		Value: model,
-	}
-	return tile
-}
-
-func toolsTile() overviewTile {
-	tile := overviewTile{
-		Id:     "tools",
-		Detail: strings.Join(toolNames, " · "),
-		Href:   "/tools",
-		Label:  "Tools",
-		Value:  fmt.Sprintf("%d", len(toolNames)),
 	}
 	return tile
 }

@@ -10,18 +10,19 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/kevinhorst/smine/internal/reach"
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
-// violationLineRe is the verifier output contract: one violation per line
-// as file:line: message. Anything else in the combined output (go run's own
-// "exit status 1" on stderr, compiler chatter) is tool noise, not a finding.
+// Verifier output not shaped file:line: message is tool noise, not a finding.
 var violationLineRe = regexp.MustCompile(`^\S+:\d+: `)
 
-// Diagnostic is one gate finding, machine-readable so retry prompts are
-// generated, not written.
+// Small pool: the heavy verifiers (golangci, exhaustive) are internally parallel already.
+const checkWorkerCount = 4
+
+// Machine-readable so retry prompts are generated, not written.
 type Diagnostic struct {
 	RuleId   string `json:"id"`
 	Verifier string `json:"verifier"`
@@ -29,11 +30,22 @@ type Diagnostic struct {
 	Why      string `json:"why"`
 }
 
-// FileUniverse lists the repo's files — tracked plus untracked unignored,
-// minus deleted-but-indexed — sorted. No pathspecs means every file: the
-// deterministic universe anchors resolve against. Untracked inclusion is the
-// point: the gate must see what an agent just generated, not what git
-// already blessed.
+type verifierJob struct {
+	entry  RegistryEntry
+	files  []string
+	hashes *contentHashes
+	index  int
+	rule   Rule
+}
+
+// verifierResult carries one job's outcome back from the pool.
+type verifierResult struct {
+	diagnostics []Diagnostic
+	err         error
+	index       int
+}
+
+// Untracked files are included: the gate must see what an agent just generated.
 func FileUniverse(ctx context.Context, root string, pathspecs ...string) ([]string, error) {
 	args := append([]string{"ls-files", "--cached", "--others", "--exclude-standard", "--"}, pathspecs...)
 	output, err := shell.Run(ctx, root, "git", args...)
@@ -50,18 +62,16 @@ func FileUniverse(ctx context.Context, root string, pathspecs ...string) ([]stri
 	return files, nil
 }
 
-// Check resolves every rule's anchor and runs its registered verifier.
-// Violations come back as diagnostics; a broken verifier (exit ≥2, missing
-// registry entry, unresolvable anchor) is an error — tool breakage, not a finding.
+// A broken verifier (exit ≥2, missing entry, unresolvable anchor) is an error, not a finding.
 func Check(ctx context.Context, root string, rules []Rule, registry map[string]RegistryEntry, universe []string) ([]Diagnostic, error) {
-	var diagnostics []Diagnostic
-	for _, rule := range rules {
+	ordered := make([][]Diagnostic, len(rules))
+	jobs := make([]verifierJob, 0, len(rules))
+	hashes := hashUniverse(root, universe)
+	for index, rule := range rules {
 		if rule.Reach == reach.None {
 			continue
 		}
-		// needs= names artifacts the verifier reads (a generated index, a
-		// schema). A tree without them — a public clone whose private
-		// artifacts are excluded — cannot run the rule; skip, not breakage.
+		// A tree without the needs= artifacts (a public clone) cannot run the rule: skip, not breakage.
 		if len(missingNeeds(root, rule)) > 0 {
 			continue
 		}
@@ -71,13 +81,12 @@ func Check(ctx context.Context, root string, rules []Rule, registry map[string]R
 		}
 		matched, err := ResolveAnchor(universe, rule)
 		if err != nil {
-			// empty="ok" marks a transient artifact class (e.g. active design
-			// plans, all archived) — zero matches is a legitimate state.
+			// empty="ok" marks a transient artifact class: zero matches is a legitimate state.
 			if rule.AllowEmpty && errors.Is(err, ErrAnchorEmpty) {
 				continue
 			}
 			if rule.Lifetime == LifetimeTask && errors.Is(err, ErrAnchorEmpty) {
-				diagnostics = append(diagnostics, Diagnostic{
+				ordered[index] = append(ordered[index], Diagnostic{
 					RuleId:   rule.Id,
 					Verifier: rule.Verifier,
 					Message:  fmt.Sprintf("%s:%d: anchor matched no files — planned artifact not yet present", rule.File, rule.Line),
@@ -87,20 +96,68 @@ func Check(ctx context.Context, root string, rules []Rule, registry map[string]R
 			}
 			return nil, fmt.Errorf("Check: %w", err)
 		}
-		ruleDiagnostics, err := runVerifier(ctx, root, rule, entry, matched)
-		if err != nil {
-			return nil, err
+		job := verifierJob{entry: entry, files: matched, hashes: hashes, index: index, rule: rule}
+		jobs = append(jobs, job)
+	}
+
+	workChan := make(chan verifierJob, len(jobs))
+	for _, job := range jobs {
+		workChan <- job
+	}
+	close(workChan)
+
+	resultChan := make(chan verifierResult, len(jobs))
+
+	var wg sync.WaitGroup
+	for range checkWorkerCount {
+		wg.Go(func() {
+			for job := range workChan {
+				resultChan <- runVerifierJob(ctx, root, job)
+			}
+		})
+	}
+	wg.Wait()
+	close(resultChan)
+
+	var firstErr error
+	firstErrIndex := len(rules)
+	for result := range resultChan {
+		if result.err != nil {
+			if result.index < firstErrIndex {
+				firstErr = result.err
+				firstErrIndex = result.index
+			}
+			continue
 		}
+		ordered[result.index] = result.diagnostics
+	}
+	if firstErr != nil {
+		return nil, firstErr
+	}
+
+	var diagnostics []Diagnostic
+	for _, ruleDiagnostics := range ordered {
 		diagnostics = append(diagnostics, ruleDiagnostics...)
 	}
 	return diagnostics, nil
 }
 
-// runVerifier executes one rule's verifier against the given files and
-// maps the exit code per the contract: 0 = pass, 1 = violations (one per
-// contract-shaped stdout line), anything else = tool error.
-func runVerifier(ctx context.Context, root string, rule Rule, entry RegistryEntry, files []string) ([]Diagnostic, error) {
+func runVerifierJob(ctx context.Context, root string, job verifierJob) verifierResult {
+	diagnostics, err := runVerifier(ctx, root, job.rule, job.entry, job.files, job.hashes)
+	result := verifierResult{diagnostics: diagnostics, err: err, index: job.index}
+	return result
+}
+
+// Exit 0 = pass, 1 = one violation per contract-shaped stdout line, anything else = tool error; nil hashes = no cache.
+func runVerifier(ctx context.Context, root string, rule Rule, entry RegistryEntry, files []string, hashes *contentHashes) ([]Diagnostic, error) {
 	entry = resolveVerifierBinary(root, entry)
+	verdictKey := cacheKey(entry, rule, files, hashes)
+	if verdictKey != "" {
+		if verdict, ok := loadVerdict(root, verdictKey); ok {
+			return verdict.Diagnostics, nil
+		}
+	}
+
 	listPath, err := writeFilesList(files)
 	if err != nil {
 		return nil, fmt.Errorf("runVerifier: %s: %w", rule.Id, err)
@@ -112,10 +169,11 @@ func runVerifier(ctx context.Context, root string, rule Rule, entry RegistryEntr
 		args = append(args, key+"="+rule.Params[key])
 	}
 
-	runCtx, cancel := context.WithTimeout(ctx, entry.Timeout())
-	output, err := shell.Run(runCtx, root, entry.Argv[0], args...)
-	cancel()
+	output, err := shell.RunWithin(ctx, root, entry.Argv[0], entry.Timeout(), args...)
 	if err == nil {
+		if verdictKey != "" {
+			storeVerdict(root, verdictKey, &cachedVerdict{Exit: 0})
+		}
 		return nil, nil // exit 0: pass
 	}
 	if !isExitOne(err) {
@@ -133,12 +191,13 @@ func runVerifier(ctx context.Context, root string, rule Rule, entry RegistryEntr
 		// Exit 1 with no contract-shaped line: never let a failure vanish.
 		diagnostics = append(diagnostics, Diagnostic{RuleId: rule.Id, Verifier: rule.Verifier, Message: strings.TrimSpace(output), Why: rule.Why})
 	}
+	if verdictKey != "" {
+		storeVerdict(root, verdictKey, &cachedVerdict{Diagnostics: diagnostics, Exit: 1})
+	}
 	return diagnostics, nil
 }
 
-// missingNeeds returns the rule's needs= paths absent under root. Check and
-// RunFixtures share it: a rule whose declared artifacts are missing is
-// skipped in both, so the gate and its fixtures agree on applicability.
+// Check and RunFixtures share it so the gate and its fixtures agree on applicability.
 func missingNeeds(root string, rule Rule) []string {
 	var missing []string
 	for _, path := range rule.Needs {
@@ -149,8 +208,6 @@ func missingNeeds(root string, rule Rule) []string {
 	return missing
 }
 
-// isExitOne reports whether the error chain ends in a verifier's exit
-// status 1 — the violations verdict, as opposed to tool breakage.
 func isExitOne(err error) bool {
 	var exitErr *exec.ExitError
 	return errors.As(err, &exitErr) && exitErr.ExitCode() == 1

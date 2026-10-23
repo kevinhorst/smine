@@ -1,0 +1,195 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{t "Usage"}}</h1>
+
+{{if .StoreErr}}<div class="card"><span class="badge badge-error">{{t "usage store"}}</span> {{.StoreErr}}</div>{{end}}
+{{range .RunErrors}}<div class="card"><span class="badge badge-error">smine-budget</span> {{.}}</div>{{end}}
+
+<div class="card card-filter">
+  <div class="card-row">
+    <span class="section-label">{{t "period"}}</span>
+    {{range .Presets}}<a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.Url}}">{{t .Label}}</a>{{end}}
+    <form class="usage-range" method="get" action="/usage">
+      {{range .RangeFields}}<input type="hidden" name="{{.Name}}" value="{{.Value}}">{{end}}
+      <input type="date" name="from" value="{{.From}}" required>
+      <input type="date" name="to" value="{{.To}}" required>
+      <button type="submit" class="small">{{t "Apply"}}</button>
+    </form>
+    <span class="meta">{{.From}} – {{.To}} · {{.Total}} {{t "sessions"}}{{if .RunTime}} · {{t "last smine-budget run"}} {{.RunTime}}{{else}} · {{t "smine-budget has not run yet"}}{{end}} · <a href="/routines/smine-budget">{{t "routine"}}</a></span>
+    {{if .HasCcusage}}<form method="post" action="/usage/recalculate" title="{{t "re-read every session from ccusage and overwrite its stored ccusage values"}}">
+      <button type="submit" class="small">{{t "recalculate ccusage"}}</button>
+    </form>{{end}}
+  </div>
+  {{if .Sources}}
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">{{t "source"}}</span>
+    {{range .Sources}}<a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.Url}}">{{t .Label}}</a>{{end}}
+  </div>
+  {{end}}
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">{{t "plan"}}</span>
+    <form class="usage-plans" method="post" action="/usage/plan">
+      {{range .Plans}}<button type="submit" name="plan" value="{{.Value}}" class="badge {{if .IsSelected}}badge-ok{{else}}badge-dim{{end}}">{{.Label}}</button>{{end}}
+    </form>
+    <span class="meta">{{t "plan % is counted against this plan's 5-hour window"}}</span>
+  </div>
+  {{if gt (len .Agents) 1}}
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">{{t "agent"}}</span>
+    {{range .Agents}}<a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.Url}}">{{if .IsAll}}{{t "all"}}{{else}}{{.Label}}{{end}}</a>{{end}}
+  </div>
+  {{end}}
+  {{if gt (len .Repos) 1}}
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">{{t "repo"}}</span>
+    {{range .Repos}}<a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.Url}}">{{if .IsAll}}{{t "all"}}{{else}}{{.Label}}{{end}}</a>{{end}}
+  </div>
+  {{end}}
+  {{if gt (len .Skills) 1}}
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">{{t "skill"}}</span>
+    <select class="scope-select" title="{{t "skill"}}" onchange="location.href=this.value">
+      {{range .Skills}}<option value="{{.Url}}"{{if .Active}} selected{{end}}>{{if .IsAll}}{{t "all skills"}}{{else}}{{.Label}}{{end}}</option>{{end}}
+    </select>
+    {{if .Skill}}<span class="meta">{{t "root-agent usage of this skill's runs · cost and plan % are the runs' price-weighted share of their session · peek"}}</span>{{end}}
+  </div>
+  {{end}}
+</div>
+
+<div class="tiles report-tiles">
+  {{range .Tiles}}
+  <div class="tile">
+    <span class="tile-label">{{t .Label}}</span>
+    <span class="tile-value{{if .Cell.Badge}} usage-pair{{end}}">{{template "_usage_values" .Cell}}</span>
+    {{if or .Cell.Badge .Detail}}<span class="tile-detail">{{if .Cell.Badge}}peek / ccusage <span class="badge {{.Cell.Badge}}">{{t (print .Cell.Verdict)}}</span>{{if .Detail}} · {{end}}{{end}}{{.Detail}}</span>{{end}}
+  </div>
+  {{end}}
+</div>
+
+{{with .Chart}}
+<div class="card card-column">
+  <div class="card-row">
+    <span class="section-label section-label-fit">{{t "cost per day"}}</span>
+    {{range .Units}}<a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.Url}}">{{t .Label}}</a>{{end}}
+    {{if .Days}}<span class="meta">{{if .Plan}}{{t "percent of one"}} {{.Plan}} {{t "5-hour window"}}, Claude Code · {{end}}{{.Total}} {{t "total"}} · {{.Average}} {{t "a day"}} · {{t "by day of last activity"}}</span>{{else}}<span class="meta">{{t "no session of this period carries a per-model token split yet"}}</span>{{end}}
+  </div>
+  {{if .Days}}
+  <div class="usage-chart">
+    <div class="usage-chart-axis"><span>{{.Max}}</span><span>{{.Half}}</span><span>0</span></div>
+    <div class="usage-chart-days">
+      {{range .Days}}
+      <div class="usage-day" title="{{.Title}}">
+        <div class="usage-day-plot">
+          {{if .Value}}<span class="usage-day-value" style="bottom: {{.Height}}%">{{.Value}}</span>{{end}}
+          <span class="usage-day-bar" style="height: {{.Height}}%"></span>
+        </div>
+        <span class="usage-day-label">{{.Label}}</span>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+</div>
+{{end}}
+
+<div class="card card-column">
+  <div class="card-row"><span class="section-label">{{t "by repo"}}</span></div>
+  <input type="checkbox" class="table-top-toggle" id="usage-top-repo">
+  <div class="table-scroll">
+  <table class="files-table table-top" data-sortable>
+    <thead><tr><th data-sort="text">{{t "repo"}}</th><th data-sort="num">{{t "sessions"}}</th><th>{{t "Cost"}}{{if .IsBoth}} peek / ccusage{{end}}</th><th>{{t "Tokens"}}{{if .IsBoth}} peek / ccusage{{end}}</th><th>{{t "Wall time"}}{{if .IsBoth}} peek / ccusage{{end}}</th></tr></thead>
+    <tbody>
+      {{range .RepoRows}}
+      <tr>
+        <td><a href="{{.Url}}">{{.Name}}</a></td>
+        <td data-value="{{.Sessions}}">{{.Sessions}}</td>
+        <td>{{template "_usage_cell" .Cost}}</td>
+        <td>{{template "_usage_cell" .Tokens}}</td>
+        <td>{{template "_usage_cell" .Wall}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{if gt (len .RepoRows) 3}}<label class="table-top-label" for="usage-top-repo"><span class="table-top-more">{{t "show all"}} {{len .RepoRows}}</span><span class="table-top-less">{{t "show top 3"}}</span></label>{{end}}
+</div>
+
+{{if not .Skill}}
+<div class="card card-column">
+  <div class="card-row"><span class="section-label">{{t "by skill"}}</span> <span class="meta">{{t "peek only — root-agent tokens per skill invocation, time is the run's wall span"}}</span></div>
+  <input type="checkbox" class="table-top-toggle" id="usage-top-skill">
+  <div class="table-scroll">
+  <table class="files-table table-top" data-sortable>
+    <thead><tr><th data-sort="text">{{t "skill"}}</th><th data-sort="num">{{t "runs"}}</th><th>{{t "time"}}</th><th data-sort="num">{{t "Tokens"}}</th><th data-sort="num">{{t "Cache read"}}</th></tr></thead>
+    <tbody>
+      {{range .SkillRows}}
+      <tr>
+        <td>{{if .Url}}<a href="{{.Url}}">{{.Name}}</a>{{else}}{{t .Name}}{{end}}</td>
+        <td data-value="{{.Runs}}">{{.Runs}}</td>
+        <td>{{.Seconds}}</td>
+        <td data-value="{{.TokensValue}}">{{.Tokens}}</td>
+        <td data-value="{{.CacheReadValue}}">{{.CacheRead}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{if gt (len .SkillRows) 3}}<label class="table-top-label" for="usage-top-skill"><span class="table-top-more">{{t "show all"}} {{len .SkillRows}}</span><span class="table-top-less">{{t "show top 3"}}</span></label>{{end}}
+</div>
+
+<div class="card card-column">
+  <div class="card-row"><span class="section-label section-label-fit">{{t "Injected context"}}</span> <span class="meta">{{.ContextCovered}} / {{.Total}} {{t "sessions with a stored breakdown"}}</span></div>
+  <input type="checkbox" class="table-top-toggle" id="usage-top-context">
+  <div class="table-scroll">
+  <table class="files-table table-top">
+    <thead><tr><th>{{t "kind"}}</th><th>{{t "Injections"}}</th><th>{{t "Chars"}}</th><th>{{t "Tokens"}}</th></tr></thead>
+    <tbody>
+      {{range .ContextKinds}}<tr><td>{{.Kind}}</td><td>{{.Items}}</td><td>{{.Chars}}</td><td>{{.Tokens}}</td></tr>{{end}}
+    </tbody>
+  </table>
+  </div>
+  {{if gt (len .ContextKinds) 3}}<label class="table-top-label" for="usage-top-context"><span class="table-top-more">{{t "show all"}} {{len .ContextKinds}}</span><span class="table-top-less">{{t "show top 3"}}</span></label>{{end}}
+</div>
+{{end}}
+
+<div class="card card-column">
+  <div class="card-row">
+    <span class="section-label">{{t "Sessions"}}</span>
+    {{if .IsBoth}}<a class="badge {{if .Only.Active}}badge-ok{{else}}badge-dim{{end}}" href="{{.Only.Url}}">{{t .Only.Label}}</a>{{end}}
+    <a href="{{.CsvUrl}}" download>{{t "Download .csv"}}</a>
+    <span class="meta">{{t "plan % of a"}} {{.Plan}} {{t "5-hour window"}}</span>
+  </div>
+  {{if .Sessions}}
+  <div class="table-scroll table-scroll-y">
+  <table class="files-table" data-sortable>
+    <thead><tr><th data-sort="text">{{t "state"}}</th><th data-sort="text">{{t "session"}}</th><th data-sort="text">{{t "repo"}}</th><th data-sort="text">{{t "skills"}}</th><th data-sort="text">{{t "last active"}}</th><th>{{t "Cost"}}{{if .IsBoth}} peek / ccusage{{end}}</th><th>{{t "plan %"}}</th><th data-sort="num">{{t "Tokens"}}{{if .IsBoth}} peek / ccusage{{end}}</th><th>{{t "Wall time"}}</th>{{if not .Skill}}<th>{{t "context chars"}}</th><th data-sort="num">{{t "context tokens"}}</th>{{end}}{{if .IsBoth}}<th></th>{{end}}</tr></thead>
+    <tbody>
+      {{range .Sessions}}
+      <tr>
+        <td class="cell-state">{{if .Title}}{{with titleView .Title}}{{template "_title_state" .}}{{end}}{{end}}</td>
+        <td><a href="/sessions-report/{{pathEscape .Id}}">{{if .Title}}{{with titleView .Title}}{{.Text}}{{end}}{{else}}{{.ShortId}}{{end}}</a> <span class="meta">{{.Agent}}</span></td>
+        <td>{{.Repo}}</td>
+        <td>{{.Skills}}{{if .MoreSkillsCount}}<details class="cell-more"><summary>+{{.MoreSkillsCount}}</summary>, {{.MoreSkills}}</details>{{end}}</td>
+        <td>{{.LastActive}}</td>
+        <td>{{template "_usage_values" .Cost}}</td>
+        <td>{{.PlanPercent}}</td>
+        <td data-value="{{.TokensValue}}">{{template "_usage_values" .Tokens}}</td>
+        <td>{{template "_usage_values" .Wall}}</td>
+        {{if $.Skill}}{{else if .HasContext}}<td>{{.ContextChars}}</td><td data-value="{{.ContextTokensValue}}">{{.ContextTokens}}</td>{{else}}<td class="cell-muted">—</td><td class="cell-muted" data-value="0">—</td>{{end}}
+        {{if $.IsBoth}}<td><span class="badge {{.Badge}}">{{t (print .Verdict)}}</span></td>{{end}}
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="empty">{{t "No sessions in this period."}}</p>
+  {{end}}
+</div>
+{{template "_table_sort"}}
+{{template "foot" .}}

@@ -1,0 +1,34 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Config</h1>
+{{template "_config_tabs" .}}
+{{if not .Tiles}}<div class="empty">No component with settings</div>{{end}}
+{{/* the tiles sit inside the swap region, so a tile click re-renders the highlight with the panel */}}
+<div id="smine-body">
+<div class="tiles tiles-3 smine-tiles">
+  {{range .Tiles}}
+  {{if .IsSelected}}
+  <a class="tile tile-pick{{if .IsActive}} tile-active{{end}}" href="/config/smine?component={{.Id}}"
+     hx-get="/config/smine?component={{.Id}}" hx-select="#smine-body" hx-target="#smine-body" hx-swap="outerHTML" hx-push-url="true">
+    <span class="tile-label">{{.Title}}</span>
+    <span class="tile-value">{{.Settings}} <span class="tile-unit">settings</span></span>
+    <span class="tile-detail">
+      <span class="badge badge-ok">on</span>
+      {{if .Overridden}}<span class="badge badge-action">{{.Overridden}} overridden</span>{{end}}
+    </span>
+  </a>
+  {{else}}
+  <div class="tile card-disabled" title="off — install it on the Profile page to change its settings">
+    <span class="tile-label">{{.Title}}</span>
+    <span class="tile-value">{{.Settings}} <span class="tile-unit">settings</span></span>
+    <span class="tile-detail">
+      <span class="badge badge-dim">off</span>
+      {{if .Overridden}}<span class="badge badge-action">{{.Overridden}} overridden</span>{{end}}
+    </span>
+  </div>
+  {{end}}
+  {{end}}
+</div>
+{{if .Tiles}}{{template "_smine_panel.html" .Panel}}{{end}}
+</div>
+{{template "foot" .}}

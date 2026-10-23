@@ -1,0 +1,10 @@
+{{define "_profile_style.html"}}
+{{/* One form, swapped in place: the save answers with it and its notice beside the Save button. */}}
+<form id="profile-style-form" class="configure-form" hx-post="/profile/style" hx-target="#profile-style-form" hx-swap="outerHTML">
+  <textarea name="style_content" rows="24">{{.StyleContent}}</textarea>
+  <div class="card-row">
+    <button type="submit">{{t "Save"}}</button>
+    {{if .Notice}}<span class="badge badge-ok">Ok</span> <span class="label">{{t .Notice}}</span>{{end}}
+  </div>
+</form>
+{{end}}

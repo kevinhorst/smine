@@ -1,6 +1,8 @@
 package contextdocs
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,23 +10,25 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/reach"
 )
 
 const rulesFixture = `# Data Integrity
 
 Intro prose.
 
-**ACTION-IMPL-INTEG-001** ` + "`[review]`" + ` — Never edit an applied migration.
+**ACTION-IMPL-INTEG-001** ` + "`[prose]`" + ` — Never edit an applied migration.
 
 * Why: history is append-only.
 * Applies: diff touches migration files.
 
-**ACTION-IMPL-INTEG-004** ` + "`[review]`" + ` — Claim side effects transactionally.
+**ACTION-IMPL-INTEG-004** ` + "`[prose]`" + ` — Claim side effects transactionally.
 
 * Applies: diff adds a send or charge.
 
 ` + "```markdown" + `
-**NEVER-INTEG-099** ` + "`[review]`" + ` — Fenced example, never parsed.
+**NEVER-INTEG-099** ` + "`[prose]`" + ` — Fenced example, never parsed.
 ` + "```" + `
 
 ## Tombstones
@@ -40,6 +44,17 @@ func writeRulesFixture(t *testing.T, files map[string]string) string {
 	for name, content := range files {
 		require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0644))
 	}
+	return dir
+}
+
+// writeContextFixture is a context root with one entry and the test aspects saved by the production writer.
+func writeContextFixture(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "actions"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "actions", "nav.md"),
+		[]byte("**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n"), 0644))
+	require.NoError(t, SaveAspects(dir, provideTestAspects()))
 	return dir
 }
 
@@ -65,7 +80,7 @@ func TestParseRulesDir(t *testing.T) {
 		assert.Equal(t, "INTEG", set.Entries[0].Topic)
 		assert.Equal(t, 1, set.Entries[0].Number)
 		assert.Equal(t, "Never edit an applied migration.", set.Entries[0].Content.Statement)
-		assert.Equal(t, "review", set.Entries[0].Enforcement)
+		assert.Equal(t, "prose", set.Entries[0].Enforcement)
 		assert.Equal(t, "diff touches migration files.", set.Entries[0].Content.Applies)
 		assert.Equal(t, RuleOriginBaseline, set.Entries[0].Origin)
 
@@ -78,20 +93,34 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("marker-tag-parses", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"integrity.md": "# Data Integrity\n\n**ACTION-IMPL-INTEG-001** `[review]` `[DoD]` — Never edit an applied migration.\n\n* Applies: diff touches migration files.\n\n**ACTION-IMPL-INTEG-004** `[review]` — Claim side effects transactionally.\n\n* Applies: diff adds a send or charge.\n",
+			"integrity.md": "# Data Integrity\n\n**ACTION-IMPL-INTEG-001** `[prose]` `[DoD]` — Never edit an applied migration.\n\n* Applies: diff touches migration files.\n\n**ACTION-IMPL-INTEG-004** `[prose]` — Claim side effects transactionally.\n\n* Applies: diff adds a send or charge.\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
 		require.Len(t, set.Entries, 2)
 		assert.Equal(t, []string{"DoD"}, set.Entries[0].Markers)
-		assert.Equal(t, "review", set.Entries[0].Enforcement)
+		assert.Equal(t, "prose", set.Entries[0].Enforcement)
 		assert.Equal(t, "Never edit an applied migration.", set.Entries[0].Content.Statement)
 		assert.Nil(t, set.Entries[1].Markers)
 	})
 
+	t.Run("soft-wrapped-headline-joins-statement", func(t *testing.T) {
+		dir := writeRulesFixture(t, map[string]string{
+			"runbooks.md": "# Runbooks\n\n**RULE-NAV-001** `[prose]` — A runbook is started from the repo's\ntemplate, never from scratch.\n\n* Applies: everywhere.\n\nA prose note after a blank line.\n\n**RULE-NAV-002** `[prose]` — Second rule\n1. numbered item stops the join\n\n**RULE-NAV-003** `[prose]` — Third rule\n| a table row stops the join |\n",
+		})
+		set, err := ParseRulesDir(dir, false)
+		require.NoError(t, err)
+		require.Len(t, set.Entries, 3)
+		assert.Equal(t, "A runbook is started from the repo's template, never from scratch.", set.Entries[0].Content.Statement)
+		assert.Equal(t, []string{"A prose note after a blank line."}, set.Entries[0].Content.Notes)
+		assert.Equal(t, "Second rule", set.Entries[1].Content.Statement)
+		assert.Equal(t, []string{"1. numbered item stops the join"}, set.Entries[1].Content.Notes)
+		assert.Equal(t, "Third rule", set.Entries[2].Content.Statement)
+	})
+
 	t.Run("malformed-entry-line-still-errors", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"integrity.md": "**ACTION-IMPL-INTEG-001** `[review]` `[DoD]` no dash separator\n",
+			"integrity.md": "**ACTION-IMPL-INTEG-001** `[prose]` `[DoD]` no dash separator\n",
 		})
 		_, err := ParseRulesDir(dir, false)
 		require.Error(t, err)
@@ -100,7 +129,7 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("content-is-typed-fields", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"go.md": "# GO\n\n**RULE-NAV-001** `[review]` — Names are verbose.\n\n* Applies: everywhere.\n* Why: clarity.\n* Evidence: measured drift.\n* Version: 1.1\n* Names MUST be verbose.\n  Continuation of the bullet.\n* No `i` loops.\n\nA prose note.\n\n```go\n// GOOD\n---\nvar hookGroup int\n```\n\n```\nbare fence\n```\n\n**RULE-NAV-002** `[review]` — Second rule.\n\n## SECTION\n\nprose\n",
+			"go.md": "# GO\n\n**RULE-NAV-001** `[prose]` — Names are verbose.\n\n* Applies: everywhere.\n* Why: clarity.\n* Evidence: measured drift.\n* Version: 1.1\n* Names MUST be verbose.\n  Continuation of the bullet.\n* No `i` loops.\n\nA prose note.\n\n```go\n// GOOD\n---\nvar hookGroup int\n```\n\n```\nbare fence\n```\n\n**RULE-NAV-002** `[prose]` — Second rule.\n\n## SECTION\n\nprose\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -121,8 +150,8 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("files-line-declares-a-guide", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"go.md":   "# GO\n\n**Files:** `*.go`, `*_test.go`\n\n**RULE-NAV-001** `[review]` — Names are verbose.\n",
-			"plan.md": "# PLAN\n\n**RULE-NAV-002** `[review]` — No Files line here.\n",
+			"go.md":   "# GO\n\n**Files:** `*.go`, `*_test.go`\n\n**RULE-NAV-001** `[prose]` — Names are verbose.\n",
+			"plan.md": "# PLAN\n\n**RULE-NAV-002** `[prose]` — No Files line here.\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -152,7 +181,7 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("malformed-entry-line-errors", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"broken.md": "**ACTION-IMPL-1** `[review]` — Two-digit number.\n",
+			"broken.md": "**ACTION-IMPL-1** `[prose]` — Two-digit number.\n",
 		})
 		_, err := ParseRulesDir(dir, false)
 		require.Error(t, err)
@@ -161,8 +190,8 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("detects-origin-by-header", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"baseline.md": "<!-- synced from smine — do not edit -->\n\n**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n",
-			"overlay.md":  "**ACTION-NAV-100** `[review]` — Repo-local rule.\n\n* Applies: this repo.\n",
+			"baseline.md": "<!-- synced from smine — do not edit -->\n\n**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n",
+			"overlay.md":  "**ACTION-NAV-100** `[prose]` — Repo-local rule.\n\n* Applies: this repo.\n",
 		})
 		set, err := ParseRulesDir(dir, true)
 		require.NoError(t, err)
@@ -171,25 +200,9 @@ func TestParseRulesDir(t *testing.T) {
 		assert.Equal(t, RuleOriginOverlay, set.Entries[1].Origin)
 	})
 
-	t.Run("repo-context-parses-clean", func(t *testing.T) {
-		contextDir := filepath.Join("..", "..", "context")
-		// A tree without the generated context file (a public clone; the
-		// private context pipeline is not materialized) has no aspects to
-		// validate the repo tree against — same skip as the acdsl needs= gate.
-		if _, err := os.Stat(filepath.Join(contextDir, ContextFileName)); os.IsNotExist(err) {
-			t.Skip("context/context.json absent — context pipeline not materialized")
-		}
-		set, err := ParseContext(contextDir, false)
-		require.NoError(t, err)
-		assert.NotEmpty(t, set.Entries)
-		aspects, err := LoadAspects(contextDir)
-		require.NoError(t, err)
-		assert.Empty(t, ValidateRules(set, aspects))
-	})
-
 	t.Run("rule-kind-headline-parses", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"go.md": "**RULE-NAV-INTEG-001** `[review]` — Names are verbose.\n",
+			"go.md": "**RULE-NAV-INTEG-001** `[prose]` — Names are verbose.\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -197,12 +210,12 @@ func TestParseRulesDir(t *testing.T) {
 		assert.Equal(t, RuleKindRule, set.Entries[0].Kind)
 		assert.Equal(t, "NAV", set.Entries[0].Scope)
 		assert.Equal(t, "INTEG", set.Entries[0].Topic)
-		assert.Equal(t, "review", set.Entries[0].Enforcement)
+		assert.Equal(t, "prose", set.Entries[0].Enforcement)
 	})
 
 	t.Run("version-bullet-overrides-default", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"nav.md": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n* Version: 1.2\n",
+			"nav.md": "**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n* Version: 1.2\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -212,7 +225,7 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("version-defaults-to-1.0", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"nav.md": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n",
+			"nav.md": "**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -222,7 +235,7 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("reach-bullet-parses-smine-and-list", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"nav.md": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n* Reach: smine\n\n**ACTION-NAV-002** `[review]` — Always look.\n\n* Applies: everywhere.\n* Reach: work, peek-mcp\n",
+			"nav.md": "**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n* Reach: smine\n\n**ACTION-NAV-002** `[prose]` — Always look.\n\n* Applies: everywhere.\n* Reach: work, peek-mcp\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -233,7 +246,7 @@ func TestParseRulesDir(t *testing.T) {
 
 	t.Run("reach-defaults-to-global", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			"nav.md": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n",
+			"nav.md": "**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n",
 		})
 		set, err := ParseRulesDir(dir, false)
 		require.NoError(t, err)
@@ -268,7 +281,7 @@ func TestParseFactsDir(t *testing.T) {
 		})
 		set, err := ParseFactsDir(dir)
 		require.NoError(t, err)
-		violations := ValidateRules(set, provideTestAspects())
+		violations := ValidateRules(set, provideTestAspects(), "")
 		require.NotEmpty(t, violations)
 		assert.Contains(t, violations[0], "Location bullet")
 	})
@@ -285,7 +298,7 @@ func TestParseContext(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, set.Entries, 1)
 		assert.Equal(t, RuleOriginOverlay, set.Entries[0].Origin)
-		assert.Empty(t, ValidateRules(set, provideTestAspects()))
+		assert.Empty(t, ValidateRules(set, provideTestAspects(), ""))
 	})
 
 	t.Run("missing-pack-dir-errors", func(t *testing.T) {
@@ -296,8 +309,8 @@ func TestParseContext(t *testing.T) {
 	t.Run("merges-actions-rules-facts", func(t *testing.T) {
 		contextDir := t.TempDir()
 		for dir, content := range map[string]string{
-			"actions": "**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n",
-			"rules":   "**RULE-NAV-001** `[review]` — Names are verbose.\n",
+			"actions": "**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n",
+			"rules":   "**RULE-NAV-001** `[prose]` — Names are verbose.\n",
 			"facts":   "**FACT-REPO-STACK-001** — Go services.\n\n* Location: go.mod\n",
 		} {
 			require.NoError(t, os.MkdirAll(filepath.Join(contextDir, dir), 0755))
@@ -314,13 +327,132 @@ func TestParseContext(t *testing.T) {
 		contextDir := t.TempDir()
 		require.NoError(t, os.MkdirAll(filepath.Join(contextDir, "rules"), 0755))
 		require.NoError(t, os.WriteFile(filepath.Join(contextDir, "rules", "go.md"),
-			[]byte("**Files:** `*.go`\n\n**RULE-NAV-001** `[review]` — Names are verbose.\n"), 0644))
+			[]byte("**Files:** `*.go`\n\n**RULE-NAV-001** `[prose]` — Names are verbose.\n"), 0644))
 		set, err := ParseContext(contextDir, false)
 		require.NoError(t, err)
 		require.Len(t, set.Guides, 1)
 		assert.Equal(t, "rules/go.md", set.Guides[0].Path)
 		assert.Equal(t, "go", set.Guides[0].Name)
 	})
+
+	t.Run("self-names-the-source-repo", func(t *testing.T) {
+		contextDir := t.TempDir()
+		require.NoError(t, os.MkdirAll(filepath.Join(contextDir, "facts"), 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(contextDir, "facts", "repo.md"),
+			[]byte("**FACT-REPO-STACK-001** — Go services.\n\n* Location: go.mod\n"), 0644))
+
+		source, err := ParseContext(contextDir, false)
+		require.NoError(t, err)
+		assert.Equal(t, reach.ThisRepo, source.Self)
+
+		deployed, err := ParseContext(contextDir, true)
+		require.NoError(t, err)
+		assert.Empty(t, deployed.Self)
+	})
+}
+
+// writeIndexDirs is a temp cwd root holding an empty context.json under each named dir.
+func writeIndexDirs(t *testing.T, dirs ...string) string {
+	t.Helper()
+	root := t.TempDir()
+	for _, dir := range dirs {
+		require.NoError(t, os.MkdirAll(filepath.Join(root, dir), 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(root, dir, ContextFileName), []byte("{}\n"), 0644))
+	}
+	return root
+}
+
+func TestResolveContextDir(t *testing.T) {
+	type testCase struct {
+		_id                 string
+		_expectedDir        string
+		_expectedErrorPart  string
+		_expectedIsDeployed bool
+		_shouldPass         bool
+
+		deployedName string
+		explicit     string
+		root         string
+	}
+
+	tests := make([]*testCase, 0)
+
+	// explicit-wins
+	tests = append(tests, &testCase{
+		_id:                 "explicit-wins",
+		_expectedDir:        "custom",
+		_expectedErrorPart:  "",
+		_expectedIsDeployed: false,
+		_shouldPass:         true,
+
+		deployedName: "",
+		explicit:     "custom",
+		root:         writeIndexDirs(t, "context", "docs"),
+	})
+
+	// source-context-dir
+	tests = append(tests, &testCase{
+		_id:                 "source-context-dir",
+		_expectedDir:        "context",
+		_expectedErrorPart:  "",
+		_expectedIsDeployed: false,
+		_shouldPass:         true,
+
+		deployedName: "",
+		explicit:     "",
+		root:         writeIndexDirs(t, "context", "docs"),
+	})
+
+	// deployed-docs-dir
+	tests = append(tests, &testCase{
+		_id:                 "deployed-docs-dir",
+		_expectedDir:        "docs",
+		_expectedErrorPart:  "",
+		_expectedIsDeployed: true,
+		_shouldPass:         true,
+
+		deployedName: "",
+		explicit:     "",
+		root:         writeIndexDirs(t, "docs"),
+	})
+
+	// deployed-name-from-environment
+	tests = append(tests, &testCase{
+		_id:                 "deployed-name-from-environment",
+		_expectedDir:        "site",
+		_expectedErrorPart:  "",
+		_expectedIsDeployed: true,
+		_shouldPass:         true,
+
+		deployedName: "site",
+		explicit:     "",
+		root:         writeIndexDirs(t, "docs", "site"),
+	})
+
+	// neither-errors
+	tests = append(tests, &testCase{
+		_id:                 "neither-errors",
+		_expectedDir:        "",
+		_expectedErrorPart:  "neither context/context.json nor docs/context.json",
+		_expectedIsDeployed: false,
+		_shouldPass:         false,
+
+		deployedName: "",
+		explicit:     "",
+		root:         writeIndexDirs(t),
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			t.Chdir(test.root)
+			dir, isDeployed, err := ResolveContextDir(test.explicit, test.deployedName)
+			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
+			assert.Equal(t, test._expectedDir, dir)
+			assert.Equal(t, test._expectedIsDeployed, isDeployed)
+			assert.Contains(t, fmt.Sprint(err), test._expectedErrorPart)
+		})
+	}
 }
 
 func TestValidateRules(t *testing.T) {
@@ -332,7 +464,7 @@ func TestValidateRules(t *testing.T) {
 			Topic:       "INTEG",
 			Number:      1,
 			Content:     RuleContent{Statement: "Never do the thing.", Applies: "always"},
-			Enforcement: "review",
+			Enforcement: "prose",
 			Reach:       "global",
 			Source:      "rules/integrity.md",
 			Origin:      RuleOriginBaseline,
@@ -396,7 +528,7 @@ func TestValidateRules(t *testing.T) {
 	// missing-enforcement-tag
 	tests = append(tests, &testCase{
 		_id:               "missing-enforcement-tag",
-		_expectedFragment: "require an enforcement tag",
+		_expectedFragment: "require a channel tag",
 		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
 			entry.Enforcement = ""
 		})}},
@@ -405,7 +537,7 @@ func TestValidateRules(t *testing.T) {
 	// unknown-enforcement-tag
 	tests = append(tests, &testCase{
 		_id:               "unknown-enforcement-tag",
-		_expectedFragment: "unknown enforcement tag [vibes]",
+		_expectedFragment: "unknown channel tag [vibes]",
 		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
 			entry.Enforcement = "vibes"
 		})}},
@@ -449,7 +581,7 @@ func TestValidateRules(t *testing.T) {
 	// fact-with-enforcement-tag
 	tests = append(tests, &testCase{
 		_id:               "fact-with-enforcement-tag",
-		_expectedFragment: "FACT entries carry no enforcement tag",
+		_expectedFragment: "FACT entries carry no role or channel tag",
 		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
 			entry.Id = "FACT-INTEG-001"
 			entry.Kind = RuleKindFact
@@ -513,9 +645,18 @@ func TestValidateRules(t *testing.T) {
 	// invalid-reach-value
 	tests = append(tests, &testCase{
 		_id:               "invalid-reach-value",
-		_expectedFragment: "Reach must be global, none, or a comma-separated repo-name list",
+		_expectedFragment: "Reach must be global, always, none, or a comma-separated repo-name list",
 		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
 			entry.Reach = "bogus name"
+		})}},
+	})
+
+	// always-reach-is-valid
+	tests = append(tests, &testCase{
+		_id:               "always-reach-is-valid",
+		_expectedFragment: "",
+		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
+			entry.Reach = "always"
 		})}},
 	})
 
@@ -551,6 +692,23 @@ func TestValidateRules(t *testing.T) {
 			entry.Origin = RuleOriginOverlay
 			entry.Source = "facts/repo.md"
 			entry.Reach = "global"
+		})}},
+	})
+
+	// repo-scope-rejects-always-reach
+	tests = append(tests, &testCase{
+		_id:               "repo-scope-rejects-always-reach",
+		_expectedFragment: "never always-injected",
+		set: RuleSet{Entries: []RuleEntry{provideEntry(func(entry *RuleEntry) {
+			entry.Id = "FACT-REPO-STACK-001"
+			entry.Kind = RuleKindFact
+			entry.Scope = "REPO"
+			entry.Topic = "STACK"
+			entry.Content.Location = "go.mod"
+			entry.Enforcement = ""
+			entry.Origin = RuleOriginOverlay
+			entry.Source = "facts/repo.md"
+			entry.Reach = "always"
 		})}},
 	})
 
@@ -600,7 +758,104 @@ func TestValidateRules(t *testing.T) {
 	// Run tests
 	for _, test := range tests {
 		t.Run(test._id, func(t *testing.T) {
-			violations := ValidateRules(test.set, provideTestAspects())
+			violations := ValidateRules(test.set, provideTestAspects(), "")
+			if test._expectedFragment == "" {
+				assert.Empty(t, violations)
+				return
+			}
+			require.NotEmpty(t, violations)
+			assert.Contains(t, strings.Join(violations, "\n"), test._expectedFragment)
+		})
+	}
+}
+
+func TestValidateRulesChannelClaims(t *testing.T) {
+	provideGateAction := func(mutate func(entry *RuleEntry)) RuleEntry {
+		entry := RuleEntry{
+			Id:          "ACTION-IMPL-001",
+			Kind:        RuleKindAction,
+			Scope:       "IMPL",
+			Number:      1,
+			Content:     RuleContent{Statement: "Never do the thing.", Applies: "always"},
+			Enforcement: "gate",
+			Reach:       "global",
+			Source:      "actions/impl.md",
+			Origin:      RuleOriginBaseline,
+		}
+		mutate(&entry)
+		return entry
+	}
+
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "acdsl"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "acdsl", "rules.acdsl"),
+		[]byte("//acdsl:ACDSL-GOLANG-ENUM-001 exhaustive-switch reach=\"global\" why=\"test\"\n"), 0644))
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "cmd", "hooks"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "cmd", "hooks", "read-gate.sh"), []byte("#!/bin/bash\n"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "schema.json"), []byte("{}"), 0644))
+
+	type testCase struct {
+		_id               string
+		_expectedFragment string
+		entry             RuleEntry
+	}
+	tests := []*testCase{
+		{
+			_id:               "gate-resolves",
+			_expectedFragment: "",
+			entry: provideGateAction(func(entry *RuleEntry) {
+				entry.Content.Gate = "ACDSL-GOLANG-ENUM-001"
+			}),
+		},
+		{
+			_id:               "gate-missing-pointer",
+			_expectedFragment: "[gate] requires a Gate: bullet",
+			entry:             provideGateAction(func(entry *RuleEntry) {}),
+		},
+		{
+			_id:               "gate-unknown-id",
+			_expectedFragment: "not declared in acdsl/rules.acdsl",
+			entry: provideGateAction(func(entry *RuleEntry) {
+				entry.Content.Gate = "ACDSL-BOGUS-001"
+			}),
+		},
+		{
+			_id:               "hook-resolves",
+			_expectedFragment: "",
+			entry: provideGateAction(func(entry *RuleEntry) {
+				entry.Enforcement = "hook"
+				entry.Content.Hook = "read-gate.sh"
+			}),
+		},
+		{
+			_id:               "hook-not-found",
+			_expectedFragment: "not found under cmd/hooks/",
+			entry: provideGateAction(func(entry *RuleEntry) {
+				entry.Enforcement = "hook"
+				entry.Content.Hook = "nope.sh"
+			}),
+		},
+		{
+			_id:               "schema-resolves",
+			_expectedFragment: "",
+			entry: provideGateAction(func(entry *RuleEntry) {
+				entry.Enforcement = "schema"
+				entry.Content.Schema = "schema.json"
+			}),
+		},
+		{
+			_id:               "schema-not-found",
+			_expectedFragment: "Schema: nope.json not found",
+			entry: provideGateAction(func(entry *RuleEntry) {
+				entry.Enforcement = "schema"
+				entry.Content.Schema = "nope.json"
+			}),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			violations := ValidateRules(RuleSet{Entries: []RuleEntry{test.entry}}, provideTestAspects(), dir)
 			if test._expectedFragment == "" {
 				assert.Empty(t, violations)
 				return
@@ -612,9 +867,9 @@ func TestValidateRules(t *testing.T) {
 }
 
 func TestLoadAspects(t *testing.T) {
-	t.Run("loads-context-json-aspects", func(t *testing.T) {
+	t.Run("loads-aspects-json", func(t *testing.T) {
 		dir := writeRulesFixture(t, map[string]string{
-			ContextFileName: `{"entries": [], "aspects": [{"name": "NAV", "scope": "Navigation"}]}`,
+			AspectsFileName: `[{"name": "NAV", "scope": "Navigation"}]`,
 		})
 		aspects, err := LoadAspects(dir)
 		require.NoError(t, err)
@@ -630,34 +885,112 @@ func TestLoadAspects(t *testing.T) {
 	})
 
 	t.Run("malformed-json-errors", func(t *testing.T) {
-		dir := writeRulesFixture(t, map[string]string{ContextFileName: "{not json"})
+		dir := writeRulesFixture(t, map[string]string{AspectsFileName: "{not json"})
 		_, err := LoadAspects(dir)
 		assert.Error(t, err)
 	})
 }
 
+func TestSaveAspects(t *testing.T) {
+	dir := t.TempDir()
+	aspects := []RuleAspect{
+		{Name: "STACK", Scope: "Stack & tooling"},
+		{Name: "ARCH", Scope: "Architecture"},
+	}
+	require.NoError(t, SaveAspects(dir, aspects))
+
+	loaded, err := LoadAspects(dir)
+	require.NoError(t, err)
+	require.Len(t, loaded, 2)
+	assert.Equal(t, "ARCH", loaded[0].Name)
+	assert.Equal(t, "STACK", loaded[1].Name)
+
+	data, err := os.ReadFile(filepath.Join(dir, AspectsFileName))
+	require.NoError(t, err)
+	assert.Contains(t, string(data), `"scope": "Stack & tooling"`)
+	assert.True(t, strings.HasSuffix(string(data), "]\n"))
+}
+
 func TestWriteContextFile(t *testing.T) {
-	t.Run("regenerates-with-sorted-aspects", func(t *testing.T) {
-		dir := t.TempDir()
-		require.NoError(t, os.MkdirAll(filepath.Join(dir, "actions"), 0755))
-		require.NoError(t, os.WriteFile(filepath.Join(dir, "actions", "nav.md"),
-			[]byte("**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n"), 0644))
-		require.NoError(t, WriteContextFile(dir, []RuleAspect{
-			{Name: "STACK", Scope: "Stack"},
-			{Name: "ARCH", Scope: "Architecture"},
-		}))
+	dir := writeContextFixture(t)
+	require.NoError(t, WriteContextFile(dir))
 
-		aspects, err := LoadAspects(dir)
-		require.NoError(t, err)
-		require.Len(t, aspects, 2)
-		assert.Equal(t, "ARCH", aspects[0].Name)
-		assert.Equal(t, "STACK", aspects[1].Name)
+	data, err := os.ReadFile(filepath.Join(dir, ContextFileName))
+	require.NoError(t, err)
+	assert.Contains(t, string(data), `"id": "ACTION-NAV-001"`)
+	assert.Contains(t, string(data), `"name": "NAV"`)
+	assert.True(t, strings.HasSuffix(string(data), "\n"))
+}
 
-		data, err := os.ReadFile(filepath.Join(dir, ContextFileName))
-		require.NoError(t, err)
-		assert.Contains(t, string(data), `"id": "ACTION-NAV-001"`)
-		assert.True(t, strings.HasSuffix(string(data), "\n"))
+func TestRegenerate(t *testing.T) {
+	t.Run("writes-context-file", func(t *testing.T) {
+		dir := writeContextFixture(t)
+		require.NoError(t, Regenerate(dir))
+		assert.FileExists(t, filepath.Join(dir, ContextFileName))
 	})
+
+	t.Run("no-aspects-source-is-left-alone", func(t *testing.T) {
+		dir := t.TempDir()
+		require.NoError(t, Regenerate(dir))
+		assert.NoFileExists(t, filepath.Join(dir, ContextFileName))
+	})
+}
+
+func TestRegenerateSkipsDeployedIndex(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, SaveAspects(dir, nil))
+	deployed := `{"deploy": {"contextDir": "context", "langs": [], "role": "r", "acdsl": false, "markdown": false, "task": false, "writeRepo": true}, "entries": [], "tombstones": [], "guides": [], "aspects": []}` + "\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ContextFileName), []byte(deployed), 0o644))
+
+	require.NoError(t, Regenerate(dir))
+
+	kept, err := os.ReadFile(filepath.Join(dir, ContextFileName))
+	require.NoError(t, err)
+	assert.Equal(t, deployed, string(kept))
+}
+
+func TestContextFileRenderCarriesDeployFirst(t *testing.T) {
+	index := &ContextFile{Deploy: &ContextDeploy{ContextDir: "docs", Langs: []string{"go"}, Role: "r"}}
+
+	data, err := index.Render()
+	require.NoError(t, err)
+
+	assert.True(t, strings.HasPrefix(string(data), "{\n  \"deploy\": {"))
+	reloaded := &ContextFile{}
+	require.NoError(t, json.Unmarshal(data, reloaded))
+	assert.Equal(t, index.Deploy, reloaded.Deploy)
+}
+
+func TestIsDeployedIndex(t *testing.T) {
+	dir := t.TempDir()
+	assert.False(t, IsDeployedIndex(filepath.Join(dir, "missing.json")))
+
+	source := filepath.Join(dir, "source.json")
+	require.NoError(t, os.WriteFile(source, []byte(`{"self": "smine", "entries": []}`), 0o644))
+	assert.False(t, IsDeployedIndex(source))
+
+	deployed := filepath.Join(dir, "deployed.json")
+	require.NoError(t, os.WriteFile(deployed, []byte(`{"deploy": {"contextDir": "docs"}, "entries": []}`), 0o644))
+	assert.True(t, IsDeployedIndex(deployed))
+}
+
+func TestLoadContextFile(t *testing.T) {
+	set := RuleSet{
+		Entries:    []RuleEntry{{Id: "ACTION-REVIEW-001", Kind: RuleKindAction, Origin: RuleOriginBaseline, Scope: "REVIEW", Content: RuleContent{Statement: "Review."}}},
+		Guides:     []RuleGuide{{Name: "go", Path: "rules/go.md", Files: []string{"*.go"}, Source: "rules/go.md"}},
+		Tombstones: []RuleTombstone{{Retired: "ACTION-REVIEW-000", Replacement: "ACTION-REVIEW-001", Date: "2026-10-12", Source: "actions/reviewing.md"}},
+	}
+	rendered, err := RenderContextJson(set, nil, "")
+	require.NoError(t, err)
+	path := filepath.Join(t.TempDir(), ContextFileName)
+	require.NoError(t, os.WriteFile(path, rendered, 0o644))
+
+	index, err := LoadContextFile(path)
+	require.NoError(t, err)
+	assert.Equal(t, set, index.RuleSet())
+
+	_, err = LoadContextFile(filepath.Join(t.TempDir(), ContextFileName))
+	assert.Error(t, err)
 }
 
 func TestRenderContextJson(t *testing.T) {
@@ -672,8 +1005,9 @@ func TestRenderContextJson(t *testing.T) {
 			{Name: "python", Path: "rules/python.md", Files: []string{"*.py"}, Source: "rules/python.md"},
 			{Name: "go", Path: "rules/go.md", Files: []string{"*.go"}, Source: "rules/go.md"},
 		},
-	}, []RuleAspect{{Name: "REPO", Scope: "repo facts", Class: "scope"}})
+	}, []RuleAspect{{Name: "REPO", Scope: "repo facts", Class: "scope"}}, "smine")
 	require.NoError(t, err)
+	assert.Contains(t, string(rendered), `"self": "smine"`)
 	assert.Contains(t, string(rendered), `"id": "FACT-REPO-STACK-001"`)
 	assert.Contains(t, string(rendered), `"name": "REPO"`)
 	assert.Contains(t, string(rendered), `"guides": [`)

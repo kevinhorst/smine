@@ -1,0 +1,88 @@
+{{define "_smine_panel.html"}}
+<section class="smine-panel" id="smine-panel">
+  <h2 class="smine-panel-title">{{.Component.Title}}
+    {{if .IsSelected}}<span class="badge badge-ok">on</span>{{else}}<span class="badge badge-dim" title="not selected — a Save stores the values, the apply refuses until the component is on">off</span>{{end}}
+    <span class="badge badge-dim">{{len .Rows}} settings</span>
+    {{/* shown while the form differs from what the server rendered; the Save's re-render clears it */}}
+    <span class="badge badge-action smine-pending" hidden>pending</span>
+  </h2>
+  <form class="smine-settings" hx-post="/config/smine/{{.Component.ID}}" hx-target="#smine-panel" hx-swap="outerHTML">
+    {{range .Rows}}{{template "_setting_row.html" .}}{{end}}
+    <div class="card-row smine-save"><button type="submit">Save</button></div>
+    {{/* the apply report of the last Save, right under the button that produced it; its close dot empties the slot */}}
+    <div id="smine-report">{{if .Report}}<pre class="file-view hooks-report" data-close="#smine-report">{{.Report}}</pre>{{end}}</div>
+  </form>
+</section>
+<script>
+  // The pending badge: the form serialized at render is the baseline; any difference shows it, the Save's re-render resets both.
+  (function () {
+    var form = document.querySelector('#smine-panel form.smine-settings');
+    var badge = document.querySelector('#smine-panel .smine-pending');
+    var serialize = function () { return new URLSearchParams(new FormData(form)).toString(); };
+    var baseline = serialize();
+    window.sminePendingCheck = function () { badge.hidden = serialize() === baseline; };
+    form.addEventListener('input', window.sminePendingCheck);
+    form.addEventListener('change', window.sminePendingCheck);
+  })();
+  // List rows keep their state in the row's hidden JSON field; Add, × and Reset rewrite it and the shown items. Nothing persists before Save.
+  window.smineListItems = function (editor) {
+    return JSON.parse(editor.querySelector('input[type=hidden]').value || '[]');
+  };
+  window.smineListRender = function (editor, items) {
+    editor.querySelector('input[type=hidden]').value = JSON.stringify(items);
+    var box = editor.querySelector('.list-items');
+    box.textContent = '';
+    if (!items.length) {
+      var empty = document.createElement('div');
+      empty.className = 'list-item';
+      var note = document.createElement('span');
+      note.className = 'meta';
+      note.textContent = 'empty list';
+      empty.appendChild(note);
+      box.appendChild(empty);
+    }
+    items.forEach(function (item) {
+      var row = document.createElement('div');
+      row.className = 'list-item';
+      var label = document.createElement('span');
+      label.className = 'label';
+      var code = document.createElement('code');
+      code.textContent = item;
+      label.appendChild(code);
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'small';
+      remove.textContent = '×';
+      remove.setAttribute('onclick', 'smineListRemove(this)');
+      row.appendChild(label);
+      row.appendChild(remove);
+      box.appendChild(row);
+    });
+    window.sminePendingCheck();
+  };
+  window.smineListAdd = function (element) {
+    var editor = element.closest('.list-editor');
+    var input = editor.querySelector('input[type=text]');
+    var text = input.value.trim();
+    if (!text) return;
+    window.smineListRender(editor, window.smineListItems(editor).concat([text]));
+    input.value = '';
+  };
+  window.smineListRemove = function (button) {
+    var editor = button.closest('.list-editor');
+    var shown = Array.prototype.slice.call(editor.querySelectorAll('.list-items .list-item'));
+    var items = window.smineListItems(editor);
+    items.splice(shown.indexOf(button.closest('.list-item')), 1);
+    window.smineListRender(editor, items);
+  };
+  window.smineRowReset = function (button) {
+    var row = button.closest('.setting-row');
+    var fallback = row.dataset.default;
+    var editor = row.querySelector('.setting-control .list-editor');
+    if (editor) { window.smineListRender(editor, JSON.parse(fallback)); return; }
+    var box = row.querySelector('.setting-control input[type=checkbox]');
+    if (box) { box.checked = fallback === 'true'; } else { row.querySelector('.setting-control select, .setting-control input').value = fallback; }
+    window.sminePendingCheck();
+  };
+</script>
+{{end}}

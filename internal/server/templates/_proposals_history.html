@@ -1,0 +1,25 @@
+{{define "_proposals_history.html"}}
+{{if not .History}}
+<div class="empty">{{t "No decisions yet."}}</div>
+{{else}}
+{{range .History}}
+<details class="section" open>
+  <summary><code>{{.Night}}</code> <span class="count-note">{{len .Entries}}</span></summary>
+  {{range .Entries}}
+  <div class="card card-proposal history-entry">
+    <div class="history-row">
+      <span class="proposal-main">
+        <span class="proposal-title">{{.Problem}}</span>
+        {{if and .Subject (ne .Subject .Problem)}}<span class="proposal-subject">{{.Subject}}</span>{{end}}
+      </span>
+      <span class="proposal-side">
+        <code class="proposal-sha">{{.ShortSha}}</code>
+        <span class="badge {{.OutcomeClass}}"{{with .Reason}} title="{{.}}"{{end}}>{{t .Outcome}}</span>
+      </span>
+    </div>
+  </div>
+  {{end}}
+</details>
+{{end}}
+{{end}}
+{{end}}

@@ -18,28 +18,28 @@ import (
 
 func TestConfigSetClaude(t *testing.T) {
 	t.Run("set-documented-key", func(t *testing.T) {
-		settingsPath := filepath.Join(t.TempDir(), "settings.json")
+		settingsPath := availableModelsSettingsPath(t)
 		server := newTestServer(t, &Options{SettingsPath: settingsPath})
 
 		response := httptest.NewRecorder()
-		server.Handler().ServeHTTP(response, formPost("/api/config/claude/model", url.Values{"value": {"opus"}}))
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/model", url.Values{"value": {"claude-sonnet-5"}}))
 		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
 
 		data, err := os.ReadFile(settingsPath)
 		require.NoError(t, err)
 		var file map[string]any
 		require.NoError(t, json.Unmarshal(data, &file))
-		assert.Equal(t, "opus", file["model"])
+		assert.Equal(t, "claude-sonnet-5", file["model"])
 	})
 
 	t.Run("unknown-keys-survive-save", func(t *testing.T) {
 		settingsPath := filepath.Join(t.TempDir(), "settings.json")
 		require.NoError(t, os.WriteFile(settingsPath,
-			[]byte(`{"zzUnknownKey": {"nested": true}, "model": "sonnet"}`), 0644))
+			[]byte(`{"zzUnknownKey": {"nested": true}, "availableModels": ["claude-sonnet-5"], "model": "sonnet"}`), 0644))
 		server := newTestServer(t, &Options{SettingsPath: settingsPath})
 
 		response := httptest.NewRecorder()
-		server.Handler().ServeHTTP(response, formPost("/api/config/claude/model", url.Values{"value": {"opus"}}))
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/model", url.Values{"value": {"claude-sonnet-5"}}))
 		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
 
 		data, err := os.ReadFile(settingsPath)
@@ -47,24 +47,63 @@ func TestConfigSetClaude(t *testing.T) {
 		var file map[string]any
 		require.NoError(t, json.Unmarshal(data, &file))
 		assert.Equal(t, map[string]any{"nested": true}, file["zzUnknownKey"])
-		assert.Equal(t, "opus", file["model"])
+		assert.Equal(t, "claude-sonnet-5", file["model"])
 		// Key order preserved: the unknown key stays first.
-		assert.Less(t, strings.Index(string(data), "zzUnknownKey"), strings.Index(string(data), "model"))
+		assert.Less(t, strings.Index(string(data), "zzUnknownKey"), strings.Index(string(data), `"model"`))
 	})
 
-	t.Run("mutations-trigger-config-op", func(t *testing.T) {
-		settingsPath := filepath.Join(t.TempDir(), "settings.json")
+	t.Run("model-outside-available-400", func(t *testing.T) {
+		server := newTestServer(t, &Options{SettingsPath: availableModelsSettingsPath(t)})
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/advisorModel", url.Values{"value": {"haiku"}}))
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+		assert.Contains(t, response.Body.String(), "does not resolve against availableModels")
+	})
+
+	t.Run("fallback-model-array-validated", func(t *testing.T) {
+		server := newTestServer(t, &Options{SettingsPath: availableModelsSettingsPath(t)})
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/fallbackModel", url.Values{"value": {`["claude-sonnet-5", "haiku"]`}}))
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+
+		response = httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/fallbackModel", url.Values{"value": {`["claude-sonnet-5", "claude-fable-5"]`}}))
+		assert.Equal(t, http.StatusOK, response.Code, response.Body.String())
+	})
+
+	t.Run("model-row-renders-select", func(t *testing.T) {
+		server := newTestServer(t, &Options{SettingsPath: availableModelsSettingsPath(t)})
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body := response.Body.String()
+		rowAt := strings.Index(body, `id="row-claude-advisorModel"`)
+		require.Greater(t, rowAt, -1)
+		row := body[rowAt:]
+		selectEnd := strings.Index(row, "</select>")
+		require.Greater(t, selectEnd, -1)
+		row = row[:selectEnd]
+		assert.Contains(t, row, "<option >claude-fable-5</option>")
+	})
+
+	t.Run("mutations-answer-with-row-badges", func(t *testing.T) {
+		settingsPath := availableModelsSettingsPath(t)
 		server := newTestServer(t, &Options{SettingsPath: settingsPath})
 
 		response := httptest.NewRecorder()
-		server.Handler().ServeHTTP(response, formPost("/api/config/claude/model", url.Values{"value": {"opus"}}))
+		server.Handler().ServeHTTP(response, formPost("/api/config/claude/model", url.Values{"value": {"claude-sonnet-5"}}))
 		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-		assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+		assert.Empty(t, response.Header().Get("HX-Trigger"))
+		assert.Contains(t, response.Body.String(), `id="ovr-available-claude" hx-swap-oob="true"`)
+		assert.Contains(t, response.Body.String(), `id="row-claude-model"`)
 
 		response = httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodDelete, "/api/config/claude/model", nil))
 		require.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+		assert.Empty(t, response.Header().Get("HX-Trigger"))
 
 		// The page GET must not carry the trigger — it would loop the re-pull.
 		response = httptest.NewRecorder()
@@ -103,11 +142,11 @@ func TestConfigSetClaude(t *testing.T) {
 func TestConfigPages(t *testing.T) {
 	server := newTestServer(t, &Options{})
 
-	t.Run("config-redirects-to-claude", func(t *testing.T) {
+	t.Run("config-redirects-to-smine", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config", nil))
 		require.Equal(t, http.StatusFound, response.Code)
-		assert.Equal(t, "/config/claude", response.Header().Get("Location"))
+		assert.Equal(t, "/config/smine", response.Header().Get("Location"))
 	})
 
 	t.Run("unknown-target-404", func(t *testing.T) {
@@ -272,17 +311,106 @@ func TestClaudeOverridden(t *testing.T) {
 	})
 }
 
+// configRowHtml cuts one claude config row out of a page: from its id to the next row's id or the page end.
+func configRowHtml(body, key string) string {
+	start := strings.Index(body, `id="row-claude-`+key+`"`)
+	if start < 0 {
+		return ""
+	}
+
+	row := body[start:]
+	if next := strings.Index(row[1:], `id="row-`); next >= 0 {
+		return row[:next+1]
+	}
+	return row
+}
+
+func TestConfigSectionOwnedKeysSkipped(t *testing.T) {
+	settingsPath := filepath.Join(t.TempDir(), "settings.json")
+	settings := `{"hooks": {"Stop": []}, "permissions": {"allow": ["Bash(ls *)"], "additionalDirectories": ["/tmp/x"]}}`
+	require.NoError(t, os.WriteFile(settingsPath, []byte(settings), 0644))
+	server := newTestServer(t, &Options{SettingsPath: settingsPath})
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude", nil))
+	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+	body := response.Body.String()
+
+	t.Run("hooks-row-absent", func(t *testing.T) {
+		assert.NotContains(t, body, `id="row-claude-hooks"`)
+	})
+
+	t.Run("permissions-allow-row-absent", func(t *testing.T) {
+		assert.NotContains(t, body, `id="row-claude-permissions-allow"`)
+		assert.NotContains(t, body, `id="row-claude-permissions"`)
+	})
+
+	t.Run("additional-directories-row-present", func(t *testing.T) {
+		assert.Contains(t, body, `id="row-claude-permissions-additionalDirectories"`)
+	})
+}
+
+func TestConfigMapRow(t *testing.T) {
+	dir := t.TempDir()
+	settingsPath := filepath.Join(dir, "settings.json")
+	require.NoError(t, os.WriteFile(settingsPath, []byte(`{"skillOverrides": {"beta": "on", "alpha": "off"}}`), 0644))
+	skillsHome := filepath.Join(dir, "skills-home")
+	for _, name := range []string{"alpha", "gamma"} {
+		skillDir := filepath.Join(skillsHome, name)
+		require.NoError(t, os.MkdirAll(skillDir, 0o755))
+		manifest := "---\nname: " + name + "\ndescription: d\nversion: 1.0.0\n---\n"
+		require.NoError(t, os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(manifest), 0o644))
+	}
+	server := newTestServer(t, &Options{
+		SettingsPath: settingsPath,
+		SkillsHome:   skillsHome,
+		SkillsRepo:   filepath.Join(dir, "no-repo"),
+	})
+
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/config/claude", nil))
+	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+	row := configRowHtml(response.Body.String(), "skillOverrides")
+
+	t.Run("one-select-per-entry", func(t *testing.T) {
+		assert.Equal(t, 2, strings.Count(row, `hx-vals='{"name": `))
+		assert.Contains(t, row, `skillOverrides/entries/alpha`)
+		assert.Contains(t, row, `skillOverrides/entries/beta`)
+	})
+
+	t.Run("entry-select-preselects-stored-value", func(t *testing.T) {
+		alphaAt := strings.Index(row, `<span class="label">alpha</span>`)
+		require.GreaterOrEqual(t, alphaAt, 0)
+		alphaSelect := row[alphaAt:]
+		selectEnd := strings.Index(alphaSelect, "</select>")
+		require.GreaterOrEqual(t, selectEnd, 0)
+		alphaSelect = alphaSelect[:selectEnd]
+		assert.Equal(t, 1, strings.Count(alphaSelect, "selected"))
+		assert.Contains(t, alphaSelect, "<option selected>off</option>")
+	})
+
+	t.Run("list-add-present", func(t *testing.T) {
+		assert.Contains(t, row, `<details class="list-add">`)
+		assert.Contains(t, row, `<select name="name">`)
+	})
+
+	t.Run("preset-excludes-present-name", func(t *testing.T) {
+		assert.Contains(t, row, "<option>gamma</option>")
+		assert.NotContains(t, row, "<option>alpha</option>")
+	})
+}
+
 func TestConfigOverriddenPage(t *testing.T) {
 	newServer := func(t *testing.T, live, fragment string) *Server {
 		t.Helper()
 		dir := t.TempDir()
 		settingsPath := filepath.Join(dir, "settings.json")
 		require.NoError(t, os.WriteFile(settingsPath, []byte(live), 0644))
-		fragmentPath := filepath.Join(dir, "fragment.json")
+		templateDir := filepath.Join(dir, "settings", "claude_code")
 		if fragment != "" {
-			require.NoError(t, os.WriteFile(fragmentPath, []byte(fragment), 0644))
+			templateDir = writeClaudeTemplate(t, dir, fragment)
 		}
-		return newTestServer(t, &Options{ClaudeFragmentPath: fragmentPath, SettingsPath: settingsPath})
+		return newTestServer(t, &Options{ClaudeFragmentPath: templateDir, SettingsPath: settingsPath})
 	}
 
 	getConfig := func(t *testing.T, server *Server) string {
@@ -297,20 +425,17 @@ func TestConfigOverriddenPage(t *testing.T) {
 		server := newServer(t, `{"model": "sonnet", "theme": "dark"}`, `{"model": "opus", "theme": "dark"}`)
 		body := getConfig(t, server)
 
-		modelRow := body[strings.Index(body, `id="row-claude-model"`):]
-		modelRow = modelRow[:strings.Index(modelRow, "</div>")]
+		modelRow := configRowHtml(body, "model")
 		assert.Contains(t, modelRow, "overridden")
 
-		themeRow := body[strings.Index(body, `id="row-claude-theme"`):]
-		themeRow = themeRow[:strings.Index(themeRow, "</div>")]
+		themeRow := configRowHtml(body, "theme")
 		assert.NotContains(t, themeRow, "overridden")
 	})
 
 	t.Run("fragment-only-undocumented-key-listed", func(t *testing.T) {
 		server := newServer(t, `{}`, `{"customThing": true}`)
 		body := getConfig(t, server)
-		row := body[strings.Index(body, `id="row-claude-customThing"`):]
-		row = row[:strings.Index(row, "</div>")]
+		row := configRowHtml(body, "customThing")
 		// A fragment-only key is flagged Repo Only (the precise form of the
 		// old generic "overridden") and shows the repo value (D1b).
 		assert.Contains(t, row, "Repo Only")
@@ -340,16 +465,14 @@ func TestConfigOverriddenPage(t *testing.T) {
 	t.Run("overridden-key-shows-repo-value", func(t *testing.T) {
 		server := newServer(t, `{"model": "sonnet"}`, `{"model": "opus"}`)
 		body := getConfig(t, server)
-		modelRow := body[strings.Index(body, `id="row-claude-model"`):]
-		modelRow = modelRow[:strings.Index(modelRow, "</div>")]
+		modelRow := configRowHtml(body, "model")
 		assert.Contains(t, modelRow, "repo: opus")
 	})
 
 	t.Run("fragment-only-key-marked-repo-only", func(t *testing.T) {
 		server := newServer(t, `{}`, `{"model": "opus"}`)
 		body := getConfig(t, server)
-		modelRow := body[strings.Index(body, `id="row-claude-model"`):]
-		modelRow = modelRow[:strings.Index(modelRow, "</div>")]
+		modelRow := configRowHtml(body, "model")
 		assert.Contains(t, modelRow, "Repo Only")
 		assert.Contains(t, modelRow, "repo: opus")
 	})

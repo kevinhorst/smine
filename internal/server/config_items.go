@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
@@ -17,15 +16,10 @@ import (
 	"github.com/kevinhorst/smine/internal/server/respond"
 )
 
-// pathArrayKeys are documented array keys whose items are filesystem paths —
-// they get the native folder picker beside the text add-form.
 var pathArrayKeys = map[string]bool{
 	"permissions.additionalDirectories": true,
 }
 
-// handleConfigItemChooseFolder opens the native folder dialog and appends
-// the picked path as an array item — the one-click add for path keys.
-// Cancel re-renders the row unchanged.
 func (s *Server) handleConfigItemChooseFolder(w http.ResponseWriter, r *http.Request) {
 	target := r.PathValue("target")
 	key := r.PathValue("key")
@@ -71,6 +65,14 @@ func (s *Server) handleConfigItemAdd(w http.ResponseWriter, r *http.Request) {
 	if value == "" {
 		respond.WithBadRequest("empty item", w)
 		return
+	}
+
+	if target == catalog.TargetClaude && key == keyFallbackModel {
+		chosen := []string{value}
+		if err := s.requireAvailableModels(chosen); err != nil {
+			respond.WithBadRequest(err.Error(), w)
+			return
+		}
 	}
 
 	if target == catalog.TargetClaude && !s.mutateClaudeItems(key, w, func(items []json.RawMessage) ([]json.RawMessage, bool) {
@@ -136,39 +138,7 @@ func (s *Server) itemEntry(target, key string, w http.ResponseWriter) *catalog.E
 	return entry
 }
 
-// appendClaudeItem appends one string item to a settings array key — the
-// error-returning variant of mutateClaudeItems for callers outside an HTTP
-// response context (e.g. the repos add-with-grant op). Same load/set/save
-// sequence, same file.
-func (s *Server) appendClaudeItem(key, value string) error {
-	settings, err := config.Load(s.settingsPath)
-	if err != nil {
-		return fmt.Errorf("appendClaudeItem: %w", err)
-	}
-	path := strings.Split(key, ".")
-	var items []json.RawMessage
-	if raw, ok := settings.Doc().Get(path); ok {
-		if err := json.Unmarshal(raw, &items); err != nil {
-			return fmt.Errorf("appendClaudeItem: existing value is not an array: %w", err)
-		}
-	}
-	quoted, _ := json.Marshal(value)
-	items = append(items, quoted)
-	encoded, err := json.Marshal(items)
-	if err != nil {
-		return fmt.Errorf("appendClaudeItem: %w", err)
-	}
-	if err := settings.Doc().Set(path, encoded); err != nil {
-		return fmt.Errorf("appendClaudeItem: %w", err)
-	}
-	if err := config.Save(s.settingsPath, settings); err != nil {
-		return fmt.Errorf("appendClaudeItem: %w", err)
-	}
-	return nil
-}
-
-// mutateClaudeItems loads the array (missing key = empty), applies mutate,
-// and saves. A false second return from mutate means "index gone" → 404.
+// mutateClaudeItems answers 404 when mutate reports the index gone.
 func (s *Server) mutateClaudeItems(key string, w http.ResponseWriter, mutate func([]json.RawMessage) ([]json.RawMessage, bool)) bool {
 	settings, err := config.Load(s.settingsPath)
 	if err != nil {
@@ -204,7 +174,7 @@ func (s *Server) mutateClaudeItems(key string, w http.ResponseWriter, mutate fun
 		return false
 	}
 
-	if err := config.Save(s.settingsPath, settings); err != nil {
+	if err := config.Save(s.settingsPath, settings, s.trash); err != nil {
 		respond.WithInternalServerError(err, w)
 		return false
 	}

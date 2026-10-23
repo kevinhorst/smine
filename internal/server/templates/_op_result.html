@@ -6,7 +6,7 @@
   <div class="card"><span class="badge badge-ok">Ok</span> <span class="label">{{.Subject}}</span>{{if .Duration}} <span class="meta">{{.Duration}}</span>{{end}}</div>
   {{end}}
   {{if .Output}}
-  <pre class="file-view">{{.Output}}</pre>
+  <pre class="file-view" data-close="#op-result">{{.Output}}</pre>
   {{end}}
 </div>
 {{end}}

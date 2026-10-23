@@ -1,0 +1,5 @@
+{{define "_skill_graph_diffs.html"}}
+{{if .Note}}<p class="meta">{{.Note}}</p>{{end}}
+<div class="st-diffs">
+  <div class="st-diff-col"><div class="st-compartment-label">model</div>{{if .ModelDiff}}{{template "_diff.html" .ModelDiff}}{{else}}<p class="meta">no change</p>{{end}}</div></div>
+{{end}}

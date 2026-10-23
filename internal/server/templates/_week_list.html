@@ -1,0 +1,21 @@
+{{define "_week_list.html"}}
+<div class="batch-list">
+  {{if .Scope.LoadErrors}}
+  <div class="card card-error">
+    <span class="label">
+      {{len .Scope.LoadErrors}} {{t "file(s) failed to load:"}}
+      {{range .Scope.LoadErrors}}<br>{{.}}{{end}}
+    </span>
+  </div>
+  {{end}}
+  {{if not .Scope.Weeks}}
+  <div class="empty">{{t "No mined records yet — the nightly smine run fills this."}}</div>
+  {{end}}
+  {{range .Scope.Weeks}}
+  <div class="card">
+    <a class="label" href="/sessions/{{.Scope}}/{{.Key}}">{{t "Week"}} {{.Label}}</a>
+    <span class="meta">{{if $.IsAll}}{{.Scope}} · {{end}}{{.Key}} · {{len .Sessions}} {{t "sessions"}}</span>
+  </div>
+  {{end}}
+</div>
+{{end}}

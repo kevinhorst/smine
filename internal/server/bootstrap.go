@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -22,6 +24,8 @@ const tmplWelcomeBootstrap = "_welcome_bootstrap.html"
 
 type bootstrapRun struct {
 	mu        sync.Mutex
+	exitCode  int
+	exited    bool
 	pid       int
 	running   bool
 	startedAt time.Time
@@ -33,14 +37,7 @@ type bootstrapView struct {
 	SessionId string
 }
 
-// handleWelcomeBootstrap spawns the one-shot bootstrap wrapper
-// (cmd/bootstrap/run.sh) detached (the startPeek precedent: a deliberately
-// multi-hour child outside shell.Run's deadline — the run is watched via
-// peek, not this process). The wrapper resolves claude through the login
-// shell exactly like the token verification: the server process PATH lacks
-// the claude shim (observed on the Windows logon task), the login-shell
-// PATH has it; auth comes from the routine token the wrapper reads from
-// BOOTSTRAP_TOKEN_FILE.
+// handleWelcomeBootstrap resolves claude through the login shell: the server's PATH lacks the claude shim.
 func (s *Server) handleWelcomeBootstrap(w http.ResponseWriter, r *http.Request) {
 	s.bootstrap.mu.Lock()
 	defer s.bootstrap.mu.Unlock()
@@ -55,8 +52,7 @@ func (s *Server) handleWelcomeBootstrap(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Token and model resolve like the profile style test: the routine's
-	// labeled token and ROUTINE_MODEL when configured, else the defaults.
+	// Token and model resolve like the profile style test.
 	target := s.styleTestTarget()
 	if target.TokenPath == "" {
 		respond.WithConflict("bootstrap needs the routine token: "+target.Detail, w)
@@ -68,18 +64,29 @@ func (s *Server) handleWelcomeBootstrap(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Seek to the end, not O_APPEND: the Git Bash child on Windows writes nothing through an inherited O_APPEND handle.
 	logPath := filepath.Join(os.TempDir(), "smine-bootstrap.log")
-	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
 
-	// Multi-hour child under its own backstop deadline (the routinewrap
-	// pattern): bounded at 6h, far above any real bootstrap run.
-	script := verifyPathPrefix + `exec bash "$1"`
+	if _, err := logFile.Seek(0, io.SeekEnd); err != nil {
+		logFile.Close()
+		respond.WithInternalServerError(err, w)
+		return
+	}
+
+	// Multi-hour child under its own backstop deadline, far above any real bootstrap run.
+	script := verifyPathPrefix + `exec "$1" bootstrap`
 	runCtx, cancel := context.WithTimeout(context.Background(), bootstrapDeadline)
-	cmd := exec.CommandContext(runCtx, bashPath, "-c", script, "bash", filepath.Join("cmd", "bootstrap", "run.sh"))
+	// The server's cwd is the main checkout; bash needs forward slashes on every platform.
+	routineBin := filepath.Join("bin", "routine")
+	if runtime.GOOS == "windows" {
+		routineBin += ".exe"
+	}
+	cmd := exec.CommandContext(runCtx, bashPath, "-c", script, "bash", filepath.ToSlash(routineBin))
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Env = append(cmd.Env, "BOOTSTRAP_TOKEN_FILE="+target.TokenPath, "ROUTINE_MODEL="+target.Model)
 	cmd.Stdout, cmd.Stderr = logFile, logFile
@@ -93,12 +100,21 @@ func (s *Server) handleWelcomeBootstrap(w http.ResponseWriter, r *http.Request) 
 
 	s.bootstrap.pid = cmd.Process.Pid
 	s.bootstrap.running = true
+	s.bootstrap.exited = false
+	s.bootstrap.exitCode = 0
 	s.bootstrap.startedAt = time.Now()
 	go func() {
-		cmd.Wait()
+		waitErr := cmd.Wait()
 		cancel()
 		logFile.Close()
+		exitCode := 0
+		var exitErr *exec.ExitError
+		if errors.As(waitErr, &exitErr) {
+			exitCode = exitErr.ExitCode()
+		}
 		s.bootstrap.mu.Lock()
+		s.bootstrap.exited = true
+		s.bootstrap.exitCode = exitCode
 		s.bootstrap.running = false
 		s.bootstrap.mu.Unlock()
 	}()
@@ -110,12 +126,12 @@ func (s *Server) handleWelcomeBootstrap(w http.ResponseWriter, r *http.Request) 
 	s.renderFragment(w, tmplWelcomeBootstrap, view)
 }
 
-// handleWelcomeBootstrapStatus reports the run and resolves its peek session
-// id by matching the repo-root cwd against sessions newer than the start.
 func (s *Server) handleWelcomeBootstrapStatus(w http.ResponseWriter, r *http.Request) {
 	s.bootstrap.mu.Lock()
 	pid := s.bootstrap.pid
 	running := s.bootstrap.running
+	exited := s.bootstrap.exited
+	exitCode := s.bootstrap.exitCode
 	startedAt := s.bootstrap.startedAt
 	s.bootstrap.mu.Unlock()
 
@@ -127,11 +143,14 @@ func (s *Server) handleWelcomeBootstrapStatus(w http.ResponseWriter, r *http.Req
 	}
 
 	view.SessionId = s.resolveBootstrapSession(r.Context(), startedAt)
+	logPath := filepath.Join(os.TempDir(), "smine-bootstrap.log")
 	switch {
 	case running && view.SessionId == "":
 		view.Detail = fmt.Sprintf("bootstrap running (pid %d) — session not indexed yet…", pid)
 	case running:
 		view.Detail = fmt.Sprintf("bootstrap running (pid %d) — session", pid)
+	case exited && exitCode != 0:
+		view.Detail = fmt.Sprintf("bootstrap failed (exit %d) — see the log %s", exitCode, logPath)
 	case view.SessionId != "":
 		view.Detail = "bootstrap finished — session"
 	default:
@@ -140,9 +159,7 @@ func (s *Server) handleWelcomeBootstrapStatus(w http.ResponseWriter, r *http.Req
 	s.renderFragment(w, tmplWelcomeBootstrap, view)
 }
 
-// resolveBootstrapSession finds the newest peek session running in the repo
-// root that started around or after the bootstrap spawn; "" when none is
-// indexed yet or peek is unreachable (the status line degrades, never errors).
+// resolveBootstrapSession degrades to "" instead of erroring when peek is unreachable.
 func (s *Server) resolveBootstrapSession(ctx context.Context, startedAt time.Time) string {
 	repoRoot, err := os.Getwd()
 	if err != nil {
@@ -163,9 +180,7 @@ func (s *Server) resolveBootstrapSession(ctx context.Context, startedAt time.Tim
 	return session.Id
 }
 
-// bootstrapEnv turns the form inputs into the wrapper's environment — the
-// wrapper translates them into deterministic stage flags (env→flag, the
-// nightly pattern; relayed prose args are retired).
+// bootstrapEnv passes inputs as env, which the wrapper turns into deterministic stage flags.
 func bootstrapEnv(since string, extraPrompt string) ([]string, error) {
 	env := make([]string, 0)
 

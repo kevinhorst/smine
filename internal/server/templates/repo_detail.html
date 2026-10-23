@@ -8,9 +8,11 @@
 {{/* Placeholder only — the fragment endpoint owns all subprocess cost so the
      shell paints instantly (D3). `load` fires once here; the swapped-in
      fragment carries `repo-op from:body` instead, never `load` (loop). A
-     plain load serves the server's last scan; Reload forces ?refresh=1. */}}
+     plain load serves the server's last scan of the kind scope; Reload forces
+     ?refresh=1. The shell opens on .Kind — claude unless the URL names
+     another kind, never all. */}}
 <div id="worktree-status"
-     hx-get="/repos/{{pathEscape .Repo.Name}}/status"
+     hx-get="/repos/{{pathEscape .Repo.Name}}/status?kind={{queryEscape .Kind}}"
      hx-trigger="load" hx-swap="outerHTML" hx-disinherit="*">
   <div class="empty">Loading worktree status…</div>
 </div>
@@ -26,45 +28,39 @@
     var sels = Array.prototype.slice.call(
       document.querySelectorAll('input[name="branch"]:checked'));
     var force = document.getElementById('op-force').checked;
-    ops.querySelectorAll('form[data-op]').forEach(function (form) {
+    // Remove is the only op (batch endpoint): enabled when every selected
+    // row is safe (or force). Detached rows carry no checkbox.
+    ops.querySelectorAll('form[data-op="remove"]').forEach(function (form) {
       var button = form.querySelector('button');
-      if (form.dataset.op === 'remove') {
-        // Batch endpoint: enabled when every selected row is safe (or force).
-        var allSafe = sels.length > 0 && sels.every(function (sel) { return sel.dataset.safe; });
-        button.disabled = !(sels.length && (allSafe || force));
-        var confirmMsg;
-        if (sels.length === 1) {
-          var branch = sels[0].dataset.branch, wt = sels[0].dataset.worktree;
-          confirmMsg = form.dataset.deleteBranch
-            ? (wt ? 'Remove worktree ' + wt + ' and DELETE branch ' + branch + '?'
-                  : 'DELETE branch ' + branch + '? (no worktree checked out)')
-            : (wt ? 'Remove worktree ' + wt + ' (branch ' + branch + ')?'
-                  : branch + ' has no worktree checked out — nothing will be removed. Run anyway?');
-        } else {
-          var branches = sels.map(function (sel) { return sel.dataset.branch; }).join(', ');
-          confirmMsg = (form.dataset.deleteBranch
-            ? 'Remove ' + sels.length + ' worktrees and DELETE their branches: '
-            : 'Remove ' + sels.length + ' worktrees: ') + branches + '?';
-        }
-        form.setAttribute('hx-confirm', confirmMsg);
+      var allSafe = sels.length > 0 && sels.every(function (sel) { return sel.dataset.safe; });
+      button.disabled = !(sels.length && (allSafe || force));
+      var confirmMsg;
+      if (sels.length === 1) {
+        var branch = sels[0].dataset.branch, wt = sels[0].dataset.worktree;
+        confirmMsg = form.dataset.deleteBranch
+          ? (wt ? 'Remove worktree ' + wt + ' and DELETE branch ' + branch + '?'
+                : 'DELETE branch ' + branch + '? (no worktree checked out)')
+          : (wt ? 'Remove worktree ' + wt + ' (branch ' + branch + ')?'
+                : branch + ' has no worktree checked out — nothing will be removed. Run anyway?');
       } else {
-        // Sync/Merge stay single-target ops. Merge additionally needs a
-        // clean checkout — the script would refuse anyway; flag it up front.
-        var checkoutBlocked = form.dataset.op === 'merge' && ops.dataset.checkoutDirty;
-        button.disabled = sels.length !== 1 || !!checkoutBlocked;
-        button.title = checkoutBlocked
-          ? 'checkout is dirty — commit or stash first' : '';
-        if (sels.length === 1) {
-          form.setAttribute('hx-post', '/repos/' + ops.dataset.repo +
-            '/branches/' + encodeURIComponent(sels[0].value) + '/' + form.dataset.op);
-        }
+        var branches = sels.map(function (sel) { return sel.dataset.branch; }).join(', ');
+        confirmMsg = (form.dataset.deleteBranch
+          ? 'Remove ' + sels.length + ' worktrees and DELETE their branches: '
+          : 'Remove ' + sels.length + ' worktrees: ') + branches + '?';
       }
+      // Name what the server archives into the trash before the removal.
+      var notes = [];
+      if (force) notes.push('uncommitted and ignored files are archived to the trash first');
+      if (form.dataset.deleteBranch) notes.push('its diff and sha are archived');
+      if (notes.length) confirmMsg = confirmMsg.replace(/\?$/, '') + ', ' + notes.join(', ') + '?';
+      form.setAttribute('hx-confirm', confirmMsg);
       htmx.process(form);
     });
   }
   document.addEventListener('change', function (e) {
     if (e.target.classList && e.target.classList.contains('select-all')) {
-      document.querySelectorAll('input[name="branch"]').forEach(function (box) {
+      // Only rows the filter shows: a hidden row is never selected for removal.
+      document.querySelectorAll('tr[data-kind]:not([hidden]) input[name="branch"]').forEach(function (box) {
         box.checked = e.target.checked;
       });
       refresh();
@@ -95,26 +91,28 @@
     e.target.nextElementSibling.hidden = false;
     e.target.hidden = true;
   });
-  // Client-side filter (D6): chips toggle row visibility; state lives in the
-  // URL (?base=&kind=) so deep links and fragment swaps re-apply it.
+  // Client-side base filter: base chips toggle row visibility over the loaded
+  // rows; state lives in the URL (?base=) so deep links and fragment swaps
+  // re-apply it. Kind is server-side — the kind chips load their rows.
   function applyFilter() {
     var params = new URLSearchParams(location.search);
-    var kind = params.get('kind') || '', base = params.get('base') || '';
+    var base = params.get('base') || '';
     var visible = 0;
     document.querySelectorAll('tr[data-kind]').forEach(function (row) {
-      var hide = !!row.dataset.removed ||
-                 (kind && row.dataset.kind !== kind) ||
-                 (base && row.dataset.base !== base);
+      var hide = !!row.dataset.removed || (base && row.dataset.base !== base);
       row.hidden = hide;
+      // A row the filter hides drops out of the selection too.
+      if (hide) row.querySelectorAll('input[name="branch"]').forEach(function (box) { box.checked = false; });
       if (!hide) visible++;
     });
     document.querySelectorAll('.wt-filter').forEach(function (chip) {
-      var active = (chip.dataset.group === 'kind' ? kind : base) === chip.dataset.value;
+      var active = base === chip.dataset.value;
       chip.classList.toggle('badge-ok', active);
       chip.classList.toggle('badge-dim', !active);
     });
     var empty = document.getElementById('wt-filter-empty');
     if (empty) empty.hidden = visible > 0 || !document.querySelector('tr[data-kind]');
+    refresh();
   }
   document.addEventListener('click', function (e) {
     var chip = e.target.closest && e.target.closest('.wt-filter');
@@ -128,6 +126,20 @@
     applyFilter();
   });
   document.addEventListener('htmx:afterSettle', applyFilter);
+  // Kind chips request their kind's rows. htmx:beforeRequest fires only once
+  // the all chip's confirm is accepted, so the URL follows a request that
+  // runs; the all scope stays out of the URL and a reload opens on claude.
+  // The base filter resets — the new rows bring their own bases.
+  document.addEventListener('htmx:beforeRequest', function (e) {
+    var chip = e.detail.elt.closest && e.detail.elt.closest('.wt-kind');
+    if (!chip) return;
+    var params = new URLSearchParams(location.search);
+    params.delete('base');
+    if (chip.dataset.kind === 'all') params.delete('kind');
+    else params.set('kind', chip.dataset.kind);
+    var query = params.toString();
+    history.replaceState(null, '', location.pathname + (query ? '?' + query : ''));
+  });
   applyFilter();
 })();
 </script>

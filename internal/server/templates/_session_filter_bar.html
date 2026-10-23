@@ -1,0 +1,46 @@
+{{define "_session_filter_bar.html"}}
+<div class="card card-filter">
+  <div class="card-row">
+    <span class="section-label">reach</span>
+    {{range .Reaches}}
+    <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+       href="{{.URL}}">{{.Name}}{{if .Counts}} ({{.RuleCount}}/{{.EntryCount}}){{end}}</a>
+    {{end}}
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">layer</span>
+    {{range .Layers}}
+    <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+       title="{{if eq .Name "acdsl"}}the executable gate system{{else if ne .Name "all"}}prose {{.Name}} entries{{end}}"
+       href="{{.URL}}">{{.Name}}</a>
+    {{end}}
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">lifetime</span>
+    {{range .Lifetimes}}
+    <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+       href="{{.URL}}">{{.Name}}</a>
+    {{end}}
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">scope</span>
+    {{range .Aspects}}
+    <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+       href="{{.URL}}">{{.Name}}{{if .Counts}} ({{.RuleCount}}/{{.EntryCount}}){{end}}</a>
+    {{end}}
+  </div>
+  {{if .Topics}}
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">topic</span>
+    {{range .Topics}}
+    <a class="badge {{if .Active}}badge-ok{{else}}badge-dim{{end}}"
+       href="{{.URL}}">{{.Name}}{{if .Counts}} ({{.EntryCount}}){{end}}</a>
+    {{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

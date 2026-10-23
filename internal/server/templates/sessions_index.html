@@ -3,28 +3,30 @@
 <h1>{{t "Sessions"}}</h1>
 {{if not .Scope}}
 <div class="tabs">
-  <a href="/sessions/archive">{{t "archive"}}</a>
+  <a href="/sessions-archive">{{t "archived records"}}</a>
 </div>
 <div class="empty">
-  {{t "No session data found."}}{{if isDeveloperAudience}} Generate batch JSONs with the /smine or /smine-batch skill
-  (sessions/&lt;folder&gt;/json/*.json).{{end}}
+  {{t "No session data found."}}{{if isDeveloperAudience}} Mine session records with the /smine or /smine-batch skill
+  (sessions/&lt;repo&gt;/&lt;YYYY-Www&gt;/&lt;id&gt;.json).{{end}}
 </div>
 {{else}}
 <div class="tabs">
-  {{$active := .Scope.Name}}
-  {{range .ScopeNames}}
-  <a href="/sessions/{{.}}" {{if eq . $active}}class="active"{{end}}>{{.}}</a>
-  {{end}}
-  <a href="/sessions/archive">{{t "archive"}}</a>
+  {{$active := .Scope.Name}}{{$isAll := .IsAll}}
+  <select class="scope-select" title="{{t "repo"}}" onchange="location.href=this.value?'/sessions/'+encodeURIComponent(this.value):'/sessions'">
+    <option value=""{{if $isAll}} selected{{end}}>{{t "all repos"}}</option>
+    {{range .ScopeNames}}<option value="{{.}}"{{if and (not $isAll) (eq . $active)}} selected{{end}}>{{.}}</option>{{end}}
+  </select>
+  <a href="/sessions-archive">{{t "archived records"}}</a>
 </div>
-<form class="reload-form" hx-post="/sessions/{{pathEscape .Scope.Name}}/archive" hx-target="#op-result"
-      hx-confirm="{{t "Archive this folder? Its analyses disappear from this page; nothing is re-mined."}}">
-  <button type="submit" class="small">{{t "Archive folder"}}</button>
-</form>
-<div id="op-result"></div>
-<h2>{{t "batches"}}</h2>
+{{/* The peek-backed list loads after the page, so a cold or slow peek never holds the mined records. */}}
+<div id="sessions-context" hx-get="/sessions-context{{if not .IsAll}}?scope={{queryEscape .Scope.Name}}{{end}}" hx-trigger="load" hx-swap="outerHTML">
+  <h2>{{t "context"}}</h2>
+  <div class="empty">{{t "Loading sessions from peek…"}}</div>
+</div>
+<h2>{{t "mined records"}}</h2>
+<p class="meta">{{t "Sessions /smine-batch has analysed — open a week for findings, frustration and positive signals per session."}}</p>
 <div id="batch-list-wrap">
-{{template "_batch_list.html" .}}
+{{template "_week_list.html" .}}
 </div>
 {{end}}
 {{template "foot" .}}

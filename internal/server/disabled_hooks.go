@@ -9,191 +9,169 @@ import (
 	"sync"
 
 	"github.com/kevinhorst/smine/internal/config"
+	"github.com/kevinhorst/smine/internal/install"
 )
 
-// disabledHookStore parks toggled-off hook groups in a write-through sidecar
-// (hooks.disabled.json next to settings.json) — disk-visible and restart-proof;
-// settings.json stays the only store for enabled hooks (revises D33).
+// disabledHookStore reads hooks.disabled.json on every call and writes through the install engine's helper; settings.json stays the only store for enabled hooks.
 type disabledHookStore struct {
-	// mu guards groups and serializes persists.
-	mu     sync.Mutex
-	path   string
-	groups map[string][]config.HookGroup
+	// mu serializes a drop-then-persist against a concurrent add.
+	mu  sync.Mutex
+	env install.Env
 }
 
-func newDisabledHookStore(settingsPath string) *disabledHookStore {
-	return &disabledHookStore{
-		path:   filepath.Join(filepath.Dir(settingsPath), "hooks.disabled.json"),
-		groups: make(map[string][]config.HookGroup),
+func newDisabledHookStore(env install.Env) *disabledHookStore {
+	return &disabledHookStore{env: env}
+}
+
+// addAll appends every group per event in one load and one save.
+func (d *disabledHookStore) addAll(groups map[string][]config.HookGroup) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	parked, err := install.LoadParked(d.env)
+	if err != nil {
+		return fmt.Errorf("disabledHookStore.addAll: %w", err)
 	}
+
+	for event, eventGroups := range groups {
+		parked[event] = append(parked[event], eventGroups...)
+	}
+	if err := install.SaveParked(d.env, parked); err != nil {
+		return fmt.Errorf("disabledHookStore.addAll: %w", err)
+	}
+	return nil
 }
 
 func (d *disabledHookStore) Add(event string, group config.HookGroup) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.add(event, group)
-	return d.persistLocked()
+	groups := map[string][]config.HookGroup{event: {group}}
+	if err := d.addAll(groups); err != nil {
+		return fmt.Errorf("disabledHookStore.Add: %w", err)
+	}
+	return nil
 }
 
-// add appends without persisting — the boot absorbs batch their persist.
-func (d *disabledHookStore) add(event string, group config.HookGroup) {
-	d.groups[event] = append(d.groups[event], group)
-}
-
-// Pop removes and returns the group at event/index; ok=false when absent.
-func (d *disabledHookStore) Pop(event string, index int) (config.HookGroup, bool, error) {
+// Drop removes the group at event/index and persists; a missing group is fine, the settings write before it already holds the group.
+func (d *disabledHookStore) Drop(event string, index int) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	parked, err := install.LoadParked(d.env)
+	if err != nil {
+		return fmt.Errorf("disabledHookStore.Drop: %w", err)
+	}
 
-	groups, ok := d.groups[event]
+	groups, ok := parked[event]
 	if !ok || index >= len(groups) {
-		return config.HookGroup{}, false, nil
-	}
-
-	group := groups[index]
-	d.groups[event] = slices.Delete(groups, index, index+1)
-	if len(d.groups[event]) == 0 {
-		delete(d.groups, event)
-	}
-	return group, true, d.persistLocked()
-}
-
-// Clear drops every parked group — a claude Revert makes the repo fragment
-// the whole truth, so parked drift must not survive it.
-func (d *disabledHookStore) Clear() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.groups = make(map[string][]config.HookGroup)
-	return d.persistLocked()
-}
-
-// Snapshot returns a rendering copy.
-func (d *disabledHookStore) Snapshot() map[string][]config.HookGroup {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	snapshot := make(map[string][]config.HookGroup, len(d.groups))
-	for event, groups := range d.groups {
-		snapshot[event] = slices.Clone(groups)
-	}
-	return snapshot
-}
-
-// persist is the lock-taking wrapper for the boot path.
-func (d *disabledHookStore) persist() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return d.persistLocked()
-}
-
-// persistLocked mirrors the map to the sidecar; an empty map removes the file.
-func (d *disabledHookStore) persistLocked() error {
-	if len(d.groups) == 0 {
-		if err := os.Remove(d.path); err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("disabledHookStore.persistLocked: %w", err)
-		}
 		return nil
 	}
 
-	data, err := json.MarshalIndent(d.groups, "", "  ")
-	if err != nil {
-		return fmt.Errorf("disabledHookStore.persistLocked: %w", err)
+	parked[event] = slices.Delete(groups, index, index+1)
+	if len(parked[event]) == 0 {
+		delete(parked, event)
 	}
-	if err := os.WriteFile(d.path, data, 0o600); err != nil {
-		return fmt.Errorf("disabledHookStore.persistLocked: %w", err)
-	}
-	return nil
-}
-
-// load reads an existing sidecar into the store; a missing file is empty.
-func (d *disabledHookStore) load() error {
-	data, err := os.ReadFile(d.path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return fmt.Errorf("disabledHookStore.load: %w", err)
-	}
-	if err := json.Unmarshal(data, &d.groups); err != nil {
-		return fmt.Errorf("disabledHookStore.load: Failed to parse %s: %w", d.path, err)
+	if err := install.SaveParked(d.env, parked); err != nil {
+		return fmt.Errorf("disabledHookStore.Drop: %w", err)
 	}
 	return nil
 }
 
-// disabledHooksTmpPath sits next to settings.json; legacy shutdown handoff of
-// the retired in-memory store — read (and consumed) at boot as migration only.
+// Peek returns the group at event/index without writing; ok=false when absent.
+func (d *disabledHookStore) Peek(event string, index int) (config.HookGroup, bool, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	parked, err := install.LoadParked(d.env)
+	if err != nil {
+		return config.HookGroup{}, false, fmt.Errorf("disabledHookStore.Peek: %w", err)
+	}
+
+	groups, ok := parked[event]
+	if !ok || index >= len(groups) {
+		return config.HookGroup{}, false, nil
+	}
+	return groups[index], true, nil
+}
+
+// Snapshot is the sidecar as it is on disk.
+func (d *disabledHookStore) Snapshot() (map[string][]config.HookGroup, error) {
+	parked, err := install.LoadParked(d.env)
+	if err != nil {
+		return nil, fmt.Errorf("disabledHookStore.Snapshot: %w", err)
+	}
+	return parked, nil
+}
+
+// disabledHooksTmpPath is the retired store's shutdown handoff, read at boot as migration only.
 func disabledHooksTmpPath(settingsPath string) string {
 	return filepath.Join(filepath.Dir(settingsPath), ".disabled-hooks.tmp.json")
 }
 
-// restoreDisabledHooks builds the boot store from hooks.disabled.json, then
-// absorbs the two legacy stores (shutdown tmp file, settings.disabled.json
-// hooks key) and persists the merge — legacy state migrates on first boot.
-func restoreDisabledHooks(settingsPath string) (*disabledHookStore, error) {
-	store := newDisabledHookStore(settingsPath)
-	if err := store.load(); err != nil {
-		return store, err
-	}
-	if err := absorbTmpFile(store, disabledHooksTmpPath(settingsPath)); err != nil {
-		return store, err
-	}
-
-	if err := absorbSidecarHooks(store, settingsPath); err != nil {
-		return store, err
-	}
-	return store, store.persist()
-}
-
-func absorbTmpFile(store *disabledHookStore, tmpPath string) error {
-	data, err := os.ReadFile(tmpPath)
+// restoreDisabledHooks absorbs the two legacy stores into the sidecar, then retires them.
+func restoreDisabledHooks(env install.Env, settingsPath string) (*disabledHookStore, error) {
+	store := newDisabledHookStore(env)
+	tmpPath := disabledHooksTmpPath(settingsPath)
+	absorbed, err := readTmpFile(tmpPath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return fmt.Errorf("absorbTmpFile: Failed to read %s: %w", tmpPath, err)
+		return store, err
 	}
 
-	var groups map[string][]config.HookGroup
-	if err := json.Unmarshal(data, &groups); err != nil {
-		return fmt.Errorf("absorbTmpFile: Failed to parse %s: %w", tmpPath, err)
+	sidecar, sidecarHooks, err := readSidecarHooks(settingsPath)
+	if err != nil {
+		return store, err
 	}
-	for event, eventGroups := range groups {
-		for _, group := range eventGroups {
-			store.add(event, group)
-		}
+	for event, groups := range sidecarHooks {
+		absorbed[event] = append(absorbed[event], groups...)
+	}
+	if len(absorbed) == 0 {
+		return store, nil
 	}
 
-	if err := os.Remove(tmpPath); err != nil {
-		return fmt.Errorf("absorbTmpFile: Failed to remove %s: %w", tmpPath, err)
+	if err := store.addAll(absorbed); err != nil {
+		return store, fmt.Errorf("restoreDisabledHooks: %w", err)
 	}
-	return nil
+	if err := os.Remove(tmpPath); err != nil && !os.IsNotExist(err) {
+		return store, fmt.Errorf("restoreDisabledHooks: Failed to remove %s: %w", tmpPath, err)
+	}
+	if len(sidecarHooks) == 0 {
+		return store, nil
+	}
+
+	if err := sidecar.SetHooks(nil); err != nil {
+		return store, fmt.Errorf("restoreDisabledHooks: %w", err)
+	}
+	if err := config.Save(config.DisabledPath(settingsPath), sidecar, env.Trash); err != nil {
+		return store, fmt.Errorf("restoreDisabledHooks: %w", err)
+	}
+	return store, nil
 }
 
-func absorbSidecarHooks(store *disabledHookStore, settingsPath string) error {
+// readSidecarHooks reads the hooks key of settings.disabled.json, the older legacy store.
+func readSidecarHooks(settingsPath string) (*config.Settings, map[string][]config.HookGroup, error) {
 	sidecar, err := config.Load(config.DisabledPath(settingsPath))
 	if err != nil {
-		return fmt.Errorf("absorbSidecarHooks: %w", err)
+		return nil, nil, fmt.Errorf("readSidecarHooks: %w", err)
 	}
 
 	hooks, err := sidecar.Hooks()
 	if err != nil {
-		return fmt.Errorf("absorbSidecarHooks: %w", err)
+		return nil, nil, fmt.Errorf("readSidecarHooks: %w", err)
 	}
-	if len(hooks) == 0 {
-		return nil
+	return sidecar, hooks, nil
+}
+
+// readTmpFile reads the legacy tmp handoff; a missing file is empty.
+func readTmpFile(tmpPath string) (map[string][]config.HookGroup, error) {
+	groups := map[string][]config.HookGroup{}
+	data, err := os.ReadFile(tmpPath)
+	if os.IsNotExist(err) {
+		return groups, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("readTmpFile: Failed to read %s: %w", tmpPath, err)
 	}
 
-	for event, groups := range hooks {
-		for _, group := range groups {
-			store.add(event, group)
-		}
+	if err := json.Unmarshal(data, &groups); err != nil {
+		return nil, fmt.Errorf("readTmpFile: Failed to parse %s: %w", tmpPath, err)
 	}
-
-	if err := sidecar.SetHooks(nil); err != nil {
-		return fmt.Errorf("absorbSidecarHooks: %w", err)
+	if groups == nil {
+		groups = map[string][]config.HookGroup{}
 	}
-	if err := config.Save(config.DisabledPath(settingsPath), sidecar); err != nil {
-		return fmt.Errorf("absorbSidecarHooks: %w", err)
-	}
-	return nil
+	return groups, nil
 }

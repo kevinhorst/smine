@@ -1,0 +1,22 @@
+{"type":"user","cwd":"/repo/x","gitBranch":"claude/x","sessionId":"sess-1","message":{"role":"user","content":"/concept do it"}}
+{"type":"attachment","attachment":{"type":"hook_success","hookName":"UserPromptSubmit","hookEvent":"UserPromptSubmit","content":"<persisted-output>stub</persisted-output>","stdout":"===== SKILL CONTEXT /concept (injected by hook) =====\n- **ACTION-CONCEPT-HOT-001** [gate] — x\n- **FACT-REPO-ARCH-001** [fact] — y\n"}}
+{"type":"attachment","attachment":{"type":"hook_success","hookName":"SessionStart:startup","hookEvent":"SessionStart","content":"","stdout":"===== GLOBAL CONTEXT (injected by hook) =====\n\n===== docs/global/company.md =====\nfacts\n"}}
+{"type":"attachment","attachment":{"type":"hook_success","hookName":"UserPromptSubmit","hookEvent":"UserPromptSubmit","content":"","stdout":"{\"hookSpecificOutput\":{\"additionalContext\":\"===== SKILL CONTEXT /fdesign v6.3.0 (injected by hook) =====\\n- **ACTION-PLAN-FMT-001** [review] — z\\n\"}}"}}
+{"type":"attachment","attachment":{"type":"hook_additional_context","hookName":"SessionStart:startup","content":["===== GLOBAL CONTEXT (injected by hook) =====\n\n===== docs/global/company.md =====\nfacts\n"]}}
+{"type":"attachment","attachment":{"type":"hook_success","hookName":"PreToolUse:Read","hookEvent":"PreToolUse","content":"","stdout":"{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\"}}"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu1","name":"Read","input":{"file_path":"/repo/x/internal/a.go"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu1","content":"     1\t// [ACDSL-PROJECTION] 2 rule(s) govern this file — working-copy view, stripped before commit\n     2\t// - [ACDSL-GOLANG-FMT-001] gofmt\n     3\t// - [ACDSL-GOLANG-FUNC-001] sigs\n     4\tpackage a\n"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu7","name":"Edit","input":{"file_path":"/repo/a.go"}}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu2","name":"Read","input":{"file_path":"/repo/x/docs/rules/go.md"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu2","content":"rules"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu3","name":"Bash","input":{"command":"go run ./cmd/acdsl project -plan internal/b.go"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu3","content":"- [ACDSL-GOLANG-ENUM-001] enums\n"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu4","name":"Agent","input":{"prompt":"Read docs/actions/implementing.md first; honor ACTION-IMPL-001 and RULE-GOLANG-TEST-002."}}]}}
+{"type":"attachment","attachment":{"type":"hook_additional_context","hookName":"PostToolUse:Read","content":["Session title: call mcp__ccd_session_mgmt__set_session_title with session_id \"self\" and title \"X\"."]}}
+{"type":"attachment","attachment":{"type":"hook_additional_context","hookName":"tool.call","content":["Contents of /repo/x/context/AGENTS.md:\n\n# Agents\n"]}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-fable-5-1","content":[{"type":"tool_use","id":"tu5","name":"Read","input":{"file_path":"/home/u/.claude/context-required/sess-1/global.md"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu5","content":"     1\tglobal — rules\n     2\tline two\n"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu6","name":"Read","input":{"file_path":"/home/u/.claude/context-required/sess-1/fdesign.md"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu6","content":[{"type":"text","text":"     1\t===== SKILL CONTEXT /fdesign (injected) =====\n     2\t- **ACTION-PLAN-FMT-001** [review] — z\n"}]}]}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-fable-5-1","content":[{"type":"tool_use","id":"tu9","name":"Bash","input":{"command":"git grep -n PROJECTION cmd"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu9","content":"cmd/x.go:1:// [ACDSL-PROJECTION] 1 rule(s) govern this file\ncmd/x.go:2:// - [ACDSL-GOLANG-FMT-001] gofmt\n"}]}}

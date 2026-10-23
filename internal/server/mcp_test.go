@@ -28,8 +28,8 @@ func writeMCPFixtures(t *testing.T) (string, *Server) {
 	require.NoError(t, main.SetDisabledMcpjsonServers([]string{"beta", "ghost"}))
 	disabled := config.NewSettings()
 	require.NoError(t, disabled.SetDisabledMcpjsonServers([]string{"leftover"}))
-	require.NoError(t, config.Save(settingsPath, main))
-	require.NoError(t, config.Save(config.DisabledPath(settingsPath), disabled))
+	require.NoError(t, config.Save(settingsPath, main, nil))
+	require.NoError(t, config.Save(config.DisabledPath(settingsPath), disabled, nil))
 
 	server := newTestServer(t, &Options{ClaudeJsonPath: claudeJsonPath, SettingsPath: settingsPath})
 	return settingsPath, server
@@ -83,6 +83,79 @@ func TestGetMCP(t *testing.T) {
 	})
 }
 
+func TestRenderMCPVersions(t *testing.T) {
+	// A fake peek-mcp binary: a shell script whose `version` subcommand echoes
+	// the installed version. The claude.json command points at it.
+	writeFakePeek := func(t *testing.T, dir, version string) string {
+		t.Helper()
+		script := filepath.Join(dir, "peek-mcp.sh")
+		body := "#!/bin/sh\nif [ \"$1\" = version ]; then echo '" + version + "'; fi\n"
+		require.NoError(t, os.WriteFile(script, []byte(body), 0o755))
+		return script
+	}
+
+	newVersionServer := func(t *testing.T, installed, expected string) *Server {
+		t.Helper()
+		dir := t.TempDir()
+		peekBin := writeFakePeek(t, dir, installed)
+		claudeJsonPath := filepath.Join(dir, ".claude.json")
+		claudeJson := `{"mcpServers": {"peek-mcp": {"command": ` + jsonString(t, peekBin) + `}}}`
+		require.NoError(t, os.WriteFile(claudeJsonPath, []byte(claudeJson), 0o644))
+		settingsPath := filepath.Join(dir, "settings.json")
+		require.NoError(t, config.Save(settingsPath, config.NewSettings(), nil))
+		require.NoError(t, config.Save(config.DisabledPath(settingsPath), config.NewSettings(), nil))
+		return newTestServer(t, &Options{
+			ClaudeJsonPath:      claudeJsonPath,
+			PeekExpectedVersion: expected,
+			SettingsPath:        settingsPath,
+		})
+	}
+
+	t.Run("command-path-rendered-and-update-offered-when-behind", func(t *testing.T) {
+		server := newVersionServer(t, "1.2.1", "1.2.2")
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/mcp", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body := response.Body.String()
+
+		assert.Contains(t, body, "peek-mcp")
+		assert.Contains(t, body, "expected 1.2.2")
+		assert.Contains(t, body, "installed 1.2.1")
+		assert.Contains(t, body, `hx-post="/api/mcp/peek-mcp/update"`)
+	})
+
+	t.Run("no-update-offered-when-current", func(t *testing.T) {
+		server := newVersionServer(t, "1.2.2", "1.2.2")
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/mcp", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		body := response.Body.String()
+
+		assert.Contains(t, body, "installed 1.2.2")
+		assert.NotContains(t, body, `hx-post="/api/mcp/peek-mcp/update"`)
+	})
+
+	t.Run("probe-failure-shows-version-unknown", func(t *testing.T) {
+		dir := t.TempDir()
+		claudeJsonPath := filepath.Join(dir, ".claude.json")
+		claudeJson := `{"mcpServers": {"peek-mcp": {"command": ` + jsonString(t, filepath.Join(dir, "missing-peek")) + `}}}`
+		require.NoError(t, os.WriteFile(claudeJsonPath, []byte(claudeJson), 0o644))
+		settingsPath := filepath.Join(dir, "settings.json")
+		require.NoError(t, config.Save(settingsPath, config.NewSettings(), nil))
+		require.NoError(t, config.Save(config.DisabledPath(settingsPath), config.NewSettings(), nil))
+		server := newTestServer(t, &Options{
+			ClaudeJsonPath:      claudeJsonPath,
+			PeekExpectedVersion: "1.2.2",
+			SettingsPath:        settingsPath,
+		})
+
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/mcp", nil))
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.Contains(t, response.Body.String(), "version unknown")
+	})
+}
+
 func TestMCPSectionOverriddenBadge(t *testing.T) {
 	list := `{"disabledMcpjsonServers": ["clickup"]}`
 
@@ -118,13 +191,13 @@ func TestToggleMCP(t *testing.T) {
 	})
 }
 
-func TestMCPMutationTriggersConfigOp(t *testing.T) {
+func TestMCPMutationAnswersWithFragment(t *testing.T) {
 	_, server := writeMCPFixtures(t)
 
 	response := httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, formPost("/api/mcp/alpha/toggle", nil))
 	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-	assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+	assert.Empty(t, response.Header().Get("HX-Trigger"))
 
 	response = httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/mcp", nil))

@@ -4,11 +4,13 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/kevinhorst/smine/internal/contextdocs"
 	"github.com/kevinhorst/smine/internal/reach"
 	"github.com/kevinhorst/smine/internal/shell"
 	"github.com/stretchr/testify/assert"
@@ -189,6 +191,7 @@ func TestContextEntryReachHandler(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join("context", "facts"), 0o755))
 	require.NoError(t, os.WriteFile(filepath.Join("context", "facts", "repo.md"),
 		[]byte("**FACT-REPO-STACK-001** — Go services.\n\n* Location: go.mod\n* Reach: global\n"), 0o644))
+	require.NoError(t, contextdocs.SaveAspects("context", nil))
 
 	request := httptest.NewRequest(http.MethodPost, "/context/entry/FACT-REPO-STACK-001/reach", strings.NewReader("reach=smine"))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -227,6 +230,12 @@ func TestBuildReachOptionsMultiSelect(t *testing.T) {
 	// The singleton values still mark exactly themselves.
 	assert.Equal(t, []string{reach.None}, selected(server.buildReachOptions(reach.None)))
 	assert.Equal(t, []string{reach.Global}, selected(server.buildReachOptions(reach.Global)))
+	assert.Equal(t, []string{reach.Always}, selected(server.buildReachOptions(reach.Always)))
+
+	// The always option sits directly after global.
+	options = server.buildReachOptions(reach.Always)
+	assert.Equal(t, reach.Global, options[1].Value)
+	assert.Equal(t, reach.Always, options[2].Value)
 }
 
 func TestContextReachBulkHandler(t *testing.T) {
@@ -234,6 +243,7 @@ func TestContextReachBulkHandler(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join("context", "facts"), 0o755))
 	require.NoError(t, os.WriteFile(filepath.Join("context", "facts", "repo.md"),
 		[]byte("**FACT-REPO-STACK-001** — Go services.\n\n* Location: go.mod\n* Reach: global\n"), 0o644))
+	require.NoError(t, contextdocs.SaveAspects("context", nil))
 	post := func(body string) *httptest.ResponseRecorder {
 		request := httptest.NewRequest(http.MethodPost, "/context/reach/bulk", strings.NewReader(body))
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -264,14 +274,22 @@ func TestContextReachBulkHandler(t *testing.T) {
 	response = post("reach=global")
 	require.Equal(t, http.StatusSeeOther, response.Code)
 	assert.Contains(t, response.Header().Get("Location"), "err=")
+	// Items without a reach pick: an error, never a silent none.
+	response = post("id=TSV-001")
+	require.Equal(t, http.StatusSeeOther, response.Code)
+	assert.Contains(t, response.Header().Get("Location"), "err=")
 	rules, err = os.ReadFile(filepath.Join("acdsl", "rules.acdsl"))
 	require.NoError(t, err)
 	assert.Contains(t, string(rules), `reach="aqms,peek-mcp"`)
 
-	// An id that is neither a discovered rule nor a known entry: 500, same
-	// as the single-entry handler's unknown-entry path.
-	response = post("id=TSV-999&reach=global")
-	assert.Equal(t, http.StatusInternalServerError, response.Code)
+	// An unknown id anywhere in the list: the error names it and nothing is
+	// written, the known id included.
+	response = post("id=TSV-001&id=TSV-999&reach=global")
+	require.Equal(t, http.StatusSeeOther, response.Code)
+	assert.Contains(t, response.Header().Get("Location"), url.QueryEscape("unknown id TSV-999"))
+	rules, err = os.ReadFile(filepath.Join("acdsl", "rules.acdsl"))
+	require.NoError(t, err)
+	assert.Contains(t, string(rules), `reach="aqms,peek-mcp"`)
 }
 
 func TestAcdslDisabledRuleShowsBadgeAndNoCandidate(t *testing.T) {
@@ -378,15 +396,6 @@ func TestContextRuleShowsVerifier(t *testing.T) {
 	body := response.Body.String()
 	assert.Contains(t, body, "noop")       // registry description
 	assert.Contains(t, body, "timeout 5s") // registry timeout
-	assert.Contains(t, body, `id="rule-fixtures"`)
-}
-
-func TestContextRuleFixturesRunNoFixtures(t *testing.T) {
-	server := newAcdslTestRepo(t)
-	response := httptest.NewRecorder()
-	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/context/rule/TSV-001/fixtures/run", nil))
-	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-	body := response.Body.String()
 	assert.Contains(t, body, `id="rule-fixtures"`)
 	assert.Contains(t, body, "no fixtures for this rule")
 }

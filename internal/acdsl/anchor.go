@@ -6,14 +6,9 @@ import (
 	"regexp"
 )
 
-// ErrAnchorEmpty marks an anchor that resolved to nothing. For doctrine this
-// stays a hard authoring error; for task entries Check converts it into a
-// diagnostic — the planned artifact not existing IS the contract violation.
+// Doctrine keeps an empty anchor a hard error; Check turns it into a diagnostic for task entries.
 var ErrAnchorEmpty = errors.New("anchor matched no files")
 
-// ResolveAnchor filters tracked repo-relative paths by the rule's anchor
-// regexps. Resolving to nothing is an authoring error per the concept:
-// an anchor must return something.
 func ResolveAnchor(tracked []string, rule Rule) ([]string, error) {
 	include, err := regexp.Compile(rule.Anchor)
 	if err != nil {

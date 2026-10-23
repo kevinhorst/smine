@@ -3,7 +3,7 @@
 {{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
 <div class="detail-head">
   <h1>{{.Row.Rule.Id}}</h1>
-  <span class="badge {{if .Row.Rule.Projected}}badge-ok{{else}}badge-dim{{end}}" title="{{if .Row.Rule.Projected}}prose delivered into prompts and working-copy projections; the gate checks it too{{else}}checked only by the gate — no prose delivered{{end}}">{{if .Row.Rule.Projected}}projected{{else}}gate-only{{end}}</span>
+  <span class="badge {{if .Row.Rule.Projected}}badge-ok{{else}}badge-dim{{end}}" title="{{if .Row.Rule.Projected}}prose delivered at read time as context and into plan-time resolution; the gate checks it too{{else}}checked only by the gate — no prose delivered{{end}}">{{if .Row.Rule.Projected}}projected{{else}}gate-only{{end}}</span>
   {{if eq .Row.Rule.Reach "none"}}<span class="badge badge-error" title="disabled — governs no files, checked by nothing, deploys nowhere">disabled</span>
   {{else}}<span class="badge {{if eq .Row.Rule.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Row.Rule.Reach "smine"}}binds only in smine (this repo), never deploys{{else if eq .Row.Rule.Reach "global"}}would bind in any repo — future distribution manifest{{else}}deploys exactly to the named repos{{end}}">{{.Row.Rule.Reach}}</span>{{end}}
   {{if eq .Row.Rule.Lifetime "task"}}<span class="badge badge-dim">task</span>{{end}}
@@ -35,12 +35,7 @@
 </div>
 <section id="rule-fixtures">
 <h2>examples</h2>
-<div class="card card-filter">
-  {{if .Row.HasFixtures}}
-  <button hx-post="/context/rule/{{pathEscape .Row.Rule.Id}}/fixtures/run" hx-target="#rule-fixtures" hx-select="#rule-fixtures" hx-swap="outerHTML">run fixture</button>
-  {{else}}<span class="meta">no fixtures for this rule</span>{{end}}
-  {{if .FixturesResult}}<span class="meta">{{.FixturesResult}}</span>{{end}}
-</div>
+{{if not .Row.HasFixtures}}<div class="card card-filter"><span class="meta">no fixtures for this rule</span></div>{{end}}
 {{if .Positive}}
 {{range .Positive}}
 <div class="card card-column">

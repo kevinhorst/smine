@@ -3,11 +3,14 @@ package routines
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
 const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
@@ -36,12 +39,72 @@ func writeRoutine(t *testing.T, dir, name string) string {
 	t.Helper()
 	routineDir := filepath.Join(dir, name)
 	require.NoError(t, os.MkdirAll(routineDir, 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "run.sh"), []byte("#!/bin/sh\n"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, ManifestFileName), []byte(`{"kind":"single","prompt":"/demo"}`), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "com.test.demo.plist"), []byte(plistTemplate), 0o644))
 	return routineDir
 }
 
 func intPtr(v int) *int { return &v }
+
+func TestScanManifestSkill(t *testing.T) {
+	type testCase struct {
+		_id       string
+		_expected string
+
+		manifest string
+	}
+	tests := make([]*testCase, 0)
+
+	// declares-skill
+	tests = append(tests, &testCase{_id: "declares-skill", _expected: "smine", manifest: `{"kind":"smine-nightly","prompt":"/smine --nightly"}`})
+
+	// template-placeholder
+	tests = append(tests, &testCase{_id: "template-placeholder", _expected: "", manifest: `{"kind":"single","prompt":"<the claude -p prompt>"}`})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			dir := t.TempDir()
+			routineDir := writeRoutine(t, dir, "demo")
+			require.NoError(t, os.WriteFile(filepath.Join(routineDir, ManifestFileName), []byte(test.manifest), 0o644))
+			routines, err := Scan(dir)
+			require.NoError(t, err)
+			require.Len(t, routines, 1)
+
+			assert.Equal(t, test._expected, routines[0].Skill)
+		})
+	}
+}
+
+func TestScanManifestGroup(t *testing.T) {
+	type testCase struct {
+		_id       string
+		_expected string
+
+		manifest string
+	}
+	tests := make([]*testCase, 0)
+
+	// declares-group
+	tests = append(tests, &testCase{_id: "declares-group", _expected: "backlog", manifest: `{"kind":"single","prompt":"/fdesign --nightly","group":"backlog"}`})
+
+	// no-group
+	tests = append(tests, &testCase{_id: "no-group", _expected: "", manifest: `{"kind":"single","prompt":"/demo"}`})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			dir := t.TempDir()
+			routineDir := writeRoutine(t, dir, "demo")
+			require.NoError(t, os.WriteFile(filepath.Join(routineDir, ManifestFileName), []byte(test.manifest), 0o644))
+			routines, err := Scan(dir)
+			require.NoError(t, err)
+			require.Len(t, routines, 1)
+
+			assert.Equal(t, test._expected, routines[0].Group)
+		})
+	}
+}
 
 func TestScanConformantRoutine(t *testing.T) {
 	dir := t.TempDir()
@@ -105,15 +168,49 @@ func TestScanDefaultDisabledMarker(t *testing.T) {
 	assert.False(t, routines[1].DefaultDisabled)
 }
 
-func TestScanMissingRunShDegrades(t *testing.T) {
+func TestScanMissingManifestDegrades(t *testing.T) {
 	dir := t.TempDir()
 	routineDir := writeRoutine(t, dir, "demo")
-	require.NoError(t, os.Remove(filepath.Join(routineDir, "run.sh")))
+	require.NoError(t, os.Remove(filepath.Join(routineDir, ManifestFileName)))
 
 	routines, err := Scan(dir)
 	require.NoError(t, err)
 	require.Len(t, routines, 1)
-	assert.Equal(t, "missing run.sh", routines[0].LoadError)
+	assert.Equal(t, "missing routine.json", routines[0].LoadError)
+}
+
+func TestScanInvalidManifestDegrades(t *testing.T) {
+	dir := t.TempDir()
+	routineDir := writeRoutine(t, dir, "demo")
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, ManifestFileName), []byte(`{"kind":"bogus"}`), 0o644))
+
+	routines, err := Scan(dir)
+	require.NoError(t, err)
+	require.Len(t, routines, 1)
+	assert.Contains(t, routines[0].LoadError, "Invalid field kind")
+}
+
+func TestScanForeignEnvKeyDegrades(t *testing.T) {
+	dir := t.TempDir()
+	routineDir := writeRoutine(t, dir, "demo")
+	envPlist := strings.Replace(plistTemplate, "<key>StartCalendarInterval</key>", "<key>EnvironmentVariables</key>\n\t<dict><key>SKILLEVAL_TARGET_REPO</key><string>/repo</string></dict>\n\t<key>StartCalendarInterval</key>", 1)
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "com.test.demo.plist"), []byte(envPlist), 0o644))
+
+	routines, err := Scan(dir)
+	require.NoError(t, err)
+	require.Len(t, routines, 1)
+	assert.Contains(t, routines[0].LoadError, "SKILLEVAL_TARGET_REPO")
+}
+
+func TestScanInvalidLabelDegrades(t *testing.T) {
+	dir := t.TempDir()
+	routineDir := writeRoutine(t, dir, "demo")
+	require.NoError(t, os.Rename(filepath.Join(routineDir, "com.test.demo.plist"), filepath.Join(routineDir, "com.test.it's.plist")))
+
+	routines, err := Scan(dir)
+	require.NoError(t, err)
+	require.Len(t, routines, 1)
+	assert.Contains(t, routines[0].LoadError, "invalid label")
 }
 
 func TestScanTwoPlistsDegrades(t *testing.T) {
@@ -146,13 +243,13 @@ func TestDuplicate(t *testing.T) {
 	dir := t.TempDir()
 	routineDir := filepath.Join(dir, "demo")
 	require.NoError(t, os.MkdirAll(routineDir, 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "run.sh"), []byte("#!/bin/sh\necho demo\n"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, ManifestFileName), []byte(`{"kind":"single","prompt":"/demo --flag"}`), 0o644))
 	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "results.jsonl"), []byte("{}\n"), 0o644))
 	content := `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 	<key>Label</key><string>com.test.routine.demo</string>
-	<key>ProgramArguments</key><array><string>/bin/bash</string><string>` + routineDir + `/run.sh</string></array>
+	<key>ProgramArguments</key><array><string>/repo/bin/routine</string><string>run</string><string>` + routineDir + `</string></array>
 	<key>StartCalendarInterval</key><dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
 	<key>StandardOutPath</key><string>/tmp/claude-routine-demo.out.log</string>
 	<key>StandardErrorPath</key><string>/tmp/claude-routine-demo.err.log</string>
@@ -169,12 +266,12 @@ func TestDuplicate(t *testing.T) {
 	assert.Empty(t, duplicated.LoadError)
 	assert.Equal(t, "com.test.routine.demo-second", duplicated.Label)
 
-	wrapper, err := os.ReadFile(duplicated.WrapperPath)
+	manifest, err := os.ReadFile(duplicated.ManifestPath)
 	require.NoError(t, err)
-	assert.Contains(t, string(wrapper), "echo demo")
+	assert.Contains(t, string(manifest), "/demo --flag")
 	plistData, err := os.ReadFile(duplicated.PlistPath)
 	require.NoError(t, err)
-	assert.Contains(t, string(plistData), filepath.Join(dir, "demo-second", "run.sh"))
+	assert.Contains(t, string(plistData), "<string>"+filepath.Join(dir, "demo-second")+"</string>")
 	assert.Contains(t, string(plistData), "/tmp/claude-routine-demo-second.out.log")
 	assert.Contains(t, string(plistData), "/tmp/claude-routine-demo-second.err.log")
 	assert.NotContains(t, string(plistData), "/tmp/claude-routine-demo.out.log")
@@ -186,24 +283,24 @@ func TestDuplicate(t *testing.T) {
 }
 
 // A plist whose ProgramArguments does not reference the source directory would
-// leave the copy running the source wrapper — both instances would then share
+// leave the copy running the source routine — both instances would then share
 // .lock, results.jsonl and .cadence-stamp.
 func TestDuplicateRejectsUnrewritablePlist(t *testing.T) {
 	dir := t.TempDir()
 	routineDir := filepath.Join(dir, "demo")
 	require.NoError(t, os.MkdirAll(routineDir, 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "run.sh"), []byte("#!/bin/sh\n"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, ManifestFileName), []byte(`{"kind":"single","prompt":"/demo"}`), 0o644))
 	content := `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 	<key>Label</key><string>com.test.routine.demo</string>
-	<key>ProgramArguments</key><array><string>/bin/bash</string><string>$HOME/elsewhere/run.sh</string></array>
+	<key>ProgramArguments</key><array><string>/repo/bin/routine</string><string>run</string><string>$HOME/elsewhere</string></array>
 </dict></plist>`
 	require.NoError(t, os.WriteFile(filepath.Join(routineDir, "com.test.routine.demo.plist"), []byte(content), 0o644))
 
 	err := Duplicate("demo", "demo-second", dir)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "would run the source wrapper")
+	assert.Contains(t, err.Error(), "would run the source routine")
 	_, statErr := os.Stat(filepath.Join(dir, "demo-second"))
 	assert.True(t, os.IsNotExist(statErr))
 }
@@ -291,4 +388,101 @@ func TestNextRunUnsatisfiable(t *testing.T) {
 
 	_, ok := NextRun(schedule, now)
 	assert.False(t, ok)
+}
+
+func TestPlistLogPaths(t *testing.T) {
+	withLogs := writePlist(t, `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+	<key>Label</key><string>com.test.demo</string>
+	<key>StandardErrorPath</key><string>/tmp/demo.err.log</string>
+	<key>StandardOutPath</key><string>/tmp/demo.out.log</string>
+</dict></plist>`)
+	paths := plistLogPaths(withLogs)
+	assert.ElementsMatch(t, []string{"/tmp/demo.err.log", "/tmp/demo.out.log"}, paths)
+
+	noLogs := writePlist(t, `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+	<key>Label</key><string>com.test.demo</string>
+</dict></plist>`)
+	assert.Empty(t, plistLogPaths(noLogs))
+
+	assert.Empty(t, plistLogPaths(filepath.Join(t.TempDir(), "does-not-exist.plist")))
+}
+
+func TestRemoveRoutineFiles(t *testing.T) {
+	base := t.TempDir()
+	routineDir := filepath.Join(base, "demo")
+	require.NoError(t, os.MkdirAll(routineDir, 0o755))
+	errLog := filepath.Join(base, "demo.err.log")
+	outLog := filepath.Join(base, "demo.out.log")
+	require.NoError(t, os.WriteFile(errLog, []byte("e"), 0o644))
+	require.NoError(t, os.WriteFile(outLog, []byte("o"), 0o644))
+
+	plistPath := writePlist(t, `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+	<key>StandardErrorPath</key><string>`+errLog+`</string>
+	<key>StandardOutPath</key><string>`+outLog+`</string>
+</dict></plist>`)
+
+	require.NoError(t, os.WriteFile(filepath.Join(routineDir, ResultsFileName), []byte("{}\n"), 0o644))
+
+	trashRoot := filepath.Join(t.TempDir(), "state")
+	store := trash.New(trashRoot, 0)
+	routine := &Routine{Dir: routineDir, Name: "demo", PlistPath: plistPath}
+	require.NoError(t, removeRoutineFiles(routine, store))
+
+	assert.NoDirExists(t, routineDir)
+	assert.NoFileExists(t, errLog)
+	assert.NoFileExists(t, outLog)
+
+	// newest first: the dir moves after both logs
+	journal, err := store.Tail(3)
+	require.NoError(t, err)
+	require.Len(t, journal, 3)
+	movedPaths := []string{journal[0].Path, journal[1].Path, journal[2].Path}
+	assert.Equal(t, routineDir, journal[0].Path)
+	assert.ElementsMatch(t, []string{routineDir, errLog, outLog}, movedPaths)
+	assert.Equal(t, "routine delete demo", journal[0].Action)
+	assert.FileExists(t, filepath.Join(trashRoot, trash.TrashDir, filepath.FromSlash(journal[0].Stash), ResultsFileName))
+	assert.FileExists(t, filepath.Join(trashRoot, trash.TrashDir, filepath.FromSlash(journal[1].Stash)))
+	assert.FileExists(t, filepath.Join(trashRoot, trash.TrashDir, filepath.FromSlash(journal[2].Stash)))
+
+	// A missing log file is tolerated.
+	routineDir2 := filepath.Join(base, "demo2")
+	require.NoError(t, os.MkdirAll(routineDir2, 0o755))
+	plistPath2 := writePlist(t, `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+	<key>StandardOutPath</key><string>`+filepath.Join(base, "gone.log")+`</string>
+</dict></plist>`)
+	routine2 := &Routine{Dir: routineDir2, PlistPath: plistPath2}
+	require.NoError(t, removeRoutineFiles(routine2, store))
+	assert.NoDirExists(t, routineDir2)
+}
+
+func TestDelete(t *testing.T) {
+	routinesDir := t.TempDir()
+	routineDir := writeRoutine(t, routinesDir, "demo")
+	brokenDir := filepath.Join(routinesDir, "broken")
+	require.NoError(t, os.MkdirAll(brokenDir, 0o755))
+	trashRoot := t.TempDir()
+	store := trash.New(trashRoot, 0)
+
+	// labelled routine: not loaded, Unregister runs (a no-op off Windows, an absent task on the Windows runner)
+	require.NoError(t, Delete(t.Context(), "demo", routinesDir, store))
+	assert.NoDirExists(t, routineDir)
+
+	// broken beyond a label: the files move without a scheduler call
+	require.NoError(t, Delete(t.Context(), "broken", routinesDir, store))
+	assert.NoDirExists(t, brokenDir)
+
+	journal, err := store.Tail(2)
+	require.NoError(t, err)
+	require.Len(t, journal, 2)
+	assert.Equal(t, brokenDir, journal[0].Path)
+	assert.Equal(t, routineDir, journal[1].Path)
+	assert.DirExists(t, filepath.Join(trashRoot, trash.TrashDir, filepath.FromSlash(journal[1].Stash)))
 }

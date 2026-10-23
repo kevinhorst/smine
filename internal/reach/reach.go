@@ -1,10 +1,4 @@
-// Package reach defines the deployment-reach grammar shared by ACDSL rules
-// and context entries: "global" binds in any repo; "none" disables the
-// entry — it governs no files locally and deploys nowhere; a comma-separated
-// repo-name list deploys to exactly those targets (names = target dir
-// basename, the roster convention). There is no self-keyword — this repo is
-// referenced by its own name, smine, which never matches a sync target and
-// therefore never deploys.
+// Package reach defines the deployment-reach grammar shared by ACDSL rules and context entries.
 package reach
 
 import (
@@ -13,38 +7,36 @@ import (
 )
 
 const (
+	// Always ships only into the machine-global always pack, never into a repo pack.
+	Always = "always"
 	Global = "global"
-	// None disables an entry or rule: it governs no files locally and
-	// deploys nowhere. A reserved token like Global — never a list member.
+	// None governs no files locally and deploys nowhere.
 	None = "none"
-	// ThisRepo is this repository's roster name — the reach value for
-	// "binds only here". An ordinary name, not a keyword: it never matches
-	// a sync target, so such entries never deploy.
+	// ThisRepo is an ordinary name that never matches a sync target, so its entries never deploy.
 	ThisRepo = "smine"
 )
 
-// nameRe matches one repo-name token; "global" and "none" are reserved.
 var nameRe = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 
-// Valid reports whether value is global, none, or a non-empty
-// comma-separated list of repo-name tokens.
+func isReservedToken(name string) bool {
+	return name == Always || name == Global || name == None
+}
+
 func Valid(value string) bool {
-	if value == Global || value == None {
+	if isReservedToken(value) {
 		return true
 	}
 	for _, name := range strings.Split(value, ",") {
 		name = strings.TrimSpace(name)
-		if name == "" || name == Global || name == None || !nameRe.MatchString(name) {
+		if name == "" || isReservedToken(name) || !nameRe.MatchString(name) {
 			return false
 		}
 	}
 	return true
 }
 
-// Names returns the repo names in a list value, trimmed; empty for global,
-// none, and the empty value.
 func Names(value string) []string {
-	if value == Global || value == None || value == "" {
+	if isReservedToken(value) || value == "" {
 		return nil
 	}
 	var names []string
@@ -56,8 +48,6 @@ func Names(value string) []string {
 	return names
 }
 
-// DeploysTo reports whether an entry with this reach ships to target:
-// global always, a name list when it contains target, empty never.
 func DeploysTo(value, target string) bool {
 	if value == Global {
 		return true

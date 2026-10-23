@@ -1,5 +1,4 @@
-// Package contextdocs lists the repo's context source tree (context/) and
-// wraps its deployment script, cmd/sync/sync_context.sh.
+// Package contextdocs parses, filters and packs the context entry tree and deploys it per registry repo.
 package contextdocs
 
 import (
@@ -9,16 +8,12 @@ import (
 	"strings"
 )
 
-// Group is one context source subdirectory (general, go, ...) with its
-// markdown files, both name-sorted.
 type Group struct {
 	Files []string
 	Name  string
 }
 
-// Scan lists the context source subdirectories and their .md files. The
-// plans skip mirrors the script's language enumeration (sync_context.sh) so
-// the form never offers a dir the script would reject.
+// plans/ holds design plans, not context groups.
 func Scan(srcDir string) ([]Group, error) {
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {

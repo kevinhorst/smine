@@ -1,0 +1,22 @@
+{{define "_backlog_runs.html"}}
+<div id="item-runs"{{if .IsLive}} hx-get="/backlog/{{.Item.Id}}/runs" hx-trigger="every 5s" hx-swap="outerHTML"{{end}}>
+<h2>runs <span class="meta">{{with .Routine}}{{.ResultsPath}} · {{end}}rows carrying {{.Item.Id}}</span></h2>
+{{if .Runs}}
+<table class="md-body checklist-table" id="run-history">
+  <thead><tr><th>Timestamp</th><th>Exit</th><th>Turns</th><th>Cost</th><th>Branch</th><th>Session</th><th>Result</th></tr></thead>
+  <tbody>
+    {{range .Runs}}
+    <tr data-stamp="{{.Timestamp}}">
+      <td class="run-cell">{{stampDate .Timestamp}}<br>{{stampTime .Timestamp}}</td>
+      {{if .IsRunning}}<td>{{if $.IsLive}}<span class="badge">RUNNING</span>{{else}}<span class="badge badge-dim" title="the run died without a final row">INTERRUPTED</span>{{end}}</td><td>–</td><td>–</td>
+      {{else}}<td>{{if eq .ExitStatus 0}}<span class="badge badge-ok">0</span>{{else}}<span class="badge badge-error">{{.ExitStatus}}</span>{{end}}</td><td>{{.NumTurns}}</td><td>${{printf "%.4f" .TotalCostUsd}}</td>{{end}}
+      <td>{{if .Branch}}<code>{{.Branch}}</code>{{else}}–{{end}}</td>
+      <td>{{if .SessionId}}{{$peekURL := peekSessionURL .SessionId}}{{if $peekURL}}<a href="{{$peekURL}}" title="open in peek"><code>{{.SessionId}}</code></a>{{else}}<code>{{.SessionId}}</code>{{end}}{{else}}–{{end}}</td>
+      <td>{{if .Result}}<code>{{truncate .Result 110}}</code>{{else}}–{{end}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}<div class="empty">No routine runs for this item.</div>{{end}}
+</div>
+{{end}}

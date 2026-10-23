@@ -16,9 +16,7 @@ import (
 
 const tmplPermChip = "_perm_chip.html"
 
-// Permission-rule shapes recognized in doc code spans: Tool(specifier) for a
-// known tool name, or a bare mcp__ tool name. Whitelisted tools keep ordinary
-// code like Load(path) undecorated (raw.md D5).
+// Rule shapes match only known tool names, so ordinary code like Load(path) stays undecorated.
 var (
 	permToolPattern = regexp.MustCompile(`^(Bash|Read|Edit|Write|Glob|Grep|WebFetch|WebSearch|Task|Skill|SlashCommand|NotebookEdit)\(.+\)$`)
 	permMCPPattern  = regexp.MustCompile(`^mcp__[A-Za-z0-9_]+$`)
@@ -28,8 +26,6 @@ func isPermRule(text string) bool {
 	return permToolPattern.MatchString(text) || permMCPPattern.MatchString(text)
 }
 
-// Chip states: absent (apply button), already live (passive badge), or parked
-// in settings.disabled.json (enable button).
 const (
 	chipAbsent   = "absent"
 	chipAllowed  = "allowed"
@@ -37,8 +33,6 @@ const (
 	chipDisabled = "disabled"
 )
 
-// permRuleState is the live+disabled permission membership a doc render
-// decorates against.
 type permRuleState struct {
 	Allow         []string
 	Ask           []string
@@ -52,8 +46,28 @@ type permChipData struct {
 	AddURL string
 }
 
-// permChip resolves a rule's chip state against live+disabled membership;
-// shared by the render-time decoration and the add endpoint's response.
+func (s *Server) permState() (permRuleState, bool) {
+	main, disabled, err := s.loadBoth()
+	if err != nil {
+		return permRuleState{}, false
+	}
+
+	mainPerms, mainErr := main.Permissions()
+	disabledPerms, disabledErr := disabled.Permissions()
+	if mainErr != nil || disabledErr != nil {
+		return permRuleState{}, false
+	}
+
+	state := permRuleState{
+		Allow:         mainPerms.Allow,
+		Ask:           mainPerms.Ask,
+		DisabledAllow: disabledPerms.Allow,
+		DisabledAsk:   disabledPerms.Ask,
+	}
+	return state, true
+}
+
+// permChip is shared by the render-time decoration and the add endpoint's response.
 func permChip(rule string, state permRuleState) permChipData {
 	status := chipAbsent
 	switch {
@@ -71,8 +85,6 @@ func permChip(rule string, state permRuleState) permChipData {
 	}
 }
 
-// permCodeSpanRenderer replaces goldmark's code-span output: matched rules
-// render as the chip template, everything else as the stock <code> element.
 type permCodeSpanRenderer struct {
 	state permRuleState
 	tmpl  *template.Template
@@ -86,8 +98,7 @@ func (r *permCodeSpanRenderer) renderCodeSpan(w util.BufWriter, source []byte, n
 	if !entering {
 		return ast.WalkContinue, nil
 	}
-	// Join the span's text segments; embedded newlines render as spaces,
-	// matching goldmark's stock code-span behavior.
+	// Embedded newlines render as spaces, matching goldmark's stock code-span behavior.
 	var textBuf bytes.Buffer
 	for child := node.FirstChild(); child != nil; child = child.NextSibling() {
 		if textNode, ok := child.(*ast.Text); ok {
@@ -109,26 +120,13 @@ func (r *permCodeSpanRenderer) renderCodeSpan(w util.BufWriter, source []byte, n
 	return ast.WalkSkipChildren, nil
 }
 
-// renderDocMarkdown renders doc markdown with permission-rule code spans
-// decorated against live-settings state; any settings problem degrades to the
-// plain renderer — doc pages never fail over decoration (raw.md D6).
+// renderDocMarkdown degrades to the plain renderer: doc pages never fail over decoration.
 func (s *Server) renderDocMarkdown(src []byte) (template.HTML, error) {
-	main, disabled, err := s.loadBoth()
-	if err != nil {
+	state, ok := s.permState()
+	if !ok {
 		return renderMarkdown(src)
 	}
-	mainPerms, mainErr := main.Permissions()
-	disabledPerms, disabledErr := disabled.Permissions()
-	if mainErr != nil || disabledErr != nil {
-		return renderMarkdown(src)
-	}
-	state := permRuleState{
-		Allow:         mainPerms.Allow,
-		Ask:           mainPerms.Ask,
-		DisabledAllow: disabledPerms.Allow,
-		DisabledAsk:   disabledPerms.Ask,
-	}
-	md := goldmark.New(goldmark.WithRendererOptions(
+	md := newMarkdown(goldmark.WithRendererOptions(
 		renderer.WithNodeRenderers(util.Prioritized(&permCodeSpanRenderer{state: state, tmpl: s.tmpl}, 100)),
 	))
 	var buf bytes.Buffer

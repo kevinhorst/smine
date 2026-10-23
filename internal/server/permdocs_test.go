@@ -18,7 +18,7 @@ func TestIsPermRule(t *testing.T) {
 		{"Bash(git commit -m *)", true},
 		{"WebFetch(domain:x.dev)", true},
 		{"Read(//Users/x/**)", true},
-		{"mcp__serena__find_symbol", true},
+		{"mcp__goland__search_symbol", true},
 		{"Load(path)", false},
 		{"jq", false},
 		{"Bash()", false},

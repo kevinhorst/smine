@@ -1,0 +1,83 @@
+{{define "_backlog_table"}}
+<table class="md-body checklist-table backlog-table">
+  <colgroup><col class="col-id"><col class="col-title"><col class="col-route"><col class="col-status"><col class="col-activity"></colgroup>
+  <thead><tr><th>ID</th><th>Title</th><th>Route</th><th>Status</th><th>Activity</th></tr></thead>
+  <tbody>{{range .}}{{template "_backlog_row.html" .}}{{end}}</tbody>
+</table>
+{{end}}
+
+{{define "_backlog_row.html"}}
+<tr id="item-{{.Item.Id}}" class="{{if .Item.Mined}}row-mined{{end}}" data-item="{{.Item.Id}}" data-status="{{.Item.Status}}" data-pri="{{.Item.Pri}}"
+    data-live="{{if .IsLive}}1{{end}}" data-missing="{{if .RoutineMissing}}1{{end}}" data-mined="{{if .Item.Mined}}1{{end}}">
+  <td>
+    <button type="button" class="bl-chip" data-item-chip="{{.Item.Id}}" title="open the item panel">{{.Item.Id}}</button>
+    {{with .Item.Mined}}<div><span class="badge badge-ok" title="smined {{.Date}} from {{len .Sessions}} session(s) by the smine nightly">smined</span></div>{{end}}
+  </td>
+  {{template "_backlog_title_cell" .}}
+  {{template "_backlog_route_cell" .}}
+  {{template "_backlog_status_cell" .}}
+  {{template "_backlog_activity" .}}
+</tr>
+{{end}}
+
+{{/* A write swaps only the cells it changed, each by id: an open select elsewhere in the row, or the Activity poll, is never replaced. */}}
+{{define "_backlog_cells_oob.html"}}
+<template>
+{{if .IsTitleOOB}}{{template "_backlog_title_cell" .}}{{end}}
+{{if .IsRouteOOB}}{{template "_backlog_route_cell" .}}{{end}}
+{{if .IsStatusOOB}}{{template "_backlog_status_cell" .}}{{end}}
+{{if .IsActivityOOB}}{{template "_backlog_activity" .}}{{end}}
+</template>
+{{end}}
+
+{{define "_backlog_title_cell"}}
+<td id="title-{{.Item.Id}}"{{if .IsTitleOOB}} hx-swap-oob="true"{{end}}>
+    <div class="bl-tags">
+      {{template "_backlog_pri" .}}
+      <span class="badge badge-dim">{{.Item.Size}}</span>
+      <span class="badge badge-dim">{{.Item.Theme}}</span>
+      {{range .Deps}}{{if .IsActive}}<a class="dep-link" href="#item-{{.Id}}" title="depends on {{.Id}}">needs {{.Id}}</a>{{else}}<span class="meta" title="depends on {{.Id}}, which is archived">needs {{.Id}} · archived</span>{{end}}{{end}}
+    </div>
+    <div class="bl-title">{{.Item.Title}}</div>
+    {{with .Item.Mined}}{{if .By}}<div class="bl-origin meta">{{template "_backlog_mined_by" $}}</div>{{end}}{{end}}
+</td>
+{{end}}
+
+{{define "_backlog_route_cell"}}<td id="route-{{.Item.Id}}"{{if .IsRouteOOB}} hx-swap-oob="true"{{end}}>{{template "_backlog_route" .}}</td>{{end}}
+
+{{define "_backlog_status_cell"}}<td id="status-{{.Item.Id}}"{{if .IsStatusOOB}} hx-swap-oob="true"{{end}}><select name="status" autocomplete="off" hx-post="/api/backlog/{{.Item.Id}}/status" hx-swap="none" title="writes the item's status and a changelog row; done and rejected move the item to the archive">
+    {{range .Statuses}}<option {{if eq . $.Item.Status}}selected{{end}}>{{.}}</option>{{end}}
+  </select></td>{{end}}
+
+{{/* Only this cell polls and swaps: the selects in the other cells are never replaced under the user. */}}
+{{define "_backlog_activity"}}
+<td id="activity-{{.Item.Id}}"{{if .IsActivityOOB}} hx-swap-oob="true"{{end}}
+    {{if or .IsLive .PollSince}}hx-get="/backlog/{{.Item.Id}}/activity{{if .PollSince}}?since={{.PollSince}}{{end}}" hx-trigger="every 3s" hx-swap="outerHTML"{{end}}>
+    {{if .RoutineMissing}}
+    <div class="activity-line"><span class="badge badge-error" title="no routine runs /{{.RouteSkill}} — create one with /skillroutine-create routine">ROUTINE MISSING</span>{{if .SkillHref}}<a class="skill-link" href="{{.SkillHref}}">/{{.RouteSkill}}</a>{{else}}<span class="meta">/{{.RouteSkill}}</span>{{end}}</div>
+    {{else if .PollSince}}
+    <div class="activity-line"><span class="badge badge-action">starting</span><span class="meta">dispatched — waiting for the run to start</span></div>
+    {{else if .LastRun}}
+    {{with .LastRun}}
+    <div class="activity-line">
+      {{if $.IsLive}}<span class="badge badge-action">running</span>{{else if .IsRunning}}<span class="badge badge-error" title="the run died without a final row">interrupted</span>{{else if eq .ExitStatus 0}}<span class="badge badge-dim">ok</span>{{else}}<span class="badge badge-error">exit {{.ExitStatus}}</span>{{end}}
+      <span class="meta">{{stampDate .Timestamp}} {{stampTime .Timestamp}}{{$peekURL := peekSessionURL .SessionId}}{{if $peekURL}} · <a href="{{$peekURL}}" title="{{.SessionId}} — open in peek">session</a>{{end}}</span>
+    </div>
+    {{if .Branch}}<div class="activity-line"><code>{{.Branch}}</code></div>{{end}}
+    {{end}}
+    {{else}}–{{end}}
+</td>
+{{end}}
+
+{{define "_backlog_pri"}}<select name="pri" class="badge badge-select {{priBadge .Item.Pri}}" autocomplete="off" hx-post="/api/backlog/{{.Item.Id}}/pri" hx-swap="none" title="writes the item's priority and a changelog row">{{range .Priorities}}<option value="{{.}}" {{if eq . $.Item.Pri}}selected{{end}}>{{priLabel .}}</option>{{end}}</select>{{end}}
+
+{{define "_backlog_routine_select"}}<select name="routine" autocomplete="off" title="the backlog routine this dispatch runs on; its env sets model, effort and budget">{{range .Routines}}<option value="{{.Name}}" {{if eq .Name $.Routine.Name}}selected{{end}}>{{.Name}}</option>{{end}}</select>{{end}}
+
+{{define "_backlog_mined_by"}}{{with .Item.Mined}}smined {{.Date}}{{if .By}} by {{if $.MinedByURL}}<a href="{{$.MinedByURL}}" title="{{.By}} — the run that mined this row, in peek">{{printf "%.8s" .By}}</a>{{else}}<span title="{{.By}}">{{printf "%.8s" .By}}</span>{{end}}{{end}}{{end}}{{end}}
+
+{{define "_backlog_session_link"}}{{if .WeekURL}}<a href="{{.WeekURL}}" title="open the session findings">{{.Text}}</a>{{else}}<span>{{.Text}}</span>{{end}}{{end}}
+
+{{define "_backlog_route"}}<select name="skill" class="bl-route" autocomplete="off" hx-post="/api/backlog/{{.Item.Id}}/route" hx-swap="none" title="the skill whose backlog routine runs this item; a change drops the route args, the changelog keeps the old route">
+  {{- if not .IsRouteListed}}<option value="" selected disabled>{{if .Item.Route}}{{.Item.Route}}{{else}}–{{end}}</option>{{end -}}
+  {{range .RouteSkills}}<option value="{{.}}" {{if eq . $.RouteSkill}}selected{{end}}>/{{.}}</option>{{end -}}
+</select>{{if and .IsRouteListed .RouteRest}} <span class="meta">{{.RouteRest}}</span>{{end}}{{end}}

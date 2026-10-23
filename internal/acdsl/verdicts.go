@@ -9,9 +9,7 @@ import (
 	"strings"
 )
 
-// VerdictRecord archives one gate run — the raw material of the standing
-// ablation loop: per-rule first-pass violation rates from real sessions,
-// not probe harnesses.
+// Raw material of the ablation loop: first-pass violation rates from real sessions.
 type VerdictRecord struct {
 	Ts          string          `json:"ts"` // RFC3339 UTC — lexicographic order is time order
 	Root        string          `json:"root"`
@@ -22,25 +20,19 @@ type VerdictRecord struct {
 	Diagnostics []DiagnosticRef `json:"diagnostics,omitempty"`
 }
 
-// RuleVerdict is one rule's slice of a run: its delivery flag at run time
-// and how many violations its verifier reported. Zero-violation rows are
-// deliberate — they are the rate denominator.
+// Zero-violation rows are deliberate: they are the rate denominator.
 type RuleVerdict struct {
 	Id         string `json:"id"`
 	Projected  bool   `json:"projected"`
 	Violations int    `json:"violations"`
 }
 
-// DiagnosticRef preserves the finding text for later analysis without
-// duplicating the rule's why.
 type DiagnosticRef struct {
 	Id      string `json:"id"`
 	Message string `json:"message"`
 }
 
-// DefaultVerdictsPath resolves the log sink: $ACDSL_VERDICTS_PATH, else
-// ~/.claude/acdsl/verdicts.jsonl — home-anchored because pool worktrees are
-// destroyed with their sessions and the loop's data must outlive them.
+// Home-anchored because pool worktrees are destroyed with their sessions.
 func DefaultVerdictsPath() (string, error) {
 	if fromEnv := os.Getenv("ACDSL_VERDICTS_PATH"); fromEnv != "" {
 		return fromEnv, nil
@@ -71,9 +63,7 @@ func BuildVerdictRecord(ts, root, branch, session string, rules []Rule, diagnost
 	return record
 }
 
-// AppendVerdict appends one JSONL record to path, creating the directory on
-// first use. The caller treats failure as a warning: the gate's exit code
-// never depends on logging.
+// Callers treat failure as a warning: the gate's exit code never depends on logging.
 func AppendVerdict(path string, record VerdictRecord) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("AppendVerdict: %w", err)
@@ -93,9 +83,7 @@ func AppendVerdict(path string, record VerdictRecord) error {
 	return nil
 }
 
-// ReadVerdicts loads the JSONL sink. A missing file is an empty log, not an
-// error; unparseable lines are skipped and counted so drift stays visible
-// without ever being fatal. since (RFC3339, empty = all) filters by Ts.
+// Unparseable lines are skipped and counted so drift stays visible without being fatal.
 func ReadVerdicts(path, since string) ([]VerdictRecord, int, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -123,9 +111,7 @@ func ReadVerdicts(path, since string) ([]VerdictRecord, int, error) {
 	return records, skipped, nil
 }
 
-// RuleStat aggregates one (rule, projected) slice of the verdict log — the
-// eviction decision reads exactly this table. A rule flipped mid-window
-// yields two rows: the A/B comparison the loop exists for.
+// A rule flipped mid-window yields two rows: the A/B comparison the loop exists for.
 type RuleStat struct {
 	Id         string
 	Projected  bool
@@ -141,8 +127,6 @@ type verdictKey struct {
 	projected bool
 }
 
-// AggregateVerdicts folds records into per-(rule, projected) stats, sorted
-// by id, projected=true first.
 func AggregateVerdicts(records []VerdictRecord) []RuleStat {
 	stats := map[verdictKey]*RuleStat{}
 	for _, record := range records {

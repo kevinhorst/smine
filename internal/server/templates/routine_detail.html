@@ -6,7 +6,6 @@
 </div>
 <div class="meta">{{.Routine.Dir}}</div>
 {{template "_routine_ops.html" .}}
-{{template "_routine_tokens.html" .}}
 <div id="op-result"></div>
 <h2>status</h2>
 <div class="routines-layout">
@@ -23,6 +22,33 @@
 {{if .HistoryErr}}
 <div class="card card-error"><span class="label">{{.HistoryErr}}</span></div>
 {{end}}
+{{if .ReportsErr}}
+<div class="card card-error"><span class="label">{{.ReportsErr}}</span></div>
+{{end}}
+{{if .Reports}}
+<h2>Run reports</h2>
+<input type="checkbox" class="table-top-toggle" id="reports-recent">
+<div class="table-scroll">
+<table class="md-body checklist-table table-recent" id="run-reports">
+  <thead>
+    <tr><th>Run</th><th>Mode</th><th>Exit</th><th>Cost</th><th>Branch</th><th>Merged</th></tr>
+  </thead>
+  <tbody>
+    {{range $index, $report := .Reports}}
+    <tr{{if ge $index $.RecentReports}} class="row-old"{{end}}>
+      <td class="run-cell"><a href="/routines/{{$.Routine.Name}}/runs/{{$report.RunId}}">{{stampDate $report.Started}}<br>{{stampTime $report.Started}}</a></td>
+      <td>{{$report.Mode}}</td>
+      <td>{{if eq $report.Totals.ExitStatus 0}}<span class="badge badge-ok">0</span>{{else}}<span class="badge badge-error">{{$report.Totals.ExitStatus}}</span>{{end}}</td>
+      <td>${{printf "%.4f" $report.Totals.CostUsd}}</td>
+      <td>{{if $report.Branch}}<code>{{$report.Branch}}</code>{{else}}–{{end}}</td>
+      <td>{{if $report.Orchestrate}}{{if $report.Orchestrate.Merged}}<span class="badge badge-ok">merged</span>{{else}}<span class="badge badge-dim">kept</span>{{end}}{{else}}–{{end}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+</div>
+{{if lt .RecentReports (len .Reports)}}<label class="table-top-label" for="reports-recent"><span class="table-top-more">show all {{len .Reports}}</span><span class="table-top-less">show last 2 days</span></label>{{end}}
+{{end}}
 <h2>Run history</h2>
 {{if .History}}
 <table class="md-body checklist-table" id="run-history">
@@ -34,7 +60,7 @@
     <tr data-stamp="{{.Timestamp}}">
       <td class="run-cell">{{stampDate .Timestamp}}<br>{{stampTime .Timestamp}}</td>
       {{if .IsRunning}}
-      <td><span class="badge">RUNNING</span></td>
+      <td>{{if $.Routine.IsLive}}<span class="badge">RUNNING</span>{{else}}<span class="badge badge-dim" title="the run died without a final row">INTERRUPTED</span>{{end}}</td>
       <td>–</td>
       <td>–</td>
       {{else}}
@@ -54,56 +80,7 @@
     {{end}}
   </tbody>
 </table>
-<script>
-{{/* Week bands (client-side): consecutive rows grouped per ISO week (Monday
-     start, UTC — matches the UTC stamps); a clickable band header row per
-     week, newest expanded, older collapsed. */}}
-(function () {
-  var body = document.querySelector('#run-history tbody');
-  if (!body) return;
-  function weekStart(stamp) {
-    var date = new Date(stamp);
-    if (isNaN(date)) return null;
-    var day = (date.getUTCDay() + 6) % 7;
-    date.setUTCHours(0, 0, 0, 0);
-    date.setUTCDate(date.getUTCDate() - day);
-    return date;
-  }
-  function iso(date) { return date.toISOString().slice(0, 10); }
-  var bands = [], current = null;
-  Array.prototype.slice.call(body.querySelectorAll('tr[data-stamp]')).forEach(function (row) {
-    var start = weekStart(row.dataset.stamp);
-    var key = start ? iso(start) : 'unknown';
-    if (!current || current.key !== key) {
-      current = { key: key, start: start, rows: [] };
-      bands.push(current);
-    }
-    current.rows.push(row);
-  });
-  bands.forEach(function (band, index) {
-    var header = document.createElement('tr');
-    header.className = 'run-band';
-    var cell = document.createElement('td');
-    cell.colSpan = 6;
-    var label = 'unknown date';
-    if (band.start) {
-      var end = new Date(band.start);
-      end.setUTCDate(end.getUTCDate() + 6);
-      label = 'Week ' + iso(band.start) + ' – ' + iso(end);
-    }
-    cell.textContent = label + ' (' + band.rows.length + ')';
-    header.appendChild(cell);
-    body.insertBefore(header, band.rows[0]);
-    var collapsed = index > 0;
-    function apply() {
-      band.rows.forEach(function (row) { row.hidden = collapsed; });
-      header.classList.toggle('collapsed', collapsed);
-    }
-    header.addEventListener('click', function () { collapsed = !collapsed; apply(); });
-    apply();
-  });
-})();
-</script>
+{{template "_run_bands.html" "run-history"}}
 {{else}}
 <div class="empty">No runs recorded.</div>
 {{end}}

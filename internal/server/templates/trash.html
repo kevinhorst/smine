@@ -1,0 +1,51 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{t "Trash"}}</h1>
+{{if .LoadErr}}<div class="card card-error"><span class="badge badge-error">Failed</span> <span class="label">{{.LoadErr}}</span></div>{{end}}
+<div id="op-result"></div>
+{{range $stash := .Stashes}}
+<h2>{{$stash.Time.Local.Format "2006-01-02 15:04:05"}}</h2>
+<table class="md-body checklist-table">
+  <tbody>
+    {{range $stash.Entries}}
+    <tr>
+      <td>{{pathWrap .Rel}}{{if .IsDir}}/ <span class="meta">{{t "folder"}}</span>{{end}}</td>
+      <td>{{.Size}} B</td>
+      <td>
+        <form hx-post="/trash/{{pathEscape $stash.Stamp}}/restore" hx-target="#op-result"
+              hx-confirm="{{t "Restore this file to its original place?"}} {{.Rel}}">
+          <input type="hidden" name="rel" value="{{.Rel}}">
+          <label><input type="checkbox" name="replace" value="on"> {{t "replace the current file (it is stashed first)"}}</label>
+          <button type="submit" class="small">{{t "Restore"}}</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<div class="empty">{{t "The trash is empty."}}</div>
+{{end}}
+<h2>{{t "Journal"}}</h2>
+{{if .Journal}}
+<table class="md-body checklist-table">
+  <thead>
+    <tr><th>{{t "time"}}</th><th>{{t "action"}}</th><th>{{t "kind"}}</th><th>{{t "path"}}</th><th>{{t "reason"}}</th><th>{{t "stash"}}</th></tr>
+  </thead>
+  <tbody>
+    {{range .Journal}}
+    <tr>
+      <td>{{.Time.Local.Format "2006-01-02 15:04:05"}}</td>
+      <td>{{.Action}}</td>
+      <td>{{.Kind}}</td>
+      <td>{{pathWrap .Path}}</td>
+      <td>{{.Reason}}</td>
+      <td>{{pathWrap .Stash}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<div class="empty">{{t "No journal lines."}}</div>
+{{end}}
+{{template "foot" .}}

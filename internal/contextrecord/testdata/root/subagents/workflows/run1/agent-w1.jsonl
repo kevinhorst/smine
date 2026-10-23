@@ -1,0 +1,2 @@
+{"type":"attachment","attachment":{"type":"hook_additional_context","hookName":"SubagentStart","content":["===== GLOBAL CONTEXT (injected by hook) =====\nWritten to /home/u/.claude/context-required/sess-1/global.md (40 chars, 2 lines). Read it in full before any other tool call.\n"]}}
+{"type":"assistant","message":{"role":"assistant","model":"claude-sonnet-5","content":[{"type":"text","text":"done"}]}}

@@ -1,0 +1,58 @@
+{{define "_setting_row.html"}}
+{{/* Every control edits the form alone — list Add and ×, Reset included; Save stores and applies the panel. */}}
+<div class="card card-column card-config setting-row" id="setting-{{.Component}}-{{.Key}}" data-default="{{.Default}}">
+  <div class="card-row card-head">
+    <span class="label label-key"><strong>{{.Label}}</strong> <code>{{.Key}}</code></span>
+    <span class="card-tags">
+      <span class="badge badge-dim">{{.Kind}}</span>
+      {{if .IsOverridden}}<span class="badge badge-action" title="the record overrides the default">overridden</span>{{end}}
+    </span>
+  </div>
+  <div class="meta explanation setting-help">{{.Help}}</div>
+  <div class="setting-control">
+  {{if eq .Kind "bool"}}
+    <input type="hidden" name="{{.Key}}" value="false">
+    <label class="toggle"><input type="checkbox" name="{{.Key}}" value="true" {{if eq .Current "true"}}checked{{end}}><span class="slider"></span></label>
+  {{else if eq .Kind "enum"}}
+    {{$current := .Current}}
+    <select name="{{.Key}}">
+      {{range .Values}}<option {{if eq . $current}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+  {{else if eq .Kind "int"}}
+    <input type="number" min="0" step="1" name="{{.Key}}" value="{{.Current}}">
+  {{else if .IsList}}
+    {{/* the hidden field holds the list as JSON, the items beneath only show it; Add and × rewrite both */}}
+    <div class="list-editor">
+      <input type="hidden" name="{{.Key}}" value="{{.Current}}">
+      <div class="list-items">
+        {{range .Items}}<div class="list-item"><span class="label"><code>{{.}}</code></span><button type="button" class="small" onclick="smineListRemove(this)">×</button></div>{{end}}
+        {{if not .Items}}<div class="list-item"><span class="meta">empty list</span></div>{{end}}
+      </div>
+      <details class="list-add">
+        <summary class="meta">add item</summary>
+        {{/* the field is named per row: a text left here is folded in by Save */}}
+        <div class="inline-form">
+          <input type="text" name="{{.Key}}.item" placeholder="new item" class="grow" onkeydown="if (event.key === 'Enter') { event.preventDefault(); smineListAdd(this); }">
+          <button type="button" class="small" onclick="smineListAdd(this)">Add</button>
+        </div>
+      </details>
+    </div>
+  {{else}}
+    <input type="text" name="{{.Key}}" value="{{.Current}}" class="grow">
+  {{end}}
+  </div>
+  <div class="card-row card-foot setting-foot">
+    {{if .IsList}}
+    <details class="setting-default">
+      <summary class="meta">default · {{len .DefaultItems}} items · {{.Sink}}</summary>
+      <div class="list-editor">{{range .DefaultItems}}<div class="list-item"><span class="label"><code>{{.}}</code></span></div>{{end}}</div>
+    </details>
+    {{else}}
+    <span class="meta">default <code>{{if .Default}}{{.Default}}{{else}}""{{end}}</code> · {{.Sink}}</span>
+    {{end}}
+    {{if .IsOverridden}}
+    <button type="button" class="small push-right" title="set the default — stored on Save" onclick="smineRowReset(this)">Reset</button>
+    {{end}}
+  </div>
+</div>
+{{end}}

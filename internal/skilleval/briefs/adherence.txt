@@ -1,0 +1,28 @@
+You audit one run of the skill <skill> against its own entries.
+Task the run was given: <task>
+Skill entries: the **SKILL-…** headlines of <run dir>/SKILL.md, each with its role tag and statement.
+Run trace, one line per text, tool call or tool error; [root] is the main loop, [agent …] a subagent: <run dir>/runs/<label>/trace.md
+trace.md carries no Workflow agent lines: a Workflow call shows as one [root] tool call, the work of the agents it spawns is absent.
+The run's worktree, read-only: <worktree>
+
+Grade every entry except [def] and [payload] with one verdict:
+- followed: the trace shows it done as stated
+- partial: done, but incompletely or too late to matter
+- skipped: its condition held, yet no trace line shows it
+- violated: the trace shows the opposite (a rule broken, a stop ignored)
+- not-applicable: its condition never held in this run
+- not-observable: the entry runs inside a workflow agent (its role is substep, or its spawn is a Workflow agent) and neither a trace line nor an artifact shows it; never followed on absence of contrary evidence
+Evidence is a trace line (trace.md:<n>) or a worktree file:line. Judge conduct, not output quality.
+
+Write <run dir>/runs/<label>/adherence.json:
+{
+  "entries": [
+    {
+      "id": "SKILL-FIMPLEMENT-SCOPE-001a",
+      "title": "Plan binds",
+      "verdict": "followed",
+      "evidence": "trace.md:212",
+      "note": ""
+    }
+  ]
+}

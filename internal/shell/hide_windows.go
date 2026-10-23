@@ -7,14 +7,10 @@ import (
 	"syscall"
 )
 
-// CREATE_NO_WINDOW: the child gets no console at all — combined with
-// HideWindow this keeps console-subsystem children (powershell, git, bash)
-// from popping windows when the parent is a GUI-subsystem binary.
+// CREATE_NO_WINDOW keeps console-subsystem children from popping windows under a GUI-subsystem parent.
 const createNoWindow = 0x08000000
 
-// HideWindow marks cmd to run without a console window. The detached server
-// and routinewrap are built -H=windowsgui; without this every child spawn
-// would open a fresh console window on the desktop.
+// HideWindow matters because the server and the routine runner are built -H=windowsgui.
 func HideWindow(cmd *exec.Cmd) {
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}

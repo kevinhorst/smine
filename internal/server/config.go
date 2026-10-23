@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"reflect"
@@ -17,7 +18,20 @@ import (
 	"github.com/kevinhorst/smine/internal/config"
 	"github.com/kevinhorst/smine/internal/server/catalog"
 	"github.com/kevinhorst/smine/internal/server/respond"
+	"github.com/kevinhorst/smine/internal/skills"
 )
+
+// sectionOwnedKeys render in a top section of the page and never as a generic row (D6).
+var sectionOwnedKeys = map[string]bool{
+	"hooks":             true,
+	"permissions":       true,
+	"permissions.allow": true,
+	"permissions.ask":   true,
+	"permissions.deny":  true,
+}
+
+// keySkillOverrides is the one map key with a preset list.
+const keySkillOverrides = "skillOverrides"
 
 const (
 	tmplConfig    = "config.html"
@@ -39,8 +53,7 @@ type configGroup struct {
 }
 
 type configPageData struct {
-	// Entries is always nil; it exists so the shared _config_tabs template
-	// can test {{if .Entries}} on both the Active and Docs page data.
+	// Entries is always nil; the shared _config_tabs template tests {{if .Entries}} on both pages.
 	Entries             []catalog.Entry
 	Available           []configGroup
 	AvailableCount      int
@@ -59,7 +72,9 @@ type configRow struct {
 	Category    string
 	Diff        []diffLine
 	Documented  bool
+	Entries     []configEntry
 	Explanation string
+	GroupBadges []groupBadge
 	IsTable     bool
 	Items       []configItem
 	Key         string
@@ -76,11 +91,22 @@ type configRow struct {
 	Values      []string
 }
 
-// configItem pairs a display value with its index in the stored array so
-// display order can be alphabetical while delete URLs stay positional (D7).
+// configEntry is one named member of a map key, shown as a select.
+type configEntry struct {
+	Name  string
+	Value string
+}
+
+// configItem keeps the storage index so display can sort while delete URLs stay positional.
 type configItem struct {
 	Index int
 	Value string
+}
+
+// groupBadge is one group summary's overridden count, swapped out of band by a row answer.
+type groupBadge struct {
+	Id    string
+	Count int
 }
 
 func (s *Server) catalogEntry(target, key string) *catalog.Entry {
@@ -98,7 +124,12 @@ func (s *Server) claudeRows() ([]configRow, error) {
 		return nil, err
 	}
 
-	fragment, err := config.LoadFragment(s.claudeFragmentPath)
+	fragment, err := config.LoadFragment(s.claudeFragmentPath, s.markers())
+	if err != nil {
+		return nil, err
+	}
+
+	models, err := main.AvailableModels()
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +148,10 @@ func (s *Server) claudeRows() ([]configRow, error) {
 
 		path := strings.Split(entry.Key, ".")
 		covered[path[0]] = true
+		if sectionOwnedKeys[entry.Key] {
+			continue
+		}
+
 		row := rowFromEntry(entry)
 		state, raw, ok := settingsValue(disabled.Doc(), main.Doc(), path)
 		if ok {
@@ -125,17 +160,26 @@ func (s *Server) claudeRows() ([]configRow, error) {
 			if entry.Type == catalog.TypeArray {
 				row.Items = jsonArrayItems(raw)
 			}
+			if entry.Type == catalog.TypeMap {
+				row.Entries = jsonMapEntries(raw)
+			}
 		}
 		if entry.Type == catalog.TypeArray {
-			row.Presets = s.arrayPresets(entry.Key, row.Items)
+			row.Presets = s.arrayPresets(entry.Key, row.Items, models)
 			row.PathArray = pathArrayKeys[entry.Key]
+		}
+		if entry.Type == catalog.TypeMap {
+			row.Presets = s.mapPresets(entry.Key, row.Entries)
+		}
+		if entry.Type == catalog.TypeString && slices.Contains(modelSettingKeys, entry.Key) {
+			row.Values = models
 		}
 		row.Overridden = claudeOverridden(main.Doc(), fragment.Doc(), path)
 		if row.Overridden {
 			if fragRaw, ok := fragment.Doc().Get(path); ok {
 				row.RepoValue = displayJSON(entry.Type, fragRaw)
 			}
-			blockType := entry.Type == catalog.TypeArray || entry.Type == catalog.TypeObject || entry.Type == catalog.TypeTable
+			blockType := isBlockType(entry.Type)
 			if blockType && row.RepoValue != "" && row.Value != "" {
 				row.Diff = compactDiff(diffLines(row.RepoValue, row.Value), 2)
 			}
@@ -149,13 +193,9 @@ func (s *Server) claudeRows() ([]configRow, error) {
 	return rows, nil
 }
 
-// docURLRe matches the canonical per-key documentation deep link embedded in a
-// catalog explanation (a trailing "See https://code.claude.com/docs/...").
 var docURLRe = regexp.MustCompile(`https://code\.claude\.com/docs/\S+`)
 
-// docHref returns the per-key documentation URL: the code.claude.com deep link
-// from the explanation when present, else the generic schema source. Keys with
-// no embedded URL (all Codex keys, ~58 Claude keys) keep their .Source.
+// docHref falls back to .Source: all Codex keys and some Claude keys embed no deep link.
 func docHref(explanation, source string) string {
 	if match := docURLRe.FindString(explanation); match != "" {
 		return strings.TrimRight(match, ".,;)")
@@ -163,9 +203,7 @@ func docHref(explanation, source string) string {
 	return source
 }
 
-// claudeOverridden reports whether the live value at path differs from the
-// repo fragment's — including one side missing. Equality is canonical JSON:
-// key order in objects is irrelevant, array order matters (H1).
+// claudeOverridden counts one side missing as a difference.
 func claudeOverridden(mainDoc, fragmentDoc *config.Document, path []string) bool {
 	liveRaw, liveOk := mainDoc.Get(path)
 	fragRaw, fragOk := fragmentDoc.Get(path)
@@ -183,9 +221,7 @@ func claudeOverridden(mainDoc, fragmentDoc *config.Document, path []string) bool
 	return !reflect.DeepEqual(canonicalJSON(live), canonicalJSON(frag))
 }
 
-// canonicalJSON normalizes a decoded value for drift comparison: arrays
-// compare as multisets — the toggles re-append entries on enable, so
-// storage order is presentation noise, not drift.
+// canonicalJSON compares arrays as multisets: the toggles re-append entries on enable, so order is not drift.
 func canonicalJSON(value any) any {
 	switch typed := value.(type) {
 	case map[string]any:
@@ -259,7 +295,11 @@ func (s *Server) codexRows() ([]configRow, error) {
 		return nil, err
 	}
 
-	fragment, err := codex.Load(s.codexFragmentPath)
+	fragmentData, err := os.ReadFile(s.codexFragmentPath)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("codexRows: Failed to read %s: %w", s.codexFragmentPath, err)
+	}
+	fragment, err := codex.Parse(s.markers().Expand(fragmentData))
 	if err != nil {
 		return nil, err
 	}
@@ -340,6 +380,40 @@ func (s *Server) handleConfigPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data := configPageData{Open: r.URL.Query().Get("open"), Page: "config-" + target, Target: target, Title: target + " config"}
+	fragment := s.claudeFragmentPath
+	if target == catalog.TargetCodex {
+		fragment = s.codexFragmentPath
+	}
+	data.FragmentPath = fragment
+	if _, err := os.Stat(fragment); err != nil {
+		data.FragmentMissing = true
+	}
+	data.Groups, data.Available = groupedRows(rows)
+	for _, group := range data.Available {
+		data.AvailableCount += len(group.Rows)
+		data.AvailableOverridden += group.Overridden
+	}
+	s.renderFragment(w, tmplConfig, data)
+}
+
+// groupBadges is one badge per category group plus the available section's, in the ids config.html renders.
+func groupBadges(target string, groups, available []configGroup) []groupBadge {
+	badges := make([]groupBadge, 0, len(groups)+1)
+	for _, group := range groups {
+		badge := groupBadge{Id: "ovr-" + domID(target, group.Category), Count: group.Overridden}
+		badges = append(badges, badge)
+	}
+	availableOverridden := 0
+	for _, group := range available {
+		availableOverridden += group.Overridden
+	}
+	availableBadge := groupBadge{Id: "ovr-available-" + target, Count: availableOverridden}
+	return append(badges, availableBadge)
+}
+
+// groupedRows splits the rows into the category groups (set rows) and the available groups (unset rows).
+func groupedRows(rows []configRow) ([]configGroup, []configGroup) {
 	byCategory := make(map[string][]configRow)
 	availableByCategory := make(map[string][]configRow)
 	for _, row := range rows {
@@ -349,24 +423,9 @@ func (s *Server) handleConfigPage(w http.ResponseWriter, r *http.Request) {
 		}
 		byCategory[row.Category] = append(byCategory[row.Category], row)
 	}
-
-	data := configPageData{Open: r.URL.Query().Get("open"), Page: "config-" + target, Target: target, Title: target + " config"}
-	_, fragment := s.syncPaths(target)
-	data.FragmentPath = fragment
-	if _, err := os.Stat(fragment); err != nil {
-		data.FragmentMissing = true
-	}
-	data.Groups = sortedGroups(byCategory)
-	data.Available = sortedGroups(availableByCategory)
-	for _, group := range data.Available {
-		data.AvailableCount += len(group.Rows)
-		data.AvailableOverridden += group.Overridden
-	}
-	s.renderFragment(w, tmplConfig, data)
+	return sortedGroups(byCategory), sortedGroups(availableByCategory)
 }
 
-// sortedGroups orders categories alphabetically with undocumented last and
-// each group's rows by key.
 func sortedGroups(byCategory map[string][]configRow) []configGroup {
 	categories := make([]string, 0, len(byCategory))
 	for category := range byCategory {
@@ -396,7 +455,7 @@ func sortedGroups(byCategory map[string][]configRow) []configGroup {
 }
 
 func (s *Server) handleConfigRedirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/config/claude", http.StatusFound)
+	http.Redirect(w, r, "/config/smine", http.StatusFound)
 }
 
 func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
@@ -408,11 +467,22 @@ func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Catalog lookup: typed validation for documented keys, strict
-	// structured parse for everything else (D8)
+	// Catalog lookup: typed validation for documented keys, strict structured parse for the rest
 	entry := s.catalogEntry(target, key)
 	if entry != nil {
 		if err := catalog.Validate(entry, value); err != nil {
+			respond.WithBadRequest(err.Error(), w)
+			return
+		}
+	}
+
+	if target == catalog.TargetClaude && slices.Contains(modelSettingKeys, key) {
+		chosen := []string{value}
+		if key == keyFallbackModel && json.Unmarshal([]byte(value), &chosen) != nil {
+			respond.WithBadRequest("fallbackModel must be a JSON array of model IDs", w)
+			return
+		}
+		if err := s.requireAvailableModels(chosen); err != nil {
 			respond.WithBadRequest(err.Error(), w)
 			return
 		}
@@ -447,24 +517,24 @@ func (s *Server) handleConfigUnset(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) renderConfigRow(w http.ResponseWriter, target, key string) {
-	// Only mutating handlers render single rows — the trigger re-pulls
-	// #config-body so group badges and row placement stay fresh (D3).
-	w.Header().Set("HX-Trigger", "config-op")
 	rows, err := s.targetRows(target)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
 
+	groups, available := groupedRows(rows)
+	badges := groupBadges(target, groups, available)
 	for _, row := range rows {
 		if row.Key == key {
+			row.GroupBadges = badges
 			s.renderFragment(w, tmplConfigRow, row)
 			return
 		}
 	}
 
 	// Undocumented key no longer present anywhere: render a bare unset row.
-	row := configRow{Key: key, State: stateUnset, Target: target}
+	row := configRow{GroupBadges: badges, Key: key, State: stateUnset, Target: target}
 	s.renderFragment(w, tmplConfigRow, row)
 }
 
@@ -475,8 +545,7 @@ func (s *Server) setClaudeValue(entry *catalog.Entry, key, value string, w http.
 		return false
 	}
 
-	// String/enum input is JSON-quoted; bool/number/array/object and
-	// undocumented keys must be valid JSON as submitted (D8)
+	// String/enum input is JSON-quoted; everything else must be valid JSON as submitted
 	raw := json.RawMessage(value)
 	if entry != nil && catalog.IsTextualType(entry.Type) {
 		quoted, _ := json.Marshal(value)
@@ -492,7 +561,7 @@ func (s *Server) setClaudeValue(entry *catalog.Entry, key, value string, w http.
 		return false
 	}
 
-	if err := config.Save(s.settingsPath, settings); err != nil {
+	if err := config.Save(s.settingsPath, settings, s.trash); err != nil {
 		respond.WithInternalServerError(err, w)
 		return false
 	}
@@ -507,8 +576,7 @@ func (s *Server) setCodexValue(entry *catalog.Entry, key, value string, w http.R
 		return false
 	}
 
-	// String/enum input becomes a quoted TOML string; everything else
-	// must already be a valid TOML literal (D8)
+	// String/enum input becomes a quoted TOML string; everything else must be a valid TOML literal
 	literal := value
 	if entry != nil && catalog.IsTextualType(entry.Type) {
 		literal = strconv.Quote(value)
@@ -545,7 +613,7 @@ func (s *Server) unsetClaudeValue(key string, w http.ResponseWriter) bool {
 		return false
 	}
 
-	if err := config.Save(s.settingsPath, settings); err != nil {
+	if err := config.Save(s.settingsPath, settings, s.trash); err != nil {
 		respond.WithInternalServerError(err, w)
 		return false
 	}
@@ -573,9 +641,6 @@ func (s *Server) unsetCodexValue(key string, w http.ResponseWriter) bool {
 	return true
 }
 
-// jsonArrayItems renders each array element for the list editor: strings
-// bare, everything else as compact JSON. Items are display-sorted but keep
-// their storage index for the delete URL (D7).
 func jsonArrayItems(raw json.RawMessage) []configItem {
 	var elements []json.RawMessage
 	if err := json.Unmarshal(raw, &elements); err != nil {
@@ -595,21 +660,44 @@ func jsonArrayItems(raw json.RawMessage) []configItem {
 	return items
 }
 
+func jsonMapEntries(raw json.RawMessage) []configEntry {
+	var members map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &members); err != nil {
+		return nil
+	}
+
+	entries := make([]configEntry, 0, len(members))
+	for name, element := range members {
+		var text string
+		if err := json.Unmarshal(element, &text); err != nil {
+			text = string(element)
+		}
+		entries = append(entries, configEntry{Name: name, Value: text})
+	}
+	slices.SortFunc(entries, func(left, right configEntry) int {
+		return strings.Compare(left.Name, right.Name)
+	})
+	return entries
+}
+
 func sortConfigItems(items []configItem) {
 	slices.SortFunc(items, func(left, right configItem) int {
 		return strings.Compare(left.Value, right.Value)
 	})
 }
 
-// arrayPresets offers enumerable item values for MCP-server-name keys,
-// excluding items already present (D6).
-func (s *Server) arrayPresets(key string, items []configItem) []string {
-	if key != "disabledMcpjsonServers" && key != "enabledMcpjsonServers" {
-		return nil
-	}
-
-	known, err := config.McpServerNames(s.claudeJsonPath)
-	if err != nil {
+func (s *Server) arrayPresets(key string, items []configItem, models []string) []string {
+	var known []string
+	switch key {
+	case "disabledMcpjsonServers", "enabledMcpjsonServers":
+		names, err := config.McpServerNames(s.claudeJsonPath)
+		if err != nil {
+			return nil
+		}
+		known = names
+	case keyFallbackModel:
+		known = models
+	default:
 		return nil
 	}
 
@@ -622,9 +710,39 @@ func (s *Server) arrayPresets(key string, items []configItem) []string {
 	return presets
 }
 
-// codexArrayItems lists a TOML array literal's item literals; non-arrays
-// yield nil (row falls back to display-only). Display-sorted with storage
-// indexes kept, like jsonArrayItems (D7).
+// mapPresets lists the names a map key can still gain; only the skill overrides have a known name set.
+func (s *Server) mapPresets(key string, entries []configEntry) []string {
+	if key != keySkillOverrides {
+		return nil
+	}
+
+	scanned, err := skills.Scan(s.skillsRepo, s.skillsHome)
+	if err != nil {
+		return nil
+	}
+
+	present := make(map[string]bool, len(entries))
+	for _, entry := range entries {
+		present[entry.Name] = true
+	}
+
+	var presets []string
+	for _, skill := range scanned {
+		names := slices.Clone(skill.Aliases)
+		names = append(names, skill.Name)
+		for _, name := range names {
+			if present[name] {
+				continue
+			}
+
+			present[name] = true
+			presets = append(presets, name)
+		}
+	}
+	slices.Sort(presets)
+	return presets
+}
+
 func codexArrayItems(literal string) []configItem {
 	value, err := parser.ParseValue(literal)
 	if err != nil {
@@ -635,8 +753,7 @@ func codexArrayItems(literal string) []configItem {
 		return nil
 	}
 
-	// Index counts parser.Value elements only — mutateCodexItems rebuilds
-	// the array from exactly those, so delete positions must match.
+	// Index counts parser.Value elements only, matching how mutateCodexItems rebuilds the array.
 	var items []configItem
 	for _, element := range array {
 		if item, ok := element.(parser.Value); ok {
@@ -664,8 +781,17 @@ func codexDisplayValue(entry *catalog.Entry, value string) string {
 	return value
 }
 
-// displayJSON renders a raw JSON value for the row's control: strings and
-// enums show the bare string, structured values show indented JSON.
+// isBlockType names the types whose value renders as a block, so the repo value diffs line by line.
+func isBlockType(configType string) bool {
+	switch configType {
+	case catalog.TypeArray, catalog.TypeMap, catalog.TypeObject, catalog.TypeTable:
+		return true
+	case catalog.TypeBool, catalog.TypeEnum, catalog.TypeNumber, catalog.TypeString:
+		return false
+	}
+	return false
+}
+
 func displayJSON(configType string, raw json.RawMessage) string {
 	if catalog.IsTextualType(configType) {
 		var text string
@@ -725,8 +851,6 @@ func rowFromEntry(entry *catalog.Entry) configRow {
 	}
 }
 
-// settingsValue resolves a key path against the live settings first, then the
-// disabled file.
 func settingsValue(disabledDoc, mainDoc *config.Document, path []string) (string, json.RawMessage, bool) {
 	if raw, ok := mainDoc.Get(path); ok {
 		return stateSet, raw, true
@@ -752,8 +876,7 @@ func undocumentedClaudeRows(covered map[string]bool, doc, fragmentDoc *config.Do
 			Target:   catalog.TargetClaude,
 		}
 		if state == stateUnset {
-			// Fragment-only pass: the key exists nowhere live, so there is
-			// no live value to show — only the drift marker (D4).
+			// Fragment-only: no live value to show, only the drift marker.
 			row.Overridden = true
 			if raw, ok := fragmentDoc.Get([]string{key}); ok {
 				row.RepoValue = displayJSON("", raw)

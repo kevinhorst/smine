@@ -26,9 +26,7 @@ const (
 	tmplAspectBar    = "_aspect_bar.html"
 	tmplContextDoc   = "context_doc.html"
 	tmplContextIndex = "context_index.html"
-	// contextSyncLockKey serializes the context sync via the repo-locks map,
-	// like skillsSyncLockKey: the underscore prefix keeps it out of the
-	// registry's repo-name space.
+	// contextSyncLockKey's underscore prefix keeps it out of the registry's repo-name space.
 	contextSyncLockKey = "_context-sync"
 )
 
@@ -46,6 +44,9 @@ type contextIndexPage struct {
 	AspectBar      aspectBarFragment
 	Error          string
 	Filter         contextFilter
+	GlobalEnabled  bool
+	GlobalError    string
+	GlobalFiles    []globalContextFile
 	Page           string
 	RepoNames      []string
 	Sections       []entryKindSection
@@ -53,8 +54,6 @@ type contextIndexPage struct {
 	Title          string
 }
 
-// contextFilter is the one projection the Context page renders under; every
-// axis comes from the query string and combines with the others.
 type contextFilter struct {
 	Aspect   string // scope chip
 	Layer    string // "", layerAcdsl, or an entry kind (action / rule / fact)
@@ -63,19 +62,16 @@ type contextFilter struct {
 	Topic    string
 }
 
-// layerAcdsl is the layer chip selecting the gate system instead of a prose
-// entry kind.
+// layerAcdsl is the layer chip selecting the gate system instead of a prose entry kind.
 const layerAcdsl = "acdsl"
 
-// Active reports whether any axis narrows the page — the switch between the
-// collapsed overview and the hide+uncollapse projection (plan D7).
+// Active switches the page between the collapsed overview and the hide+uncollapse projection.
 func (f contextFilter) Active() bool {
 	return f.Aspect != "" || f.Layer != "" || f.Lifetime != "" || f.Reach != "" || f.Topic != ""
 }
 
-// URL renders /context under this filter — the single builder behind every
-// chip link (plan D6).
-func (f contextFilter) URL() string {
+// URL is the single builder behind every chip link on the context page and the session report.
+func (f contextFilter) URL(base string) string {
 	query := url.Values{}
 	axes := map[string]string{
 		"aspect":   f.Aspect,
@@ -90,13 +86,12 @@ func (f contextFilter) URL() string {
 		}
 	}
 	if len(query) == 0 {
-		return "/context"
+		return base
 	}
-	return "/context?" + query.Encode()
+	return base + "?" + query.Encode()
 }
 
-// with returns the filter with one axis overridden. Clearing or changing the
-// scope also clears the topic — a topic only means something inside its scope.
+// with clears the topic on a scope change: a topic only means something inside its scope.
 func (f contextFilter) with(axis, value string) contextFilter {
 	next := f
 	switch axis {
@@ -127,8 +122,7 @@ func parseContextFilter(r *http.Request) contextFilter {
 	return filter
 }
 
-// chipRowCap bounds the topic chips shown in a collapsed summary row;
-// anything beyond it hides behind a client-side "+N" toggle.
+// chipRowCap hides further topic chips behind a client-side "+N" toggle.
 const chipRowCap = 4
 
 // topicChip is one per-scope topic filter in a group's summary row.
@@ -138,10 +132,7 @@ type topicChip struct {
 	URL   string
 }
 
-// entryScopeGroup is one collapsible scope section of entry cards. Without an
-// active filter every group renders closed; any active filter renders only
-// matching groups, open. Coverage counts the group's entries cited by at
-// least one acdsl rule, over the unfiltered total.
+// entryScopeGroup coverage is taken over the unfiltered total.
 type entryScopeGroup struct {
 	Scope           string
 	Open            bool
@@ -154,18 +145,12 @@ type entryScopeGroup struct {
 	Entries         []registryEntryView
 }
 
-// entryKindSection is one kind heading (actions / rules / facts) with its
-// scope groups.
 type entryKindSection struct {
 	Kind   string
 	Groups []entryScopeGroup
 }
 
-// aspectBarEntry is one chip in the shared filter+manage bar: a taxonomy
-// member (acdsl rule scopes and prose entries share the applies-to axis), a
-// reach value, a layer, or a lifetime. Registered is false for a scope
-// derived from rule IDs but missing from the taxonomy; Counts marks the rows
-// that display rule/entry counts.
+// aspectBarEntry.Registered is false for a scope derived from rule IDs but missing from the taxonomy.
 type aspectBarEntry struct {
 	Active     bool
 	Counts     bool
@@ -177,17 +162,14 @@ type aspectBarEntry struct {
 	URL        string
 }
 
-// aspectBarFragment backs _aspect_bar.html, rendered once on the Context
-// page. Four axes share the one filter card: reach, layer + lifetime, and
-// scope. Topic filtering lives in each scope group's summary row, not here.
+// aspectBarFragment carries no topic axis: topic filtering lives in each scope group's summary row.
 type aspectBarFragment struct {
 	Aspects   []aspectBarEntry
 	Layers    []aspectBarEntry
 	Lifetimes []aspectBarEntry
 	Reaches   []aspectBarEntry
 	Filter    contextFilter
-	// Bulk is the reach picker in the reach row — its checkboxes and submit
-	// button post the listing's bulk form via the HTML form attribute.
+	// Bulk posts the listing's bulk form via the HTML form attribute.
 	Bulk  reachPicker
 	Error string
 }
@@ -200,53 +182,74 @@ type registryEntry struct {
 	Topic       string               `json:"topic"`
 	Content     registryEntryContent `json:"content"`
 	Enforcement string               `json:"enforcement"`
+	Role        string               `json:"role"`
 	Reach       string               `json:"reach"`
 	Version     string               `json:"version"`
 	Source      string               `json:"source"`
 }
 
-// registryEntryContent is the nested content object of a context.json entry;
-// only the statement is read here.
 type registryEntryContent struct {
 	Statement string `json:"statement"`
 }
 
-// registryEntryView adds the reverse coverage map: which acdsl rules cite this
-// entry in their why — the loop connection made visible.
 type registryEntryView struct {
 	Entry   registryEntry
 	GatedBy []string
 }
 
-// aspectNamePattern bounds UI-created aspect names: short, upper-case,
-// letters only — matching the entry-ID grammar's ASPECT segment.
+// aspectNamePattern matches the entry-ID grammar's ASPECT segment.
 var aspectNamePattern = regexp.MustCompile(`^[A-Z]{2,12}$`)
 
-// contextDirPattern bounds the sync context-dir: a single path segment of
-// letters, digits, underscore or dash — no slashes, so the value can never
-// traverse or reach the sync script's sed as an injection primitive.
+// contextDirPattern forbids slashes so the value can never traverse or inject into the sync script's sed.
 var contextDirPattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 
-// enforcementTitle explains an enforcement token in plain language — the
-// tokens are contract vocabulary, the tooltip is where they get defined.
+// Channel and role tags mirror internal/contextdocs's unexported vocabulary; keep the two in step.
+const (
+	channelGate   = "gate"
+	channelHook   = "hook"
+	channelLint   = "lint"
+	channelProse  = "prose"
+	channelSchema = "schema"
+	roleDef       = "def"
+	rolePayload   = "payload"
+	roleQuality   = "quality"
+	roleRule      = "rule"
+	roleSpawn     = "spawn"
+	roleStep      = "step"
+	roleStop      = "stop"
+	roleSubstep   = "substep"
+	roleVerify    = "verify"
+)
+
 func enforcementTitle(enforcement string) string {
 	switch enforcement {
-	case "gate":
-		return "checked mechanically by the acdsl gate — a violation blocks"
-	case "hook":
-		return "enforced by a Claude Code hook at tool-call time"
-	case "lint":
+	case channelGate:
+		return "checked mechanically by the acdsl gate its Gate: bullet names — a violation blocks"
+	case channelHook:
+		return "enforced by the Claude Code hook its Hook: bullet names, at tool-call time"
+	case channelLint:
 		return "enforced by a linter or formatter"
-	case "review":
+	case channelSchema:
+		return "produced output must conform to the JSON schema its Schema: bullet names"
+	case channelProse:
 		return "checked by a human or agent during review — no mechanical check"
-	case "manual":
-		return "followed by hand — no mechanical or review checkpoint"
 	}
 	return ""
 }
 
-// sourceDocHref maps an entry's recorded source (context/actions/x.md) to the
-// doc-view route segment (actions/x.md) — the last two path segments.
+func roleTitle(role string) string {
+	switch role {
+	case roleStep:
+		return "an execution unit — removing it means some output provably does not happen"
+	case roleStop:
+		return "a behavioral halt — removing it means some failure provably can happen"
+	case rolePayload:
+		return "a template/example paired with a fenced block, not a channel"
+	}
+	return ""
+}
+
+// sourceDocHref maps context/actions/x.md to the doc-view segment actions/x.md.
 func sourceDocHref(source string) string {
 	parts := strings.Split(source, "/")
 	if len(parts) < 2 {
@@ -272,14 +275,20 @@ func (s *Server) handleContextIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Acdsl = s.buildAcdslPage(r)
 
-	// A missing template renders as an empty baseline (fresh checkout, or a
-	// repo without the prose pack) — mirrors loadAspectsTolerant.
+	// A missing template renders as an empty baseline, as on a fresh checkout.
 	agents, err := os.ReadFile(filepath.Join(s.contextDir, "AGENTS.md"))
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		respond.WithInternalServerError(err, w)
 		return
 	}
 	data.AgentsTemplate = string(agents)
+
+	globalFiles, globalErr := s.globalContextFiles()
+	if globalErr != nil {
+		data.GlobalError = globalErr.Error()
+	}
+	data.GlobalFiles = globalFiles
+	data.GlobalEnabled = s.globalContextEnabled()
 
 	discovery, err := acdsl.DiscoverRules(r.Context(), ".")
 	if err != nil {
@@ -310,11 +319,7 @@ func (s *Server) handleContextIndex(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, tmplContextIndex, data)
 }
 
-// buildEntrySections buckets entry views into the fixed kind order (actions,
-// rules, facts) with sorted collapsible scope groups per kind — presentation
-// grouping happens here, the template only ranges (mirrors skillGroups).
-// Without an active filter every group renders closed (the overview); any
-// active filter renders only matching kinds/scopes/topics, open (plan D7).
+// buildEntrySections does all grouping so the template only ranges.
 func buildEntrySections(views []registryEntryView, filter contextFilter) []entryKindSection {
 	if filter.Layer == layerAcdsl {
 		return nil
@@ -360,21 +365,18 @@ func buildEntrySections(views []registryEntryView, filter contextFilter) []entry
 	return sections
 }
 
-// buildEntryScopeGroup assembles one scope group under the filter: topic
-// chips carry their link, coverage counts the full scope, and an active
-// filter narrows the entries and opens the group.
+// buildEntryScopeGroup counts coverage over the full scope, not the filtered entries.
 func buildEntryScopeGroup(scope string, views []registryEntryView, filter contextFilter) entryScopeGroup {
 	group := entryScopeGroup{Scope: scope, Open: filter.Active(), Topics: entryTopicChips(views)}
 	scoped := filter.with("aspect", scope)
-	group.AllURL = scoped.URL()
+	group.AllURL = scoped.URL("/context")
 	for index := range group.Topics {
-		group.Topics[index].URL = scoped.with("topic", group.Topics[index].Name).URL()
+		group.Topics[index].URL = scoped.with("topic", group.Topics[index].Name).URL("/context")
 	}
 	if len(group.Topics) > chipRowCap {
 		group.ExtraTopics = len(group.Topics) - chipRowCap
 	}
-	// The topic narrows only groups that actually carry it — a same-scope
-	// group in another kind keeps its full list.
+	// The topic narrows only groups that carry it; a same-scope group in another kind keeps its full list.
 	hasTopic := false
 	for _, view := range views {
 		if view.Entry.Topic == filter.Topic {
@@ -420,8 +422,7 @@ func sortedTopicChips(counts map[string]int) []topicChip {
 	return chips
 }
 
-// loadRegistryEntries reads the generated context file; a missing or broken
-// file renders as an empty list — the generation gates own its integrity.
+// loadRegistryEntries renders a broken file as empty: the generation gates own its integrity.
 func (s *Server) loadRegistryEntries() []registryEntry {
 	raw, err := os.ReadFile(filepath.Join(s.contextDir, "context.json"))
 	if err != nil {
@@ -436,18 +437,14 @@ func (s *Server) loadRegistryEntries() []registryEntry {
 	return parsed.Entries
 }
 
-// reachChips maps a reach value to its filter chips: "global" is its own
-// chip; a name list contributes one chip per name (exact-name semantics —
-// a chip answers "what is deliberately scoped here", never coverage).
+// reachChips uses exact-name semantics: a chip answers "what is deliberately scoped here", never coverage.
 func reachChips(value string) []string {
-	if value == reach.Global {
-		return []string{reach.Global}
+	if value == reach.Global || value == reach.Always {
+		return []string{value}
 	}
 	return reach.Names(value)
 }
 
-// reachMatches reports whether a rule/entry with this reach value belongs
-// under the given chip. Empty chip = no reach filter.
 func reachMatches(value, chip string) bool {
 	if chip == "" {
 		return true
@@ -460,8 +457,6 @@ func reachMatches(value, chip string) bool {
 	return false
 }
 
-// reachBarEntries orders the repo-section chips: global, smine, then the
-// remaining names sorted.
 func reachBarEntries(ruleCounts, entryCounts map[string]int) []aspectBarEntry {
 	names := map[string]bool{}
 	for name := range ruleCounts {
@@ -472,7 +467,8 @@ func reachBarEntries(ruleCounts, entryCounts map[string]int) []aspectBarEntry {
 	}
 	var rest []string
 	for name := range names {
-		if name != reach.Global && name != reach.ThisRepo {
+		isReserved := name == reach.Global || name == reach.Always || name == reach.ThisRepo
+		if !isReserved {
 			rest = append(rest, name)
 		}
 	}
@@ -480,6 +476,9 @@ func reachBarEntries(ruleCounts, entryCounts map[string]int) []aspectBarEntry {
 	ordered := make([]string, 0, len(names))
 	if names[reach.Global] {
 		ordered = append(ordered, reach.Global)
+	}
+	if names[reach.Always] {
+		ordered = append(ordered, reach.Always)
 	}
 	if names[reach.ThisRepo] {
 		ordered = append(ordered, reach.ThisRepo)
@@ -500,30 +499,23 @@ func reachBarEntries(ruleCounts, entryCounts map[string]int) []aspectBarEntry {
 }
 
 // allChip is the axis-clearing chip leading every filter row.
-func allChip(filter contextFilter, axis, active string) aspectBarEntry {
+func allChip(base string, filter contextFilter, axis, active string) aspectBarEntry {
 	chip := aspectBarEntry{Active: active == "", Name: "all", Registered: true}
-	chip.URL = filter.with(axis, "").URL()
+	chip.URL = filter.with(axis, "").URL(base)
 	return chip
 }
 
-// axisChips renders one fixed-value filter row (layer, lifetime): all + one
-// chip per value.
-func axisChips(filter contextFilter, axis, active string, values []string) []aspectBarEntry {
-	chips := []aspectBarEntry{allChip(filter, axis, active)}
+func axisChips(base string, filter contextFilter, axis, active string, values []string) []aspectBarEntry {
+	chips := []aspectBarEntry{allChip(base, filter, axis, active)}
 	for _, value := range values {
 		chip := aspectBarEntry{Active: active == value, Name: value, Registered: true}
-		chip.URL = filter.with(axis, value).URL()
+		chip.URL = filter.with(axis, value).URL(base)
 		chips = append(chips, chip)
 	}
 	return chips
 }
 
-// buildAspectBar merges the registered scope vocabulary with the acdsl rule
-// scopes and counts both populations per member. Scope counts are taken
-// under the active reach, and scopes with nothing under that reach disappear
-// (plan D8); topic chips live in the scope-group summaries. Scopes derived
-// from rule IDs but missing from the taxonomy surface as unregistered —
-// visible, never hidden.
+// buildAspectBar surfaces scopes missing from the taxonomy as unregistered, never hidden.
 func (s *Server) buildAspectBar(rules []acdsl.Rule, filter contextFilter) aspectBarFragment {
 	bar := aspectBarFragment{Filter: filter, Bulk: s.buildReachPicker("", "bulk-reach")}
 	bar.Bulk.Label = "bulk reach"
@@ -559,22 +551,22 @@ func (s *Server) buildAspectBar(rules []acdsl.Rule, filter contextFilter) aspect
 		}
 		entryCounts[entry.Scope]++
 	}
-	bar.Reaches = append([]aspectBarEntry{allChip(filter, "reach", filter.Reach)},
+	bar.Reaches = append([]aspectBarEntry{allChip("/context", filter, "reach", filter.Reach)},
 		reachBarEntries(reachRuleCounts, reachEntryCounts)...)
 	for index := range bar.Reaches {
 		if bar.Reaches[index].Name == "all" {
 			continue
 		}
 		bar.Reaches[index].Active = bar.Reaches[index].Name == filter.Reach
-		bar.Reaches[index].URL = filter.with("reach", bar.Reaches[index].Name).URL()
+		bar.Reaches[index].URL = filter.with("reach", bar.Reaches[index].Name).URL("/context")
 	}
 
-	bar.Layers = axisChips(filter, "layer", filter.Layer,
+	bar.Layers = axisChips("/context", filter, "layer", filter.Layer,
 		[]string{layerAcdsl, contextdocs.RuleKindAction, contextdocs.RuleKindRule, contextdocs.RuleKindFact})
-	bar.Lifetimes = axisChips(filter, "lifetime", filter.Lifetime,
+	bar.Lifetimes = axisChips("/context", filter, "lifetime", filter.Lifetime,
 		[]string{acdsl.LifetimeTask, acdsl.LifetimeDoctrine})
 
-	bar.Aspects = append(bar.Aspects, allChip(filter, "aspect", filter.Aspect))
+	bar.Aspects = append(bar.Aspects, allChip("/context", filter, "aspect", filter.Aspect))
 	registered := map[string]bool{}
 	for _, aspect := range aspects {
 		registered[aspect.Name] = true
@@ -592,7 +584,7 @@ func (s *Server) buildAspectBar(rules []acdsl.Rule, filter contextFilter) aspect
 			Registered: true,
 			RuleCount:  ruleCounts[aspect.Name],
 			EntryCount: entryCounts[aspect.Name],
-			URL:        filter.with("aspect", aspect.Name).URL(),
+			URL:        filter.with("aspect", aspect.Name).URL("/context"),
 		})
 	}
 	var unregistered []string
@@ -608,14 +600,12 @@ func (s *Server) buildAspectBar(rules []acdsl.Rule, filter contextFilter) aspect
 			Counts:    true,
 			Name:      scope,
 			RuleCount: ruleCounts[scope],
-			URL:       filter.with("aspect", scope).URL(),
+			URL:       filter.with("aspect", scope).URL("/context"),
 		})
 	}
 	return bar
 }
 
-// contextEntryPage backs context_entry.html — one entry with its reverse
-// coverage (mirrors skillDetailPage).
 type contextEntryPage struct {
 	Entry   registryEntry
 	GatedBy []string
@@ -625,8 +615,6 @@ type contextEntryPage struct {
 	Title   string
 }
 
-// handleContextEntry renders one entry's details page; the id must match a
-// generated context.json entry by string equality (mirrors handleSkillDetail).
 func (s *Server) handleContextEntry(w http.ResponseWriter, r *http.Request) {
 	data, found, err := s.buildContextEntryPage(r.Context(), r.PathValue("id"))
 	if err != nil {
@@ -640,8 +628,6 @@ func (s *Server) handleContextEntry(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, "context_entry.html", data)
 }
 
-// buildContextEntryPage assembles one entry's detail view with its reverse
-// coverage; found is false when the id matches no generated entry.
 func (s *Server) buildContextEntryPage(ctx context.Context, id string) (contextEntryPage, bool, error) {
 	var entry *registryEntry
 	for _, candidate := range s.loadRegistryEntries() {
@@ -668,9 +654,7 @@ func (s *Server) buildContextEntryPage(ctx context.Context, id string) (contextE
 	return data, true, nil
 }
 
-// handleContextEntryReach sets a prose entry's reach by rewriting its source
-// markdown bullet, then regenerates context.json — the WriteContextFile
-// write path, same as the aspect editor. Empty input disables (reach "none").
+// handleContextEntryReach writes through WriteContextFile, like the aspect editor; empty input means "none".
 func (s *Server) handleContextEntryReach(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if err := r.ParseForm(); err != nil {
@@ -696,22 +680,14 @@ func (s *Server) handleContextEntryReach(w http.ResponseWriter, r *http.Request)
 		respond.WithInternalServerError(err, w)
 		return
 	}
-	aspects, err := s.loadAspectsTolerant()
-	if err != nil {
-		respond.WithInternalServerError(err, w)
-		return
-	}
-	if err := contextdocs.WriteContextFile(s.contextDir, aspects); err != nil {
+	if err := contextdocs.WriteContextFile(s.contextDir); err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
 	http.Redirect(w, r, "/context/entry/"+url.PathEscape(id), http.StatusSeeOther)
 }
 
-// handleContextReachBulk sets one reach value on every checked id from the
-// context page: discovered acdsl rule ids through SetRuleReach, everything
-// else through SetEntryReach. context.json regenerates once when any entry
-// changed. Redirects back to the page with its filter state preserved.
+// handleContextReachBulk regenerates context.json once, not per entry.
 func (s *Server) handleContextReachBulk(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		respond.WithInternalServerError(err, w)
@@ -719,6 +695,8 @@ func (s *Server) handleContextReachBulk(w http.ResponseWriter, r *http.Request) 
 	}
 	value := reachFromForm(r)
 	ids := r.Form["id"]
+	isPicked := len(r.Form["reach"]) > 0
+	hasSelection := isPicked && len(ids) > 0
 	backFilter := contextFilter{
 		Aspect:   r.FormValue("aspect"),
 		Layer:    r.FormValue("layer"),
@@ -726,13 +704,9 @@ func (s *Server) handleContextReachBulk(w http.ResponseWriter, r *http.Request) 
 		Reach:    r.FormValue("reach-filter"),
 		Topic:    r.FormValue("topic"),
 	}
-	back := backFilter.URL()
-	if !reach.Valid(value) || len(ids) == 0 {
-		separator := "?"
-		if strings.Contains(back, "?") {
-			separator = "&"
-		}
-		http.Redirect(w, r, back+separator+"err="+url.QueryEscape("bulk reach: pick at least one item and a valid reach"), http.StatusSeeOther)
+	back := backFilter.URL("/context")
+	if !hasSelection || !reach.Valid(value) {
+		redirectWithError(w, r, back, "bulk reach: pick at least one item and a valid reach")
 		return
 	}
 	discovery, err := acdsl.DiscoverRules(r.Context(), ".")
@@ -743,6 +717,22 @@ func (s *Server) handleContextReachBulk(w http.ResponseWriter, r *http.Request) 
 	ruleById := map[string]acdsl.Rule{}
 	for _, rule := range discovery.Rules {
 		ruleById[rule.Id] = rule
+	}
+	set, err := contextdocs.ParseContext(s.contextDir, false)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	entryIds := map[string]bool{}
+	for _, entry := range set.Entries {
+		entryIds[entry.Id] = true
+	}
+	for _, id := range ids {
+		_, isRule := ruleById[id]
+		if !isRule && !entryIds[id] {
+			redirectWithError(w, r, back, "bulk reach: unknown id "+id)
+			return
+		}
 	}
 	entriesChanged := false
 	for _, id := range ids {
@@ -760,17 +750,21 @@ func (s *Server) handleContextReachBulk(w http.ResponseWriter, r *http.Request) 
 		entriesChanged = true
 	}
 	if entriesChanged {
-		aspects, err := s.loadAspectsTolerant()
-		if err != nil {
-			respond.WithInternalServerError(err, w)
-			return
-		}
-		if err := contextdocs.WriteContextFile(s.contextDir, aspects); err != nil {
+		if err := contextdocs.WriteContextFile(s.contextDir); err != nil {
 			respond.WithInternalServerError(err, w)
 			return
 		}
 	}
 	http.Redirect(w, r, back, http.StatusSeeOther)
+}
+
+// redirectWithError sends the browser back to the listing with the message in the err query, which the page renders as a card.
+func redirectWithError(w http.ResponseWriter, r *http.Request, back, message string) {
+	separator := "?"
+	if strings.Contains(back, "?") {
+		separator = "&"
+	}
+	http.Redirect(w, r, back+separator+"err="+url.QueryEscape(message), http.StatusSeeOther)
 }
 
 func (s *Server) handleContextDoc(w http.ResponseWriter, r *http.Request) {
@@ -780,9 +774,7 @@ func (s *Server) handleContextDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// The requested doc must match a scanned entry by string equality; user
-	// input is never joined into a path on its own (concept security rule,
-	// mirrors handleSkillFile).
+	// User input is never joined into a path; it must match a scanned entry by string equality.
 	dir, file := r.PathValue("dir"), r.PathValue("file")
 	found := false
 	for _, group := range groups {
@@ -817,8 +809,7 @@ func (s *Server) handleContextDoc(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, tmplContextDoc, data)
 }
 
-// loadAspectsTolerant reads the vocabulary; a missing context.json renders
-// as an empty section (fresh checkout), every other error is real.
+// loadAspectsTolerant tolerates only a missing aspects.json, as on a tree without the private context surface.
 func (s *Server) loadAspectsTolerant() ([]contextdocs.RuleAspect, error) {
 	aspects, err := contextdocs.LoadAspects(s.contextDir)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -827,8 +818,6 @@ func (s *Server) loadAspectsTolerant() ([]contextdocs.RuleAspect, error) {
 	return aspects, nil
 }
 
-// renderAspectBar re-renders the shared bar after a mutation, keeping the
-// caller's active filter (hidden form fields / query params).
 func (s *Server) renderAspectBar(errorMessage string, w http.ResponseWriter, r *http.Request) {
 	discovery, err := acdsl.DiscoverRules(r.Context(), ".")
 	if err != nil {
@@ -874,7 +863,11 @@ func (s *Server) handleContextAspectAdd(w http.ResponseWriter, r *http.Request) 
 	}
 
 	aspects = append(aspects, contextdocs.RuleAspect{Name: name, Scope: scope, Class: "scope"})
-	if err := contextdocs.WriteContextFile(s.contextDir, aspects); err != nil {
+	if err := contextdocs.SaveAspects(s.contextDir, aspects); err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	if err := contextdocs.WriteContextFile(s.contextDir); err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
@@ -884,8 +877,7 @@ func (s *Server) handleContextAspectAdd(w http.ResponseWriter, r *http.Request) 
 func (s *Server) handleContextAspectDelete(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 
-	// In-use guard: a vocabulary the entries still cite cannot lose members —
-	// the next audit run would fail on every citing entry.
+	// In-use guard: removing a cited member would fail the next audit on every citing entry.
 	set, err := contextdocs.ParseContext(s.contextDir, false)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
@@ -897,8 +889,7 @@ func (s *Server) handleContextAspectDelete(w http.ResponseWriter, r *http.Reques
 			blockingIds = append(blockingIds, entry.Id)
 		}
 	}
-	// The taxonomy is shared: acdsl rule families (ID segment) block a
-	// delete the same way citing pack entries do.
+	// The taxonomy is shared: acdsl rule families block a delete like citing pack entries do.
 	discovery, err := acdsl.DiscoverRules(r.Context(), ".")
 	if err != nil {
 		respond.WithInternalServerError(err, w)
@@ -932,7 +923,11 @@ func (s *Server) handleContextAspectDelete(w http.ResponseWriter, r *http.Reques
 		respond.WithBadRequest("unknown aspect: "+name, w)
 		return
 	}
-	if err := contextdocs.WriteContextFile(s.contextDir, kept); err != nil {
+	if err := contextdocs.SaveAspects(s.contextDir, kept); err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	if err := contextdocs.WriteContextFile(s.contextDir); err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
@@ -940,54 +935,49 @@ func (s *Server) handleContextAspectDelete(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) handleContextSync(w http.ResponseWriter, r *http.Request) {
-	// Concept boundary: the request selects by name, the path comes from the
-	// registry (mirrors findRepo).
+	// The request selects by name; the path comes from the registry.
 	repo, ok := s.repoRegistry.Find(r.FormValue("name"))
 	if !ok {
 		respond.WithBadRequest("unknown repo: "+r.FormValue("name"), w)
 		return
 	}
 
-	// context-dir reaches the sync script's AGENTS.md placeholder expansion;
-	// validate it to a single safe path segment before it leaves the server
-	// (the sibling name is validated via repoRegistry.Find above).
+	// context-dir becomes a path segment under the repo and the state dir, so it must be one safe segment.
 	contextDir := r.FormValue("context-dir")
 	if !contextDirPattern.MatchString(contextDir) {
 		respond.WithBadRequest("invalid context-dir: letters, digits, _ or - only, no slashes", w)
 		return
 	}
 
-	opts := contextdocs.SyncOptions{
+	deploy := contextdocs.ContextDeploy{
+		Acdsl:      r.FormValue("acdsl") == "on",
 		ContextDir: contextDir,
-		SkipAcdsl:  r.FormValue("acdsl") != "on",
-		SkipProse:  r.FormValue("prose") != "on",
-		Symlink:    r.FormValue("symlink") == "on",
+		Markdown:   r.FormValue("markdown") == "on",
 		Task:       r.FormValue("task") == "on",
-		Target:     repo.Path,
+		WriteRepo:  r.FormValue("write") == "on",
+	}
+	hasSubOption := deploy.Markdown || deploy.Acdsl || deploy.Task
+	if hasSubOption && !deploy.WriteRepo {
+		respond.WithBadRequest("project markdown, sync acdsl and sync task need write to repo", w)
+		return
 	}
 
-	// Flat sync: every language ships. Languages are the rules/ guides minus
-	// the always-synced artifact guides — mirrors the builder's split.
-	groups, err := contextdocs.Scan(s.contextDir)
+	// Every language the taxonomy binds ships; the form offers no per-language choice.
+	aspects, err := contextdocs.LoadAspects(s.contextDir)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
-	for _, group := range groups {
-		if group.Name != "rules" {
-			continue
-		}
-		for _, file := range group.Files {
-			name := strings.TrimSuffix(file, ".md")
-			if name == "plan" || name == "commits" {
-				continue
-			}
-			opts.Langs = append(opts.Langs, name)
-		}
+	deploy.Langs = contextdocs.Langs(aspects)
+	sourceRoot, err := filepath.Abs(filepath.Dir(s.contextDir))
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
 	}
 
+	options := &contextdocs.DeployOptions{ContextDeploy: deploy, Name: repo.Name, RepoPath: repo.Path, SourceRoot: sourceRoot, StateDir: s.stateDir, Trash: s.trash}
 	op := func(ctx context.Context) (string, error) {
-		return contextdocs.Sync(ctx, opts, s.syncScripts)
+		return contextdocs.Deploy(ctx, options)
 	}
 	s.runRepoOp(contextSyncLockKey, "repo-op", op, w, r)
 }

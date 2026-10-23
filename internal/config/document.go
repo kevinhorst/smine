@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
-// Document is a JSON object whose key order is preserved across load and
-// save. Values stay raw so keys the code does not model survive untouched.
+// Values stay raw so keys the code does not model survive untouched, in order.
 type Document struct {
 	keys   []string
 	values map[string]json.RawMessage
@@ -39,6 +39,20 @@ func (d *Document) Keys() []string {
 	keys := make([]string, len(d.keys))
 	copy(keys, d.keys)
 	return keys
+}
+
+// List returns the JSON array at path; an absent path is an empty list.
+func (d *Document) List(path []string) ([]json.RawMessage, error) {
+	raw, ok := d.Get(path)
+	if !ok {
+		return nil, nil
+	}
+
+	var list []json.RawMessage
+	if err := json.Unmarshal(raw, &list); err != nil {
+		return nil, fmt.Errorf("Document.List: %s is not an array: %w", strings.Join(path, "."), err)
+	}
+	return list, nil
 }
 
 func (d *Document) MarshalJSON() ([]byte, error) {
@@ -86,6 +100,20 @@ func (d *Document) Set(path []string, value json.RawMessage) error {
 		return fmt.Errorf("Document.Set: Failed to encode child %s: %w", key, err)
 	}
 	return d.Set([]string{key}, encoded)
+}
+
+// SetList writes list at path; an empty list removes the key.
+func (d *Document) SetList(path []string, list []json.RawMessage) error {
+	if len(list) == 0 {
+		d.Unset(path)
+		return nil
+	}
+
+	encoded, err := json.Marshal(list)
+	if err != nil {
+		return fmt.Errorf("Document.SetList: %w", err)
+	}
+	return d.Set(path, encoded)
 }
 
 func (d *Document) UnmarshalJSON(data []byte) error {

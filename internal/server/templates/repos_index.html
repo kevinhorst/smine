@@ -1,6 +1,6 @@
 {{template "head" .}}
 {{template "nav" .}}
-<h1>{{if isDeveloperAudience}}Repos{{else}}{{t "Projects"}}{{end}}</h1>
+<h1>{{.Title}}</h1>
 <div class="card card-filter card-column">
   <form class="card-row" id="repo-add-form" hx-post="/repos/add" hx-target="#op-result" hx-swap="innerHTML show:none">
     <span class="section-label">{{t "add"}}</span>
@@ -9,9 +9,6 @@
            title="registry name — also the mining folder under sessions/; edit to resolve a name collision">
     <input type="text" name="label" maxlength="80" placeholder="{{t "label (optional)"}}">
     <button type="submit">{{t "Add"}}</button>
-    {{if isDeveloperAudience}}
-    <label class="inline-check" title="also append the repo path to permissions.additionalDirectories in the live settings — grants every session read access and puts the repo on the smine working-repo roster"><input type="checkbox" name="additional-dir"> add to additionalDirectories</label>
-    {{end}}
   </form>
   <hr class="filter-divider">
   {{/* Own repo-op listener: the select lives outside #repo-list, so it
@@ -28,8 +25,31 @@
     {{end}}
   </div>
 </div>
+{{if isDeveloperAudience}}
+<div class="card">
+  <form id="prune-form" hx-post="/repos/prune-jetbrains" hx-target="#op-result">
+    <button type="submit" title="Claude worktrees appear as projects in JetBrains IDEs. Use this tool to remove them.">Prune JetBrains recent projects</button>
+    <label><input type="checkbox" name="dry-run" checked> dry run</label>
+    <label><input type="checkbox" name="force"> force</label>
+  </form>
+  <script>
+    // A dry run is read-only; the real prune edits JetBrains Recent Projects
+    // and asks first. The confirm follows the checkbox.
+    (function () {
+      var form = document.getElementById('prune-form');
+      function sync() {
+        var isDryRun = form.querySelector('input[name="dry-run"]').checked;
+        if (isDryRun) form.removeAttribute('hx-confirm');
+        else form.setAttribute('hx-confirm', 'Prune JetBrains recent projects?');
+      }
+      form.addEventListener('change', sync);
+      sync();
+    })();
+  </script>
+</div>
+{{end}}
 <div id="op-result"></div>
-<h2>{{if isDeveloperAudience}}repos{{else}}{{t "Projects"}}{{end}}</h2>
+<h2>{{if isDeveloperAudience}}repos{{else}}{{t "Your projects"}}{{end}}</h2>
 {{/* Add/remove change the row set, so the table re-pulls itself whenever an op
      fires HX-Trigger: repo-op (mirrors repo_detail's #worktree-status). */}}
 <div id="repo-list" hx-get="/repos" hx-trigger="repo-op from:body"
@@ -41,7 +61,7 @@
   <tbody>
     {{range .Rows}}
     <tr>
-      <td><a href="/repos/{{pathEscape .Repo.Name}}">{{if .Repo.Label}}{{.Repo.Label}}{{else}}{{nameWrap .Repo.Name}}{{end}}</a></td>
+      <td><a href="/repos/{{pathEscape .Repo.Name}}">{{template "_repo_label" .Repo}}</a></td>
       <td>{{pathWrap .Repo.Path}}</td>
       <td><span class="badge {{.Context.Class}}" title="{{.Context.Title}}">{{.Context.Label}}</span></td>
       <td><span class="badge {{.Acdsl.Class}}" title="{{.Acdsl.Title}}">{{.Acdsl.Label}}</span></td>
@@ -53,7 +73,7 @@
   <tbody>
     {{range .Rows}}
     <tr>
-      <td>{{if .Repo.Label}}{{.Repo.Label}}{{else}}{{nameWrap .Repo.Name}}{{end}}</td>
+      <td>{{template "_repo_label" .Repo}}</td>
     </tr>
     {{end}}
   </tbody>
@@ -64,3 +84,5 @@
 {{end}}
 </div>
 {{template "foot" .}}
+
+{{define "_repo_label"}}{{if .Label}}{{.Label}}{{else}}{{nameWrap .Name}}{{end}}{{end}}

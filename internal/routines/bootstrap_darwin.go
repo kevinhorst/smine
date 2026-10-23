@@ -10,16 +10,7 @@ import (
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
-// SyncAll loads every non-degraded routine that is not already loaded
-// and not disabled in launchd's per-service override store; a routine with a
-// default-disabled marker additionally needs an explicit enabled override
-// (the config server's Start writes it) before it is ever bootstrapped.
-// Called once at
-// server startup: a logout tears down the gui domain and unloads every
-// routine, and the configserver LaunchAgent restarting at login is the
-// re-bootstrap trigger (D1). Per-routine failures are logged, never fatal
-// (D7). Windows implements the same name as a registration reconcile
-// (sched_windows.go) — registrations persist there, the gui domain does not.
+// SyncAll runs at server startup because a logout unloads every routine from the gui domain.
 func SyncAll(ctx context.Context, dir string) {
 	list, err := Scan(dir)
 	if err != nil {
@@ -62,10 +53,7 @@ func SyncAll(ctx context.Context, dir string) {
 	}
 }
 
-// overrideLabels parses `launchctl print-disabled` output — lines of the form
-// `"<label>" => disabled` or `"<label>" => enabled` — into label → state.
-// Absent labels have no explicit override. The output is not a stable API
-// (same caveat as IsLoaded, D23); anything unmatched carries no entry (D8).
+// overrideLabels drops unmatched lines: `launchctl print-disabled` output is not a stable API.
 func overrideLabels(output string) map[string]string {
 	overrides := make(map[string]string)
 	for _, line := range strings.Split(output, "\n") {
@@ -78,7 +66,8 @@ func overrideLabels(output string) map[string]string {
 			continue
 		}
 		state, found := strings.CutPrefix(strings.TrimSpace(rest), "=> ")
-		if !found || (state != "enabled" && state != "disabled") {
+		isKnownState := state == "enabled" || state == "disabled"
+		if !found || !isKnownState {
 			continue
 		}
 		overrides[label] = state

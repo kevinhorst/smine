@@ -1,0 +1,12 @@
+{{define "_id_families.html"}}
+{{range .}}
+<details class="section id-family"{{if .Open}} open{{end}}>
+  <summary>{{.Name}} <span class="badge badge-dim">{{len .Chips}}</span></summary>
+  <div>{{range .Chips}}{{template "_id_chip" .}} {{end}}</div>
+</details>
+{{end}}
+{{end}}
+
+{{define "_id_chip"}}{{if .Href}}<a class="badge badge-dim id-chip" href="{{.Href}}"{{if .Description}} title="{{.Description}}"{{end}}>{{template "_id_chip_label" .}}</a>{{else}}<span class="badge badge-dim id-chip"{{if .Description}} title="{{.Description}}"{{end}}>{{template "_id_chip_label" .}}</span>{{end}}{{end}}
+
+{{define "_id_chip_label"}}{{if .Title}}<span class="chip-title">{{.Title}}</span> {{end}}{{.Id}}{{end}}

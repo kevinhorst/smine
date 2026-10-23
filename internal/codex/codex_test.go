@@ -44,6 +44,41 @@ func writeFixture(t *testing.T) string {
 	return path
 }
 
+func TestParse(t *testing.T) {
+	type testCase struct {
+		_id          string
+		_expectedErr bool
+
+		input string
+	}
+
+	tests := make([]*testCase, 0)
+
+	// valid-toml
+	tests = append(tests, &testCase{
+		_id:          "valid-toml",
+		_expectedErr: false,
+
+		input: fixture,
+	})
+
+	// invalid-toml-errors
+	tests = append(tests, &testCase{
+		_id:          "invalid-toml-errors",
+		_expectedErr: true,
+
+		input: "notify = [\"unterminated\n",
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			_, err := Parse([]byte(test.input))
+			assert.Equal(t, test._expectedErr, err != nil, err)
+		})
+	}
+}
+
 func TestConfigSet(t *testing.T) {
 	tests := []struct {
 		name    string

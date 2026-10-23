@@ -5,11 +5,7 @@ import (
 	"strings"
 )
 
-// taskTemplate is the Task Scheduler definition shell: triggers hole, then
-// the fixed concept settings (IgnoreNew, StartWhenAvailable, no execution
-// time limit, run on batteries, WakeToRun, interactive token), then the
-// routinewrap action. Kept untagged so trigger translation is testable on
-// any platform (plan D15).
+// taskTemplate stays untagged so trigger translation is testable on any platform.
 const taskTemplate = `<?xml version="1.0"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers>
@@ -52,13 +48,8 @@ var weekdayNames = map[int]string{
 var monthNames = [13]string{"", "January", "February", "March", "April", "May", "June",
 	"July", "August", "September", "October", "November", "December"}
 
-// TaskXML renders the Task Scheduler definition for a routine: calendar
-// triggers translated from the plist schedule, the fixed concept settings,
-// and routinewrap.exe as the action. An unrepresentable schedule returns an
-// error — the caller surfaces it as a degraded row. An empty schedule yields
-// a trigger-less task: never fired by the calendar, still runnable on demand
-// (matches a plist without StartCalendarInterval under launchd).
-func TaskXML(label string, schedule []CalendarInterval, wrapperExe, routineDir string) (string, error) {
+// TaskXML yields a trigger-less task for an empty schedule, like a plist without StartCalendarInterval.
+func TaskXML(label string, schedule []CalendarInterval, runnerExe, routineDir string) (string, error) {
 	var triggers strings.Builder
 	for _, interval := range schedule {
 		trigger, err := triggerXML(interval)
@@ -67,19 +58,10 @@ func TaskXML(label string, schedule []CalendarInterval, wrapperExe, routineDir s
 		}
 		triggers.WriteString(trigger)
 	}
-	return fmt.Sprintf(taskTemplate, triggers.String(), xmlEscape(wrapperExe), xmlEscape(routineDir)), nil
+	return fmt.Sprintf(taskTemplate, triggers.String(), xmlEscape(runnerExe), xmlEscape(`run "`+routineDir+`"`)), nil
 }
 
-// triggerXML maps one CalendarInterval to a trigger element:
-//
-//	Hour+Minute         -> ScheduleByDay, DaysInterval 1
-//	+Weekday            -> ScheduleByWeek (launchd 0 and 7 both Sunday)
-//	+Day (opt. +Month)  -> ScheduleByMonth, DaysOfMonth (opt. Months)
-//	Minute only         -> ScheduleByDay + Repetition PT1H over the day
-//	empty interval      -> ScheduleByDay + Repetition PT1M over the day
-//
-// Weekday and Day together, Month without Day, and out-of-range values are
-// unrepresentable in one trigger and return an error.
+// triggerXML treats launchd weekday 0 and 7 both as Sunday.
 func triggerXML(interval CalendarInterval) (string, error) {
 	if interval.Weekday != nil && interval.Day != nil {
 		return "", fmt.Errorf("triggerXML: Weekday and Day set together is unrepresentable")
@@ -136,9 +118,6 @@ func triggerXML(interval CalendarInterval) (string, error) {
 	}
 }
 
-// dailyTrigger renders a ScheduleByDay trigger; a non-empty repetition
-// interval adds a day-long repetition block (minute-only and empty-interval
-// launchd schedules).
 func dailyTrigger(boundary, repetition string) string {
 	repetitionBlock := ""
 	if repetition != "" {

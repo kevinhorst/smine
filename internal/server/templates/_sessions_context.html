@@ -1,0 +1,38 @@
+{{define "_sessions_context.html"}}
+{{/* A peek that does not answer leaves a note that reloads this fragment until it does; a disabled peek leaves nothing. */}}
+<div id="sessions-context">
+{{if .PeekErr}}
+  <h2>{{t "context"}}</h2>
+  <div class="empty" title="{{.PeekErr}}" hx-get="{{.RetryUrl}}" hx-trigger="load delay:15s" hx-target="#sessions-context" hx-swap="outerHTML">{{t "peek is not answering yet — live sessions appear once it does, retrying every 15 s."}}</div>
+{{else if .ContextWeeks}}
+  <h2>{{t "context"}}</h2>
+  {{range $index, $week := .ContextWeeks}}
+  <details class="section context-week"{{if eq $index 0}} open{{end}}>
+    <summary>{{t "Week"}} {{$week.Label}} · {{$week.Count}} {{t "sessions"}}</summary>
+    {{range $dayIndex, $day := $week.Days}}
+    <details class="context-day"{{if eq $dayIndex 0}} open{{end}}>
+      <summary class="context-day-head"><span class="badge badge-dim">{{$day.Label}}</span><span class="count-note">{{len $day.Sessions}}</span></summary>
+      <div class="context-day-body">
+        <input type="checkbox" class="table-top-toggle" id="ctx-{{$week.Key}}-{{$dayIndex}}">
+        <div class="list-top">{{range $day.Sessions}}{{template "_context_session_row" .}}{{end}}</div>
+        {{if gt (len $day.Sessions) 3}}<label class="table-top-label" for="ctx-{{$week.Key}}-{{$dayIndex}}"><span class="table-top-more">{{t "show all"}} {{len $day.Sessions}}</span><span class="table-top-less">{{t "show top 3"}}</span></label>{{end}}
+      </div>
+    </details>
+    {{end}}
+  </details>
+  {{end}}
+{{end}}
+</div>
+{{end}}
+
+{{define "_context_session_row"}}
+<div class="session-row">
+  <a class="session-row-title" href="/sessions-report/{{pathEscape .Session.Id}}" title="{{if .Session.Title}}{{.Session.Title}}{{else}}{{.ShortId}}{{end}}">{{if .Session.Title}}{{.Session.Title}}{{else}}{{.ShortId}}{{end}}</a>
+  <span class="session-row-meta">{{if .Repo}}{{.Repo}} · {{end}}{{.ShortId}} · {{.Session.LastActive.Format "15:04"}}{{if .Session.GitBranch}} · {{.Session.GitBranch}}{{end}}</span>
+  <span class="session-row-links">
+    {{if .Session.Live}}<span class="badge badge-ok">{{t "live"}}</span>{{end}}
+    {{with peekSessionURL .Session.Id}}<a href="{{.}}" target="_blank" rel="noopener">peek</a>{{end}}
+    {{if .RecordUrl}}<a href="{{.RecordUrl}}">{{t "record"}}</a>{{end}}
+  </span>
+</div>
+{{end}}

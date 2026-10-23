@@ -1,0 +1,8 @@
+{{define "_overview_tile.html"}}
+<a class="tile" href="{{.Href}}" draggable="true" data-tile-id="{{.Id}}"
+   {{if .LazyHref}}hx-get="{{.LazyHref}}" hx-trigger="load" hx-swap="outerHTML"{{end}}>
+  <span class="tile-label">{{t .Label}}</span>
+  <span class="tile-value">{{.Value}}</span>
+  {{if .Detail}}<span class="tile-detail">{{t .Detail}}</span>{{end}}
+</a>
+{{end}}

@@ -1,13 +1,27 @@
 {{template "head" .}}
 {{template "nav" .}}
 <h1>Skills</h1>
+{{template "_skills_tabs" .}}
 <div class="card">
   <form hx-post="/scripts/skills/sync" hx-target="#op-result"
-        hx-confirm="Sync all repo skills to the claude and codex home skill roots?">
+        hx-confirm="Sync the selected skills to the claude and codex home skill roots and remove deployed ones the selection dropped?">
     <button type="submit">Sync skills</button>
-    <label><input type="checkbox" name="prune"> prune removed</label>
+    <span class="meta">skill sync: {{.SkillsMode}} — <a href="/profile#installation">change in Profile → Installation</a></span>
   </form>
 </div>
+{{if .IsCasual}}
+{{/* the sync never edits settings.json; hiding the deployed skills in the user's sessions is this click (master B16) */}}
+<div class="card card-actions">
+  <form hx-post="/scripts/skills/visibility" hx-target="#op-result">
+    <input type="hidden" name="visibility" value="off">
+    <button type="submit" title="sets skillOverrides off for every deployed leaf in ~/.claude/settings.json; the previous file goes to the trash">Hide smine skills in your sessions ({{.VisibilityCount}})</button>
+  </form>
+  <form hx-post="/scripts/skills/visibility" hx-target="#op-result">
+    <input type="hidden" name="visibility" value="on">
+    <button type="submit" title="clears the skillOverrides of every deployed leaf in ~/.claude/settings.json; the previous file goes to the trash">Show smine skills in your sessions ({{.VisibilityCount}})</button>
+  </form>
+</div>
+{{end}}
 <div id="op-result"></div>
 {{/* Sync changes states and counts; the list re-pulls itself when the op
      fires HX-Trigger: repo-op (mirrors repos_index's #repo-list). */}}
@@ -19,7 +33,7 @@
   <a class="badge {{if not .State}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills">All ({{.CountAll}})</a>
   <a class="badge {{if eq .State "synced"}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills?state=synced">Synced ({{.CountSynced}})</a>
   <a class="badge {{if eq .State "active"}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills?state=active">Active only ({{.CountActive}})</a>
-  <a class="badge {{if eq .State "repo"}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills?state=repo">Repo only ({{.CountRepo}})</a>
+  <a class="badge {{if eq .State "repo"}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills?state=repo">Uninstalled ({{.CountRepo}})</a>
 </div>
 {{if not .Groups}}<div class="empty">No skills found.</div>{{end}}
 {{range .Groups}}
@@ -29,7 +43,9 @@
 <details class="section">
   <summary>{{.Family}} ({{len .Skills}})
     <span class="badge badge-dim">{{.Invocations}} invocation{{if ne .Invocations 1}}s{{end}}</span>
+    {{if .Uninstalled}}<span class="badge badge-error">{{.Uninstalled}} uninstalled</span>{{end}}
     {{if .UpdatesNeeded}}<span class="badge badge-action">Update needed{{if gt .UpdatesNeeded 1}} ({{.UpdatesNeeded}}){{end}}</span>{{end}}
+    {{if .Unset}}<span class="badge badge-warn" title="required and unset — {{join .Unset " · "}}">⚠ {{.UnsetCount}} unset</span>{{end}}
   </summary>
   {{range .Skills}}{{template "_skill_card" .}}{{end}}
 </details>
@@ -39,19 +55,41 @@
 {{template "foot" .}}
 
 {{define "_skill_card"}}
+{{/* Fixed grid: every status slot renders, filled or empty, so the columns line up across cards; the leading badge slot holds unset, smoke and state right-aligned, sized for what the page holds, so a missing badge leaves no gap. */}}
 <div class="card card-skill">
   <span class="label">
     <a href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}"><strong>/{{.Skill.Name}}</strong></a>
+    {{range .Skill.Aliases}}<span class="badge badge-dim">/{{.}}</span>{{end}}
     {{if .Skill.Summary}}<br><span class="description">{{.Skill.Summary}}</span>{{end}}
     {{if .Skill.Args}}<br><span class="skill-args">{{range .Skill.Args}}<span class="arg-chip">{{.Name}}</span>{{end}}</span>{{end}}
+    {{if .Missing}}<br><span class="meta" title="turn the component on in Profile → Installation">unavailable ({{.Missing}})</span>{{end}}
   </span>
-  <span class="badge badge-dim">{{.Invocations}} invocation{{if ne .Invocations 1}}s{{end}}</span>
-  {{if .LastUsed}}<span class="badge badge-dim">last used {{.LastUsed}}</span>{{end}}
-  {{if eq .State "synced"}}<span class="badge badge-ok">Synced</span>
-  {{else if eq .State "active"}}<span class="badge badge-action">Active only</span>
-  {{else}}<span class="badge badge-error">Repo only</span>{{end}}
-  {{if .HomeVersion}}<span class="badge badge-action">Update needed</span>
-  <span class="badge badge-dim badge-version" title="installed version differs — sync to update">v{{.HomeVersion}} → v{{.Skill.Version}}</span>
-  {{else if .Skill.Version}}<span class="badge badge-dim badge-version">v{{.Skill.Version}}</span>{{end}}
+  <span class="skill-status{{if .HasUnsetColumn}} with-unset{{end}}{{if .HasSmokeColumn}} with-smoke{{end}}">
+    <span class="slot slot-badges">
+      {{- with .Unset}}<span class="badge badge-warn" title="required and unset: {{join . ", "}}">⚠ {{len .}} unset</span>{{end}}
+      {{- with .Smoke}}<span class="badge {{if .IsStale}}badge-dim{{else if .IsPass}}badge-ok{{else}}badge-error{{end}}" title="{{if .IsStale}}stale — no smoke of v{{.Current}} yet; v{{.Version}}{{else}}smoke of v{{.Version}}{{end}} {{.Date}}{{if .Coverage}} · {{.Coverage}}{{end}}{{if .Cause}}: {{.Cause}}{{end}}">{{.Verdict}}{{if .IsStale}} · stale{{end}}</span>{{end}}
+      {{- if eq .State "synced"}}<span class="badge badge-ok">Synced</span>
+      {{- else if eq .State "active"}}<span class="badge badge-action">Active only</span>
+      {{- else}}<span class="badge badge-error">Uninstalled</span>{{end -}}
+    </span>
+    <span class="slot"><span class="badge badge-dim">{{.Invocations}} invocation{{if ne .Invocations 1}}s{{end}}</span></span>
+    <span class="slot">{{if .LastUsed}}<span class="badge badge-dim">last used {{.LastUsed}}</span>{{end}}</span>
+    <span class="slot slot-version">
+      {{if .HomeVersion}}<span class="badge badge-action" title="installed v{{.HomeVersion}}, repo v{{.Skill.Version}}">v{{.Skill.Version}}</span>
+      {{- else if .Skill.Version}}<span class="badge badge-dim">v{{.Skill.Version}}</span>{{end}}
+      {{if .Missing}}<button type="button" class="icon-button skill-deploy skill-blocked" hx-post="/scripts/skills/{{.Skill.Name}}/deploy" hx-target="#op-result" title="Skill {{.Skill.Name}} unavailable ({{.Missing}})" aria-label="deploy /{{.Skill.Name}} unavailable">{{template "_icon_download"}}</button>
+      {{- else if eq .State "repo"}}<button type="button" class="icon-button skill-deploy" hx-post="/scripts/skills/{{.Skill.Name}}/deploy" hx-target="#op-result" title="deploy v{{.Skill.Version}}" aria-label="deploy /{{.Skill.Name}}">{{template "_icon_download"}}</button>
+      {{- else if .HomeVersion}}<button type="button" class="icon-button skill-deploy skill-update" hx-post="/scripts/skills/{{.Skill.Name}}/deploy" hx-target="#op-result" title="update v{{.HomeVersion}} → v{{.Skill.Version}}" aria-label="update /{{.Skill.Name}}">{{template "_icon_download"}}</button>
+      {{- else}}<button type="button" class="icon-button skill-deploy" disabled title="{{if eq .State "active"}}no repo source{{else}}up to date{{end}}" aria-label="nothing to update">{{template "_icon_download"}}</button>{{end}}
+    </span>
+  </span>
+  {{if eq .State "synced"}}
+  <button type="button" class="icon-button skill-remove" hx-post="/scripts/skills/{{.Skill.Name}}/remove" hx-target="#op-result"
+          hx-confirm="Remove /{{.Skill.Name}} from the claude and codex skill homes?" title="remove from the skill homes" aria-label="remove /{{.Skill.Name}}">{{template "_icon_remove"}}</button>
+  {{end}}
 </div>
 {{end}}
+
+{{define "_icon_download"}}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>{{end}}
+
+{{define "_icon_remove"}}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>{{end}}

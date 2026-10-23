@@ -1,0 +1,28 @@
+{{define "_table_sort"}}
+<script>
+  (function () {
+    // sortable table: click a header, click again to flip
+    document.querySelectorAll('table[data-sortable]').forEach(function (table) {
+      table.querySelectorAll('th[data-sort]').forEach(function (th) {
+        th.addEventListener('click', function () {
+          var dir = th.getAttribute('data-dir') === 'asc' ? 'desc' : 'asc';
+          table.querySelectorAll('th[data-sort]').forEach(function (other) { other.removeAttribute('data-dir'); });
+          th.setAttribute('data-dir', dir);
+          var isNum = th.getAttribute('data-sort') === 'num';
+          var column = th.cellIndex;
+          var body = table.querySelector('tbody');
+          var rows = Array.prototype.slice.call(body.querySelectorAll('tr'));
+          rows.sort(function (a, b) {
+            var ca = a.children[column], cb = b.children[column];
+            var va = isNum ? parseInt((ca.getAttribute('data-value') || '0').replace(/\s/g, ''), 10) || 0 : ca.textContent.trim().toLowerCase();
+            var vb = isNum ? parseInt((cb.getAttribute('data-value') || '0').replace(/\s/g, ''), 10) || 0 : cb.textContent.trim().toLowerCase();
+            var order = va < vb ? -1 : va > vb ? 1 : 0;
+            return dir === 'asc' ? order : -order;
+          });
+          rows.forEach(function (row) { body.appendChild(row); });
+        });
+      });
+    });
+  })();
+</script>
+{{end}}

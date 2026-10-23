@@ -7,14 +7,10 @@ import (
 	"time"
 )
 
-// DialogTimeout bounds interactive dialog children — generous because a
-// human is browsing, unlike Run's 60s script ceiling.
+// DialogTimeout is generous because a human is browsing the dialog.
 const DialogTimeout = 10 * time.Minute
 
-// RunDialog executes a command that must show a window and wait for the
-// user: no HideWindow (SW_HIDE would suppress the dialog), no console
-// (dialogAttr), DialogTimeout instead of Timeout. Callers are the folder
-// pickers only.
+// RunDialog skips HideWindow because SW_HIDE would suppress the dialog.
 func RunDialog(ctx context.Context, name string, args ...string) (string, error) {
 	runCtx, cancel := context.WithTimeout(ctx, DialogTimeout)
 	defer cancel()

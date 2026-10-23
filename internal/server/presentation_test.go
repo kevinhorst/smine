@@ -1,22 +1,23 @@
 package server
 
 import (
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
-func TestLoadPresentationProfile(t *testing.T) {
+func TestPresentationStore_Load(t *testing.T) {
 	type testCase struct {
-		_id               string
-		_expectedAudience string
-		_expectedDevMode  bool
-		_expectedLanguage string
+		_id                string
+		_expectedAudience  string
+		_expectedAutoMerge bool
+		_expectedDevMode   bool
+		_expectedLanguage  string
 
 		content string
 		missing bool
@@ -26,19 +27,43 @@ func TestLoadPresentationProfile(t *testing.T) {
 
 	// missing-file-defaults
 	tests = append(tests, &testCase{
-		_id:               "missing-file-defaults",
-		_expectedAudience: "",
-		_expectedLanguage: "en",
+		_id:                "missing-file-defaults",
+		_expectedAudience:  "",
+		_expectedAutoMerge: true,
+		_expectedLanguage:  "en",
 
 		content: "",
 		missing: true,
 	})
 
+	// legacy-proposals-key-ignored
+	tests = append(tests, &testCase{
+		_id:                "legacy-proposals-key-ignored",
+		_expectedAudience:  "casual",
+		_expectedAutoMerge: true,
+		_expectedLanguage:  "en",
+
+		content: "---\naudience: casual\nproposals: auto\n---\n",
+		missing: false,
+	})
+
+	// auto-merge-false-parsed
+	tests = append(tests, &testCase{
+		_id:                "auto-merge-false-parsed",
+		_expectedAudience:  "",
+		_expectedAutoMerge: false,
+		_expectedLanguage:  "en",
+
+		content: "---\nauto-merge: false\n---\n",
+		missing: false,
+	})
+
 	// de-casual-parsed
 	tests = append(tests, &testCase{
-		_id:               "de-casual-parsed",
-		_expectedAudience: "casual",
-		_expectedLanguage: "de",
+		_id:                "de-casual-parsed",
+		_expectedAudience:  "casual",
+		_expectedAutoMerge: true,
+		_expectedLanguage:  "de",
 
 		content: "---\nlanguage: de\naudience: casual\n---\nbody text\n",
 		missing: false,
@@ -46,9 +71,10 @@ func TestLoadPresentationProfile(t *testing.T) {
 
 	// missing-front-matter-defaults
 	tests = append(tests, &testCase{
-		_id:               "missing-front-matter-defaults",
-		_expectedAudience: "",
-		_expectedLanguage: "en",
+		_id:                "missing-front-matter-defaults",
+		_expectedAudience:  "",
+		_expectedAutoMerge: true,
+		_expectedLanguage:  "en",
 
 		content: "# just a heading\nlanguage: de\n",
 		missing: false,
@@ -56,9 +82,10 @@ func TestLoadPresentationProfile(t *testing.T) {
 
 	// unknown-audience-kept-verbatim
 	tests = append(tests, &testCase{
-		_id:               "unknown-audience-kept-verbatim",
-		_expectedAudience: "manager",
-		_expectedLanguage: "en",
+		_id:                "unknown-audience-kept-verbatim",
+		_expectedAudience:  "manager",
+		_expectedAutoMerge: true,
+		_expectedLanguage:  "en",
 
 		content: "---\naudience: manager\n---\n",
 		missing: false,
@@ -66,9 +93,10 @@ func TestLoadPresentationProfile(t *testing.T) {
 
 	// empty-language-defaults-en
 	tests = append(tests, &testCase{
-		_id:               "empty-language-defaults-en",
-		_expectedAudience: "casual",
-		_expectedLanguage: "en",
+		_id:                "empty-language-defaults-en",
+		_expectedAudience:  "casual",
+		_expectedAutoMerge: true,
+		_expectedLanguage:  "en",
 
 		content: "---\nlanguage:\naudience: casual\n---\n",
 		missing: false,
@@ -76,10 +104,11 @@ func TestLoadPresentationProfile(t *testing.T) {
 
 	// dev-mode-true-parsed
 	tests = append(tests, &testCase{
-		_id:               "dev-mode-true-parsed",
-		_expectedAudience: "",
-		_expectedDevMode:  true,
-		_expectedLanguage: "en",
+		_id:                "dev-mode-true-parsed",
+		_expectedAudience:  "",
+		_expectedAutoMerge: true,
+		_expectedDevMode:   true,
+		_expectedLanguage:  "en",
 
 		content: "---\nlanguage: en\naudience: \ndev-mode: true\n---\n",
 		missing: false,
@@ -87,10 +116,11 @@ func TestLoadPresentationProfile(t *testing.T) {
 
 	// dev-mode-garbage-off
 	tests = append(tests, &testCase{
-		_id:               "dev-mode-garbage-off",
-		_expectedAudience: "",
-		_expectedDevMode:  false,
-		_expectedLanguage: "en",
+		_id:                "dev-mode-garbage-off",
+		_expectedAudience:  "",
+		_expectedAutoMerge: true,
+		_expectedDevMode:   false,
+		_expectedLanguage:  "en",
 
 		content: "---\ndev-mode: yes please\n---\n",
 		missing: false,
@@ -104,20 +134,13 @@ func TestLoadPresentationProfile(t *testing.T) {
 				require.NoError(t, os.WriteFile(path, []byte(test.content), 0o644))
 			}
 
-			profile := loadPresentationProfile(path)
-			assert.Equal(t, test._expectedAudience, profile.Audience)
-			assert.Equal(t, test._expectedDevMode, profile.DevMode)
-			assert.Equal(t, test._expectedLanguage, profile.Language)
+			store := newPresentationStore(path, filepath.Join(filepath.Dir(path), "style-profile.md"), filepath.Join(filepath.Dir(path), "template.md"), nil)
+			assert.Equal(t, test._expectedAudience, store.audience())
+			assert.Equal(t, test._expectedAutoMerge, store.autoMerge())
+			assert.Equal(t, test._expectedDevMode, store.isDevMode())
+			assert.Equal(t, test._expectedLanguage, store.language())
 		})
 	}
-}
-
-func TestPresentationProfile_IsDeveloperAudience(t *testing.T) {
-	developer := loadPresentationProfile("")
-	assert.True(t, developer.isDeveloperAudience())
-
-	casual := &presentationProfile{Audience: audienceCasual, Language: "de"}
-	assert.False(t, casual.isDeveloperAudience())
 }
 
 func writeGermanProfile(t *testing.T) string {
@@ -127,140 +150,6 @@ func writeGermanProfile(t *testing.T) string {
 	return path
 }
 
-func TestProposalCardCasual(t *testing.T) {
-	dir := t.TempDir()
-	proposalsDir := filepath.Join(dir, "proposals")
-	require.NoError(t, os.MkdirAll(proposalsDir, 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(proposalsDir, "skills.json"), []byte(`{
-		"kind": "skills",
-		"groups": [{
-			"title": "Group",
-			"proposals": [{
-				"id": "sp-001",
-				"title": "Ein Vorschlag",
-				"change": "Eine Änderung",
-				"status": "proposed",
-				"target": "skills/foo",
-				"tags": ["workflow"],
-				"gate": {"band": "J", "verifier": "railroad", "anchor": "x.go:1"},
-				"evidence": [{
-					"title": "Beleg",
-					"sessions": [{"id": "abcdef1234", "note": "eine Notiz"}],
-					"snippets": [{"code": "func main() {}", "kind": "code", "lang": "go", "source": "main.go"}]
-				}]
-			}]
-		}]
-	}`), 0o644))
-
-	server := newTestServer(t, &Options{
-		PresentationPath: writeGermanProfile(t),
-		ProposalsDir:     proposalsDir,
-	})
-	recorder := httptest.NewRecorder()
-	server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/proposals", nil))
-	require.Equal(t, http.StatusOK, recorder.Code)
-
-	body := recorder.Body.String()
-	assert.NotContains(t, body, "band J")
-	assert.NotContains(t, body, "→ skills/foo")
-	assert.NotContains(t, body, ">workflow</span>")
-	assert.NotContains(t, body, ">gate</span>")
-	assert.Contains(t, body, "Technisches Detail")
-	assert.Contains(t, body, "Kommentar (Grund oder Hinweis)")
-	assert.Contains(t, body, ">später</button>")
-}
-
-// groupTitlesFixture carries the canonical English group titles plus one
-// free-form title and one accepted proposal for the tooltip pills.
-const groupTitlesFixture = `{
-	"kind": "skills",
-	"groups": [
-		{
-			"title": "New skills",
-			"proposals": [{
-				"id": "gt-001",
-				"title": "foo — do a thing",
-				"change": "A change.",
-				"status": "accepted",
-				"target": "skills/foo"
-			}]
-		},
-		{
-			"title": "Workflows (skill-bundled scripts)",
-			"proposals": [{
-				"id": "gt-002",
-				"title": "bar — a workflow",
-				"change": "Another change.",
-				"status": "proposed",
-				"target": "skills/bar"
-			}]
-		},
-		{
-			"title": "Freeform group heading",
-			"proposals": [{
-				"id": "gt-003",
-				"title": "baz — third thing",
-				"change": "Third change.",
-				"status": "proposed",
-				"target": "skills/baz"
-			}]
-		}
-	]
-}`
-
-func newGroupTitlesServer(t *testing.T, presentationPath string) *Server {
-	t.Helper()
-	proposalsDir := filepath.Join(t.TempDir(), "proposals")
-	require.NoError(t, os.MkdirAll(proposalsDir, 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(proposalsDir, "skills.json"), []byte(groupTitlesFixture), 0o644))
-	options := &Options{
-		PresentationPath: presentationPath,
-		ProposalsDir:     proposalsDir,
-	}
-	return newTestServer(t, options)
-}
-
-func TestProposalsGroupTitlesNonDeveloper(t *testing.T) {
-	server := newGroupTitlesServer(t, writeGermanProfile(t))
-	recorder := httptest.NewRecorder()
-	server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/proposals", nil))
-	require.Equal(t, http.StatusOK, recorder.Code)
-
-	body := recorder.Body.String()
-	assert.Contains(t, body, "Neue Funktionen")
-	assert.Contains(t, body, "Abläufe (gebündelte Skripte)")
-	assert.NotContains(t, body, ">New skills <")
-	assert.NotContains(t, body, ">Workflows (skill-bundled scripts) <")
-	// The kind heading translates; the free-form title falls back to identity.
-	assert.Contains(t, body, "<h2>Funktionen</h2>")
-	assert.Contains(t, body, "Freeform group heading")
-}
-
-func TestProposalsTooltipsGerman(t *testing.T) {
-	server := newGroupTitlesServer(t, writeGermanProfile(t))
-	recorder := httptest.NewRecorder()
-	server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/proposals", nil))
-	require.Equal(t, http.StatusOK, recorder.Code)
-
-	body := recorder.Body.String()
-	assert.Contains(t, body, "1 von 1 angenommen")
-	assert.NotContains(t, body, "1 of 1 accepted")
-}
-
-func TestProposalsDefaultEnglish(t *testing.T) {
-	server := newGroupTitlesServer(t, filepath.Join(t.TempDir(), "missing-profile.md"))
-	recorder := httptest.NewRecorder()
-	server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/proposals", nil))
-	require.Equal(t, http.StatusOK, recorder.Code)
-
-	body := recorder.Body.String()
-	assert.Contains(t, body, ">New skills <")
-	assert.Contains(t, body, ">Workflows (skill-bundled scripts) <")
-	assert.Contains(t, body, "<h2>skills</h2>")
-	assert.Contains(t, body, "1 of 1 accepted")
-	assert.NotContains(t, body, "Neue Funktionen")
-}
-
 func TestPresentationStore_SaveProfileSelection(t *testing.T) {
 	type testCase struct {
 		_id               string
@@ -268,79 +157,129 @@ func TestPresentationStore_SaveProfileSelection(t *testing.T) {
 		_expectedLanguage string
 		_expectedMissing  bool
 
-		audience string
-		devMode  bool
-		existing string
-		language string
+		audience  string
+		autoMerge bool
+		devMode   bool
+		existing  string
+		language  string
+		template  string
 	}
 
 	tests := make([]*testCase, 0)
 
-	// developer-en-deletes
+	// developer-en-writes-defaults
 	tests = append(tests, &testCase{
-		_id:               "developer-en-deletes",
-		_expectedContent:  "",
+		_id:               "developer-en-writes-defaults",
+		_expectedContent:  "---\nlanguage: en\naudience: \ndev-mode: false\nauto-merge: true\n---\nbody text\n",
 		_expectedLanguage: "en",
-		_expectedMissing:  true,
+		_expectedMissing:  false,
 
-		audience: "",
-		devMode:  false,
-		existing: "---\nlanguage: de\naudience: casual\n---\nbody text\n",
-		language: "en",
+		audience:  "",
+		autoMerge: true,
+		devMode:   false,
+		existing:  "---\nlanguage: de\naudience: casual\n---\nbody text\n",
+		language:  "en",
 	})
 
-	// developer-en-missing-noop
+	// developer-en-missing-writes-defaults
 	tests = append(tests, &testCase{
-		_id:               "developer-en-missing-noop",
-		_expectedContent:  "",
+		_id:               "developer-en-missing-writes-defaults",
+		_expectedContent:  "---\nlanguage: en\naudience: \ndev-mode: false\nauto-merge: true\n---\n",
 		_expectedLanguage: "en",
-		_expectedMissing:  true,
+		_expectedMissing:  false,
 
-		audience: "",
-		devMode:  false,
-		existing: "",
-		language: "en",
+		audience:  "",
+		autoMerge: true,
+		devMode:   false,
+		existing:  "",
+		language:  "en",
 	})
 
 	// developer-en-devmode-persists
 	tests = append(tests, &testCase{
 		_id:               "developer-en-devmode-persists",
-		_expectedContent:  "---\nlanguage: en\naudience: \ndev-mode: true\n---\n",
+		_expectedContent:  "---\nlanguage: en\naudience: \ndev-mode: true\nauto-merge: true\n---\n",
 		_expectedLanguage: "en",
 		_expectedMissing:  false,
 
-		audience: "",
-		devMode:  true,
-		existing: "",
-		language: "en",
+		audience:  "",
+		autoMerge: true,
+		devMode:   true,
+		existing:  "",
+		language:  "en",
 	})
 
-	// de-casual-creates
-	// The repo template is not readable from the test cwd, so the body
-	// falls back to empty — the seeding path is frontmatter-only here.
+	// auto-merge-off-persists
 	tests = append(tests, &testCase{
-		_id:               "de-casual-creates",
-		_expectedContent:  "---\nlanguage: de\naudience: casual\ndev-mode: false\n---\n",
+		_id:               "auto-merge-off-persists",
+		_expectedContent:  "---\nlanguage: en\naudience: \ndev-mode: false\nauto-merge: false\n---\n",
+		_expectedLanguage: "en",
+		_expectedMissing:  false,
+
+		audience:  "",
+		autoMerge: false,
+		devMode:   false,
+		existing:  "",
+		language:  "en",
+	})
+
+	// legacy-proposals-line-dropped
+	tests = append(tests, &testCase{
+		_id:               "legacy-proposals-line-dropped",
+		_expectedContent:  "---\nlanguage: de\naudience: casual\ndev-mode: false\nauto-merge: true\n---\nbody text\n",
 		_expectedLanguage: "de",
 		_expectedMissing:  false,
 
-		audience: "casual",
-		devMode:  false,
-		existing: "",
-		language: "de",
+		audience:  "casual",
+		autoMerge: true,
+		devMode:   false,
+		existing:  "---\nlanguage: en\naudience: casual\nproposals: auto\n---\nbody text\n",
+		language:  "de",
+	})
+
+	// de-casual-missing-template-empty-body
+	tests = append(tests, &testCase{
+		_id:               "de-casual-missing-template-empty-body",
+		_expectedContent:  "---\nlanguage: de\naudience: casual\ndev-mode: false\nauto-merge: true\n---\n",
+		_expectedLanguage: "de",
+		_expectedMissing:  false,
+
+		audience:  "casual",
+		autoMerge: true,
+		devMode:   false,
+		existing:  "",
+		language:  "de",
+		template:  "",
+	})
+
+	// de-casual-seeds-template-body
+	tests = append(tests, &testCase{
+		_id:               "de-casual-seeds-template-body",
+		_expectedContent:  "---\nlanguage: de\naudience: casual\ndev-mode: false\nauto-merge: true\n---\nAntworte kurz.\n",
+		_expectedLanguage: "de",
+		_expectedMissing:  false,
+
+		audience:  "casual",
+		autoMerge: true,
+		devMode:   false,
+		existing:  "",
+		language:  "de",
+		template:  "---\nlanguage: de\naudience: casual\n---\nAntworte kurz.\n",
 	})
 
 	// frontmatter-rewrite-keeps-body
 	tests = append(tests, &testCase{
 		_id:               "frontmatter-rewrite-keeps-body",
-		_expectedContent:  "---\nlanguage: de\naudience: casual\ndev-mode: false\n---\nbody text\n",
+		_expectedContent:  "---\nlanguage: de\naudience: casual\ndev-mode: false\nauto-merge: true\n---\nbody text\n",
 		_expectedLanguage: "de",
 		_expectedMissing:  false,
 
-		audience: "casual",
-		devMode:  false,
-		existing: "---\nlanguage: en\naudience: casual\n---\nbody text\n",
-		language: "de",
+		audience:  "casual",
+		autoMerge: true,
+		devMode:   false,
+		existing:  "---\nlanguage: en\naudience: casual\n---\nbody text\n",
+		language:  "de",
+		template:  "",
 	})
 
 	// Run tests
@@ -350,9 +289,13 @@ func TestPresentationStore_SaveProfileSelection(t *testing.T) {
 			if test.existing != "" {
 				require.NoError(t, os.WriteFile(path, []byte(test.existing), 0o644))
 			}
-			store := newPresentationStore(path, filepath.Join(filepath.Dir(path), "style-profile.md"))
+			templatePath := filepath.Join(filepath.Dir(path), "template.md")
+			if test.template != "" {
+				require.NoError(t, os.WriteFile(templatePath, []byte(test.template), 0o644))
+			}
+			store := newPresentationStore(path, filepath.Join(filepath.Dir(path), "style-profile.md"), templatePath, nil)
 
-			err := store.saveProfileSelection(test.audience, test.language, test.devMode)
+			err := store.saveProfileSelection(test.audience, test.language, test.devMode, test.autoMerge)
 
 			require.NoError(t, err)
 			content, readErr := os.ReadFile(path)
@@ -365,9 +308,12 @@ func TestPresentationStore_SaveProfileSelection(t *testing.T) {
 
 func TestPresentationStore_SaveStyle(t *testing.T) {
 	dir := t.TempDir()
+	stateDir := t.TempDir()
 	store := newPresentationStore(
 		filepath.Join(dir, "presentation-profile.md"),
 		filepath.Join(dir, "global", "style-profile.md"),
+		filepath.Join(dir, "template.md"),
+		trash.New(stateDir, 0),
 	)
 
 	missing, err := store.styleContent()
@@ -375,7 +321,16 @@ func TestPresentationStore_SaveStyle(t *testing.T) {
 	assert.Equal(t, "", missing)
 
 	require.NoError(t, store.saveStyle("- Answer tersely.\n"))
+	require.NoError(t, store.saveStyle("- Answer at length.\n"))
 	content, err := store.styleContent()
 	require.NoError(t, err)
-	assert.Equal(t, "- Answer tersely.\n", content)
+	assert.Equal(t, "- Answer at length.\n", content)
+
+	stashes, err := trash.New(stateDir, 0).List()
+	require.NoError(t, err)
+	require.Len(t, stashes, 1)
+	require.Len(t, stashes[0].Entries, 1)
+	stashed, err := os.ReadFile(filepath.Join(stateDir, trash.TrashDir, stashes[0].Stamp, filepath.FromSlash(stashes[0].Entries[0].Rel)))
+	require.NoError(t, err)
+	assert.Equal(t, "- Answer tersely.\n", string(stashed))
 }

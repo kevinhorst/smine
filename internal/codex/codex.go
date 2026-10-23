@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
@@ -21,7 +20,6 @@ type Config struct {
 	doc *tomledit.Document
 }
 
-// Entry is one toggleable unit for the UI: a global key-value or a table.
 // Subtables of a listed table are grouped under it and not toggleable alone.
 type Entry struct {
 	Key       string
@@ -30,26 +28,28 @@ type Entry struct {
 }
 
 func Load(path string) (*Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			doc, _ := tomledit.Parse(strings.NewReader(""))
-			return &Config{doc: doc}, nil
-		}
+	data, err := os.ReadFile(path)
+	if err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("Load: Failed to open %s: %w", path, err)
 	}
-	defer f.Close()
 
-	doc, err := tomledit.Parse(f)
+	cfg, err := Parse(data)
 	if err != nil {
 		return nil, fmt.Errorf("Load: Failed to parse %s: %w", path, err)
+	}
+	return cfg, nil
+}
+
+// The sync ops check an expanded or collapsed Codex file with it before writing.
+func Parse(data []byte) (*Config, error) {
+	doc, err := tomledit.Parse(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("Parse: %w", err)
 	}
 	return &Config{doc: doc}, nil
 }
 
-// Entries lists global key-values in document order, then sections in
-// document order; a section prefixed by an earlier section is grouped under
-// it as a subtable.
+// A section prefixed by an earlier section is grouped under it as a subtable.
 func (c *Config) Entries() []Entry {
 	var entries []Entry
 	for _, item := range c.doc.Global.Items {
@@ -80,8 +80,6 @@ func (c *Config) Entries() []Entry {
 	return entries
 }
 
-// takeUnit removes and returns the toggle unit for key: a global key-value,
-// or a table together with every section it prefixes (subtables).
 func (c *Config) takeUnit(key parser.Key) (*parser.KeyValue, []*tomledit.Section) {
 	for i, item := range c.doc.Global.Items {
 		kv, ok := item.(*parser.KeyValue)
@@ -184,19 +182,13 @@ func Save(path string, c *Config) error {
 		return fmt.Errorf("Save: Failed to format %s: %w", path, err)
 	}
 
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, buf.Bytes(), 0644); err != nil {
-		return fmt.Errorf("Save: Failed to write %s: %w", tmp, err)
-	}
-	if err := fsx.ReplaceFile(tmp, path); err != nil {
-		os.Remove(tmp)
-		return fmt.Errorf("Save: Failed to rename %s to %s: %w", tmp, path, err)
+	if err := fsx.WriteFileAtomic(buf.Bytes(), path, 0o644); err != nil {
+		return fmt.Errorf("Save: %w", err)
 	}
 	return nil
 }
 
-// Toggle shuttles the unit at key between config.toml and its .disabled
-// sibling. The destination file is saved first (D13).
+// The destination file is saved first (D13).
 func Toggle(configPath, key string) error {
 	k, err := parser.ParseKey(key)
 	if err != nil {

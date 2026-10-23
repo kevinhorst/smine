@@ -3,6 +3,8 @@ package routines
 import (
 	"maps"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Fixture captured from `launchctl print-disabled gui/502` on this machine
@@ -60,6 +62,41 @@ func TestOverrideLabels(t *testing.T) {
 			if !maps.Equal(got, tc.want) {
 				t.Errorf("overrideLabels() = %v, want %v", got, tc.want)
 			}
+		})
+	}
+}
+
+func TestParseRunPid(t *testing.T) {
+	cases := []struct {
+		name   string
+		output string
+		want   int
+	}{
+		{
+			name:   "pid line present",
+			output: "\tstate = running\n\tpid = 12345\n\tprogram = /bin/sh\n",
+			want:   12345,
+		},
+		{
+			name:   "no pid line",
+			output: "\tstate = not running\n\tprogram = /bin/sh\n",
+			want:   0,
+		},
+		{
+			name:   "garbage after pid degrades to zero",
+			output: "\tpid = twelve\n",
+			want:   0,
+		},
+		{
+			name:   "empty output",
+			output: "",
+			want:   0,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, parseRunPid(tc.output))
 		})
 	}
 }

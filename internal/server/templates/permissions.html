@@ -1,0 +1,15 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Config</h1>
+{{template "_config_tabs" .}}
+<div class="card card-actions">
+  {{template "_sync_forms" .}}
+  <span id="ovr-permissions" class="push-right">{{template "_permissions_overridden" .}}</span>
+</div>
+<div id="op-result"></div>
+{{/* Sync, Force sync and Persist replace the whole live file and fire config-op, on which the lists re-pull themselves. */}}
+<div id="permissions-body" hx-get="/config/permissions" hx-trigger="config-op from:body"
+     hx-select="#permissions-body" hx-swap="outerHTML" hx-disinherit="*">
+{{template "_permissions.html" .}}
+</div>
+{{template "foot" .}}

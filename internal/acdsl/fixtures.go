@@ -9,13 +9,9 @@ import (
 	"time"
 )
 
-// FixturesDir is the per-rule example tree: <root>/acdsl/testdata/<rule-id>/
-// pass/ and fail/. The testdata name keeps go tooling and every anchor
-// (by the /testdata/ exclusion convention) away from the example files.
+// The testdata name keeps go tooling and every anchor away from the example files.
 const FixturesDir = "acdsl/testdata"
 
-// FixturesReport is the outcome of a fixtures run: verdict mismatches plus
-// run metadata — rules with examples, files exercised, wall-clock elapsed.
 type FixturesReport struct {
 	Failures []string
 	Checked  int
@@ -33,9 +29,7 @@ func (r FixturesReport) Meta() string {
 	return meta
 }
 
-// RunFixtures proves each rule's verifier against its committed examples:
-// every pass file set must exit 0, every fail set must exit 1 — the examples
-// are the verifier's ground truth. Rules without a fixtures dir are skipped.
+// The committed examples are the verifier's ground truth: pass sets exit 0, fail sets exit 1.
 func RunFixtures(ctx context.Context, root string, rules []Rule, registry map[string]RegistryEntry) (FixturesReport, error) {
 	start := time.Now()
 	var report FixturesReport
@@ -44,9 +38,7 @@ func RunFixtures(ctx context.Context, root string, rules []Rule, registry map[st
 		if _, statErr := os.Stat(ruleDir); statErr != nil {
 			continue
 		}
-		// Same applicability as Check: a rule whose needs= artifacts are
-		// absent (private artifacts on a public tree) cannot exercise its
-		// fixtures either — the verifier would read the missing artifact.
+		// Same applicability as Check: absent needs= artifacts skip the fixtures too.
 		if len(missingNeeds(root, rule)) > 0 {
 			report.Skipped++
 			continue
@@ -73,9 +65,7 @@ func RunFixtures(ctx context.Context, root string, rules []Rule, registry map[st
 	return report, nil
 }
 
-// runFixtureSet runs one rule's verifier over a single example set (pass or
-// fail) and returns any verdict mismatches. A pass set flags nothing; a fail
-// set must flag; an empty set is itself a failure.
+// An empty example set is itself a failure.
 func runFixtureSet(ctx context.Context, root, ruleDir string, rule Rule, entry RegistryEntry, set string, wantGreen bool) ([]string, int, error) {
 	files, err := fixtureFiles(ruleDir, set)
 	if err != nil {
@@ -84,7 +74,7 @@ func runFixtureSet(ctx context.Context, root, ruleDir string, rule Rule, entry R
 	if len(files) == 0 {
 		return []string{fmt.Sprintf("%s: fixtures/%s is empty", rule.Id, set)}, 0, nil
 	}
-	diagnostics, err := runVerifier(ctx, root, rule, entry, files)
+	diagnostics, err := runVerifier(ctx, root, rule, entry, files, nil)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "heartbeat": {
+    "version": "0.4.0",
+    "claude_home": "/Users/devuser/.claude",
+    "addr": "127.0.0.1:6101",
+    "started_at": "2026-09-29T08:00:00Z",
+    "events_applied": 412
+  },
+  "subscriptions": [
+    {
+      "last_digest": {
+        "id": "d3",
+        "outcome": "sent",
+        "at": "2026-09-29T09:14:02Z"
+      },
+      "mode": "act",
+      "session": "5d1c2a90-3b7e-4f2a-9c11-0e6f1d2b3a44",
+      "since": "2026-09-29T09:00:00Z",
+      "target": "8a2f7c31-6d4e-4b9a-8e22-1f3c5a7b9d01",
+      "target_title": "CC,Rr - Review runtime checker",
+      "title": "CC,Rt - Runtime watch"
+    }
+  ],
+  "runs": [
+    {
+      "id": 1,
+      "anchors": [{"id": "stack", "captures": {}, "seq": 4}, {"id": "lanes", "captures": {"lanes":[{"direction":"tests"}]}, "seq": 9}],
+      "failures": [{"check": "round_buildtest_build", "count": 1}],
+      "findings": 2,
+      "passes": [
+        {
+          "check": "round_after_lanes",
+          "count": 2
+        }
+      ],
+      "reason": "",
+      "session": "8a2f7c31-6d4e-4b9a-8e22-1f3c5a7b9d01",
+      "skill": "railroad-review",
+      "state": "open",
+      "title": "CC,Rr - Review runtime checker",
+      "version": "7.4.0"
+    },
+    {
+      "id": 2,
+      "anchors": [],
+      "failures": [{"check": "value_provenance", "count": 8}],
+      "findings": 0,
+      "passes": [
+        {
+          "check": "producer_first",
+          "count": 2
+        }
+      ],
+      "reason": "value_provenance ×8",
+      "session": "c4e9b812-0a5d-4f73-b6c8-2d9e1f0a3b55",
+      "skill": "qq",
+      "state": "killed",
+      "title": "CC,QQ - Quick question",
+      "version": "1.2.0"
+    }
+  ],
+  "findings": [
+    {
+      "id": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b",
+      "acted": "handed_over",
+      "entry": "SKILL-RAILROADREVIEW-DISPATCH-004",
+      "evidence": ["tool Agent at 09:12:40Z", "risk_map unknown"],
+      "kind": "judgment",
+      "moves": ["send"],
+      "reason": "fired before risk_map held",
+      "run": 1,
+      "session": "8a2f7c31-6d4e-4b9a-8e22-1f3c5a7b9d01",
+      "title": "CC,Rr - Review runtime checker",
+      "skill": "railroad-review",
+      "version": "7.4.0"
+    },
+    {
+      "id": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2c",
+      "acted": "open",
+      "entry": "SKILL-RAILROADREVIEW-STATION-009",
+      "evidence": ["red base reported at 09:13:55Z"],
+      "kind": "check_failed",
+      "moves": ["send", "stop"],
+      "reason": "base red and expect-base-red absent",
+      "run": 1,
+      "session": "8a2f7c31-6d4e-4b9a-8e22-1f3c5a7b9d01",
+      "title": "CC,Rr - Review runtime checker",
+      "skill": "railroad-review",
+      "version": "7.4.0"
+    }
+  ]
+}

@@ -9,11 +9,12 @@ const (
 	diffSame = "same"
 	diffAdd  = "add"
 	diffDel  = "del"
+	diffFile = "file"
+	diffHunk = "hunk"
 	diffSkip = "skip"
 )
 
-// diffLine is one rendered diff line; Text carries the "+ "/"- "/"  " prefix
-// so the text op-result and the HTML partial render identically.
+// diffLine.Text carries the prefix so the text op-result and the HTML partial render identically.
 type diffLine struct {
 	Kind string
 	Text string
@@ -62,8 +63,31 @@ func diffLines(oldText, newText string) []diffLine {
 	return lines
 }
 
-// compactDiff keeps context unchanged lines around each change and collapses
-// longer same-runs into one skip line; a diff with no changes returns nil.
+// diffLinesFromPatch classifies the lines of a `git show --patch` text; the text keeps its own prefixes.
+func diffLinesFromPatch(patch string) []diffLine {
+	if patch == "" {
+		return nil
+	}
+
+	lines := make([]diffLine, 0)
+	for line := range strings.Lines(patch) {
+		text := strings.TrimRight(line, "\n")
+		kind := diffSame
+		switch {
+		case strings.HasPrefix(text, "diff --git "), strings.HasPrefix(text, "--- "), strings.HasPrefix(text, "+++ "):
+			kind = diffFile
+		case strings.HasPrefix(text, "@@"):
+			kind = diffHunk
+		case strings.HasPrefix(text, "+"):
+			kind = diffAdd
+		case strings.HasPrefix(text, "-"):
+			kind = diffDel
+		}
+		lines = append(lines, diffLine{Kind: kind, Text: text})
+	}
+	return lines
+}
+
 func compactDiff(lines []diffLine, context int) []diffLine {
 	keep := make([]bool, len(lines))
 	changed := false
@@ -105,8 +129,6 @@ func formatDiff(lines []diffLine) string {
 	return strings.Join(texts, "\n")
 }
 
-// fileDiff diffs a file's captured before-state against its current on-disk
-// content; a missing before-state diffs from empty.
 func fileDiff(before []byte, path string) ([]diffLine, error) {
 	after, err := os.ReadFile(path)
 	if err != nil {

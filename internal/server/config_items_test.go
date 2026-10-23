@@ -97,6 +97,26 @@ func TestConfigItems(t *testing.T) {
 			formPost("/api/config/claude/model/items", url.Values{"value": {"x"}}))
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
+
+	t.Run("fallback-model-add-available", func(t *testing.T) {
+		settingsPath, server := newServer(t, availableModelsSettings)
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response,
+			formPost("/api/config/claude/fallbackModel/items", url.Values{"value": {"claude-fable-5"}}))
+		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+		assert.Equal(t, []string{"claude-fable-5"}, readSettingsArray(t, settingsPath, "fallbackModel"))
+		assert.NotContains(t, response.Body.String(), "<option>claude-fable-5</option>", "a present item leaves the presets")
+		assert.Contains(t, response.Body.String(), "<option>claude-sonnet-5</option>", "presets come from availableModels")
+	})
+
+	t.Run("fallback-model-add-outside-available-400", func(t *testing.T) {
+		settingsPath, server := newServer(t, availableModelsSettings)
+		response := httptest.NewRecorder()
+		server.Handler().ServeHTTP(response,
+			formPost("/api/config/claude/fallbackModel/items", url.Values{"value": {"haiku"}}))
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+		assert.Nil(t, readSettingsArray(t, settingsPath, "fallbackModel"))
+	})
 }
 
 func TestConfigItemsCodex(t *testing.T) {
@@ -181,7 +201,7 @@ func TestConfigItemsSortedDisplay(t *testing.T) {
 	assert.Equal(t, []string{"b"}, readSettingsArray(t, settingsPath, "disabledMcpjsonServers"))
 }
 
-func TestConfigItemMutationTriggersConfigOp(t *testing.T) {
+func TestConfigItemMutationAnswersWithFragment(t *testing.T) {
 	settingsPath := filepath.Join(t.TempDir(), "settings.json")
 	require.NoError(t, os.WriteFile(settingsPath, []byte(`{"disabledMcpjsonServers": ["a"]}`), 0644))
 	server := newTestServer(t, &Options{SettingsPath: settingsPath})
@@ -190,11 +210,11 @@ func TestConfigItemMutationTriggersConfigOp(t *testing.T) {
 	server.Handler().ServeHTTP(response,
 		formPost("/api/config/claude/disabledMcpjsonServers/items", url.Values{"value": {"x"}}))
 	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-	assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+	assert.Empty(t, response.Header().Get("HX-Trigger"))
 
 	response = httptest.NewRecorder()
 	server.Handler().ServeHTTP(response,
 		httptest.NewRequest(http.MethodDelete, "/api/config/claude/disabledMcpjsonServers/items/0", nil))
 	require.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+	assert.Empty(t, response.Header().Get("HX-Trigger"))
 }

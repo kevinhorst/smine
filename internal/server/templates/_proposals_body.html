@@ -1,0 +1,57 @@
+{{define "_proposals_body.html"}}
+{{if .Results}}
+<div class="card card-column">
+  <span class="section-label">{{t "picked"}}</span>
+  {{range .Results}}
+  <div class="finding"><span class="badge {{if eq .Outcome "picked"}}badge-ok{{else}}badge-action{{end}}">{{t .Outcome}}</span><span class="label"><code>{{.ShortSha}}</code> {{.Subject}}{{if .Reason}} — {{.Reason}}{{end}}{{if .NewCommit}} → <code>{{printf "%.8s" .NewCommit}}</code>{{end}}</span></div>
+  {{end}}
+</div>
+{{end}}
+{{if not .Nights}}
+<div class="empty">{{t "No open changes."}}</div>
+{{else}}
+<form id="pick-form">
+<div class="card card-filter card-column" id="proposals-filter" data-filter-for=".card-proposal">
+  <div class="card-row">
+    <span class="section-label">verdict</span>
+    <a class="badge badge-ok" href="#" data-group="verdict" data-value="">{{t "all"}} {{.Total}}</a>
+    {{range .VerdictCounts}}<a class="badge badge-dim" href="#" data-group="verdict" data-value="{{.Value}}">{{t .Value}} {{.Count}}</a>{{end}}
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">kind</span>
+    {{range .KindCounts}}<a class="badge badge-dim" href="#" data-group="kind" data-value="{{.Value}}">{{.Value}} {{.Count}}</a>{{end}}
+    <hr class="filter-divider">
+    <span class="section-label">night</span>
+    {{range .NightCounts}}<a class="badge badge-dim" href="#" data-group="night" data-value="{{.Value}}">{{.Value}} {{.Count}}</a>{{end}}
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">actions</span>
+    <button type="button" class="small" hx-post="/api/proposals/pick" hx-target="#proposals-body" hx-swap="innerHTML"
+            title="{{t "Pick the selected changes onto main — oldest night first, parent before child; a conflict stops nothing else"}}">{{t "Pick"}}</button>
+    <button type="button" class="small" hx-post="/api/proposals/reject" hx-target="#proposals-body" hx-swap="innerHTML"
+            title="{{t "Reject the selected changes — never picked, never proposed again"}}"
+            hx-prompt="{{t "Reject the selected changes — never picked, never proposed again. Reason (optional), logged and shown to the miners:"}}">{{t "Reject"}}</button>
+  </div>
+</div>
+{{range .Nights}}
+<details class="section" data-section="{{.Branch}}" open>
+  <summary><code>{{.Night}}</code> <span class="count-note">{{len .Cards}}</span>
+    <input type="checkbox" class="bulk-all" title="{{t "select every change of this night"}}"></summary>
+  {{range .Cards}}
+  {{template "_change_card.html" .}}
+  {{end}}
+  {{if .Conflicts}}
+  <details class="conflicts">
+    <summary>{{t "conflicts"}} <span class="count-note">{{len .Conflicts}}</span></summary>
+    {{range .Conflicts}}
+    {{template "_change_card.html" .}}
+    {{end}}
+  </details>
+  {{end}}
+</details>
+{{end}}
+</form>
+{{end}}
+{{end}}

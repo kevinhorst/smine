@@ -1069,7 +1069,13 @@
     "key": "skillOverrides",
     "source": "https://www.schemastore.org/claude-code-settings.json",
     "target": "claude",
-    "type": "object"
+    "type": "map",
+    "values": [
+      "on",
+      "name-only",
+      "user-invocable-only",
+      "off"
+    ]
   },
   {
     "category": "skip",

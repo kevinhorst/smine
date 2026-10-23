@@ -22,17 +22,20 @@ const (
 	PolicyModeStrict PolicyMode = "strict"
 )
 
-// policyIdRe mirrors the id-grammar shape (capture 2 = SCOPE segment). The
-// verifier keeps its own copy — it must stay standalone.
+// The id-grammar verifier keeps its own copy of this shape: it must stay standalone.
 var policyIdRe = regexp.MustCompile(`^(ACDSL|RULE|FACT|ACTION)-([A-Z]{2,12})(?:-([A-Z]{2,12}))?-(\d{3})$`)
 
-// policySurface is the frozen self-management surface: in strict and gated
-// mode none of these files may differ from the policy base.
+// The working policy's base_ref is never a candidate: a branch owns it.
+var DefaultBaseCandidates = []string{"origin/HEAD", "origin/main", "main", "master"}
+
+// In strict and gated mode none of these files may differ from the policy base.
 var policySurface = []string{
 	"acdsl/policy.json",
 	"acdsl/policy.schema.json",
 	"acdsl/registry.json",
 	"acdsl/evalgen.json",
+	"bin/acdsl",
+	"bin/acdsl.exe",
 }
 
 // Policy is acdsl/policy.json: who may change the rule system, and how far.
@@ -49,23 +52,33 @@ type Policy struct {
 // PolicyMode is the self-management stance of a repo's rule system.
 type PolicyMode string
 
-// policyRuleDelta is the rule-level difference between the working tree and
-// the policy base, keyed by declaration marker line identity.
+// changedTask holds modified rules that are task-lifetime on both sides.
 type policyRuleDelta struct {
-	added   []Rule
-	changed []Rule
-	removed []Rule
+	added       []Rule
+	changed     []Rule
+	changedTask []Rule
+	removed     []Rule
 }
 
-// basePolicy reads the authoritative policy from the base ref; a base
-// without one falls back to the working policy (the bootstrap branch that
-// introduces it). An unparseable base policy is a hard error.
+func argvPaths(argv []string) []string {
+	var paths []string
+	for _, arg := range argv {
+		isRelativePath := strings.Contains(arg, "/") && !filepath.IsAbs(arg)
+		if isRelativePath {
+			paths = append(paths, strings.TrimPrefix(arg, "./"))
+		}
+	}
+	return paths
+}
+
+// A base without a policy falls back to the working one minus base_ref, honored from the base only.
 func basePolicy(ctx context.Context, root, base string, working Policy) (Policy, error) {
 	content, exists, err := GitShowFile(ctx, root, base, "acdsl/policy.json")
 	if err != nil {
 		return Policy{}, fmt.Errorf("basePolicy: %w", err)
 	}
 	if !exists {
+		working.BaseRef = ""
 		return working, nil
 	}
 	policy, err := parsePolicy([]byte(content))
@@ -75,10 +88,22 @@ func basePolicy(ctx context.Context, root, base string, working Policy) (Policy,
 	return policy, nil
 }
 
-// classViolations judges one delta class against the mode: strict flags
-// every entry; gated flags entries outside the editable scopes and — for
-// entries that (re)bind a verifier — outside the sanctioned verifier set.
-// Task-lifetime entries are exempt while AllowTaskContracts holds.
+func baseRegistry(ctx context.Context, base, root string) (map[string]RegistryEntry, error) {
+	registry := map[string]RegistryEntry{}
+	content, exists, err := GitShowFile(ctx, root, base, "acdsl/registry.json")
+	if err != nil {
+		return nil, fmt.Errorf("baseRegistry: %w", err)
+	}
+	if !exists {
+		return registry, nil
+	}
+	if err := json.Unmarshal([]byte(content), &registry); err != nil {
+		return nil, fmt.Errorf("baseRegistry: acdsl/registry.json at %s: %w", base, err)
+	}
+	return registry, nil
+}
+
+// Task-contract exemption happens before, in CheckPolicy.
 func classViolations(policy Policy, allowlist map[string]bool, rules []Rule, action string, bindsVerifier bool) []Diagnostic {
 	editable := map[string]bool{}
 	for _, scope := range policy.EditableScopes {
@@ -86,9 +111,6 @@ func classViolations(policy Policy, allowlist map[string]bool, rules []Rule, act
 	}
 	var diagnostics []Diagnostic
 	for _, rule := range rules {
-		if policy.AllowTaskContracts && rule.Lifetime == LifetimeTask {
-			continue
-		}
 		if policy.Mode == PolicyModeStrict {
 			diagnostics = append(diagnostics, policyDiagnostic(rule.File, rule.Line, fmt.Sprintf("policy(strict): rule %s %s — no rule is editable in this repo", rule.Id, action)))
 			continue
@@ -108,38 +130,21 @@ func classViolations(policy Policy, allowlist map[string]bool, rules []Rule, act
 	return diagnostics
 }
 
-// effectiveAllowlist resolves the gated verifier set: the explicit
-// verifier_allowlist when given, else every name in the base-ref registry —
-// "the shipped set" without listing it twice.
-func effectiveAllowlist(ctx context.Context, root, base string, policy Policy) (map[string]bool, error) {
+func effectiveAllowlist(policy Policy, registry map[string]RegistryEntry) map[string]bool {
 	allowlist := map[string]bool{}
 	if len(policy.VerifierAllowlist) > 0 {
 		for _, name := range policy.VerifierAllowlist {
 			allowlist[name] = true
 		}
-		return allowlist, nil
-	}
-	content, exists, err := GitShowFile(ctx, root, base, "acdsl/registry.json")
-	if err != nil {
-		return nil, fmt.Errorf("effectiveAllowlist: %w", err)
-	}
-	if !exists {
-		return allowlist, nil
-	}
-	var registry map[string]RegistryEntry
-	if err := json.Unmarshal([]byte(content), &registry); err != nil {
-		return nil, fmt.Errorf("effectiveAllowlist: acdsl/registry.json at %s: %w", base, err)
+		return allowlist
 	}
 	for name := range registry {
 		allowlist[name] = true
 	}
-	return allowlist, nil
+	return allowlist
 }
 
-// overlayViolations reads acdsl/registry.local.json directly (tracked or
-// not) and flags every entry name missing from policy.LocalOverrides — the
-// overlay wins by name at load time, so an unguarded entry re-points any
-// verifier.
+// The overlay wins by name at load time, so an unguarded entry re-points any verifier.
 func overlayViolations(root string, policy Policy) ([]Diagnostic, error) {
 	path := filepath.Join(root, "acdsl", LocalRegistryName)
 	raw, err := os.ReadFile(path)
@@ -172,8 +177,7 @@ func overlayViolations(root string, policy Policy) ([]Diagnostic, error) {
 	return diagnostics, nil
 }
 
-// parsePolicy decodes one policy document over the defaults (task contracts
-// allowed, free mode); an unknown mode is an error, never a silent free.
+// An unknown mode is an error, never a silent free.
 func parsePolicy(raw []byte) (Policy, error) {
 	policy := Policy{AllowTaskContracts: true, Mode: PolicyModeFree}
 	if err := json.Unmarshal(raw, &policy); err != nil {
@@ -186,17 +190,8 @@ func parsePolicy(raw []byte) (Policy, error) {
 	return Policy{}, fmt.Errorf("parsePolicy: unknown mode %q", policy.Mode)
 }
 
-// policyBase resolves merge-base(HEAD, base ref). isBoundary is false only
-// when the checked-out branch IS the base branch — where humans change the
-// surface; a fresh agent branch at the base tip is a boundary, its
-// uncommitted edits diff against that tip. Candidates: BaseRef when set,
-// else origin/HEAD, origin/main, main, master; none resolving is a hard
-// error, never a silent free.
-func policyBase(ctx context.Context, root string, policy Policy) (string, bool, error) {
-	candidates := []string{"origin/HEAD", "origin/main", "main", "master"}
-	if policy.BaseRef != "" {
-		candidates = []string{policy.BaseRef}
-	}
+// isBoundary is false only on the base branch itself; a fresh agent branch at the base tip is a boundary.
+func policyBase(ctx context.Context, candidates []string, root string) (string, bool, error) {
 	for _, candidate := range candidates {
 		base, err := GitMergeBase(ctx, root, candidate)
 		if err != nil {
@@ -215,11 +210,12 @@ func policyBase(ctx context.Context, root string, policy Policy) (string, bool, 
 		baseName = strings.TrimPrefix(baseName, "origin/")
 		return base, branch != baseName, nil
 	}
-	return "", false, fmt.Errorf("policyBase: no policy base resolves (tried %s) — set base_ref in acdsl/policy.json or fetch the base branch", strings.Join(candidates, ", "))
+	return "", false, fmt.Errorf(
+		"policyBase: No policy base resolves (tried %s) — fetch the base branch, or set base_ref in acdsl/policy.json on it",
+		strings.Join(candidates, ", "),
+	)
 }
 
-// policyDiagnostic renders one policy finding in the verifier diagnostic
-// shape so the check printer, JSON mode, and verdict log treat it uniformly.
 func policyDiagnostic(file string, line int, detail string) Diagnostic {
 	diagnostic := Diagnostic{
 		RuleId:   PolicyRuleId,
@@ -230,15 +226,8 @@ func policyDiagnostic(file string, line int, detail string) Diagnostic {
 	return diagnostic
 }
 
-// ruleDelta parses declaration-capable files changed vs base on both sides
-// and classifies rules as added, removed, or changed — "changed" meaning the
-// trimmed marker line differs. Base-side authoring violations are ignored
-// (the base was committed green).
-func ruleDelta(ctx context.Context, root, base string) (policyRuleDelta, error) {
-	changedPaths, err := GitChangedFiles(ctx, root, base)
-	if err != nil {
-		return policyRuleDelta{}, fmt.Errorf("ruleDelta: %w", err)
-	}
+// Base-side authoring violations are ignored: the base was committed green.
+func ruleDelta(ctx context.Context, base string, changedPaths []string, root string) (policyRuleDelta, error) {
 	workLines := map[string][]string{}
 	baseLines := map[string][]string{}
 	for _, path := range changedPaths {
@@ -261,13 +250,22 @@ func ruleDelta(ctx context.Context, root, base string) (policyRuleDelta, error) 
 
 	workMarkers := ruleMarkers(workLines, workRules)
 	baseMarkers := ruleMarkers(baseLines, baseRules)
+	baseById := map[string]Rule{}
+	for _, rule := range baseRules {
+		baseById[rule.Id] = rule
+	}
 	var delta policyRuleDelta
 	for _, rule := range workRules {
 		baseMarker, existed := baseMarkers[rule.Id]
+		isTaskBothSides := rule.Lifetime == LifetimeTask && baseById[rule.Id].Lifetime == LifetimeTask
 		switch {
 		case !existed:
 			delta.added = append(delta.added, rule)
-		case baseMarker != workMarkers[rule.Id]:
+		case baseMarker == workMarkers[rule.Id]:
+			// unchanged
+		case isTaskBothSides:
+			delta.changedTask = append(delta.changedTask, rule)
+		default:
 			delta.changed = append(delta.changed, rule)
 		}
 	}
@@ -279,9 +277,7 @@ func ruleDelta(ctx context.Context, root, base string) (policyRuleDelta, error) 
 	return delta, nil
 }
 
-// ruleMarkers indexes each rule id to its trimmed declaration line — the
-// byte-level identity the delta compares (a field reorder counts as a
-// change, deliberately).
+// Byte-level identity: a field reorder counts as a change, deliberately.
 func ruleMarkers(fileLines map[string][]string, rules []Rule) map[string]string {
 	markers := map[string]string{}
 	for _, rule := range rules {
@@ -294,40 +290,66 @@ func ruleMarkers(fileLines map[string][]string, rules []Rule) map[string]string 
 	return markers
 }
 
-// surfaceDelta returns one diagnostic per policySurface file whose working
-// content differs from the base — absent on one side counts as a
-// difference, absent on both is clean.
-func surfaceDelta(ctx context.Context, root, base string, policy Policy) ([]Diagnostic, error) {
-	var diagnostics []Diagnostic
+// Membership comes from git's change list, so autocrlf line-ending differences never count.
+func surfaceDelta(changedPaths []string, policy Policy, verifierRoots []string) []Diagnostic {
+	frozen := map[string]bool{}
 	for _, path := range policySurface {
-		baseContent, existedAtBase, err := GitShowFile(ctx, root, base, path)
-		if err != nil {
-			return nil, fmt.Errorf("surfaceDelta: %w", err)
-		}
-		raw, readErr := os.ReadFile(filepath.Join(root, path))
-		if readErr != nil && !errors.Is(readErr, os.ErrNotExist) {
-			return nil, fmt.Errorf("surfaceDelta: %s: %w", path, readErr)
-		}
-		existsNow := readErr == nil
-		if !existedAtBase && !existsNow {
-			continue
-		}
-		if existedAtBase && existsNow && string(raw) == baseContent {
-			continue
-		}
-		diagnostics = append(diagnostics, policyDiagnostic(path, 1, fmt.Sprintf("policy(%s): %s differs from the policy base — the self-management surface changes only on the base branch", policy.Mode, path)))
+		frozen[path] = true
 	}
-	return diagnostics, nil
+	var diagnostics []Diagnostic
+	for _, path := range changedPaths {
+		if frozen[path] {
+			detail := fmt.Sprintf(
+				"policy(%s): %s differs from the policy base — the self-management surface changes only on the base branch",
+				policy.Mode,
+				path,
+			)
+			diagnostics = append(diagnostics, policyDiagnostic(path, 1, detail))
+			continue
+		}
+		root, isVerifierSource := verifierRootOf(path, verifierRoots)
+		if isVerifierSource {
+			detail := fmt.Sprintf(
+				"policy(%s): %s is verifier source the base registry runs (%s) — it changes only on the base branch",
+				policy.Mode,
+				path,
+				root,
+			)
+			diagnostics = append(diagnostics, policyDiagnostic(path, 1, detail))
+		}
+	}
+	return diagnostics
 }
 
-// CheckPolicy is the mode gate: it diffs the self-management surface and the
-// declared rules against the policy base and returns one diagnostic per
-// violation. The base-ref policy is authoritative — a branch cannot weaken
-// the mode by editing or deleting the working policy.json; the working
-// policy only bootstraps base resolution. Free mode never diffs; on the base
-// branch the diff is vacuous.
+// verifierRootOf reports the verifier root path lies under, if any.
+func verifierRootOf(path string, roots []string) (string, bool) {
+	for _, root := range roots {
+		isUnderRoot := path == root || strings.HasPrefix(path, root+"/")
+		if isUnderRoot {
+			return root, true
+		}
+	}
+	return "", false
+}
+
+func verifierRoots(registry map[string]RegistryEntry) []string {
+	seen := map[string]bool{}
+	for _, entry := range registry {
+		for _, path := range argvPaths(entry.Argv) {
+			seen[path] = true
+		}
+	}
+	roots := make([]string, 0, len(seen))
+	for root := range seen {
+		roots = append(roots, root)
+	}
+	sort.Strings(roots)
+	return roots
+}
+
+// Base, policy and registry are read from the base; the working policy decides only when no base resolves.
 func CheckPolicy(ctx context.Context, root string, policy Policy) ([]Diagnostic, error) {
-	base, isBoundary, baseErr := policyBase(ctx, root, policy)
+	base, isBoundary, baseErr := policyBase(ctx, DefaultBaseCandidates, root)
 	if baseErr != nil {
 		if policy.Mode == PolicyModeFree {
 			return nil, nil // no base to gate against, nothing declared — free
@@ -338,6 +360,18 @@ func CheckPolicy(ctx context.Context, root string, policy Policy) ([]Diagnostic,
 	if err != nil {
 		return nil, fmt.Errorf("CheckPolicy: %w", err)
 	}
+	if policy.BaseRef != "" {
+		baseRefCandidates := []string{policy.BaseRef}
+		base, isBoundary, err = policyBase(ctx, baseRefCandidates, root)
+		if err != nil {
+			return nil, fmt.Errorf("CheckPolicy: %w", err)
+		}
+
+		policy, err = basePolicy(ctx, root, base, policy)
+		if err != nil {
+			return nil, fmt.Errorf("CheckPolicy: %w", err)
+		}
+	}
 	if policy.Mode == PolicyModeFree {
 		return nil, nil
 	}
@@ -345,38 +379,60 @@ func CheckPolicy(ctx context.Context, root string, policy Policy) ([]Diagnostic,
 		return nil, nil // on the base branch — humans change the surface here
 	}
 
-	var diagnostics []Diagnostic
-	surface, err := surfaceDelta(ctx, root, base, policy)
+	changedPaths, err := GitChangedFiles(ctx, root, base)
 	if err != nil {
 		return nil, fmt.Errorf("CheckPolicy: %w", err)
 	}
-	diagnostics = append(diagnostics, surface...)
+
+	registry, err := baseRegistry(ctx, base, root)
+	if err != nil {
+		return nil, fmt.Errorf("CheckPolicy: %w", err)
+	}
+
+	diagnostics := surfaceDelta(changedPaths, policy, verifierRoots(registry))
 
 	overlay, err := overlayViolations(root, policy)
 	if err != nil {
 		return nil, fmt.Errorf("CheckPolicy: %w", err)
 	}
+
 	diagnostics = append(diagnostics, overlay...)
 
 	allowlist := map[string]bool{}
 	if policy.Mode == PolicyModeGated {
-		allowlist, err = effectiveAllowlist(ctx, root, base, policy)
-		if err != nil {
-			return nil, fmt.Errorf("CheckPolicy: %w", err)
-		}
+		allowlist = effectiveAllowlist(policy, registry)
 	}
-	delta, err := ruleDelta(ctx, root, base)
+	delta, err := ruleDelta(ctx, base, changedPaths, root)
 	if err != nil {
 		return nil, fmt.Errorf("CheckPolicy: %w", err)
 	}
-	diagnostics = append(diagnostics, classViolations(policy, allowlist, delta.added, "added", true)...)
-	diagnostics = append(diagnostics, classViolations(policy, allowlist, delta.changed, "modified", true)...)
-	diagnostics = append(diagnostics, classViolations(policy, allowlist, delta.removed, "removed", false)...)
+
+	added, changed, removed := delta.added, delta.changed, delta.removed
+	if policy.AllowTaskContracts {
+		added, err = FilterLifetime(added, LifetimeDoctrine)
+		if err != nil {
+			return nil, fmt.Errorf("CheckPolicy: %w", err)
+		}
+
+		removed, err = FilterLifetime(removed, LifetimeDoctrine)
+		if err != nil {
+			return nil, fmt.Errorf("CheckPolicy: %w", err)
+		}
+	} else {
+		changed = append(changed, delta.changedTask...)
+	}
+	diagnostics = append(diagnostics, classViolations(policy, allowlist, added, "added", true)...)
+	diagnostics = append(diagnostics, classViolations(policy, allowlist, changed, "modified", true)...)
+	diagnostics = append(diagnostics, classViolations(policy, allowlist, removed, "removed", false)...)
 	return diagnostics, nil
 }
 
-// LoadPolicy reads acdsl/policy.json under root. An absent file is free mode
-// (pre-policy behavior).
+func GuardedSurface() []string {
+	guarded := append([]string{}, policySurface...)
+	return append(guarded, "acdsl/"+LocalRegistryName)
+}
+
+// An absent file is free mode, the pre-policy behavior.
 func LoadPolicy(root string) (Policy, error) {
 	raw, err := os.ReadFile(filepath.Join(root, "acdsl", "policy.json"))
 	if errors.Is(err, os.ErrNotExist) {

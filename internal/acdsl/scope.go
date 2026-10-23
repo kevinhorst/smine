@@ -8,9 +8,7 @@ import (
 	"github.com/kevinhorst/smine/internal/reach"
 )
 
-// RulesForPlannedPath returns the rules whose anchors would match a path that
-// need not exist yet — plan-time resolution: which doctrine will govern a
-// file a task is about to create. Pure regexp match, no universe membership.
+// The path need not exist yet: pure regexp match, no universe membership.
 func RulesForPlannedPath(rules []Rule, path string) ([]Rule, error) {
 	var governing []Rule
 	for _, rule := range rules {
@@ -38,10 +36,7 @@ func RulesForPlannedPath(rules []Rule, path string) ([]Rule, error) {
 	return governing, nil
 }
 
-// Delivered returns the rules whose prose reaches prompt-side channels —
-// projection blocks and plan-time resolution. Gate-only rules
-// (projected=false) are filtered here and nowhere else: Check never
-// consults the flag, so enforcement is identical either way.
+// Gate-only rules are filtered here and nowhere else: Check never consults the flag.
 func Delivered(rules []Rule) []Rule {
 	var delivered []Rule
 	for _, rule := range rules {
@@ -52,9 +47,7 @@ func Delivered(rules []Rule) []Rule {
 	return delivered
 }
 
-// RulesForFile returns the rules whose anchor context contains path — the
-// stage-2 selection primitive: which doctrine governs this one file. Task
-// entries never project: the contract is the plan's context, not the file's.
+// Task entries never project: the contract is the plan's context, not the file's.
 func RulesForFile(rules []Rule, universe []string, path string) ([]Rule, error) {
 	var governing []Rule
 	for _, rule := range rules {
@@ -63,8 +56,7 @@ func RulesForFile(rules []Rule, universe []string, path string) ([]Rule, error) 
 		}
 		matched, err := ResolveAnchor(universe, rule)
 		if err != nil {
-			// empty="ok": a transient artifact class with no current files
-			// governs nothing — not tool breakage.
+			// empty="ok": a transient artifact class with no current files is not tool breakage.
 			if rule.AllowEmpty && errors.Is(err, ErrAnchorEmpty) {
 				continue
 			}

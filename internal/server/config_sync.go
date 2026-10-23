@@ -2,62 +2,125 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/kevinhorst/smine/internal/codex"
 	"github.com/kevinhorst/smine/internal/config"
 	"github.com/kevinhorst/smine/internal/fsx"
+	"github.com/kevinhorst/smine/internal/install"
 	"github.com/kevinhorst/smine/internal/server/catalog"
 	"github.com/kevinhorst/smine/internal/server/respond"
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
-// configSyncLockKey serializes both sync directions via the repo-locks map;
-// underscore-prefixed like _jetbrains to stay out of repo-name space.
-const configSyncLockKey = "_config-sync"
+// syncMode is the direction of a config sync op; force rebuilds the live Claude file from the template alone.
+type syncMode int
 
-// syncPaths resolves the live/fragment file pair for a target.
-func (s *Server) syncPaths(target string) (live, fragment string) {
-	if target == catalog.TargetCodex {
-		return s.codexPath, s.codexFragmentPath
-	}
-	return s.settingsPath, s.claudeFragmentPath
+const (
+	syncModePersist syncMode = iota
+	syncModeSync
+	syncModeForce
+)
+
+const tmplForcePreview = "_force_preview.html"
+
+// forcePreviewData is the Force sync preview: what the rebuild removes and the target its confirm posts to.
+type forcePreviewData struct {
+	Report *install.ForceReport
+	Target string
 }
 
 func (s *Server) handleConfigApplyOverrides(w http.ResponseWriter, r *http.Request) {
-	s.handleConfigSyncOp(w, r, false)
+	s.handleConfigSyncOp(w, r, syncModePersist)
+}
+
+// handleConfigForce runs only the confirm of the preview fragment, which posts confirmed=on (master B8).
+func (s *Server) handleConfigForce(w http.ResponseWriter, r *http.Request) {
+	if r.FormValue("confirmed") != "on" {
+		respond.WithBadRequest("preview first: the Force sync button shows what goes, its confirm runs the rebuild", w)
+		return
+	}
+	s.handleConfigSyncOp(w, r, syncModeForce)
+}
+
+// handleConfigForcePreview renders what a Force sync would remove, with the confirm that runs it (master B8).
+func (s *Server) handleConfigForcePreview(w http.ResponseWriter, r *http.Request) {
+	target := r.PathValue("target")
+	if target != catalog.TargetClaude {
+		respond.WithNotFound("force preview exists for the claude target only", w)
+		return
+	}
+
+	record, err := s.records.load(s.machine)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+
+	report, err := install.ForcePreview(s.machine, record)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	data := forcePreviewData{Report: report, Target: target}
+	s.renderFragment(w, tmplForcePreview, data)
 }
 
 func (s *Server) handleConfigRevert(w http.ResponseWriter, r *http.Request) {
-	s.handleConfigSyncOp(w, r, true)
+	s.handleConfigSyncOp(w, r, syncModeSync)
 }
 
-// handleConfigSyncOp copies live→fragment (apply) or fragment→live (revert).
-func (s *Server) handleConfigSyncOp(w http.ResponseWriter, r *http.Request, revert bool) {
+// handleConfigSyncOp refuses a result that does not parse as the target's format, writing nothing; Codex force is its whole-file sync.
+func (s *Server) handleConfigSyncOp(w http.ResponseWriter, r *http.Request, mode syncMode) {
 	target := r.PathValue("target")
 	if !catalog.IsTarget(target) {
 		respond.WithNotFound("unknown target: "+target, w)
 		return
 	}
-
-	live, fragment := s.syncPaths(target)
-	src, dst := live, fragment
-	if revert {
-		src, dst = fragment, live
+	if target != catalog.TargetCodex {
+		s.handleClaudeSync(w, r, mode)
+		return
 	}
 
-	expandMarkers := revert && target != catalog.TargetCodex
+	revert := mode != syncModePersist
+	src, dst := s.codexPath, s.codexFragmentPath
+	if revert {
+		src, dst = s.codexFragmentPath, s.codexPath
+	}
 
 	op := func(context.Context) (string, error) {
 		before, err := os.ReadFile(dst)
 		if err != nil && !os.IsNotExist(err) {
 			return "", fmt.Errorf("handleConfigSyncOp: Failed to read %s: %w", dst, err)
 		}
-		output, err := copyFileAtomic(src, dst, expandMarkers)
+		data, err := os.ReadFile(src)
 		if err != nil {
-			return output, err
+			return "", fmt.Errorf("handleConfigSyncOp: Failed to read %s: %w", src, err)
 		}
+		if revert {
+			data = s.markers().Expand(data)
+		} else if data, err = s.markers().Collapse(data, before); err != nil {
+			return "", fmt.Errorf("handleConfigSyncOp: %w", err)
+		}
+		if err := validateTarget(target, data); err != nil {
+			return "", fmt.Errorf("handleConfigSyncOp: Refusing to write %s: %w", dst, err)
+		}
+		entry := &trash.Entry{Action: "codex sync", Reason: filepath.Base(dst) + " overwritten"}
+		if _, err := s.trash.Keep(dst, entry); err != nil {
+			return "", fmt.Errorf("handleConfigSyncOp: %w", err)
+		}
+		if err := fsx.WriteFileAtomic(data, dst, 0o644); err != nil {
+			return "", fmt.Errorf("handleConfigSyncOp: %w", err)
+		}
+
+		output := fmt.Sprintf("synced: %s -> %s", src, dst)
 		diff, err := fileDiff(before, dst)
 		if err != nil {
 			return output, fmt.Errorf("handleConfigSyncOp: Failed to diff %s: %w", dst, err)
@@ -67,37 +130,47 @@ func (s *Server) handleConfigSyncOp(w http.ResponseWriter, r *http.Request, reve
 		} else {
 			output += "\n" + formatDiff(diff)
 		}
-		if !revert || target == catalog.TargetCodex {
-			return output, nil
-		}
-
-		// Revert makes the repo fragment the whole truth: parked disabled
-		// state would re-append as duplicates on the next enable toggle.
-		if err := s.clearParkedClaudeState(); err != nil {
-			return output, err
-		}
-		return output + "\ncleared parked disabled state", nil
+		return output, nil
 	}
-	s.runRepoOp(configSyncLockKey, "config-op", op, w, r)
+	s.runRepoOp(syncLockKey, "config-op", op, w, r)
 }
 
-// clearParkedClaudeState empties the disabled-hooks sidecar and the
-// settings.disabled.json sidecar.
-func (s *Server) clearParkedClaudeState() error {
-	if err := s.disabledHooks.Clear(); err != nil {
-		return fmt.Errorf("clearParkedClaudeState: %w", err)
+// handleClaudeSync: persist writes the live settings back into base.json and the owning fragments; sync runs the engine's settings step, parked groups kept; force rebuilds the live file from the template.
+func (s *Server) handleClaudeSync(w http.ResponseWriter, r *http.Request, mode syncMode) {
+	syncSettings := func(ctx context.Context) (string, error) {
+		env := s.machine
+		env.Stdout = io.Discard
+
+		var changes []string
+		var err error
+		switch mode {
+		case syncModePersist:
+			changes, err = install.PersistSettings(env)
+		case syncModeSync:
+			changes, err = syncClaudeSettings(env, install.ApplySettings)
+		case syncModeForce:
+			changes, err = syncClaudeSettings(env, install.ForceSettings)
+		}
+		if len(changes) == 0 {
+			return "(no changes)", err
+		}
+		return strings.Join(changes, "\n"), err
 	}
-	if err := config.Save(config.DisabledPath(s.settingsPath), config.NewSettings()); err != nil {
-		return fmt.Errorf("clearParkedClaudeState: %w", err)
-	}
-	return nil
+	s.runRepoOp(syncLockKey, "config-op", syncSettings, w, r)
 }
 
-// sectionOverridden reports whether any of the section's top-level keys
-// differs between the live settings and the repo fragment. A fragment load
-// error degrades to false — the sections must never 500 over the badge.
+// syncClaudeSettings runs one engine settings step over the stored record.
+func syncClaudeSettings(env install.Env, step func(install.Env, install.Record) ([]string, error)) ([]string, error) {
+	record, _, err := install.Load(env)
+	if err != nil {
+		return nil, fmt.Errorf("syncClaudeSettings: %w", err)
+	}
+	return step(env, record)
+}
+
+// sectionOverridden degrades a fragment load error to false: the sections must never 500 over the badge.
 func (s *Server) sectionOverridden(main *config.Settings, keys ...string) bool {
-	fragment, err := config.LoadFragment(s.claudeFragmentPath)
+	fragment, err := config.LoadFragment(s.claudeFragmentPath, s.markers())
 	if err != nil {
 		return false
 	}
@@ -110,33 +183,14 @@ func (s *Server) sectionOverridden(main *config.Settings, keys ...string) bool {
 	return false
 }
 
-// copyFileAtomic replaces dst with src's content via tmp+rename; a missing
-// src is an error — the buttons are disabled when the fragment is absent,
-// so this only fires on a race.
-func copyFileAtomic(src, dst string, expandMarkers bool) (string, error) {
-	data, err := os.ReadFile(src)
-	if err != nil {
-		return "", fmt.Errorf("copyFileAtomic: Failed to read %s: %w", src, err)
+// validateTarget reports whether data parses as the target's config format.
+func validateTarget(target string, data []byte) error {
+	if target == catalog.TargetCodex {
+		_, err := codex.Parse(data)
+		return err
 	}
-	if expandMarkers {
-		data = config.ExpandInstallMarkers(data)
+	if !json.Valid(data) {
+		return errors.New("not valid JSON")
 	}
-
-	tmp, err := os.CreateTemp(filepath.Dir(dst), ".config-sync-*")
-	if err != nil {
-		return "", fmt.Errorf("copyFileAtomic: Failed to create temp file: %w", err)
-	}
-	defer os.Remove(tmp.Name())
-
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		return "", fmt.Errorf("copyFileAtomic: Failed to write %s: %w", tmp.Name(), err)
-	}
-	if err := tmp.Close(); err != nil {
-		return "", fmt.Errorf("copyFileAtomic: Failed to close %s: %w", tmp.Name(), err)
-	}
-	if err := fsx.ReplaceFile(tmp.Name(), dst); err != nil {
-		return "", fmt.Errorf("copyFileAtomic: Failed to rename to %s: %w", dst, err)
-	}
-	return fmt.Sprintf("synced: %s -> %s", src, dst), nil
+	return nil
 }

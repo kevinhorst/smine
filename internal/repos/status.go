@@ -2,50 +2,85 @@ package repos
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
-const (
-	removeScript = "remove_agent_worktrees.sh"
-	statusScript = "print_agent_worktrees_status.sh"
-	syncScript   = "sync_worktrees.sh"
-)
+// statusSchema is the agentwt status document version this decoder reads.
+const statusSchema = 1
 
-// noWorktreeDirty marks a branch without a checked-out worktree ("-" in the
-// script's DIRTY column).
+// noWorktreeDirty marks a branch without a checked-out worktree.
 const noWorktreeDirty = -1
 
-// unknownCount marks AHEAD/BEHIND when the branch's origin is unrecorded
-// ("-" in the script; FROM is never guessed).
+// unknownCount marks AHEAD/BEHIND for an unresolved base, which is never guessed.
 const unknownCount = -1
+
+// unknownBase is the From sentinel for an unresolved base.
+const unknownBase = "unknown"
 
 type Commit struct {
 	Line string
 	Sha  string
 }
 
+// Containment prefers the base, then the default branch, then any other candidate.
+type Containment struct {
+	Branch string `json:"branch"`
+	Rank   string `json:"rank"`
+	Reason string `json:"reason"`
+}
+
+type OrderInfo struct {
+	BlockedBy     []string
+	ConflictsWith []string
+	Paths         []string
+	State         string // clean | blocked | nothing
+	TrainPosition int
+}
+
+// SessionInfo.Alive is nil for agents without a pid (Codex).
+type SessionInfo struct {
+	Id            string `json:"id"`
+	AccountUuid   string `json:"account_uuid"`
+	Agent         string `json:"agent"`
+	Alive         *bool  `json:"alive"`
+	Entrypoint    string `json:"entrypoint"`
+	HostSessionId string `json:"host_session_id"`
+	Name          string `json:"name"`
+	Pid           int    `json:"pid"`
+	Status        string `json:"status"`
+	UpdatedAt     string `json:"updated_at"`
+	WaitingFor    string `json:"waiting_for"`
+}
+
 type WorktreeStatus struct {
-	Ahead         int // unknownCount when From is "unknown"
-	Behind        int // unknownCount when From is "unknown"
-	Branch        string
-	Dirty         int      // noWorktreeDirty when the branch has no worktree
-	From          string   // "unknown" when the branch reflog records no origin
-	In            []string // FROM first, probe/twin-upgraded entries keep their "*"; empty when the work exists nowhere else
-	LastCommit    string
-	MergedInto    string // actual merge commit target; empty when never merged
-	ResolvedPicks int    // picked-resolved verdicts: transferred via manually conflict-resolved picks, not auto-reconcilable
-	SafeToRemove  bool
-	SafeViaProbe  bool     // an IN entry carries the "*" probe/twin marker
-	UnsafeReasons []string // the conditions that made SafeToRemove false; empty when safe
-	Unpicked      int
-	Untracked     int    // noWorktreeDirty when the branch has no worktree
-	Verdicts      string // probe summary (applied:n,resolved:n,picked-resolved:n); empty when "-"
-	Worktree      string // empty when none
+	Ahead           int // unknownCount when From is "unknown"
+	AheadCommits    []Commit
+	Behind          int // unknownCount when From is "unknown"
+	BehindCommits   []Commit
+	BehindTruncated bool
+	Branch          string // "" for a detached worktree row
+	// Contained is nil when no non-agent branch holds the work.
+	Contained       *Containment
+	Detached        bool
+	Dirty           int    // noWorktreeDirty when the branch has no worktree
+	From            string // "unknown" when unresolved
+	FromResolution  string // ref | sha | chain | reanchored | unknown
+	Head            string // abbreviated tip sha (the Branch cell of a detached row)
+	Kind            string // claude, claude-routines, codex, …; "" when outside every namespace
+	LastCommit      string
+	Order           *OrderInfo
+	SafeToRemove    bool
+	Session         *SessionInfo
+	Unpicked        int
+	UnpickedCommits []Commit // the own commits placed on no non-agent branch
+	UnsafeReasons   []string // the conditions that made SafeToRemove false; empty when safe
+	Untracked       int      // noWorktreeDirty when the branch has no worktree
+	Worktree        string   // empty when none
 }
 
 type CheckoutStatus struct {
@@ -53,10 +88,104 @@ type CheckoutStatus struct {
 	Dirty  int
 }
 
-// Checkout reports the main checkout's branch and uncommitted-change count
-// (untracked excluded — the exact predicate merge_worktree.sh and
-// cherry_pick_worktree.sh refuse on), so the UI flags a dirty checkout before
-// an op runs instead of failing at execution.
+// statusDocument mirrors wire.rs Document.
+type statusDocument struct {
+	Kinds   []string      `json:"kinds"`
+	Repo    statusRepo    `json:"repo"`
+	Rows    []statusRow   `json:"rows"`
+	Schema  int           `json:"schema"`
+	Timings StatusTimings `json:"timings"`
+}
+
+type StatusScan struct {
+	Kinds   []string
+	Rows    []WorktreeStatus
+	Timings StatusTimings
+}
+
+// StatusTimings mirrors wire.rs Timings.
+type StatusTimings struct {
+	AnalysisMs  int64 `json:"analysis_ms"`
+	OrderMs     int64 `json:"order_ms"`
+	WorktreesMs int64 `json:"worktrees_ms"`
+}
+
+type statusRepo struct {
+	DefaultBranch string `json:"default_branch"`
+}
+
+type statusRow struct {
+	Branch          *string         `json:"branch"`
+	Commits         statusCommits   `json:"commits"`
+	Containment     *Containment    `json:"containment"`
+	Counts          statusCounts    `json:"counts"`
+	From            statusFrom      `json:"from"`
+	Head            statusHead      `json:"head"`
+	Kind            *string         `json:"kind"`
+	Order           *statusOrder    `json:"order"`
+	SafeToRemove    bool            `json:"safe_to_remove"`
+	Session         *SessionInfo    `json:"session"`
+	Unpicked        int             `json:"unpicked"`
+	UnpickedCommits []string        `json:"unpicked_commits"`
+	UnsafeReasons   []string        `json:"unsafe_reasons"`
+	Worktree        *statusWorktree `json:"worktree"`
+}
+
+type statusHead struct {
+	CommittedAt string `json:"committed_at"`
+	Sha         string `json:"sha"`
+	ShortSha    string `json:"short_sha"`
+	Subject     string `json:"subject"`
+}
+
+type statusWorktree struct {
+	Detached  bool   `json:"detached"`
+	Dirty     int    `json:"dirty"`
+	Path      string `json:"path"`
+	Untracked int    `json:"untracked"`
+}
+
+type statusFrom struct {
+	Name       *string `json:"name"`
+	Resolution string  `json:"resolution"`
+}
+
+type statusCounts struct {
+	VsFrom *statusAheadBehind `json:"vs_from"`
+}
+
+type statusAheadBehind struct {
+	Ahead  int `json:"ahead"`
+	Behind int `json:"behind"`
+}
+
+type statusCommits struct {
+	Ahead           []statusCommitEntry `json:"ahead"`
+	Behind          []statusCommitEntry `json:"behind"`
+	BehindTruncated bool                `json:"behind_truncated"`
+}
+
+type statusCommitEntry struct {
+	CommittedAt string `json:"committed_at"`
+	IsMerge     bool   `json:"is_merge"`
+	Sha         string `json:"sha"`
+	ShortSha    string `json:"short_sha"`
+	Subject     string `json:"subject"`
+}
+
+type statusOrder struct {
+	ConflictsWith []string    `json:"conflicts_with"`
+	Train         statusTrain `json:"train"`
+	TrainPosition int         `json:"train_position"`
+}
+
+type statusTrain struct {
+	BlockedBy []string `json:"blocked_by"`
+	Paths     []string `json:"paths"`
+	State     string   `json:"state"`
+}
+
+// Checkout excludes untracked files from the uncommitted-change count.
 func Checkout(ctx context.Context, repoPath string) (*CheckoutStatus, error) {
 	branch, err := shell.Run(ctx, repoPath, "git", "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
@@ -77,217 +206,137 @@ func Checkout(ctx context.Context, repoPath string) (*CheckoutStatus, error) {
 	return &CheckoutStatus{Branch: strings.TrimSpace(branch), Dirty: dirty}, nil
 }
 
-// Commits lists one class (ahead|behind|unpicked) of commits for a branch via
-// the status script's detail mode, addressed by branch name — one script run
-// per drill-down (supersedes feature_extension_v2 D17).
-func Commits(ctx context.Context, branch, class, repoPath, scriptsDir string) ([]Commit, error) {
-	script := filepath.Join(scriptsDir, statusScript)
-	output, err := shell.Run(ctx, repoPath, script, branch, class)
-	if err != nil {
-		return nil, fmt.Errorf("Commits: %s: %w", strings.TrimSpace(output), err)
+// Commits reads the decoded document, so a drill-down spawns no subprocess.
+func Commits(class string, status *WorktreeStatus) []Commit {
+	switch class {
+	case "ahead":
+		return status.AheadCommits
+	case "behind":
+		return status.BehindCommits
+	case "unpicked":
+		return status.UnpickedCommits
 	}
-
-	return parseCommits(output), nil
+	return nil
 }
 
-// Status runs the overview table with cwd = repo path and parses it (D18).
-func Status(ctx context.Context, repoPath, scriptsDir string) ([]WorktreeStatus, error) {
-	script := filepath.Join(scriptsDir, statusScript)
-	output, err := shell.Run(ctx, repoPath, script)
+func Status(ctx context.Context, agentwtPath, kind, repoPath string) (*StatusScan, error) {
+	args := agentwtArgs(repoPath, "status")
+	if kind != "" {
+		args = append(args, "--kind="+kind)
+	}
+	output, err := shell.Run(ctx, repoPath, agentwtPath, args...)
 	if err != nil {
 		return nil, fmt.Errorf("Status: %s: %w", strings.TrimSpace(output), err)
 	}
 
-	return parseStatus(output)
+	return decodeStatus(output)
 }
 
-func isStatusHeader(fields []string) bool {
-	return len(fields) == 0 || fields[0] == "#"
-}
-
-func parseCommits(output string) []Commit {
-	lines := strings.Split(strings.TrimRight(output, "\n"), "\n")
-	if len(lines) <= 1 {
-		return nil
+// decodeStatus refuses an unknown schema rather than guess a field mapping.
+func decodeStatus(output string) (*StatusScan, error) {
+	var document statusDocument
+	if err := json.Unmarshal([]byte(output), &document); err != nil {
+		return nil, fmt.Errorf("decodeStatus: Decode: %w", err)
+	}
+	if document.Schema != statusSchema {
+		return nil, fmt.Errorf("decodeStatus: Unsupported schema %d", document.Schema)
 	}
 
-	var commits []Commit
-	// First line is the "Commits …:" heading.
-	for _, line := range lines[1:] {
-		isEmpty := line == "" || line == "(none)"
-		if isEmpty {
-			continue
+	rows := make([]WorktreeStatus, 0, len(document.Rows))
+	for _, row := range document.Rows {
+		rows = append(rows, row.view())
+	}
+	scan := &StatusScan{Kinds: document.Kinds, Rows: rows, Timings: document.Timings}
+	return scan, nil
+}
+
+// view maps one wire row into the template model.
+func (r *statusRow) view() WorktreeStatus {
+	status := WorktreeStatus{
+		Ahead:           unknownCount,
+		Behind:          unknownCount,
+		BehindTruncated: r.Commits.BehindTruncated,
+		Branch:          deref(r.Branch),
+		Contained:       r.Containment,
+		Dirty:           noWorktreeDirty,
+		From:            unknownBase,
+		FromResolution:  r.From.Resolution,
+		Head:            r.Head.ShortSha,
+		Kind:            deref(r.Kind),
+		LastCommit:      formatCommitTime(r.Head.CommittedAt),
+		SafeToRemove:    r.SafeToRemove,
+		Session:         r.Session,
+		Unpicked:        r.Unpicked,
+		UnsafeReasons:   r.UnsafeReasons,
+		Untracked:       noWorktreeDirty,
+	}
+	if r.From.Name != nil {
+		status.From = *r.From.Name
+	}
+	if r.Counts.VsFrom != nil {
+		status.Ahead = r.Counts.VsFrom.Ahead
+		status.Behind = r.Counts.VsFrom.Behind
+	}
+	if r.Worktree != nil {
+		status.Detached = r.Worktree.Detached
+		status.Dirty = r.Worktree.Dirty
+		status.Untracked = r.Worktree.Untracked
+		status.Worktree = r.Worktree.Path
+	}
+	if r.Order != nil {
+		status.Order = &OrderInfo{
+			BlockedBy:     r.Order.Train.BlockedBy,
+			ConflictsWith: r.Order.ConflictsWith,
+			Paths:         r.Order.Train.Paths,
+			State:         r.Order.Train.State,
+			TrainPosition: r.Order.TrainPosition,
 		}
-		fields := strings.Fields(line)
-		commit := Commit{Line: line, Sha: fields[0]}
-		commits = append(commits, commit)
+	}
+
+	status.AheadCommits = commitLines(r.Commits.Ahead)
+	status.BehindCommits = commitLines(r.Commits.Behind)
+	status.UnpickedCommits = unpickedLines(r.Commits.Ahead, r.UnpickedCommits)
+	return status
+}
+
+func commitLines(entries []statusCommitEntry) []Commit {
+	var commits []Commit
+	for _, entry := range entries {
+		line := entry.ShortSha + "  " + formatCommitTime(entry.CommittedAt) + "  " + entry.Subject
+		commits = append(commits, Commit{Line: line, Sha: entry.Sha})
 	}
 	return commits
 }
 
-func parseCount(field, column string) (int, error) {
-	count, err := strconv.Atoi(field)
-	if err != nil {
-		return 0, fmt.Errorf("parseCount: Invalid %s value %q: %w", column, field, err)
-	}
-	return count, nil
-}
-
-func parseStatus(output string) ([]WorktreeStatus, error) {
-	if strings.HasPrefix(output, "No agent branches") {
-		return nil, nil
+func unpickedLines(ahead []statusCommitEntry, unpicked []string) []Commit {
+	placedNowhere := make(map[string]bool, len(unpicked))
+	for _, sha := range unpicked {
+		placedNowhere[sha] = true
 	}
 
-	var result []WorktreeStatus
-	for _, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
-		fields := strings.Fields(line)
-		if isStatusHeader(fields) {
+	var lines []Commit
+	for _, entry := range ahead {
+		if !placedNowhere[entry.Sha] {
 			continue
 		}
 
-		status, err := parseStatusRow(fields, line)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, *status)
+		line := entry.ShortSha + "  " + formatCommitTime(entry.CommittedAt) + "  " + entry.Subject
+		lines = append(lines, Commit{Line: line, Sha: entry.Sha})
 	}
-	return result, nil
+	return lines
 }
 
-// parseStatusRow maps one table row: 11 fixed fields, LAST-COMMIT as two
-// tokens (date + time), the worktree path as the remainder. Any other shape
-// is a hard error — never guess a field mapping (stop condition S8).
-func parseStatusRow(fields []string, line string) (*WorktreeStatus, error) {
-	if len(fields) < 14 {
-		return nil, fmt.Errorf("parseStatusRow: Unparseable row: %q", line)
-	}
-
-	status := &WorktreeStatus{
-		Branch:     fields[1],
-		From:       fields[2],
-		LastCommit: fields[11] + " " + fields[12],
-	}
-
-	// DIRTY/UNTRACKED: "-" = branch has no worktree checked out
-	if fields[3] == "-" {
-		status.Dirty = noWorktreeDirty
-	} else {
-		dirty, err := parseCount(fields[3], "DIRTY")
-		if err != nil {
-			return nil, err
-		}
-		status.Dirty = dirty
-	}
-
-	if fields[4] == "-" {
-		status.Untracked = noWorktreeDirty
-	} else {
-		untracked, err := parseCount(fields[4], "UNTRACKED")
-		if err != nil {
-			return nil, err
-		}
-		status.Untracked = untracked
-	}
-
-	// AHEAD/BEHIND: "-" = FROM unknown, counts not computable
-	if fields[5] == "-" {
-		status.Ahead = unknownCount
-	} else {
-		ahead, err := parseCount(fields[5], "AHEAD")
-		if err != nil {
-			return nil, err
-		}
-		status.Ahead = ahead
-	}
-
-	if fields[6] == "-" {
-		status.Behind = unknownCount
-	} else {
-		behind, err := parseCount(fields[6], "BEHIND")
-		if err != nil {
-			return nil, err
-		}
-		status.Behind = behind
-	}
-
-	unpicked, err := parseCount(fields[7], "UNPICKED")
+func formatCommitTime(rfc3339 string) string {
+	parsed, err := time.Parse(time.RFC3339, rfc3339)
 	if err != nil {
-		return nil, err
+		return rfc3339
 	}
-	status.Unpicked = unpicked
-
-	// VERDICTS: "-" = nothing needed probing
-	if fields[8] != "-" {
-		status.Verdicts = fields[8]
-		for _, token := range strings.Split(status.Verdicts, ",") {
-			count, found := strings.CutPrefix(token, "picked-resolved:")
-			if !found {
-				continue
-			}
-			resolved, err := parseCount(count, "VERDICTS")
-			if err != nil {
-				return nil, err
-			}
-			status.ResolvedPicks = resolved
-		}
-	}
-
-	// MERGED: "-" = the tip was never target of an actual merge commit
-	if fields[9] != "-" {
-		status.MergedInto = fields[9]
-	}
-
-	// IN: comma-separated, FROM first; "-" = the work exists nowhere else
-	if fields[10] != "-" {
-		status.In = strings.Split(fields[10], ",")
-	}
-
-	// WORKTREE: en-dash = branch has no worktree (script prints '–')
-	worktree := strings.Join(fields[13:], " ")
-	if worktree != "–" {
-		status.Worktree = worktree
-	}
-
-	// Script header contract: IN != "-" plus, when a worktree is checked out,
-	// DIRTY=0 and UNTRACKED=0 => safe to remove. A branch without a worktree
-	// (DIRTY "-") has no files to lose — containment alone decides. A "*" IN
-	// entry means containment came from the probe/twin verdicts.
-	contained := len(status.In) > 0
-	if status.Dirty == noWorktreeDirty {
-		status.SafeToRemove = contained
-	} else {
-		status.SafeToRemove = status.Dirty == 0 && status.Untracked == 0 && contained
-	}
-	for _, containing := range status.In {
-		if strings.HasSuffix(containing, "*") {
-			status.SafeViaProbe = true
-		}
-	}
-	if !status.SafeToRemove {
-		status.UnsafeReasons = unsafeReasons(status, contained)
-	}
-	return status, nil
+	return parsed.UTC().Format("2006-01-02 15:04")
 }
 
-// unsafeReasons names each condition that blocks removal, in the order the
-// safety predicate checks them — the UI shows these instead of a generic ✗.
-func unsafeReasons(status *WorktreeStatus, contained bool) []string {
-	var reasons []string
-	if status.Dirty > 0 {
-		reasons = append(reasons, fmt.Sprintf("dirty(%d)", status.Dirty))
+func deref(value *string) string {
+	if value == nil {
+		return ""
 	}
-	if status.Untracked > 0 {
-		reasons = append(reasons, fmt.Sprintf("untracked(%d)", status.Untracked))
-	}
-	if !contained {
-		if status.Unpicked > 0 {
-			reasons = append(reasons, fmt.Sprintf("unpicked(%d)", status.Unpicked))
-		} else {
-			reasons = append(reasons, "work contained nowhere")
-		}
-		if status.Dirty == noWorktreeDirty {
-			reasons = append(reasons, "no worktree")
-		}
-	}
-	return reasons
+	return *value
 }

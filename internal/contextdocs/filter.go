@@ -9,12 +9,7 @@ import (
 // reachBulletPrefix identifies the Reach bullet inside an entry block.
 const reachBulletPrefix = "* Reach: "
 
-// FilterRulesFile returns content with entries removed that must not deploy
-// to target: entries whose Reach does not cover target (reach.DeploysTo —
-// global always does, a name list only when it names target; smine never
-// matches a sync target), and entries whose scope is bound (via aspects) to
-// a language outside langs. Everything that is not an entry block — headings, prose, fenced
-// examples, the Tombstones table — passes through verbatim.
+// Non-entry content — headings, prose, fences, the Tombstones table — passes through verbatim.
 func FilterRulesFile(content, target string, aspects []RuleAspect, langs []string) string {
 	selected := map[string]bool{}
 	for _, lang := range langs {
@@ -22,7 +17,7 @@ func FilterRulesFile(content, target string, aspects []RuleAspect, langs []strin
 	}
 	scopeLang := map[string]string{}
 	for _, aspect := range aspects {
-		if aspect.Class == "scope" && aspect.Lang != "" {
+		if aspect.Class == AspectClassScope && aspect.Lang != "" {
 			scopeLang[aspect.Name] = aspect.Lang
 		}
 	}
@@ -59,7 +54,7 @@ func FilterRulesFile(content, target string, aspects []RuleAspect, langs []strin
 			continue
 		}
 
-		blockEnd := entryBlockEnd(lines, index)
+		blockEnd := entryContentEnd(lines, index)
 		entryReach := entryBlockReach(lines[index:blockEnd])
 		drop := !reach.DeploysTo(entryReach, target)
 		if lang, bound := scopeLang[match[2]]; bound && !selected[lang] {
@@ -77,28 +72,17 @@ func FilterRulesFile(content, target string, aspects []RuleAspect, langs []strin
 	return strings.Join(kept, "\n")
 }
 
-// entryBlockEnd returns the exclusive end index of the entry block opening
-// at start: the headline plus its bullet lines and interior blanks, ending
-// before the next non-bullet content line, heading, or fence.
-func entryBlockEnd(lines []string, start int) int {
-	for index := start + 1; index < len(lines); index++ {
-		line := lines[index]
-		if strings.TrimSpace(line) == "" {
-			// a blank ends the block unless a bullet continues right after
-			if index+1 < len(lines) && strings.HasPrefix(lines[index+1], "* ") {
-				continue
-			}
-			return index
-		}
-		if !strings.HasPrefix(line, "* ") {
-			return index
-		}
+// No named repo admits every entry: deployed trees and unstamped indexes are reach-filtered at sync.
+func IsReachable(reachValue string, self string) bool {
+	if self == "" {
+		return true
 	}
-	return len(lines)
+
+	value := strings.Join(strings.Fields(reachValue), "")
+	return value == "" || reach.DeploysTo(value, self)
 }
 
-// entryBlockReach extracts the block's Reach bullet value; absent = the
-// prose default, global.
+// An absent Reach bullet is the prose default, global.
 func entryBlockReach(block []string) string {
 	for _, line := range block {
 		if strings.HasPrefix(line, reachBulletPrefix) {

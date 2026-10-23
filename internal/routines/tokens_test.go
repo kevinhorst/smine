@@ -3,11 +3,96 @@ package routines
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestReadToken(t *testing.T) {
+	type testCase struct {
+		_id            string
+		_expectedToken string
+		_shouldPass    bool
+
+		label string
+	}
+
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	tokenDir := filepath.Join(home, ".config", "claude-routine", "tokens")
+	require.NoError(t, os.MkdirAll(tokenDir, 0o700))
+	require.NoError(t, os.WriteFile(filepath.Join(tokenDir, "work"), []byte(" labeled-value\n"), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(tokenDir, "empty"), []byte("\n"), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(home, ".config", "claude-routine", "token"), []byte("legacy-value"), 0o600))
+
+	tests := make([]*testCase, 0)
+
+	// labeled
+	tests = append(tests, &testCase{
+		_id:            "labeled",
+		_expectedToken: "labeled-value",
+		_shouldPass:    true,
+
+		label: "work",
+	})
+
+	// empty-label-legacy
+	tests = append(tests, &testCase{
+		_id:            "empty-label-legacy",
+		_expectedToken: "legacy-value",
+		_shouldPass:    true,
+
+		label: "",
+	})
+
+	// unknown-label
+	tests = append(tests, &testCase{
+		_id:            "unknown-label",
+		_expectedToken: "",
+		_shouldPass:    false,
+
+		label: "nope",
+	})
+
+	// empty-file
+	tests = append(tests, &testCase{
+		_id:            "empty-file",
+		_expectedToken: "",
+		_shouldPass:    false,
+
+		label: "empty",
+	})
+
+	// raw-token-rejected
+	tests = append(tests, &testCase{
+		_id:            "raw-token-rejected",
+		_expectedToken: "",
+		_shouldPass:    false,
+
+		label: "sk-ant-oat01-abc",
+	})
+
+	// path-traversal-rejected
+	tests = append(tests, &testCase{
+		_id:            "path-traversal-rejected",
+		_expectedToken: "",
+		_shouldPass:    false,
+
+		label: "../token",
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			token, err := ReadToken(test.label)
+			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
+			assert.Equal(t, test._expectedToken, token)
+		})
+	}
+}
 
 func TestListTokenLabelsMissingDir(t *testing.T) {
 	labels, err := ListTokenLabels(filepath.Join(t.TempDir(), "absent"))
@@ -39,6 +124,13 @@ func TestSaveToken(t *testing.T) {
 		_shouldPass bool
 		label       string
 		value       string
+	}
+
+	expectedFileMode := os.FileMode(0o600)
+	expectedDirMode := os.FileMode(0o700)
+	if runtime.GOOS == "windows" {
+		expectedFileMode = 0o666
+		expectedDirMode = 0o777
 	}
 
 	tests := make([]*testCase, 0)
@@ -127,11 +219,11 @@ func TestSaveToken(t *testing.T) {
 
 			info, err := os.Stat(filepath.Join(dir, test.label))
 			require.NoError(t, err)
-			assert.Equal(t, os.FileMode(0o600), info.Mode().Perm())
+			assert.Equal(t, expectedFileMode, info.Mode().Perm())
 
 			dirInfo, err := os.Stat(dir)
 			require.NoError(t, err)
-			assert.Equal(t, os.FileMode(0o700), dirInfo.Mode().Perm())
+			assert.Equal(t, expectedDirMode, dirInfo.Mode().Perm())
 
 			content, err := os.ReadFile(filepath.Join(dir, test.label))
 			require.NoError(t, err)

@@ -8,10 +8,10 @@ import (
 
 func TestScriptArgvWindowsScript(t *testing.T) {
 	name, args := scriptArgv("windows", `C:\Program Files\Git\bin\bash.exe`,
-		`C:\repo\cmd\sync\sync_skills.sh`, []string{"--flag", `C:\Users\kevin\repo`})
+		`C:\repo\cmd\sync\sync_skills.sh`, []string{"--flag", `C:\Users\devuser\repo`})
 
 	assert.Equal(t, `C:\Program Files\Git\bin\bash.exe`, name)
-	assert.Equal(t, []string{"C:/repo/cmd/sync/sync_skills.sh", "--flag", "C:/Users/kevin/repo"}, args)
+	assert.Equal(t, []string{"C:/repo/cmd/sync/sync_skills.sh", "--flag", "C:/Users/devuser/repo"}, args)
 }
 
 func TestScriptArgvWindowsNonScriptPassthrough(t *testing.T) {

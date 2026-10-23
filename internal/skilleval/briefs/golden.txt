@@ -1,0 +1,17 @@
+You match one review run's findings against a confirmed golden.
+Candidates: <run dir>/runs/<label>/candidates.json
+Golden findings and binding falsePositives rulings: <preset skill dir>/<goldens[0].file>
+Matching guide: the judgeGuide of <preset skill dir>/<scoring>
+Code under review: `git -C <worktree> diff <range.baseSha>..<range.headSha><range.pathspec>`; the worktree is read-only evidence.
+An unmatched candidate is adjudicated against the code: untrue or outside that diff ⇒ falsePositives; genuine and inside it ⇒ uncataloged.
+Fix check: for every matched pair whose candidate carries "fix_state": "fixed", inspect the worktree's current HEAD (the arm's post-fix tree); the golden defect still present ⇒ list the golden id in fixEscapes.
+
+Write <run dir>/runs/<label>/judge.json:
+{
+  "matched": [{"goldenId": "GV3-010", "findingId": "r1-correctness-MAJ-1", "note": "same defect: …"}],
+  "missed": ["GV3-001"],
+  "misclassified": [{"goldenId": "GV3-010", "findingId": "r1-correctness-MAJ-1", "expected": "MINOR", "actual": "MAJOR"}],
+  "falsePositives": [{"findingId": "r1-code-style-MIN-1", "reason": "…"}],
+  "uncataloged": [{"findingId": "r1-code-style-MIN-2", "reason": "…"}],
+  "fixEscapes": ["GV3-010"]
+}

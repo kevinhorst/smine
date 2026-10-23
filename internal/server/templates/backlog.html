@@ -1,0 +1,78 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{.Title}}</h1>
+<div class="tabs">
+  <a href="/backlog" {{if eq .Tab "active"}}class="active"{{end}}>Active ({{.Active}})</a>
+  <a href="/backlog?tab=archive" {{if eq .Tab "archive"}}class="active"{{end}}>Archive{{with .Archive}} ({{len .Done}} done · {{len .Rejected}} rejected){{end}}</a>
+</div>
+{{if .Error}}
+<div class="card card-error"><span class="label">{{.Error}}</span></div>
+{{end}}
+<div id="op-result"></div>
+{{if eq .Tab "archive"}}
+  {{with .Archive}}
+  <h2>done</h2>
+  {{if .Done}}
+  <table class="md-body checklist-table backlog-table">
+    <thead><tr><th>ID</th><th>Title</th><th>Resolution</th><th>Date</th><th>Link</th></tr></thead>
+    <tbody>{{range .Done}}<tr><td>{{.Id}}</td><td>{{.Title}}</td><td>{{.Reason}}</td><td>{{.Date}}</td><td>{{.Link}}</td></tr>{{end}}</tbody>
+  </table>
+  {{else}}<div class="empty">No done items.</div>{{end}}
+  <h2>rejected</h2>
+  {{if .Rejected}}
+  <table class="md-body checklist-table backlog-table">
+    <thead><tr><th>ID</th><th>Title</th><th>Reason</th><th>Date</th></tr></thead>
+    <tbody>{{range .Rejected}}<tr><td>{{.Id}}</td><td>{{.Title}}</td><td>{{.Reason}}</td><td>{{.Date}}</td></tr>{{end}}</tbody>
+  </table>
+  {{else}}<div class="empty">No rejected items.</div>{{end}}
+  {{end}}
+{{else}}
+<div class="card card-filter card-column" id="backlog-filter" data-filter-for="tr[data-item]">
+  <div class="card-row">
+    <span class="section-label">status</span>
+    <a class="badge badge-ok" href="#" data-group="status" data-value="">all {{.Active}}</a>
+    {{range .StatusCounts}}<a class="badge badge-dim" href="#" data-group="status" data-value="{{.Value}}">{{.Value}} {{.Count}}</a>{{end}}
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">pri</span>
+    {{range .PriCounts}}<a class="badge badge-dim" href="#" data-group="pri" data-value="{{.Value}}">{{.Value}} {{.Count}}</a>{{end}}
+    <hr class="filter-divider">
+    <span class="section-label">source</span>
+    <a class="badge badge-dim" href="#" data-group="mined" data-value="1">smined {{.Mined}}</a>
+    <hr class="filter-divider">
+    <span class="section-label">activity</span>
+    <a class="badge badge-dim" href="#" data-group="live" data-value="1">live {{.Live}}</a>
+    <a class="badge badge-dim" href="#" data-group="missing" data-value="1">routine missing {{.RoutineMissing}}</a>
+  </div>
+  <hr class="filter-divider">
+  <form class="card-row epic-form" hx-post="/api/backlog/epics" hx-swap="none">
+    <span class="section-label">epic</span>
+    <input type="text" name="name" placeholder="new epic" required>
+    <button type="submit" title="adds an empty epic before the Icebox; move items into it from their card">create epic</button>
+  </form>
+</div>
+{{range .Sections}}
+<h2>{{.Name}}{{if and (not .Items) (not .IsIcebox)}} <button type="button" class="st-btn" hx-delete="/api/backlog/epics/{{pathEscape .Name}}" hx-swap="none" hx-confirm="Delete the empty epic {{.Name}}?">delete epic</button>{{end}}</h2>
+{{if .IsIcebox}}
+  {{if .Days}}{{range .Days}}
+  <details class="section session-day"{{if .IsOpen}} open{{end}}>
+    <summary><code>{{.Label}}</code> <span class="count-note">{{len .Items}}</span></summary>
+    {{template "_backlog_table" .Items}}
+  </details>
+  {{end}}{{else}}<div class="empty">No items in the Icebox.</div>{{end}}
+{{else if .Items}}
+  {{template "_backlog_table" .Items}}
+{{else}}<div class="empty">No items in this epic.</div>{{end}}
+{{end}}
+{{if not .Sections}}<div class="empty">No backlog store — run /backlog with a brain dump to create <code>{{.StoreRel}}</code>.</div>{{end}}
+<aside class="bl-panel" id="bl-panel" hidden>
+  <div class="st-panel-bar bl-panel-bar"><div class="bl-head" id="bl-head"></div><button type="button" class="st-btn" id="bl-close">close</button></div>
+  <div class="bl-card" id="bl-panel-body"></div>
+</aside>
+{{if .Sections}}
+<script type="application/json" id="backlog-data">{{.DataJson}}</script>
+<script src="/assets/backlog-panel.js?v={{assetVersion}}"></script>
+{{end}}
+{{end}}
+{{template "foot" .}}

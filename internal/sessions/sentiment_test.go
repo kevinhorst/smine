@@ -7,46 +7,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSentimentByBatch(t *testing.T) {
+func TestSentimentByWeek(t *testing.T) {
 	dir := t.TempDir()
-	writeBatch(t, dir, "personal", "batch-01.json", `{
-		"batch": {"scope": "personal", "file": "b1.md", "number": 1, "analyzedDate": "2026-07-10"},
-		"sessions": [
-			{"id": "00000000-0000-0000-0000-000000000001", "title": "s1",
-				"frustration": [{"quote": "argh", "trigger": "t"}, {"quote": "ugh", "trigger": "t"}],
-				"positive": [{"quote": "nice", "trigger": "t"}]},
-			{"id": "00000000-0000-0000-0000-000000000002", "title": "s2", "skipped": true,
-				"frustration": [{"quote": "skipped anger", "trigger": "t"}]}
-		]
-	}`)
-	writeBatch(t, dir, "work", "batch-01.json", `{
-		"batch": {"scope": "work", "file": "b1.md", "number": 1, "analyzedDate": "2026-07-11"},
-		"sessions": [
-			{"id": "00000000-0000-0000-0000-000000000003", "title": "s3",
-				"frustration": [{"quote": "hm", "trigger": "t"}]}
-		]
-	}`)
-	writeBatch(t, dir, "work", "batch-02.json", `{
-		"batch": {"scope": "work", "file": "b2.md", "number": 2, "analyzedDate": "2026-07-12"},
-		"sessions": [
-			{"id": "00000000-0000-0000-0000-000000000004", "title": "s4"}
-		]
-	}`)
+	writeRecord(t, dir, "peek-mcp", weekNewer, "s1.json", `{"id": "s1", "agent": "claude", "title": "s1", "repo": "peek-mcp",
+		"week": "2026-W39", "lastActive": "2026-09-22T10:00:00Z", "findings": [],
+		"frustration": [{"quote": "argh", "trigger": "t"}, {"quote": "ugh", "trigger": "t"}],
+		"positive": [{"quote": "nice", "trigger": "t"}]}`)
+	writeRecord(t, dir, "peek-mcp", weekNewer, "s2.json", `{"id": "s2", "agent": "claude", "title": "s2", "repo": "peek-mcp",
+		"week": "2026-W39", "lastActive": "2026-09-23T10:00:00Z", "findings": [], "skipped": true,
+		"frustration": [{"quote": "skipped anger", "trigger": "t"}]}`)
+	writeRecord(t, dir, "go", weekNewer, "s3.json", `{"id": "s3", "agent": "claude", "title": "s3", "repo": "go",
+		"week": "2026-W39", "lastActive": "2026-09-24T10:00:00Z", "findings": [],
+		"frustration": [{"quote": "hm", "trigger": "t"}]}`)
+	writeRecord(t, dir, "go", weekOlder, "s4.json", skippedRecordJson("s4", "2026-09-15T10:00:00Z", weekOlder))
 
-	store := NewStore(dir)
+	store := NewStore(dir, nil)
 	require.NoError(t, store.Reload())
 
-	points := store.SentimentByBatch()
+	points := store.SentimentByWeek()
 	require.Len(t, points, 2)
 
-	// batch 1 merges both scopes; the skipped session contributes nothing.
-	assert.Equal(t, SentimentPoint{BatchNumber: 1, Frustration: 3, Positive: 1}, points[0])
-	// batch 2 has no sentiment fields at all.
-	assert.Equal(t, SentimentPoint{BatchNumber: 2, Frustration: 0, Positive: 0}, points[1])
+	// the older week carries only a skipped session: zero, listed first.
+	assert.Equal(t, SentimentPoint{Frustration: 0, Positive: 0, Week: weekOlder}, points[0])
+	// the newer week merges both scopes; the skipped session contributes nothing.
+	assert.Equal(t, SentimentPoint{Frustration: 3, Positive: 1, Week: weekNewer}, points[1])
 }
 
-func TestSentimentByBatchEmpty(t *testing.T) {
-	store := NewStore(t.TempDir())
+func TestSentimentByWeekEmpty(t *testing.T) {
+	store := NewStore(t.TempDir(), nil)
 	require.NoError(t, store.Reload())
-	assert.Empty(t, store.SentimentByBatch())
+	assert.Empty(t, store.SentimentByWeek())
 }

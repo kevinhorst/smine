@@ -2,8 +2,7 @@ package repos
 
 import "sync"
 
-// Locks serializes mutations per repo: one running operation per repo name,
-// concurrent attempts get 409 instead of queueing (D20).
+// Locks rejects a concurrent mutation of one repo instead of queueing it.
 type Locks struct {
 	// mu guards held.
 	mu   sync.Mutex
@@ -14,8 +13,6 @@ func NewLocks() *Locks {
 	return &Locks{held: make(map[string]bool)}
 }
 
-// TryAcquire claims the repo for one mutation; false means an operation is
-// already running.
 func (l *Locks) TryAcquire(name string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()

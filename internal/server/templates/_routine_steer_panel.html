@@ -1,0 +1,26 @@
+{{define "_routine_steer_panel.html"}}
+<div class="card" id="steer-panel" data-name="{{.Routine.Name}}">
+  <div class="steer-panel-body">
+    <span class="section-label">steer {{.Routine.Name}}</span>
+    <form class="steer-form" hx-post="/routines/{{pathEscape .Routine.Name}}/steer" hx-target="#op-result">
+      <input type="text" name="prompt" placeholder="steer the active run"
+             title="mid-run instruction — delivered as a user message at the run's next turn boundary; a second steer before delivery replaces the first">
+      <button type="submit">Steer</button>
+    </form>
+    <div class="steer-list"
+         hx-get="/routines/{{pathEscape .Routine.Name}}/steer-panel"
+         hx-trigger="every 3s" hx-select=".steer-list" hx-swap="outerHTML">
+      {{range .SteerEntries}}
+      <div class="steer-line">
+        {{if eq .State "delivered"}}<span class="badge badge-ok" title="delivered {{.DeliveredAt.Local.Format "2006-01-02 15:04:05"}}">delivered</span>
+        {{else if eq .State "queued"}}<span class="badge badge-action" title="queued — delivered as a user message at the run's next turn boundary">queued</span>
+        {{else if eq .State "dropped"}}<span class="badge badge-dim" title="the run ended before it read this steer">dropped</span>
+        {{else}}<span class="badge badge-dim" title="superseded by a later steer before delivery">replaced</span>{{end}}
+        <span class="meta">{{.QueuedAt.Local.Format "2006-01-02 15:04:05"}}</span>
+        <span class="steer-prompt-text">{{.Prompt}}</span>
+      </div>
+      {{else}}<div class="meta">no steerings in the live run</div>{{end}}
+    </div>
+  </div>
+</div>
+{{end}}

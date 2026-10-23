@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -45,8 +46,13 @@ func TestRunTimeoutKills(t *testing.T) {
 }
 
 func TestRunAppliesDirAsCwd(t *testing.T) {
+	// Git Bash's plain pwd prints an msys path (/c/...) Go cannot resolve.
+	pwdCommand := "pwd"
+	if runtime.GOOS == "windows" {
+		pwdCommand = "pwd -W"
+	}
 	dir := t.TempDir()
-	script := writeScript(t, "#!/bin/sh\npwd\n")
+	script := writeScript(t, "#!/bin/sh\n"+pwdCommand+"\n")
 	output, err := Run(context.Background(), dir, script)
 	require.NoError(t, err)
 

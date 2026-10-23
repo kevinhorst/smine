@@ -1,0 +1,15 @@
+{{define "_skill_smoke.html"}}
+<div class="card card-column smoke-card">
+  <div class="card-row card-head">
+    <span class="label">Smoke {{template "_smoke_badge" .Badge}}</span>
+    <span class="meta">{{.Dir}}</span>
+  </div>
+  {{with .Badge.Cause}}<div class="card-row"><span class="meta">cause: {{.}}</span></div>{{end}}
+  <div class="card-row">
+    <span class="label">anchors</span>
+    <span class="tool-chips">{{range .Anchors}}<span class="tool-chip {{if .IsHit}}smoke-hit{{else}}smoke-missed{{end}}" title="{{if .IsHit}}hit{{else}}never hit{{end}}">{{.Id}}</span>{{end}}{{if not .Anchors}}<span class="meta">no expected anchors recorded — a record from before the expectation fields</span>{{end}}</span>
+  </div>
+  <div class="card-row"><span class="meta">checks {{.Checks}}{{with .Cost}} · {{.}}{{end}}{{with .Tokens}} · {{.}} output tokens{{end}}{{with .Session}} · session {{.}}{{end}}</span></div>
+  <pre class="file-view">{{.Command}}</pre>
+</div>
+{{end}}

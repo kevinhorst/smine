@@ -1,0 +1,266 @@
+{
+  "schema": 1,
+  "repo": {
+    "path": "/Users/devuser/GolandProjects/claude-configs",
+    "default_branch": "main"
+  },
+  "checkout": {
+    "branch": "main",
+    "dirty": 0
+  },
+  "candidates": [
+    "main",
+    "improvement/agent-permission-handling",
+    "release/ruben",
+    "release/v1.1.0",
+    "release/v1.1.2",
+    "release/v1.2.0"
+  ],
+  "rows": [
+    {
+      "branch": "claude/worktree-pool-diagnosis-f85b2a",
+      "kind": "claude",
+      "head": {
+        "sha": "23c2b82f732cfd3230f5c946009f84f3b6e1582b",
+        "short_sha": "23c2b82f",
+        "subject": "cmd.worktreecreate, cmd.sync, settings.claude_code, skills.orchestration.close, internal.server, context, docs, plans: probe",
+        "committed_at": "2026-09-25T20:11:44Z"
+      },
+      "worktree": {
+        "path": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/worktree-deletion-bug-996e7b",
+        "main": false,
+        "detached": false,
+        "locked": "claude session",
+        "prunable": false,
+        "dirty": 0,
+        "untracked": 0,
+        "untracked_paths": []
+      },
+      "from": {
+        "name": "main",
+        "resolution": "sha",
+        "origin": "2983f982ad3f9db4cb21ecb0440238c7f6692293"
+      },
+      "counts": {
+        "vs_from": {
+          "ahead": 1,
+          "behind": 1
+        }
+      },
+      "commits": {
+        "ahead": [
+          {
+            "sha": "23c2b82f732cfd3230f5c946009f84f3b6e1582b",
+            "short_sha": "23c2b82f",
+            "subject": "cmd.worktreecreate, cmd.sync, settings.claude_code, skills.orchestration.close, internal.server, context, docs, plans: probe",
+            "committed_at": "2026-09-25T20:11:44Z",
+            "is_merge": false
+          }
+        ],
+        "behind": [
+          {
+            "sha": "a36dd5b46f542542cb58401ef7cf2d7452eb28f9",
+            "short_sha": "a36dd5b4",
+            "subject": "docs: added investigations",
+            "committed_at": "2026-09-25T19:49:31Z",
+            "is_merge": false
+          }
+        ],
+        "behind_truncated": false
+      },
+      "unpicked": 1,
+      "unpicked_commits": [
+        "23c2b82f732cfd3230f5c946009f84f3b6e1582b"
+      ],
+      "containment": null,
+      "safe_to_remove": false,
+      "unsafe_reasons": [
+        "unpicked(1)"
+      ],
+      "session": {
+        "agent": "claude",
+        "id": "3d7f877a-10dd-4ae7-9fba-5c4edca1c765",
+        "pid": 44407,
+        "alive": true,
+        "status": "idle",
+        "entrypoint": "claude-desktop",
+        "name": "CC, FD - Worktree pool branch mismatch diagnosis",
+        "host_session_id": "local_0c707bc9-fff3-48af-9bd7-112a6de12bfd",
+        "updated_at": "2026-09-25T20:12:14Z",
+        "account_uuid": "2f48075d-4202-4bc6-a50a-9a0d7f309ba1"
+      },
+      "order": {
+        "conflicts_with": [],
+        "train_position": 2,
+        "train": {
+          "state": "clean"
+        }
+      }
+    },
+    {
+      "branch": "claude/skillroutine-eval-railroad-review-09145b",
+      "kind": "claude",
+      "head": {
+        "sha": "a043df217ac0f18962014f9ef060835f6a128ea1",
+        "short_sha": "a043df21",
+        "subject": "evals.railroad-review: Added the 2026-09-16-a34281 bootstrap eval run",
+        "committed_at": "2026-09-17T11:18:08Z"
+      },
+      "from": {
+        "name": "main",
+        "resolution": "ref",
+        "origin": "refs/heads/main"
+      },
+      "counts": {
+        "vs_from": {
+          "ahead": 3,
+          "behind": 315
+        }
+      },
+      "commits": {
+        "ahead": [
+          {
+            "sha": "a043df217ac0f18962014f9ef060835f6a128ea1",
+            "short_sha": "a043df21",
+            "subject": "evals.railroad-review: Added the 2026-09-16-a34281 bootstrap eval run",
+            "committed_at": "2026-09-17T11:18:08Z",
+            "is_merge": false
+          },
+          {
+            "sha": "7ae31b66d98234d14cf9898594dc03469cb06488",
+            "short_sha": "7ae31b66",
+            "subject": "skills.quality.railroad-review.eval: Repointed goldens to v2 post fix-apply and fix re-review",
+            "committed_at": "2026-09-17T11:18:02Z",
+            "is_merge": false
+          },
+          {
+            "sha": "a4e7e15238b23bfaf506e9b957c3b7bee854a1a8",
+            "short_sha": "a4e7e152",
+            "subject": "skills.quality.railroad-review.eval.golden: Added golden v2 for the smine 1.1.4-1.2.1 g2 line",
+            "committed_at": "2026-09-17T11:17:58Z",
+            "is_merge": false
+          }
+        ],
+        "behind": [
+          {
+            "sha": "a36dd5b46f542542cb58401ef7cf2d7452eb28f9",
+            "short_sha": "a36dd5b4",
+            "subject": "docs: added investigations",
+            "committed_at": "2026-09-25T19:49:31Z",
+            "is_merge": false
+          },
+          {
+            "sha": "2983f982ad3f9db4cb21ecb0440238c7f6692293",
+            "short_sha": "2983f982",
+            "subject": "cmd.agentwt: Bounded the twin walk by the branch's fork points instead of its tip so picks that came back through a merge of main still place the originals",
+            "committed_at": "2026-09-25T19:35:29Z",
+            "is_merge": false
+          }
+        ],
+        "behind_truncated": true
+      },
+      "unpicked": 3,
+      "unpicked_commits": [
+        "a043df217ac0f18962014f9ef060835f6a128ea1",
+        "7ae31b66d98234d14cf9898594dc03469cb06488",
+        "a4e7e15238b23bfaf506e9b957c3b7bee854a1a8"
+      ],
+      "containment": null,
+      "safe_to_remove": false,
+      "unsafe_reasons": [
+        "unpicked(3)",
+        "no worktree"
+      ],
+      "order": {
+        "conflicts_with": [],
+        "train_position": 1,
+        "train": {
+          "state": "clean"
+        }
+      }
+    },
+    {
+      "branch": null,
+      "kind": "codex",
+      "head": {
+        "sha": "0d079e76c28c4c8d468fbcc31b1f0c20222dc5ab",
+        "short_sha": "0d079e76",
+        "subject": "skills.skillroutine.skillroutine-eval: Added the worker-model-pinned rule — a fan-out contract MUST pin worker models, the eval never lets interactive workers inherit the session model",
+        "committed_at": "2026-09-16T16:51:22Z"
+      },
+      "worktree": {
+        "path": "/Users/devuser/.codex/worktrees/ffc8/claude-configs",
+        "main": false,
+        "detached": true,
+        "prunable": false,
+        "dirty": 0,
+        "untracked": 0,
+        "untracked_paths": []
+      },
+      "from": {
+        "name": null,
+        "resolution": "unknown",
+        "origin": null
+      },
+      "counts": {},
+      "commits": {
+        "ahead": [],
+        "behind": [
+          {
+            "sha": "a76adc7dadfc1612585e7784053d2d655416ff9e",
+            "short_sha": "a76adc7d",
+            "subject": "docs, settings.claude_code: Registered /overlap in the README skill map, chain diagram, allowlist and deploy defaults, replacing merge-risk",
+            "committed_at": "2026-09-25T00:30:17Z",
+            "is_merge": false
+          },
+          {
+            "sha": "9fcbc0a7b4c1ae7ec7d210e0f3e309011a39fbed",
+            "short_sha": "9fcbc0a7",
+            "subject": "skills.git.merge-resolve: Added a disambiguation row for /overlap and clarified that the merge step's frontmatter grants every git verb it issues",
+            "committed_at": "2026-09-25T00:30:17Z",
+            "is_merge": false
+          }
+        ],
+        "behind_truncated": true
+      },
+      "unpicked": 0,
+      "containment": {
+        "branch": "main",
+        "reason": "ancestor",
+        "rank": "default"
+      },
+      "safe_to_remove": true,
+      "unsafe_reasons": [],
+      "session": {
+        "agent": "codex",
+        "id": "01a0b555-95af-7951-8596-ba87550eed1d",
+        "entrypoint": "Codex Desktop",
+        "updated_at": "2026-09-18T16:24:40.134Z"
+      }
+    }
+  ],
+  "order": {
+    "train": [
+      "claude/skillroutine-eval-railroad-review-09145b",
+      "claude/worktree-pool-diagnosis-f85b2a"
+    ],
+    "pairs": [],
+    "components": [
+      [
+        "claude/skillroutine-eval-railroad-review-09145b"
+      ],
+      [
+        "claude/worktree-pool-diagnosis-f85b2a"
+      ]
+    ],
+    "dirty_snapshots": []
+  },
+  "warnings": [],
+  "timings": {
+    "inventory_ms": 9,
+    "gitstate_ms": 1064,
+    "sessions_ms": 3,
+    "order_ms": 21,
+    "total_ms": 1128
+  }
+}

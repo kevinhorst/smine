@@ -1,12 +1,44 @@
 {{define "_routine_configure.html"}}
 <div class="card card-column window-card" data-close="#routine-configure">
   <span class="label"><strong>Configure {{.Name}}</strong></span>
-  <form class="card-column configure-form" hx-post="/routines/{{pathEscape .Name}}/params" hx-target="#op-result">
+  {{/* the save answers with this card: the persisted values and the notice beside the Save button */}}
+  <form class="card-column configure-form" hx-post="/routines/{{pathEscape .Name}}/params" hx-target="#routine-configure">
     {{range .Standard}}
-    <div class="card configure-row">
-      <span class="label configure-key"><strong>{{.Label}}</strong></span>
+    <div class="card configure-row{{if .IsContainerDetail}} container-only{{end}}">
+      <span class="label configure-key"><strong>{{.Label}}</strong> <code class="meta">{{.Key}}</code>{{with .Help}}<br><span class="meta">{{.}}</span>{{end}}</span>
+      {{if eq .Key "ROUTINE_CONTAINER_MOUNTS"}}
+      <div class="mount-field">
+        <details class="reach-picker mount-pick">
+          <summary>{{$.MountsLabel}}</summary>
+          <div class="reach-options">
+            {{range $.Mounts}}<label title="{{.Repo}}"><input type="checkbox" name="mount_repo" value="{{.Repo}}"{{if .IsSelected}} checked{{end}} onchange="smineMountPick(this)"> {{.Repo}}{{if not .IsMountable}} <span class="meta">(not mountable)</span>{{end}}</label>{{else}}<span class="meta">No registered repos.</span>{{end}}
+          </div>
+        </details>
+        <table class="mount-table"{{if not $.HasMounts}} hidden{{end}}>
+          <colgroup><col><col class="mount-access-col"></colgroup>
+          <thead><tr><th>Repo</th><th>Access</th></tr></thead>
+          <tbody>
+            {{range $.Mounts}}
+            <tr data-mount-repo="{{.Repo}}"{{if not .IsSelected}} hidden{{end}}>
+              <td class="mount-repo" title="{{.Repo}}">{{.Repo}}</td>
+              <td><select name="mount_access:{{.Repo}}">
+                <option value="ro" {{if eq .Access "ro"}}selected{{end}}>read</option>
+                <option value="rw" {{if eq .Access "rw"}}selected{{end}}>read-write</option>
+              </select></td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+        {{with $.MountsErr}}<span class="meta">{{.}}</span>{{end}}
+      </div>
+      {{else}}
       <input type="hidden" name="key" value="{{.Key}}">
-      {{if eq .Key "ROUTINE_PERMISSION_MODE"}}
+      {{if eq .Key "ROUTINE_CONTAINER"}}
+      <select name="value" class="container-toggle">
+        <option value="">{{.Default}} (default)</option>
+        <option value="1" {{if eq .Value "1"}}selected{{end}}>on</option>
+      </select>
+      {{else if eq .Key "ROUTINE_PERMISSION_MODE"}}
       <select name="value">
         <option value="">{{.Default}} (default)</option>
         <option value="default" {{if eq .Value "default"}}selected{{end}}>default</option>
@@ -14,12 +46,14 @@
         <option value="plan" {{if eq .Value "plan"}}selected{{end}}>plan</option>
         <option value="bypassPermissions" {{if eq .Value "bypassPermissions"}}selected{{end}}>bypassPermissions</option>
       </select>
-      {{else if eq .Key "SMINE_AUTO_APPLY"}}
+      {{else if eq .Key "ROUTINE_MODEL"}}
       <select name="value">
         <option value="">{{.Default}} (default)</option>
-        <option value="never" {{if eq .Value "never"}}selected{{end}}>never</option>
-        <option value="decide" {{if eq .Value "decide"}}selected{{end}}>decide</option>
-        <option value="always" {{if eq .Value "always"}}selected{{end}}>always</option>
+        {{$current := .Value}}{{$matched := false}}
+        {{range $.Models}}
+        <option value="{{.}}" {{if eq . $current}}selected{{$matched = true}}{{end}}>{{.}}</option>
+        {{end}}
+        {{if and $current (not $matched)}}<option value="{{$current}}" selected>{{$current}} (not in availableModels)</option>{{end}}
       </select>
       {{else if eq .Key "ROUTINE_TOKEN"}}
       <select name="value">
@@ -30,14 +64,16 @@
         {{end}}
         {{if and $current (not $matched)}}<option value="{{$current}}" selected>{{$current}}</option>{{end}}
       </select>
+      <span class="meta">add tokens on <a href="/profile">Profile</a></span>
       {{else}}
       <input type="text" name="value" value="{{.Value}}" placeholder="{{.Default}}">
+      {{end}}
       {{end}}
     </div>
     {{end}}
     {{range .EnvPairs}}
     <div class="card configure-row">
-      <span class="label configure-key"><strong>{{.Key}}</strong></span>
+      <span class="label configure-key"><strong>{{if .Label}}{{.Label}}{{else}}{{.Key}}{{end}}</strong>{{if .Label}} <code class="meta">{{.Key}}</code>{{end}}{{with .Help}}<br><span class="meta">{{.}}</span>{{end}}</span>
       <input type="hidden" name="key" value="{{.Key}}">
       {{if eq .Key "ROUTINE_TARGET_REPO"}}
       <select name="value">
@@ -56,18 +92,27 @@
     {{if .TokenErr}}
     <div class="card card-error"><span class="label">{{.TokenErr}}</span></div>
     {{end}}
-    {{if .AutoApplyPath}}
-    {{if .AutoApplyError}}
-    <div class="card card-error"><span class="label">{{.AutoApplyError}}</span></div>
-    {{end}}
-    <div class="card configure-row">
-      <span class="label configure-key"><strong>Auto-apply decide-mode rules</strong> <span class="meta">{{.AutoApplyPath}}</span></span>
-      <textarea name="auto_apply_content" rows="24">{{.AutoApplyContent}}</textarea>
-    </div>
+    {{if .ModelsErr}}
+    <div class="card card-error"><span class="label">{{.ModelsErr}}</span></div>
     {{end}}
     <div class="card-row">
       <button type="submit">Save</button>
+      {{if .Notice}}<span class="badge {{if .IsError}}badge-error{{else}}badge-ok{{end}}">{{if .IsError}}Failed{{else}}Ok{{end}}</span> <span class="label">{{.Notice}}</span>{{end}}
     </div>
+    {{if .Output}}<pre class="file-view">{{.Output}}</pre>{{end}}
   </form>
 </div>
+<script>
+  window.smineMountPick = function (box) {
+    var form = box.form;
+    form.querySelectorAll('.mount-table tr[data-mount-repo]').forEach(function (row) {
+      if (row.dataset.mountRepo === box.value) {
+        row.hidden = !box.checked;
+      }
+    });
+    var picked = Array.from(form.querySelectorAll('.mount-pick input:checked')).map(function (b) { return b.value; });
+    form.querySelector('.mount-table').hidden = picked.length === 0;
+    form.querySelector('.mount-pick > summary').textContent = picked.length ? picked.join(', ') : 'select repos';
+  };
+</script>
 {{end}}

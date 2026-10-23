@@ -1,30 +1,141 @@
-{{template "head" .}}
-{{template "nav" .}}
-{{template "_skill_head" .}}
-{{if .File}}
-<div class="card">
-  <span class="label">{{.File}}</span>
-  <a class="meta" href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}/tests">back to Tests</a>
-</div>
-<pre class="file-view">{{.FileContent}}</pre>
-{{else}}
-{{range .EvalErrors}}
-<div class="card card-error"><span class="label">{{.}}</span></div>
-{{end}}
-{{if .Evals}}
-{{range .Evals}}
+{{define "_eval_featured"}}
 {{$view := .}}
+<div class="section">
 <h2>{{.Dir.Eval.Eval.Date}} — {{.Dir.Dir}}{{if .Dir.Eval.IsLegacy}} <span class="meta">(schema v1)</span>{{end}}</h2>
-{{if .Dir.Eval.Eval.Notes}}<div class="meta">{{.Dir.Eval.Eval.Notes}}</div>{{end}}
-{{if .Runs}}
+{{with .Config}}<div class="eval-config">
+  <span class="eval-chip eval-chip-env" title="execution environment — cli: claude -p cells run by the eval runner; desktop: arms spawned inside a Desktop session">{{.Environment}}</span>
+  <span class="eval-chip" title="{{.VersionTitle}}">claude {{.Version}}{{if .VersionIsInstalled}} <span class="meta">installed now</span>{{end}}</span>
+  {{range .Notes}}<span class="eval-chip">{{.}}</span>{{end}}
+</div>{{end}}
+{{if .Dir.Eval.Eval.Notes}}<details><summary class="meta">full notes</summary><div class="meta">{{.Dir.Eval.Eval.Notes}}</div></details>{{end}}
+{{with .Combined}}
+<div class="card card-column eval-hero{{if .IsFail}} card-error{{end}}">
+  <span class="label eval-hero-headline">{{.PassLine}}</span>
+  {{if .Thresholds}}<div class="meta">Thresholds: {{range $index, $threshold := .Thresholds}}{{if $index}} · {{end}}{{$threshold}}{{end}}</div>{{end}}
+  {{if .Reason}}<div class="meta">{{.Reason}}</div>{{end}}
+  <div class="eval-tile-row">
+    <div class="eval-tile eval-tile-big {{.ReviewScoreClass}}" title="1 − (run − oracle) ÷ (null − oracle), in minutes: oracle = every golden entry found and fixed by a human, null = every golden entry missed and merged"><span class="eval-tile-value">{{.ReviewScore}}</span><span class="eval-tile-label">{{.MeanPrefix}}review score</span></div>
+    <div class="eval-tile eval-tile-big" title="run minutes − oracle minutes; the bar and the breakdown below show what the run's minutes are made of"><span class="eval-tile-value">{{.LostMinutes}}{{if ne .LostMinutes "—"}} min{{end}}</span><span class="eval-tile-label">{{.MeanPrefix}}lost minutes</span></div>
+  </div>
+  {{with .MinutesBar}}
+  <div class="minutes-bar" title="{{.RunLabel}}: escaped {{.EscapedLabel}} + false positives {{.FalsePositiveLabel}} + found {{.FoundLabel}} = {{.TotalLabel}} min; ticks: oracle {{.OracleLabel}}, null {{.NullLabel}}">
+    <span class="seg seg-escaped" style="width:{{printf "%.1f" .EscapedPct}}%" title="escaped: golden entries missed, priced at their escape multiplier — {{.EscapedLabel}} min"></span>
+    <span class="seg seg-fp" style="width:{{printf "%.1f" .FalsePositivePct}}%" title="false positives: findings the judges ruled wrong — {{.FalsePositiveLabel}} min"></span>
+    <span class="seg seg-found" style="width:{{printf "%.1f" .FoundPct}}%" title="found: golden entries matched, fixed or triaged at their price — {{.FoundLabel}} min"></span>
+    <span class="tick tick-oracle" style="left:{{printf "%.1f" .OraclePct}}%" title="oracle {{.OracleLabel}} min"></span>
+    <span class="tick tick-null" style="left:{{printf "%.1f" .NullPct}}%" title="null {{.NullLabel}} min"></span>
+  </div>
+  <div class="meta minutes-legend"><span>{{.RunLabel}} minutes:</span><span><i class="swatch seg-escaped"></i>escaped {{.EscapedLabel}}</span><span><i class="swatch seg-fp"></i>false positives {{.FalsePositiveLabel}}</span><span><i class="swatch seg-found"></i>found {{.FoundLabel}}</span><span>= {{.TotalLabel}}</span><span>│ oracle {{.OracleLabel}}</span><span>│ null {{.NullLabel}}</span></div>
+  {{end}}
+  <div class="eval-tile-row">
+    {{if .FoundLabel}}<div class="eval-tile" title="distinct golden findings matched by at least one arm, of the golden total"><span class="eval-tile-value">{{.FoundLabel}}</span><span class="eval-tile-label">goldens found ∪</span></div>{{end}}
+    <div class="eval-tile" title="minutes of golden defects the arms missed, weighted by escape multiplier (mean per run)"><span class="eval-tile-value">{{.EscapedMinutes}}{{if ne .EscapedMinutes "—"}} min{{end}}</span><span class="eval-tile-label">escaped ⌀</span></div>
+    <div class="eval-tile" title="findings the judges ruled wrong, summed over all arms, and their minutes (mean per run) — a verdict threshold"><span class="eval-tile-value">{{.FalsePositives}} · {{.FalsePositiveMinutes}}{{if ne .FalsePositiveMinutes "—"}} min{{end}}</span><span class="eval-tile-label">false positives Σ · ⌀</span></div>
+    <div class="eval-tile" title="sum of per-arm uncataloged rulings — the same defect counts once per arm that found it"><span class="eval-tile-value">{{.NewFinds}}</span><span class="eval-tile-label">uncataloged rulings Σ</span></div>
+    {{if .GoldenCoverage}}<div class="eval-tile" title="share of the golden severity weight living in files the arm's transcript shows it inspected"><span class="eval-tile-value">{{.GoldenCoverage}}</span><span class="eval-tile-label">golden coverage ⌀</span></div>{{end}}
+    {{if .UnionCoverage}}<div class="eval-tile" title="share of the golden findings (by count) living in files touched by at least one arm"><span class="eval-tile-value">{{.UnionCoverage}}</span><span class="eval-tile-label">union coverage</span></div>{{end}}
+    <div class="eval-tile" title="summed cost_usd over all arms"><span class="eval-tile-value">{{.CostTotal}}</span><span class="eval-tile-label">cost Σ</span></div>
+    <div class="eval-tile" title="the whole run's wall clock — the runner's runtimeS when recorded, else the longest arm as the honest lower bound"><span class="eval-tile-value">{{.RunWall}}</span><span class="eval-tile-label">{{.RunWallLabel}}</span></div>
+    <div class="eval-tile" title="summed output tokens — measured where available, ≈ workflow-agent tokens or est. sibling mean otherwise"><span class="eval-tile-value">{{.TokensTotal}}</span><span class="eval-tile-label">{{.TokensLabel}}</span></div>
+  </div>
+  {{range .ArmLines}}<div class="meta eval-hero-armline">{{.}}</div>{{end}}
+</div>
+{{end}}
+{{with .Breakdown}}
+<div class="card card-column severity-breakdown">
+  <span class="label">{{if .HasRun}}Breakdown · {{.RunLabel}}{{else}}Minute prices{{end}} <span class="meta">(minutes; found + escaped = entries; found min + escaped min + false-positive min − oracle = lost)</span></span>
+  <table class="md-body checklist-table">
+    <thead><tr><th>Severity</th><th>Price <span class="meta">found · missed · fixed</span></th><th>Entries</th>{{if .HasRun}}<th>Found (min)</th><th>Escaped (min)</th><th>False positives (min)</th><th>Oracle min</th><th>Lost min</th>{{end}}</tr></thead>
+    <tbody>
+      {{range .Rows}}
+      <tr{{if .IsTriageLine}} class="triage-line"{{end}}><td>{{.Severity}}{{if .IsTriageLine}} <span class="badge badge-dim" title="triage line: a finding reported below it is never looked at by a human">triage line</span>{{end}}</td><td class="meta">{{.PriceFound}} · {{.PriceMissed}} · {{.PriceFixed}}</td><td>{{.Entries}}</td>{{if $.Breakdown.HasRun}}<td class="cell-found">{{.Found}} ({{.FoundMinutes}})</td><td class="cell-missed">{{.Escaped}} ({{.EscapedMinutes}})</td><td class="cell-fp">{{.FalsePositives}} ({{.FalsePositiveMinutes}})</td><td>{{.OracleMinutes}}</td><td>{{.LostMinutes}}</td>{{end}}</tr>
+      {{end}}
+      {{if .HasRun}}{{with .Totals}}
+      <tr class="breakdown-total"><td>Σ</td><td></td><td>{{.Entries}}</td><td class="cell-found">{{.Found}} ({{.FoundMinutes}})</td><td class="cell-missed">{{.Escaped}} ({{.EscapedMinutes}})</td><td class="cell-fp">{{.FalsePositives}} ({{.FalsePositiveMinutes}})</td><td>{{.OracleMinutes}}</td><td>{{.LostMinutes}}</td></tr>
+      {{end}}{{end}}
+    </tbody>
+  </table>
+  {{if .Notes}}<ul class="meta breakdown-notes">{{range .Notes}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  {{if .ScoreLine}}<div class="meta">{{.ScoreLine}}</div>{{end}}
+</div>
+{{end}}
+{{if .Dir.Interpretation}}
+<div class="card card-column eval-interpretation">
+  <span class="label">Interpretation</span>
+  {{if .InterpretationBullets}}<ul class="meta eval-bullets">{{range .InterpretationBullets}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  <a class="meta" href="/scripts/skills/{{$view.Skill.Origin}}/{{$view.Skill.Name}}/tests/file?d={{$view.Dir.Dir}}&f=interpretation.md">full interpretation</a>
+</div>
+{{end}}
+{{if .ResultRows}}
+<h3>Result</h3>
+<div class="table-scroll result-scroll">
 <table class="md-body checklist-table">
-  <thead><tr><th></th><th>Run</th><th>Variant</th><th>Model</th><th>Effort</th><th>Mode</th></tr></thead>
+  <thead><tr><th>Run</th><th>Arm</th><th>Pass</th><th>Missed</th><th>Found</th><th>Miscl</th><th>FP</th><th>New</th><th>Score</th><th>Lost min</th><th>Cost</th><th>Wall</th><th>Active</th><th>Tokens</th></tr></thead>
   <tbody>
-    {{range .Runs}}
-    <tr><td>{{.Label}}</td><td>{{.Run.Id}}</td><td>{{if .Run.Variant.Name}}{{.Run.Variant.Name}}{{else}}default{{end}}</td><td>{{.Run.Model.Id}}</td><td>{{.Run.Model.Effort}}</td><td>{{.Run.Model.Mode}}</td></tr>
+    {{with .CombinedRow}}
+    <tr{{if not $view.FocusRunId}} class="history-featured"{{end}}>
+      <td><a href="?run={{$view.Dir.Dir}}" title="back to the combined view">{{.Label}}</a></td>
+      <td>{{.Arm}}</td>
+      <td>—</td>
+      <td>{{if .Total}}<strong>{{printf "%.0f" .MissedPct}}%</strong> ({{.Missed}} of {{.Total}}){{else}}—{{end}}</td>
+      <td>{{.Found}}</td>
+      <td>{{.Misclassified}}</td>
+      <td>{{.FalsePositives}}</td>
+      <td>+{{.NewFinds}}</td>
+      <td class="{{.ReviewScoreClass}}">{{.ReviewScore}}</td>
+      <td>{{.LostMinutes}}</td>
+      <td>{{.Cost}}</td>
+      <td>{{.WallTime}}</td>
+      <td>{{.ActiveTime}}</td>
+      <td>{{.Tokens}}</td>
+    </tr>
+    {{end}}
+    {{range .ResultRows}}
+    <tr class="{{if .Invalid}}arm-invalid{{end}}{{if eq .Id $view.FocusRunId}} history-featured{{end}}">
+      <td title="{{.Id}}"><a href="?run={{$view.Dir.Dir}}&focus={{.Id}}" title="show this run as the hero widget">{{.Label}}</a>{{if .Invalid}} <span class="badge badge-dim" title="{{.InvalidReason}}">INVALID</span>{{end}}{{if .SessionId}} <a class="meta" href="/sessions-report/{{.SessionId}}">report</a>{{end}}</td>
+      <td>{{.Arm}}</td>
+      <td>{{if .Invalid}}—{{else if .Pass}}<span class="badge badge-ok">pass</span>{{else}}<span class="badge badge-error">fail</span>{{end}}</td>
+      <td>{{if .Total}}<strong>{{printf "%.0f" .MissedPct}}%</strong> ({{.Missed}} of {{.Total}}){{else}}—{{end}}</td>
+      <td>{{.Found}}</td>
+      <td>{{.Misclassified}}</td>
+      <td>{{.FalsePositives}}</td>
+      <td>+{{.NewFinds}}</td>
+      <td class="{{.ReviewScoreClass}}">{{.ReviewScore}}</td>
+      <td>{{.LostMinutes}}</td>
+      <td>{{.Cost}}</td>
+      <td>{{.WallTime}}</td>
+      <td>{{.ActiveTime}}</td>
+      <td>{{if .TokensSource}}<span class="tok-approx">{{.TokensSource}}</span> {{end}}{{.Tokens}}</td>
+    </tr>
     {{end}}
   </tbody>
 </table>
+</div>
+{{end}}
+{{if .ShowStats}}
+{{$stats := .Dir.Stats}}
+<details>
+  <summary>statistics detail</summary>
+  <table class="md-body checklist-table">
+    <thead><tr><th>Metric</th><th>Arm</th><th>n</th><th>Mean</th><th>Stddev</th><th>Variance</th></tr></thead>
+    <tbody>
+      {{range $stats.Groups}}
+      <tr><td>{{.MetricId}}</td><td>{{.Arm}}</td><td>{{.N}}</td><td>{{printf "%.3f" .Mean}}</td><td>{{printf "%.3f" .StdDev}}</td><td>{{printf "%.3f" .Variance}}{{if .Note}} <span class="meta">{{.Note}}</span>{{end}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{if $stats.Comparisons}}
+  <table class="md-body checklist-table">
+    <thead><tr><th>Metric</th><th>Arm</th><th>Δ mean vs {{$stats.Baseline}}</th><th>Welch t</th><th>df</th><th>Significant</th><th></th></tr></thead>
+    <tbody>
+      {{range $stats.Comparisons}}
+      <tr><td>{{.MetricId}}</td><td>{{.Arm}}</td><td>{{printf "%+.3f" .DeltaMean}}</td><td>{{printf "%.2f" .WelchT}}</td><td>{{printf "%.1f" .Df}}</td><td>{{if .Significant}}yes{{else}}no{{end}}</td><td class="meta">{{.Note}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{end}}
+  {{if $stats.Notes}}<div class="meta">{{$stats.Notes}}</div>{{end}}
+</details>
 {{end}}
 {{if .Rankings}}
 <h3>Ranking</h3>
@@ -39,22 +150,35 @@
 {{end}}
 {{range .Axes}}
 <h3>{{.Axis}} axis</h3>
+<div class="table-scroll">
 <table class="md-body checklist-table score-matrix">
-  <thead><tr><th>Rule</th>{{range $view.Runs}}<th>{{.Label}}</th>{{end}}</tr></thead>
+  <thead><tr><th>Entry</th>{{range $view.Runs}}<th>{{.Label}}</th>{{end}}</tr></thead>
   <tbody>
+    {{range .Groups}}
+    {{if .Topic}}
+    <tr class="score-group">
+      <td class="score-topic">{{.Topic}}
+        <span class="score-bar" title="{{.Pos}} followed · {{.Zero}} partial · {{.Neg}} missed"><span class="seg seg-pos" style="width:{{printf "%.1f" .PosPct}}%"></span><span class="seg seg-zero" style="width:{{printf "%.1f" .ZeroPct}}%"></span><span class="seg seg-neg" style="width:{{printf "%.1f" .NegPct}}%"></span></span>
+        <span class="meta">{{.Pos}} · {{.Zero}} · {{.Neg}}</span>
+      </td>
+      {{range $view.Runs}}<td></td>{{end}}
+    </tr>
+    {{end}}
     {{range .Rows}}
-    <tr><td title="{{.Rule.Rule}}">{{.Rule.Id}}</td>{{range .Cells}}<td class="score-cell {{.Class}}" title="{{.Title}}">{{.Text}}</td>{{end}}</tr>
+    <tr><td class="score-rule" title="{{.Rule.Id}}">{{.Rule.Rule}}</td>{{range .Cells}}<td class="score-cell {{.Class}}" title="{{.Title}}">{{.Text}}</td>{{end}}</tr>
+    {{end}}
     {{end}}
   </tbody>
 </table>
+</div>
 {{if .Justifications}}
 <details>
   <summary>justifications ({{len .Justifications}})</summary>
   <table class="md-body checklist-table">
-    <thead><tr><th>Rule</th><th>Run</th><th>Score</th><th>Source</th><th>Justification</th><th>Evidence</th></tr></thead>
+    <thead><tr><th>Entry</th><th>Run</th><th>Score</th><th>Source</th><th>Justification</th><th>Evidence</th></tr></thead>
     <tbody>
       {{range .Justifications}}
-      <tr><td>{{.RuleId}}</td><td>{{.RunLabel}}</td><td>{{.Score}}</td><td>{{.Source}}</td><td>{{.Justification}}</td><td class="meta">{{.Evidence}}</td></tr>
+      <tr><td title="{{.RuleId}}">{{.RuleTitle}}</td><td>{{.RunLabel}}</td><td>{{.Score}}</td><td>{{.Source}}</td><td>{{.Justification}}</td><td class="meta">{{.Evidence}}</td></tr>
       {{end}}
     </tbody>
   </table>
@@ -83,36 +207,113 @@
   </tbody>
 </table>
 {{end}}
-{{if .Dir.Eval.Metrics}}
-<h3>Metrics</h3>
+{{if .Artifacts}}
+<details>
+  <summary>artifacts ({{len .Artifacts}})</summary>
+  <table class="md-body checklist-table artifact-table">
+    <thead><tr><th>File</th><th>What it is</th></tr></thead>
+    <tbody>
+      {{range .Artifacts}}
+      <tr><td><a href="/scripts/skills/{{$view.Skill.Origin}}/{{$view.Skill.Name}}/tests/file?d={{$view.Dir.Dir}}&f={{.File}}">{{.File}}</a></td><td class="meta">{{.What}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</details>
+{{end}}
+</div>
+{{end}}
+{{define "_golden_card"}}
+<div class="card card-column card-golden">
+  <span class="label">Golden {{.Def.Id}}{{if .Version}} v{{.Version}}{{end}}</span>
+  <div class="meta">{{if .Def.FindingCount}}{{.Def.FindingCount}} findings, oracle {{printf "%.0f" .Def.OracleMinutes}} min{{if .Def.SeverityLine}} ({{.Def.SeverityLine}}){{end}}{{else}}summary unavailable{{end}}{{if .Def.RangeLine}} — range {{.Def.RangeLine}}{{end}}{{if .Def.Input}}<br><span class="meta">{{.Def.Input}}</span>{{end}}</div>
+  {{if .ProductionLine}}<div class="meta">{{.ProductionLine}}</div>{{end}}
+  {{if .Contributions}}
+  <div class="table-scroll">
+  <table class="md-body checklist-table">
+    <thead><tr><th>Run</th><th>Status</th><th>Note</th><th>New findings</th><th>Cost</th><th>Wall</th><th>Tokens</th></tr></thead>
+    <tbody>
+      {{range .Contributions}}
+      <tr><td>{{if .IsLoaded}}<a href="?run={{.Dir}}">{{.Dir}}</a>{{else}}{{.Dir}}{{end}}</td><td>{{if .Status}}<span class="badge {{.StatusClass}}">{{.Status}}</span>{{else}}—{{end}}</td><td class="meta">{{.VersionLabel}}{{if .Source}} — {{.Source}}{{end}}</td><td>+{{.NewFindings}}</td><td>{{.Cost}}</td><td>{{.Wall}}</td><td>{{.Tokens}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{end}}
+</div>
+{{end}}
+{{define "_definition_card"}}
+{{$def := .Definition}}
+<div class="card card-column">
+  <span class="label">Test definition{{if $def.SchemaVersion}} <span class="meta">(schema v{{$def.SchemaVersion}})</span>{{end}}</span>
+  {{if $def.Thresholds}}<div class="meta">Verdict thresholds: {{range $index, $threshold := $def.Thresholds}}{{if $index}} · {{end}}{{$threshold}}{{end}}</div>{{end}}
+  {{if $def.Budgets}}<div class="meta">Budgets: {{range $index, $budget := $def.Budgets}}{{if $index}} · {{end}}{{$budget}}{{end}}</div>{{end}}
+  <div class="meta">Run it:</div>
+  {{range $def.Recipes}}<pre class="file-view">{{.}}</pre>{{end}}
+</div>
+{{end}}
+{{template "head" .}}
+{{template "nav" .}}
+{{template "_skill_head" .}}
+{{if .File}}
+<div class="card">
+  <span class="label">{{.File}}</span>
+  <a class="meta" href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}/tests">back to Tests</a>
+</div>
+<pre class="file-view">{{.FileContent}}</pre>
+{{else}}
+{{with .SmokeCard}}{{template "_skill_smoke.html" .}}{{end}}
+{{range .EvalErrors}}
+<div class="card card-error"><span class="label">{{.}}</span></div>
+{{end}}
+{{if .DefinitionError}}
+<div class="card card-error"><span class="label">{{.DefinitionError}}</span></div>
+{{end}}
+{{if .RunGroups}}
+<div class="card card-filter">
+  <span class="section-label">Run</span>
+  <select class="scope-select" onchange="location.href='?run='+encodeURIComponent(this.value)">
+    {{range .RunGroups}}<optgroup label="{{.Label}}">{{range .Options}}<option value="{{.Dir}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</optgroup>{{end}}
+  </select>
+</div>
+{{end}}
+{{if .Featured}}
+{{template "_eval_featured" .Featured}}
+{{end}}
+{{range .Goldens}}
+{{template "_golden_card" .}}
+{{end}}
+{{if .History}}
+<h3>Run history</h3>
+<div class="table-scroll">
 <table class="md-body checklist-table">
-  <thead><tr><th>Metric</th><th>Run</th><th>Value</th></tr></thead>
+  <thead><tr><th>Date</th><th>Run</th><th>Status</th><th>Best arm</th><th>Golden</th><th>Score</th><th>Lost min</th><th>Missed</th><th>Cost</th><th>Wall</th></tr></thead>
   <tbody>
-    {{range $metric := .Dir.Eval.Metrics}}{{range $value := $view.Dir.Eval.MetricValues}}{{if eq $value.MetricId $metric.Id}}
-    <tr><td>{{$metric.Label}} ({{$metric.Unit}})</td><td>{{$value.RunId}}</td><td>{{if eq $value.Value nil}}—{{else}}{{$value.Value}}{{end}}{{if $value.Note}} <span class="meta">{{$value.Note}}</span>{{end}}</td></tr>
-    {{end}}{{end}}{{end}}
+    {{range .History}}
+    <tr{{if .IsFeatured}} class="history-featured"{{end}}>
+      <td>{{.Date}}</td>
+      <td><a href="?run={{.Dir}}">{{.Dir}}</a></td>
+      <td><span class="badge {{.StatusClass}}">{{.Status}}</span>{{if .StatusDetail}}<div class="meta">{{.StatusDetail}}</div>{{end}}</td>
+      <td>{{if .BestArm}}<span class="badge badge-dim">★ {{.BestArm}}</span>{{end}}</td>
+      <td>{{.GoldenLabel}}</td>
+      <td>{{.ReviewScore}}</td>
+      <td>{{.LostMinutes}}</td>
+      <td>{{.MissedPct}}</td>
+      <td>{{.Cost}}</td>
+      <td>{{.WallTime}}</td>
+    </tr>
+    {{end}}
   </tbody>
 </table>
+</div>
 {{end}}
-{{if .Dir.Files}}
-<details>
-  <summary>artifacts ({{len .Dir.Files}})</summary>
-  <div class="meta">
-    {{range .Dir.Files}}
-    <a href="/scripts/skills/{{$.Skill.Origin}}/{{$.Skill.Name}}/tests/file?d={{$view.Dir.Dir}}&f={{.}}">{{.}}</a>
-    {{end}}
-  </div>
+{{if .Definition}}
+<details class="section">
+<summary>test definition</summary>
+{{template "_definition_card" .}}
 </details>
 {{end}}
-{{end}}
-{{else}}
-<p class="description">No eval runs yet. The nightly skill-eval routine writes to evals/&lt;skill&gt;-&lt;date&gt;/, or run /skillroutine-eval with the manifest stub below.</p>
-{{end}}
-{{if .ManifestStub}}
-<details>
-  <summary>eval manifest stub</summary>
-  <pre class="file-view">{{.ManifestStub}}</pre>
-</details>
+{{if not .Featured}}
+<p class="description">No eval runs yet. Run <code>/skillroutine-eval {{.Skill.Name}}</code> in an interactive session; results land under evals/&lt;skill&gt;/&lt;date&gt;-&lt;hash&gt;/.</p>
 {{end}}
 {{end}}
 {{template "foot" .}}

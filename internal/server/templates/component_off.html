@@ -1,0 +1,8 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{.Title}}</h1>
+<div class="card">
+  <span class="badge badge-dim">off</span>
+  <span>{{t "This page needs"}} {{.Needs}}{{if eq .Page "usage"}} ({{t "Routines runs smine-budget, which fills the usage store from peek or ccusage"}}){{end}} — {{t "turn it on under"}} <a href="/profile#installation">{{t "Profile → Installation"}}</a>.</span>
+</div>
+{{template "foot" .}}

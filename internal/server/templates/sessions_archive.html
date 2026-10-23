@@ -1,12 +1,19 @@
 {{template "head" .}}
 {{template "nav" .}}
-<h1>{{t "Sessions"}}</h1>
+<h1>{{t "Archived records"}}</h1>
 <div class="tabs">
-  {{range .ScopeNames}}
-  <a href="/sessions/{{.}}">{{.}}</a>
-  {{end}}
-  <a href="/sessions/archive" class="active">{{t "archive"}}</a>
+  <a href="/sessions" title="{{t "back to Sessions"}}">← {{t "Sessions"}}</a>
 </div>
+{{if .ActiveScopes}}
+<form class="card card-actions" hx-post="/sessions-archive" hx-target="#op-result"
+      hx-confirm="{{t "Archive this folder? Its analyses disappear from this page; nothing is re-mined."}}">
+  <span class="section-label">{{t "archive"}}</span>
+  <select name="scope" title="{{t "repo"}}">
+    {{range .ActiveScopes}}<option value="{{.}}">{{.}}</option>{{end}}
+  </select>
+  <button type="submit" class="small">{{t "Archive a repo's records"}}</button>
+</form>
+{{end}}
 <div id="op-result"></div>
 {{if .Archived}}
 <table class="md-body checklist-table">
@@ -14,15 +21,15 @@
     {{range .Archived}}
     <tr>
       <td>{{.Name}}</td>
-      <td>{{.MdReports}} {{t "batches"}}</td>
+      <td>{{.Sessions}} {{t "sessions"}}</td>
       <td>
-        <form hx-post="/sessions/archive/{{pathEscape .Name}}/unarchive" hx-target="#op-result">
+        <form hx-post="/sessions-archive/{{pathEscape .Name}}/unarchive" hx-target="#op-result">
           <button type="submit" class="small">{{t "Unarchive"}}</button>
         </form>
       </td>
       <td>
-        <form hx-post="/sessions/archive/{{pathEscape .Name}}/delete" hx-target="#op-result"
-              hx-confirm="{{t "Delete this folder permanently? Analyses and ledgers are removed; its sessions may be mined again."}}">
+        <form hx-post="/sessions-archive/{{pathEscape .Name}}/delete" hx-target="#op-result"
+              hx-confirm="{{t "Delete this folder? It moves to the trash and the deletion is committed; its sessions may be mined again."}}">
           <button type="submit" class="small">{{t "Delete"}}</button>
         </form>
       </td>

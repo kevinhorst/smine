@@ -1,0 +1,122 @@
+{{define "_skill_env.html"}}
+{{/* One widget, swapped in place: the repo chips and the save answer re-render it, the page never reloads; the notice sits beside the Save button. */}}
+<div id="skill-env" class="skill-env">
+  {{if and .Defaults .Repos}}
+  <div class="card card-filter">
+    <a class="badge {{if not .Repo}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills/{{.Origin}}/{{.Skill}}" hx-get="/scripts/skills/{{.Origin}}/{{.Skill}}/env" hx-target="#skill-env" hx-swap="outerHTML">Default</a>
+    {{range .Repos}}<a class="badge {{if eq . $.Repo}}badge-ok{{else}}badge-dim{{end}}" href="/scripts/skills/{{$.Origin}}/{{$.Skill}}?repo={{queryEscape .}}" hx-get="/scripts/skills/{{$.Origin}}/{{$.Skill}}/env?repo={{queryEscape .}}" hx-target="#skill-env" hx-swap="outerHTML">{{.}}</a>{{end}}
+  </div>
+  {{end}}
+  <form hx-post="/scripts/skills/{{.Origin}}/{{.Skill}}/env{{if .Repo}}/{{pathEscape .Repo}}{{end}}" hx-target="#skill-env" hx-swap="outerHTML" class="card-column configure-form">
+  {{if and .States (not .Repo)}}
+  <div class="card">
+    <span class="label"><span class="meta">tools</span> {{range .States}}<span class="badge {{if eq .State "current"}}badge-ok{{else if eq .State "missing"}}badge-error{{else}}badge-action{{end}}" title="{{.Fix}}">{{.Id}} {{.State}}</span> {{end}}</span>
+    <a class="meta env-tab-link" href="/scripts/skills/environment?skill={{queryEscape .Skill}}">Environment</a>
+  </div>
+  {{end}}
+  {{/* The env setting: the variable rows and their Save in one widget. */}}
+  <div class="card card-column env-setting">
+  {{if .Repo}}
+  {{/* The selected repo's rows: its own value, the default and the global default it falls back to beneath. */}}
+  {{range .Defaults}}
+  <div class="card card-column card-config">
+    <div class="card-row card-head">
+      <span class="label label-key"><strong>{{.Name}}</strong><br><span class="meta explanation">{{.Interface.Summary}}{{if eq .Interface.Kind "command"}} One command per line.{{end}}</span></span>
+      <span class="card-tags">
+        <span class="badge badge-dim">{{if .Required}}required{{else}}optional{{end}}</span>
+        <span class="badge badge-dim">repo</span>
+        {{if .Override}}<span class="badge badge-ok">repo value</span>{{else if .Default}}<span class="badge badge-dim">default</span>{{else if .Global}}<span class="badge badge-dim">global</span>{{else if .Required}}<span class="badge badge-warn">⚠ unset</span>{{else}}<span class="badge badge-dim">unset</span>{{end}}
+      </span>
+    </div>
+    <div class="card-row card-foot">
+      <span class="card-control">{{if eq .Interface.Kind "command"}}<textarea name="{{.Name}}" rows="2" placeholder="{{or .Default .Global .Interface.Example}}" aria-label="{{.Name}}">{{.Override}}</textarea>{{else}}<input type="text" name="{{.Name}}" value="{{.Override}}" placeholder="{{or .Default .Global .Interface.Example}}" aria-label="{{.Name}}">{{end}}</span>
+      <span class="meta">{{if .Default}}empty falls back to the default: {{.Default}}{{else if .Global}}empty falls back to the global default: {{.Global}}{{else if .Required}}no default — the skill stops at invocation while unset{{else}}no default — empty drops what reads it{{end}}</span>
+    </div>
+  </div>
+  {{end}}
+  {{else}}
+  {{/* The default rows: the record's default, the global default beneath an empty one, every repo's own value listed beneath. */}}
+  {{range .Defaults}}
+  <div class="card card-column card-config">
+    <div class="card-row card-head">
+      <span class="label label-key"><strong>{{.Name}}</strong><br><span class="meta explanation">{{.Interface.Summary}}{{if eq .Interface.Kind "command"}} One command per line.{{end}}</span></span>
+      <span class="card-tags">
+        <span class="badge badge-dim">{{if .Required}}required{{else}}optional{{end}}</span>
+        <span class="badge badge-dim">repo</span>
+        {{if .Default}}<span class="badge badge-ok">default</span>{{else if .Global}}<span class="badge badge-dim">global</span>{{else if .Required}}<span class="badge badge-warn">⚠ unset</span>{{else}}<span class="badge badge-dim">unset</span>{{end}}
+      </span>
+    </div>
+    <div class="card-row card-foot">
+      <span class="card-control">{{if eq .Interface.Kind "command"}}<textarea name="{{.Name}}" rows="2" placeholder="{{or .Global .Interface.Example}}" aria-label="{{.Name}}">{{.Default}}</textarea>{{else}}<input type="text" name="{{.Name}}" value="{{.Default}}" placeholder="{{or .Global .Interface.Example}}" aria-label="{{.Name}}">{{end}}</span>
+      <span class="meta">{{if and (not .Default) .Global}}empty uses the global default · {{end}}{{if .Overrides}}{{range $index, $override := .Overrides}}{{if $index}} · {{end}}<a href="/scripts/skills/{{$.Origin}}/{{$.Skill}}?repo={{queryEscape $override.Repo}}" hx-get="/scripts/skills/{{$.Origin}}/{{$.Skill}}/env?repo={{queryEscape $override.Repo}}" hx-target="#skill-env" hx-swap="outerHTML">{{$override.Repo}}</a>: {{$override.Value}}{{end}}{{else}}no repo overrides it{{end}}</span>
+    </div>
+  </div>
+  {{end}}
+  {{/* A required install-scoped variable without a value: the deploy skips the skill, so it shows here; its input stays under advanced. */}}
+  {{range .UnsetInstalls}}
+  <div class="card card-column card-config">
+    <div class="card-row card-head">
+      <span class="label label-key"><strong>{{.Name}}</strong><br><span class="meta explanation">{{with .Interface}}{{.Summary}}{{end}}</span></span>
+      <span class="card-tags">
+        <span class="badge badge-dim">required</span>
+        <span class="badge badge-dim">install</span>
+        <span class="badge badge-warn">⚠ unset</span>
+      </span>
+    </div>
+    <div class="card-row card-foot">
+      <span class="meta">{{with .Cause}}✗ {{.}} — {{end}}the skill is skipped until set; set it or its provider under advanced</span>
+    </div>
+  </div>
+  {{end}}
+  {{end}}
+  <div class="card-row"><button type="submit">Save</button><span class="meta">· {{or .Repo "default"}}</span>{{if .Notice}}<span class="badge {{if .IsError}}badge-error{{else}}badge-ok{{end}}">{{if .IsError}}Failed{{else}}Ok{{end}}</span> <span class="label">{{.Notice}}</span>{{end}}</div>
+  {{if .Output}}<pre class="file-view">{{.Output}}</pre>{{end}}
+  </div>
+  {{if not .Repo}}
+  <hr class="filter-divider">
+  <details class="advanced">
+    <summary>advanced: contracts and per-capability overrides</summary>
+    {{with .GateError}}<div class="card card-error"><span class="label">gate check unavailable: {{.}}</span></div>{{end}}
+    {{range .Providers}}
+    <div class="card configure-row">
+      <span class="label configure-key"><strong>{{if .Program}}{{.Program}}{{else}}unset{{end}}</strong> <code class="meta">PROVIDER_{{providerKey .Id}}</code><br><span class="meta">provider · {{.Source}}{{if .Claims}} · claims {{join .Claims ", "}}{{end}}{{with .Cause}} · {{.}}{{end}}</span></span>
+      <input type="text" name="PROVIDER_{{providerKey .Id}}" value="{{.Override}}" placeholder="{{.Program}}" aria-label="PROVIDER_{{providerKey .Id}}">
+    </div>
+    <div class="env-capabilities">{{range .Variables}}{{template "_skill_env_row" .}}{{end}}</div>
+    {{end}}
+    {{range .Standalone}}{{template "_skill_env_row" .}}{{end}}
+    <div class="card-row"><button type="submit">Save</button><span class="meta">· default</span></div>
+  </details>
+  {{end}}
+  </form>
+  {{if .Orphans}}
+  {{/* rows no leaf of this checkout declares stay until the user forgets them; forget journals the value */}}
+  <hr class="filter-divider">
+  <span class="section-label">Rows no skill declares</span>
+  {{range .Orphans}}
+  <div class="card configure-row">
+    <span class="label configure-key"><code>{{.}}</code><br><span class="meta">kept — no skill of this checkout declares it</span></span>
+    <form hx-post="/scripts/skills/environment/forget" hx-target="#skill-env" hx-swap="outerHTML"
+          hx-confirm="Forget {{.}}? The row leaves install.json; its value goes to the journal.">
+      <input type="hidden" name="key" value="{{.}}">
+      <input type="hidden" name="skill" value="{{$.Skill}}">
+      {{if $.Repo}}<input type="hidden" name="repo" value="{{$.Repo}}">{{end}}
+      <button type="submit" class="small">Forget</button>
+    </form>
+  </div>
+  {{end}}
+  {{end}}
+</div>
+{{end}}
+{{define "_skill_env_row"}}
+<div class="card configure-row{{if .Interface}} env-{{.Interface.Kind}}{{end}}">
+  <span class="label configure-key"><strong>{{if .Value}}{{.Value}}{{else}}unset{{end}}</strong> <code class="meta">{{.Name}}</code> <span class="badge badge-dim">{{if .Required}}required{{else}}optional{{end}}</span>{{if not .Value}}{{if .Required}}{{if not .IsDeferred}} <span class="badge badge-warn">⚠ unset</span>{{end}}{{end}}{{end}}<br>
+    {{with .Interface}}<span class="meta">{{$.Source}} · {{.Id}}@{{.Version}} — {{.Summary}}</span><br>
+    <span class="meta">{{.Invocation.Cwd}} · {{.Invocation.Args}} · stdin {{.Invocation.Stdin}} · {{.Invocation.Timeout}}</span><br>
+    <span class="meta">{{range $.Exit}}exit {{.Code}} {{.Meaning}} · {{end}}{{if .Validate.Resolves}}resolves{{else}}exists {{.Validate.Exists}}{{end}} {{if $.Cause}}✗ {{$.Cause}}{{else if $.Value}}✓{{end}}{{if $.Gate}} · gate: {{$.Gate}}{{end}}</span>{{else}}<span class="meta">{{.Source}}{{with .Cause}} · ✗ {{.}}{{end}}</span>{{end}}
+    {{if .IsDeferred}}<br><span class="meta">repo-scoped — filled at invocation from the repo's value, the default above or the global default</span>
+    {{else if not .Value}}{{if .Required}}<br><span class="meta">required — the skill is skipped until set</span>{{else}}<br><span class="meta">optional — unset drops: {{join .Readers ", "}}</span>{{end}}{{end}}
+  </span>
+  {{if not .IsDeferred}}<input type="text" name="{{.Name}}" value="{{.Override}}" placeholder="{{if .Value}}{{.Value}}{{else}}value{{end}}" aria-label="{{.Name}}">{{end}}
+</div>
+{{end}}

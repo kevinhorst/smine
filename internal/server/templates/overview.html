@@ -1,6 +1,31 @@
 {{template "head" .}}
 {{template "nav" .}}
 <h1>{{t "Overview"}}</h1>
+<div class="card">
+  <form class="card-row card-filter" id="sync-form" hx-post="/sync" hx-target="#op-result"
+        hx-confirm="Sync the ticked targets to this machine?">
+    <button type="submit">Sync</button>
+    <label title="apply the whole installation selection — every selected component, hooks, settings and skills included"><input type="checkbox" id="sync-all" name="target" value="all" checked> all</label>
+    <label title="build the hook binaries of the selected components into ~/.claude/hooks/bin"><input type="checkbox" name="target" value="hooks" checked> hooks</label>
+    <label title="bring ~/.claude/settings.json and ~/.claude.json to the selected components' templates"><input type="checkbox" name="target" value="settings" checked> settings</label>
+    <label title="deploy the selected repo skills into ~/.claude/skills and ~/.codex/skills"><input type="checkbox" name="target" value="skills" checked> skills</label>
+  </form>
+</div>
+<script>
+  (function () {
+    var all = document.getElementById('sync-all');
+    var targets = document.querySelectorAll('#sync-form input[name="target"]:not(#sync-all)');
+    all.addEventListener('change', function () {
+      targets.forEach(function (box) { box.checked = all.checked; });
+    });
+    targets.forEach(function (box) {
+      box.addEventListener('change', function () {
+        all.checked = Array.prototype.every.call(targets, function (target) { return target.checked; });
+      });
+    });
+  })();
+</script>
+<div id="op-result"></div>
 <div class="tiles" id="overview-tiles">
   {{range .Tiles}}
   {{if .Split}}
@@ -23,12 +48,26 @@
     {{end}}
     {{if .Detail}}<span class="tile-detail">{{t .Detail}}</span>{{end}}
   </div>
-  {{else}}
-  <a class="tile" href="{{.Href}}" draggable="true" data-tile-id="{{.Id}}">
-    <span class="tile-label">{{t .Label}}</span>
-    <span class="tile-value">{{.Value}}</span>
+  {{else if .Filters}}
+  <div class="tile" draggable="true" data-tile-id="{{.Id}}">
+    <span class="tile-head">
+      <span class="tile-label">{{t .Label}}</span>
+      {{if .Plans}}
+      <form class="tile-plan" method="post" action="/usage/plan">
+        <select name="plan" title="{{t "plan the percentages count against"}}" onchange="this.form.submit()">
+          {{range .Plans}}<option value="{{.Value}}"{{if .IsSelected}} selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+      </form>
+      {{end}}
+    </span>
+    <a class="tile-value tile-value-link" href="{{.Href}}"{{if .Plans}} title="{{t "5-hour window / weekly limit"}}"{{end}}>{{.Value}}</a>
     {{if .Detail}}<span class="tile-detail">{{t .Detail}}</span>{{end}}
-  </a>
+    <span class="tile-filter">
+      {{range .Filters}}<a class="tile-filter-link{{if .Active}} tile-filter-active{{end}}" href="{{.URL}}">{{t .Label}}</a>{{end}}
+    </span>
+  </div>
+  {{else}}
+  {{template "_overview_tile.html" .}}
   {{end}}
   {{end}}
 </div>
@@ -82,4 +121,7 @@
     }
   })();
 </script>
+{{if isDeveloperAudience}}<a class="trash-corner" href="/trash" title="Trash — what smine removed or replaced, restorable" aria-label="Trash">{{template "_icon_trash"}}</a>{{end}}
 {{template "foot" .}}
+
+{{define "_icon_trash"}}<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>{{end}}

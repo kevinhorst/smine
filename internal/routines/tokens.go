@@ -11,9 +11,9 @@ import (
 	"unicode"
 )
 
-// TokenDir returns the routine token store (~/.config/claude-routine/tokens):
-// one file per token, filename = label. The legacy single-token file next to
-// it stays the default for routines that set no ROUTINE_TOKEN.
+// rawTokenPrefix starts every Anthropic credential; a label carrying it is a pasted secret.
+const rawTokenPrefix = "sk-ant-"
+
 func TokenDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -22,15 +22,11 @@ func TokenDir() (string, error) {
 	return filepath.Join(home, ".config", "claude-routine", "tokens"), nil
 }
 
-// LegacyTokenPath returns the single-file token that predates labeled
-// tokens — the sibling named "token" of the token store dir. run.sh still
-// falls back to it when no ROUTINE_TOKEN label is set.
+// LegacyTokenPath is the fallback when a routine sets no ROUTINE_TOKEN label.
 func LegacyTokenPath(dir string) string {
 	return filepath.Join(filepath.Dir(dir), "token")
 }
 
-// ListTokenLabels lists stored token labels sorted; a missing dir is an
-// empty store, not an error.
 func ListTokenLabels(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -51,10 +47,29 @@ func ListTokenLabels(dir string) ([]string, error) {
 	return labels, nil
 }
 
-// SaveToken stores value under label in dir (file 0600, dir created 0700).
-// All whitespace is stripped from the value — pasted setup-token output
-// embeds line-wrap newlines. Write-only by design: nothing reads token
-// values back (D8). Never overwrites an existing label (D4).
+// ReadToken reads the legacy single file for an empty label.
+func ReadToken(label string) (string, error) {
+	dir, err := TokenDir()
+	if err != nil {
+		return "", err
+	}
+
+	path := LegacyTokenPath(dir)
+	if label != "" {
+		if err := validateTokenLabel(label); err != nil {
+			return "", err
+		}
+		path = filepath.Join(dir, label)
+	}
+	data, err := os.ReadFile(path)
+	token := strings.TrimSpace(string(data))
+	if err != nil || token == "" {
+		return "", fmt.Errorf("ReadToken: token file missing or empty: %s", path)
+	}
+	return token, nil
+}
+
+// SaveToken strips all whitespace: pasted setup-token output embeds line-wrap newlines.
 func SaveToken(label, value, dir string) error {
 	value = strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
@@ -86,12 +101,13 @@ func SaveToken(label, value, dir string) error {
 	return file.Close()
 }
 
-// validateTokenLabel allows [A-Za-z0-9._-] up to 64 bytes, rejecting a
-// leading '.' or '-' — labels are filenames; the allowlist blocks path
-// separators and '..' inherently.
+// validateTokenLabel's allowlist blocks path separators and '..', since labels are filenames.
 func validateTokenLabel(label string) error {
 	if label == "" || len(label) > 64 {
 		return errors.New("validateTokenLabel: label must be 1-64 characters")
+	}
+	if strings.HasPrefix(label, rawTokenPrefix) {
+		return errors.New("validateTokenLabel: that is a raw token, not a label — pass the label of a stored token")
 	}
 	if label[0] == '.' || label[0] == '-' {
 		return errors.New("validateTokenLabel: label must not start with '.' or '-'")

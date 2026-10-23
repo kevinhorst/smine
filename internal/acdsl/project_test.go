@@ -1,6 +1,7 @@
 package acdsl
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -108,6 +109,56 @@ func TestProjectFileStripRestoresOriginalBytes(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, changed)
 	assert.Equal(t, originalContent, readBack(t, root, path))
+}
+
+func TestStripProjection(t *testing.T) {
+	type testCase struct {
+		_id       string
+		_expected string
+
+		content string
+		path    string
+	}
+
+	markdown := "---\nname: x\n---\n# X\n"
+	goFile := originalContent
+	projectedMarkdown := func() string {
+		root := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(root, "SKILL.md"), []byte(markdown), 0o644))
+		_, err := ProjectFile(root, "SKILL.md", projectRules())
+		require.NoError(t, err)
+		return readBack(t, root, "SKILL.md")
+	}
+	projectedGo := func() string {
+		root, path := writeProjectFile(t, goFile)
+		_, err := ProjectFile(root, path, projectRules())
+		require.NoError(t, err)
+		return readBack(t, root, path)
+	}
+	misplaced := "# X\n\n" + strings.Join(ProjectionBlock(projectRules(), goSyntax()), "\n")
+	tests := make([]*testCase, 0)
+
+	// md-after-frontmatter
+	tests = append(tests, &testCase{_id: "md-after-frontmatter", _expected: markdown, content: projectedMarkdown(), path: "SKILL.md"})
+
+	// go-at-top
+	tests = append(tests, &testCase{_id: "go-at-top", _expected: goFile, content: projectedGo(), path: "a.go"})
+
+	// no-block-unchanged
+	tests = append(tests, &testCase{_id: "no-block-unchanged", _expected: markdown, content: markdown, path: "SKILL.md"})
+
+	// non-projectable-cue-unchanged
+	tests = append(tests, &testCase{_id: "non-projectable-cue-unchanged", _expected: "// x\nname: 1\n", content: "// x\nname: 1\n", path: "skill.cue"})
+
+	// block-off-insertion-index-untouched
+	tests = append(tests, &testCase{_id: "block-off-insertion-index-untouched", _expected: misplaced, content: misplaced, path: "a.go"})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			assert.Equal(t, test._expected, string(StripProjection(test.path, []byte(test.content))))
+		})
+	}
 }
 
 func TestProjectFileUngovernedUntouched(t *testing.T) {
@@ -277,4 +328,51 @@ func TestStripAllMixedSyntaxes(t *testing.T) {
 	for name, content := range files {
 		assert.Equal(t, content, readBack(t, root, name))
 	}
+}
+
+// newCommittedRepo builds a git repo whose HEAD carries exactly the given
+// files — the tree ValidateCommittedClean scans.
+func newCommittedRepo(t *testing.T, files map[string]string) string {
+	t.Helper()
+	root := t.TempDir()
+	policyGit(t, root, "init", "-q", "-b", "main")
+	policyGit(t, root, "config", "user.email", "test@example.com")
+	policyGit(t, root, "config", "user.name", "test")
+	for rel, content := range files {
+		writePolicyFile(t, root, rel, content)
+	}
+	policyGit(t, root, "add", ".")
+	policyGit(t, root, "commit", "-q", "-m", "base")
+	return root
+}
+
+func TestValidateCommittedCleanReportsLeak(t *testing.T) {
+	leak := "// " + ProjectionMarker + " 1 rule(s) govern this file\npackage x\n"
+	root := newCommittedRepo(t, map[string]string{"pkg/x.go": leak})
+
+	violations, err := ValidateCommittedClean(context.Background(), root)
+
+	require.NoError(t, err)
+	require.Len(t, violations, 1)
+	assert.Contains(t, violations[0], "pkg/x.go:1")
+	assert.Contains(t, violations[0], "projection content committed")
+}
+
+func TestValidateCommittedCleanCleanHead(t *testing.T) {
+	root := newCommittedRepo(t, map[string]string{"pkg/x.go": "package x\n"})
+
+	violations, err := ValidateCommittedClean(context.Background(), root)
+
+	require.NoError(t, err)
+	assert.Empty(t, violations)
+}
+
+func TestValidateCommittedCleanExcludesQuotingTrees(t *testing.T) {
+	leak := "// " + ProjectionMarker + " 1 rule(s) govern this file\npackage x\n"
+	root := newCommittedRepo(t, map[string]string{"sessions/x.go": leak, "docs/y.go": leak})
+
+	violations, err := ValidateCommittedClean(context.Background(), root)
+
+	require.NoError(t, err)
+	assert.Empty(t, violations)
 }

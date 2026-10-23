@@ -1,0 +1,8 @@
+{{define "_record_history.html"}}
+<div class="card card-column record-history">
+  <p class="meta">install.json.{{.Stamp}} → {{t "current install.json"}}</p>
+  {{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>
+  {{else if .Diff}}{{template "_diff.html" .Diff}}
+  {{else}}<p class="meta">{{t "No difference — the current record holds the same bytes."}}</p>{{end}}
+</div>
+{{end}}

@@ -9,15 +9,39 @@
 <div id="routine-ops">
   <div class="card card-filter card-column">
     <div class="card-row">
-    <span class="section-label">Actions</span>
+    <span class="section-label" id="ops-selected" title="the routine the ops below act on — pick via the row radio">no routine selected</span>
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+    <span class="section-label" title="these ops target the selected routine's runs — the next one or the one in flight">Run</span>
     <form data-op="run" hx-post="" hx-target="#op-result">
       <input type="text" name="prompt" placeholder="extra prompt for this run"
              title="appended once to this run's prompt — one-shot, on top of the configured Extra prompt">
       <button type="submit" disabled>Run now</button>
     </form>
-    <form data-op="start" hx-post="" hx-target="#op-result"><button type="submit" disabled>Start</button></form>
-    <form data-op="stop" hx-post="" hx-target="#op-result"><button type="submit" disabled>Stop</button></form>
-    <form data-op="configure" hx-get="" hx-target="#routine-configure"><button type="submit" disabled>Configure</button></form>
+    {{if pauseSupported}}
+    <form data-op="resume" hx-post="" hx-target="#op-result">
+      <button type="submit" disabled title="SIGCONTs a paused run">Resume</button>
+    </form>
+    <form data-op="pause" hx-post="" hx-target="#op-result">
+      <button type="submit" disabled title="SIGSTOPs the run's process tree; the dispatcher's deadline excludes paused time, in-flight worker cells keep their ceilings ticking">Pause</button>
+    </form>
+    {{end}}
+    <form data-op="kill" hx-post="" hx-target="#op-result"
+          hx-confirm="Kill the active run? The whole process tree, including detached cells, is terminated; the schedule stays loaded.">
+      <button type="submit" disabled title="terminates the running routine — root tree and detached cell groups; a pending config reload applies once the run is dead">Kill</button>
+    </form>
+    </div>
+    <hr class="filter-divider">
+    <div class="card-row">
+    <span class="section-label" title="these ops manage the routine itself — its launchd registration, configuration and existence">Routine</span>
+    <form data-op="start" hx-post="" hx-target="#op-result"><button type="submit" disabled title="enables and loads the schedule (launchctl enable + bootstrap)">Start</button></form>
+    <form data-op="stop" hx-post="" hx-target="#op-result"><button type="submit" disabled title="unloads the schedule and persists the off state (bootout + disable)">Stop</button></form>
+    <form data-op="configure" hx-get="" hx-target="#routine-configure"><button type="submit" disabled title="opens the routine's settings (env, budgets, tokens)">Configure</button></form>
+    <form data-op="delete" hx-post="" hx-target="#op-result"
+          hx-confirm="Delete the selected routine? Unloads the job; its directory and log files move to the trash.">
+      <button type="submit" disabled>Delete</button>
+    </form>
     </div>
     <hr class="filter-divider">
     <div class="card-row">
@@ -75,16 +99,23 @@
       var remembered = document.querySelector('input[name="rt-select"][value="' + ops.dataset.sel + '"]');
       if (remembered) { remembered.checked = true; sel = remembered; }
     }
-    ops.querySelectorAll('form[data-op]').forEach(function (form) {
+    var selectedBadge = document.getElementById('ops-selected');
+    if (selectedBadge) selectedBadge.textContent = sel ? sel.value : 'no routine selected';
+    // The steer-panel form lives in the routines-table header (the empty
+    // top-left square), outside the ops card — wire every data-op form on
+    // the page, not only the card's.
+    document.querySelectorAll('form[data-op]').forEach(function (form) {
       var button = form.querySelector('button');
       if (!sel) { button.disabled = true; return; }
-      var verb = form.dataset.op === 'configure' ? 'hx-get' : 'hx-post';
+      var verb = (form.dataset.op === 'configure' || form.dataset.op === 'steer-panel') ? 'hx-get' : 'hx-post';
       form.setAttribute(verb, '/routines/' + sel.value + '/' + form.dataset.op);
       var loaded = !!sel.dataset.loaded;
       if (form.dataset.op === 'start') button.disabled = loaded;
       else if (form.dataset.op === 'reschedule') button.disabled = !sel.dataset.reschedule;
       else if (form.dataset.op === 'duplicate') button.disabled = false;
       else if (form.dataset.op === 'configure') button.disabled = false;
+      else if (form.dataset.op === 'steer-panel') button.disabled = false;
+      else if (form.dataset.op === 'delete') button.disabled = false;
       else button.disabled = !loaded;
       htmx.process(form);
     });
@@ -100,6 +131,10 @@
       var configure = document.getElementById('routine-configure');
       if (configure && configure.innerHTML.trim() !== '') {
         htmx.ajax('GET', '/routines/' + sel.value + '/configure', { target: '#routine-configure' });
+      }
+      var steer = document.getElementById('routine-steer');
+      if (steer && steer.innerHTML.trim() !== '') {
+        htmx.ajax('GET', '/routines/' + sel.value + '/steer-panel', { target: '#routine-steer' });
       }
       ops.dataset.sel = sel.value;
       ops.querySelector('input[name="hour"]').value = sel.dataset.hour || '';
@@ -131,7 +166,21 @@
       document.querySelector('#routine-ops select[name="weekday"]').value = '';
     }
   });
-  document.body.addEventListener('htmx:afterSwap', refresh);
+  // Steer-panel toggle: a second click on the ops Steer button for the same
+  // routine removes the open panel instead of fetching another one. Capture
+  // phase so htmx never sees the closing click.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest && e.target.closest('form[data-op="steer-panel"] button');
+    if (!button) return;
+    var sel = document.querySelector('input[name="rt-select"]:checked');
+    var panel = document.getElementById('steer-panel');
+    if (sel && panel && panel.dataset.name === sel.value) {
+      panel.remove();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  document.body.addEventListener('htmx:afterSwap', function () { refresh(); });
   // The cards render above the table, so the radios don't exist yet while
   // this script runs during the initial parse.
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);

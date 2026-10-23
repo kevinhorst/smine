@@ -1,0 +1,45 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Skills</h1>
+{{template "_skills_tabs" .}}
+<h2>tools</h2>
+{{if not .Providers}}<div class="empty">No selected skill runs a tool.</div>{{end}}
+{{range .Providers}}
+<div class="card card-column card-config">
+  <div class="card-row card-head">
+    <span class="label label-key"><strong>{{.Id}}</strong>{{with .Fix}}<br><span class="meta explanation">{{.}}</span>{{end}}</span>
+    <span class="card-tags"><span class="badge {{if eq .State "current"}}badge-ok{{else if eq .State "missing"}}badge-error{{else}}badge-action{{end}}">{{.State}}</span></span>
+  </div>
+</div>
+{{end}}
+{{if .Providers}}
+<details class="section">
+  <summary>Override a program</summary>
+  {{/* the sync's result lands under the button that ran it */}}
+  <form hx-post="/scripts/skills/environment" hx-target="#op-result" hx-disabled-elt="find button" class="card-column configure-form">
+    {{range .Providers}}
+    <div class="card configure-row">
+      <span class="label configure-key"><strong>{{.Id}}</strong> <code class="meta">PROVIDER_{{providerKey .Id}}</code><br><span class="meta">empty runs the {{.Program}} the component installs</span></span>
+      <input type="text" name="PROVIDER_{{providerKey .Id}}" value="{{.Override}}" placeholder="{{.Program}}" aria-label="PROVIDER_{{providerKey .Id}}">
+    </div>
+    {{end}}
+    <div class="card-row"><button type="submit">Save and sync skills</button></div>
+  </form>
+  <div id="op-result"></div>
+</details>
+{{end}}
+<h2>global defaults</h2>
+{{with .Defaults}}{{if .Rows}}{{template "_global_defaults.html" .}}{{else}}<div class="empty">No selected skill reads a repo value.</div>{{end}}{{end}}
+<h2>skills</h2>
+{{if not .Skills}}<div class="empty">No selected skill declares a variable.</div>{{end}}
+{{if .Skills}}
+<div class="card">
+  <span class="label">skill</span>
+  <select name="skill" aria-label="skill" hx-get="/scripts/skills/environment/widget" hx-trigger="change" hx-target="#skill-env" hx-swap="outerHTML">
+    {{range .Skills}}<option value="{{.}}" {{if eq . $.Skill}}selected{{end}}>/{{.}}</option>{{end}}
+  </select>
+</div>
+{{/* The tab is the Environment page: the widget's link to it is hidden here, chip swaps included. */}}
+<div class="on-environment-tab">{{template "_skill_env.html" .Env}}</div>
+{{end}}
+{{template "foot" .}}

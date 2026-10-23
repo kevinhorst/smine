@@ -1,0 +1,12 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="detail-head">
+  <h1>Fleet</h1>
+</div>
+{{template "_heartbeat_tabs" .}}
+<div class="meta">heartbeat runtime document, read-only — what the runtime agent sees</div>
+{{/* Placeholder only — the fragment owns the heartbeat call and re-polls itself. */}}
+<div id="runtime-status" hx-get="/runtime/status" hx-trigger="load" hx-swap="outerHTML" hx-disinherit="*">
+  <div class="empty">Loading runtime status…</div>
+</div>
+{{template "foot" .}}

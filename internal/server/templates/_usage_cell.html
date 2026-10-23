@@ -1,0 +1,2 @@
+{{define "_usage_values"}}{{range $index, $value := .Values}}{{if $index}}<span class="tile-value-sep"> / </span>{{end}}{{$value}}{{end}}{{end}}
+{{define "_usage_cell"}}{{template "_usage_values" .}}{{if .Badge}} <span class="badge {{.Badge}}">{{t (print .Verdict)}}</span>{{end}}{{end}}

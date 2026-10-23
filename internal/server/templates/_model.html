@@ -2,8 +2,16 @@
 <span id="ovr-model" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
 <div id="model-section">
   <form class="inline-form" hx-post="/api/model" hx-target="#model-section" hx-swap="outerHTML">
-    <input type="text" name="model" value="{{.Model}}" placeholder="e.g. opus[1m]" class="grow">
+    <select name="model" class="grow">
+      <option value="">– unset –</option>
+      {{$current := .Model}}{{$matched := false}}
+      {{range .Models}}
+      <option value="{{.}}" {{if eq . $current}}selected{{$matched = true}}{{end}}>{{.}}</option>
+      {{end}}
+      {{if and $current (not $matched)}}<option value="{{$current}}" selected>{{$current}} (not in availableModels)</option>{{end}}
+    </select>
     <button type="submit">Set</button>
   </form>
+  {{if .Overridden}}<span class="repo-scalar" title="value in the repo fragment">repo: {{if .RepoModel}}{{.RepoModel}}{{else}}(unset){{end}}</span>{{end}}
 </div>
 {{end}}

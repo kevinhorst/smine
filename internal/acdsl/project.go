@@ -9,12 +9,7 @@ import (
 	"strings"
 )
 
-// ProjectionMarker opens every projection block in a working copy. Built by
-// concatenation so the literal never appears in committed source — the
-// staged leak guard (ValidateStagedClean) greps the index for its
-// syntax-wrapped shapes but reports only matches in files whose own
-// projection syntax produces that shape, so a doc quoting another syntax's
-// form in prose is not a leak.
+// Built by concatenation so the literal never appears in committed source.
 const ProjectionMarker = "[ACDSL-" + "PROJECTION]"
 
 // projectionSyntax describes how one file class renders a projection line.
@@ -23,10 +18,7 @@ type projectionSyntax struct {
 	lineSuffix string
 }
 
-// projectionSyntaxes maps a lowercased extension to its comment syntax.
-// Extensions absent here (.json, .acdsl, binaries) have no comment syntax
-// the projector writes — their rules are gate-only on disk and delivered at
-// read time by the acdsl-context hook instead.
+// Rules over extensions absent here are gate-only on disk and delivered by the acdsl-context hook.
 var projectionSyntaxes = map[string]projectionSyntax{
 	".go":   {linePrefix: "// "},
 	".html": {linePrefix: "<!-- ", lineSuffix: " -->"},
@@ -39,8 +31,6 @@ var projectionSyntaxes = map[string]projectionSyntax{
 	".yml":  {linePrefix: "# "},
 }
 
-// syntaxForPath resolves a path's projection syntax; ok=false means the file
-// class carries no comment syntax the projector writes.
 func syntaxForPath(path string) (projectionSyntax, bool) {
 	if syntax, ok := projectionSyntaxes[strings.ToLower(filepath.Ext(path))]; ok {
 		return syntax, true
@@ -52,11 +42,7 @@ func syntaxForPath(path string) (projectionSyntax, bool) {
 	return projectionSyntax{}, false
 }
 
-// insertionIndex returns the line index where a projection block belongs:
-// after a #!-shebang (hash syntaxes), after a closed leading YAML
-// frontmatter fence (HTML-wrapped syntaxes — an HTML comment above the
-// fence would break frontmatter parsers), else 0. An unclosed fence yields
-// 0 — never guess past malformed preamble.
+// An HTML comment above a frontmatter fence would break its parsers; an unclosed fence yields 0.
 func insertionIndex(lines []string, syntax projectionSyntax) int {
 	if len(lines) == 0 {
 		return 0
@@ -74,11 +60,7 @@ func insertionIndex(lines []string, syntax projectionSyntax) int {
 	return 0
 }
 
-// ProjectionBlock renders the working-copy block for the rules governing one
-// file: marker line, one comment line per rule, one blank separator line —
-// each line wrapped in the file class's own comment syntax, so the projected
-// tree stays parseable. Empty input yields nil — an ungoverned file has no
-// projection.
+// Each line uses the file class's own comment syntax so the projected tree stays parseable.
 func ProjectionBlock(governing []Rule, syntax projectionSyntax) []string {
 	if len(governing) == 0 {
 		return nil
@@ -101,10 +83,7 @@ func ProjectionBlock(governing []Rule, syntax projectionSyntax) []string {
 	return append(lines, "")
 }
 
-// stripBlock removes a projection block at line index at, returning the full
-// remaining lines and whether a block was present. Blocks only ever live at
-// their file's insertion index (ProjectFile puts them there); stragglers
-// elsewhere are caught by the staged leak guard, never silently rewritten.
+// Blocks only live at the insertion index; stragglers are left to the staged leak guard.
 func stripBlock(lines []string, syntax projectionSyntax, at int) ([]string, bool) {
 	if at >= len(lines) || !strings.HasPrefix(lines[at], syntax.linePrefix+ProjectionMarker) {
 		return lines, false
@@ -119,19 +98,12 @@ func stripBlock(lines []string, syntax projectionSyntax, at int) ([]string, bool
 	return append(append([]string{}, lines[:at]...), lines[i:]...), true
 }
 
-// Projectable reports whether a path can carry an on-disk projection block —
-// whether its file class has a registered comment syntax. Rules over other
-// file types are gate-only on disk; project -plan and project -context still
-// resolve and print them.
+// Rules over other file types are gate-only on disk; project -plan and -context still print them.
 func Projectable(path string) bool {
 	_, ok := syntaxForPath(path)
 	return ok
 }
 
-// ProjectFile syncs one file's on-disk projection to the current rules:
-// inserts, refreshes, or removes the block so the working copy always shows
-// the governing doctrine directly above the content. Idempotent — returns
-// whether the file changed. Non-projectable files are never touched.
 func ProjectFile(root, path string, governing []Rule) (bool, error) {
 	syntax, ok := syntaxForPath(path)
 	if !ok {
@@ -147,9 +119,7 @@ func ProjectFile(root, path string, governing []Rule) (bool, error) {
 		return false, fmt.Errorf("ProjectFile: %w", err)
 	}
 
-	// The insertion index is computed on the raw lines and reused after the
-	// strip: stripBlock only removes lines from that index on, so the
-	// preamble before it is invariant.
+	// The index is reused after the strip: stripBlock only removes lines from it on.
 	lines := strings.Split(string(raw), "\n")
 	at := insertionIndex(lines, syntax)
 	stripped, _ := stripBlock(lines, syntax, at)
@@ -166,8 +136,6 @@ func ProjectFile(root, path string, governing []Rule) (bool, error) {
 	return true, nil
 }
 
-// StripAll removes projection blocks from every universe file — the
-// pre-commit sweep. Returns how many files were stripped.
 func StripAll(root string, universe []string) (int, error) {
 	stripped := 0
 	for _, path := range universe {
@@ -182,22 +150,27 @@ func StripAll(root string, universe []string) (int, error) {
 	return stripped, nil
 }
 
-// projectionRuleLineMarker is the id-opening fragment of a per-rule line
-// inside a projection block. Guarded separately from the marker: a model
-// copying the rule lines without the marker line (observed in the A/B
-// probes) must not slip the index either. Concatenated so committed source
-// stays grep-clean.
+func StripProjection(path string, content []byte) []byte {
+	syntax, ok := syntaxForPath(path)
+	if !ok {
+		return content
+	}
+	lines := strings.Split(string(content), "\n")
+	stripped, isStripped := stripBlock(lines, syntax, insertionIndex(lines, syntax))
+	if !isStripped {
+		return content
+	}
+	return []byte(strings.Join(stripped, "\n"))
+}
+
+// Guarded apart from the marker: models copied rule lines without it in the A/B probes.
 const projectionRuleLineMarker = "- [ACDSL" + "-"
 
-// projectionShape is one staged-leak grep target: the syntax-wrapped literal
-// and the linePrefix identifying which file class legitimately produces it.
 type projectionShape struct {
 	linePrefix string
 	literal    string
 }
 
-// projectionShapes builds the header and rule-line literals for every
-// registered comment syntax.
 func projectionShapes() []projectionShape {
 	prefixes := map[string]bool{}
 	for _, syntax := range projectionSyntaxes {
@@ -213,12 +186,7 @@ func projectionShapes() []projectionShape {
 	return shapes
 }
 
-// ValidateStagedClean reports every staged (index) line carrying projection
-// content — a syntax-wrapped marker or rule line whose comment shape matches
-// the file's own projection syntax — a working-copy projection about to
-// become repo history. A file quoting another syntax's shape (a doc quoting
-// the Go form in a fence) is a reference, not a leak. The working tree
-// legitimately carries projections; the index never may.
+// A file quoting another syntax's shape is a reference, not a leak.
 func ValidateStagedClean(ctx context.Context, root string) ([]string, error) {
 	var violations []string
 	seen := map[string]bool{}
@@ -246,6 +214,41 @@ func ValidateStagedClean(ctx context.Context, root string) ([]string, error) {
 			}
 			seen[key] = true
 			violations = append(violations, fmt.Sprintf("%s:%s: projection content staged — run: go run ./cmd/acdsl project -strip, then restage", path, lineNo))
+		}
+	}
+	return violations, nil
+}
+
+// These trees legitimately quote projection lines; a match there is a reference, never a leak.
+var committedScanExcludes = []string{"sessions/", "plans/", "docs/", "examples/", "evals/"}
+
+// Loud on every audit until the offending commit is stripped and amended or reverted.
+func ValidateCommittedClean(ctx context.Context, root string) ([]string, error) {
+	var violations []string
+	seen := map[string]bool{}
+	for _, shape := range projectionShapes() {
+		output, err := shellGitGrepTree(ctx, root, shape.literal, "HEAD", committedScanExcludes)
+		if err != nil {
+			if isExitOne(err) {
+				continue // no matches for this pattern
+			}
+			return nil, fmt.Errorf("ValidateCommittedClean: %w", err)
+		}
+		for line := range strings.SplitSeq(strings.TrimSpace(output), "\n") {
+			if line == "" {
+				continue
+			}
+			path, lineNo, _ := splitGrepLine(strings.TrimPrefix(line, "HEAD:"))
+			syntax, ok := syntaxForPath(path)
+			if !ok || syntax.linePrefix != shape.linePrefix {
+				continue // scan space = files whose own syntax produces this shape
+			}
+			key := path + ":" + lineNo
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			violations = append(violations, fmt.Sprintf("%s:%s: projection content committed — strip and amend or revert the offending commit (see docs/acdsl.html)", path, lineNo))
 		}
 	}
 	return violations, nil

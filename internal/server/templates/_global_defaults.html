@@ -1,0 +1,18 @@
+{{define "_global_defaults.html"}}
+{{/* One card, swapped in place: the save answers with it and its notice beside the Save button. */}}
+<form id="global-defaults" hx-post="/scripts/skills/environment/defaults" hx-target="#global-defaults" hx-swap="outerHTML" class="card card-column configure-form">
+  {{range .Rows}}
+  <div class="card card-column card-config">
+    <div class="card-row card-head">
+      <span class="label label-key"><strong>{{.Interface.Id}}</strong><br><span class="meta explanation">{{.Interface.Summary}}{{if eq .Interface.Kind "command"}} One command per line.{{end}}</span></span>
+      <span class="card-tags">{{if .Value}}<span class="badge badge-ok">set</span>{{else}}<span class="badge badge-dim">unset</span>{{end}}</span>
+    </div>
+    <div class="card-row card-foot">
+      <span class="card-control">{{if eq .Interface.Kind "command"}}<textarea name="{{.Interface.Id}}" rows="2" placeholder="{{.Interface.Example}}" aria-label="{{.Interface.Id}}">{{.Value}}</textarea>{{else}}<input type="text" name="{{.Interface.Id}}" value="{{.Value}}" placeholder="{{.Interface.Example}}" aria-label="{{.Interface.Id}}">{{end}}</span>
+      <span class="meta">used by {{range $index, $skill := .Skills}}{{if $index}}, {{end}}/{{$skill}}{{end}} — a skill default or a repo value overrides it</span>
+    </div>
+  </div>
+  {{end}}
+  <div class="card-row"><button type="submit">Save</button><span class="meta">· every skill on every repo</span>{{if .Notice}}<span class="badge badge-ok">Ok</span> <span class="label">{{.Notice}}</span>{{end}}</div>
+</form>
+{{end}}

@@ -1,0 +1,23 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>Config</h1>
+{{template "_config_tabs" .}}
+<form class="card card-filter hooks-filter" hx-get="/config/hooks" hx-select="#hooks-cards" hx-target="#hooks-cards" hx-swap="outerHTML" hx-push-url="true" hx-trigger="submit, input changed delay:300ms from:#hooks-query">
+  <div class="card-row">
+    <span class="section-label">find</span>
+    <input type="search" id="hooks-query" name="q" value="{{.Query}}" placeholder="group, event, matcher or command" class="grow">
+  </div>
+  <hr class="filter-divider">
+  <div class="card-row">
+    <span class="section-label">state</span>
+    {{$active := .State}}{{$query := .Query}}
+    {{range .States}}
+    <a class="badge {{if eq . $active}}badge-ok{{else}}badge-dim{{end}}" href="/config/hooks?state={{.}}&q={{$query}}">{{.}}</a>
+    {{end}}
+  </div>
+</form>
+<div id="hooks-cards">
+  {{if not .Cards}}<div class="empty">{{if or .Query (ne .State "all")}}No hook group matches the filter{{else}}No hook group{{end}}</div>{{end}}
+  {{range .Cards}}{{template "_hooks_card.html" .}}{{end}}
+</div>
+{{template "foot" .}}

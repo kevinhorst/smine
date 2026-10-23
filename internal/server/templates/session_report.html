@@ -1,0 +1,421 @@
+{{define "_section_controls"}}<div class="section-tools"><button class="small" data-expand="section" data-open="true">{{t "expand all"}}</button><button class="small" data-expand="section" data-open="false">{{t "collapse all"}}</button></div>{{end}}
+{{define "_section_size"}}<span class="sh-num u-chars">{{.Chars}}</span><span class="sh-num u-tokens">{{.Tokens}}</span><span class="sh-num sh-pending">{{.Pending}}</span>{{end}}
+{{define "_mechanism_tag"}}<span class="st-tag st-tag-{{.Class}}" title="{{.Class}}: {{.Text}}">{{.Text}}</span>{{if .Warn}}<span class="warn-mark" title="{{.Warn}}">⚠</span>{{end}}{{end}}
+{{define "_path"}}<span class="path" title="{{.Prefix}}{{.Rel}}"><span class="path-prefix">{{.Prefix}}</span>{{.Rel}}</span>{{end}}
+{{define "_subject"}}{{if .Prefix}}{{template "_path" .}}{{else}}<span class="meta">{{.Rel}}</span>{{end}}{{end}}
+{{define "_token_cell"}}{{if .Class}}<span class="{{.Class}}" title="{{.Title}}">{{.Text}}</span>{{else}}{{.Text}}{{end}}{{end}}
+{{define "_coverage_badge"}}{{if .Text}}<span class="badge {{.Class}}" title="{{.Title}}">{{.Text}}</span>{{end}}{{end}}
+{{define "_unit_heads"}}<th class="u-chars">{{t "Chars"}}</th><th class="u-tokens">{{t "Tokens"}}</th>{{end}}
+{{define "_section_row"}}
+<tr class="row-toggle{{if not .Row.HasDetail}} row-plain{{end}}">
+  <td>{{if eq .Kind "hooks"}}{{template "_mechanism_tag" .Row.Tag}}{{else if eq .Kind "skills"}}<span class="skill-pill">/{{.Row.Subject.Rel}}</span>{{if .Row.Version}} <span class="badge badge-dim badge-version">v{{.Row.Version}}</span>{{end}}{{else}}{{template "_subject" .Row.Subject}}{{end}}</td>
+  {{if eq .Kind "hooks"}}<td>{{template "_subject" .Row.Subject}}</td>{{end}}
+  {{if eq .Kind "prompts"}}<td><span class="meta">{{.Row.Agents}}</span></td>{{end}}
+  {{range .Cells}}<td>{{.}}</td>{{end}}
+  {{if eq .Kind "files"}}<td>{{template "_coverage_badge" .Row.Coverage}}</td>{{end}}
+  {{if ne .Kind "prompts"}}<td><span class="meta">{{.Row.Agents}}</span></td><td>{{.Row.Count}}</td>{{end}}
+  <td class="u-chars">{{.Row.Chars}}</td>
+  <td class="u-tokens">{{template "_token_cell" .Row.Tokens}}</td>
+</tr>
+{{if .Row.HasDetail}}
+<tr class="row-detail" hidden>
+  <td colspan="{{.Columns}}">
+    {{if gt (len .Row.AgentLines) 1}}<ul class="agent-lines">{{range .Row.AgentLines}}<li>{{.Agent}} · {{.Count}}× {{if .Lines}}· {{.Lines}} {{end}}<span class="u-chars">· {{.Chars}} {{t "chars"}}</span><span class="u-tokens">· {{template "_token_cell" .Tokens}} {{t "tokens"}}</span></li>{{end}}</ul>{{end}}
+    {{range .Row.Paths}}{{template "_path" .}} {{end}}
+    {{if .Row.Families}}<div class="id-family-grid">{{template "_id_families.html" .Row.Families}}</div>{{end}}
+    {{if .Row.Text}}<pre class="row-text">{{.Row.Text}}</pre>{{if .Row.TextRest}}<span class="meta">… {{.Row.TextRest}} {{t "more characters"}}</span>{{end}}{{end}}
+  </td>
+</tr>
+{{end}}
+{{end}}
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{t "Session"}} · {{if .Session.Title}}{{.Session.Title}}{{else}}{{.Session.Id}}{{end}}</h1>
+<div class="tabs">
+  <a href="/sessions">&larr; {{t "Sessions"}}</a>
+  {{if .DownloadUrl}}<a href="{{.DownloadUrl}}" download>{{t "Download .md"}}</a>{{end}}
+</div>
+
+{{if .EventsErr}}<div class="empty">{{.EventsErr}}</div>{{end}}
+
+{{if .Events}}
+<div class="tiles report-tiles">
+  <div class="tile">
+    <span class="tile-label">{{t "Runtime"}}</span>
+    <span class="tile-value">{{.Stats.Runtime}}</span>
+    <span class="tile-detail">{{t "active"}} {{.Stats.ActiveTime}} · {{t "idle"}} {{.Stats.IdleTime}}</span>
+  </div>
+  <div class="tile tile-cost" data-cost-unit="{{if .Stats.PlanPercent}}plan{{else}}usd{{end}}">
+    <div class="tile-head">
+      <span class="tile-label">{{t "Cost"}}</span>
+      <span class="tile-units">
+        <button type="button" class="badge {{if .Stats.PlanPercent}}badge-ok{{else}}badge-dim{{end}}" data-set-unit="plan"{{if not .Stats.PlanPercent}} disabled title="{{t "no per-model token split yet — plan % needs a ccusage model breakdown"}}"{{end}}>{{t "plan %"}}</button>
+        <button type="button" class="badge {{if .Stats.PlanPercent}}badge-dim{{else}}badge-ok{{end}}" data-set-unit="usd">$</button>
+      </span>
+    </div>
+    <span class="tile-value u-plan">{{if .Stats.PlanPercent}}{{.Stats.PlanPercent}}{{else}}—{{end}}</span>
+    <span class="tile-value u-usd">{{.Stats.Cost}}</span>
+    <div class="tile-detail u-plan">{{if .Stats.PlanPercent}}{{t "of a"}} <form class="tile-plan" method="post" action="/usage/plan"><select name="plan" title="{{t "plan"}}" onchange="this.form.submit()">{{range .Plans}}<option value="{{.Value}}"{{if .IsSelected}} selected{{end}}>{{.Label}}</option>{{end}}</select></form> {{t "5-hour window"}} · {{.Stats.Cost}}{{else}}{{t "no per-model token split yet — plan % needs a ccusage model breakdown"}}{{end}}</div>
+    <span class="tile-detail u-usd">{{len .Events.InvokedSkills}} {{t "skills"}} · {{len .Events.TouchedFiles}} {{t "files"}}{{if .Stats.PlanPercent}} · {{.Stats.PlanPercent}} {{t "of a"}} {{.Plan}} {{t "5-hour window"}}{{end}}</span>
+  </div>
+  <div class="tile">
+    <span class="tile-label">{{t "Tokens"}}</span>
+    <span class="tile-value">{{.Stats.TotalTokens}}</span>
+    <span class="tile-detail">{{t "in"}} {{.Stats.InputTokens}} · {{t "out"}} {{.Stats.OutputTokens}}</span>
+  </div>
+  <div class="tile">
+    <span class="tile-label">{{t "Cache hit"}}</span>
+    <span class="tile-value">{{if .Stats.CacheHit}}{{.Stats.CacheHit}}{{else}}—{{end}}</span>
+    <span class="tile-detail">{{t "read"}} {{.Stats.CacheRead}} · {{t "write"}} {{.Stats.CacheWrite}}</span>
+  </div>
+</div>
+<div class="card report-meta">
+  <div class="item-fields">
+    <span class="field-key">{{t "Started"}}</span><span class="meta">{{.Events.StartedAt.Format "2006-01-02 15:04:05"}}</span>
+    <span class="field-key">{{t "Last active"}}</span><span class="meta">{{.Events.LastActive.Format "2006-01-02 15:04:05"}}</span>
+    {{if .Session.Cwd}}<span class="field-key">{{t "Cwd"}}</span><span class="meta">{{.Session.Cwd}}</span>{{end}}
+    {{if .Branch}}<span class="field-key">{{t "Branch"}}</span><span class="meta">{{.Branch}}</span>{{end}}
+    {{with peekSessionURL .Session.Id}}<span class="field-key">Peek</span><span class="meta"><a href="{{.}}" target="_blank" rel="noopener">{{t "open in peek"}} &rarr;</a></span>{{end}}
+  </div>
+</div>
+{{end}}
+
+<h2>{{t "Ingested context"}}</h2>
+{{if .ContextErr}}<div class="empty">{{.ContextErr}}</div>{{end}}
+{{if .Record}}
+<div id="context-report" data-unit="tokens">
+<div class="section-controls">
+  <button class="small" data-expand="all" data-open="true">{{t "Expand all"}}</button>
+  <button class="small" data-expand="all" data-open="false">{{t "Collapse all"}}</button>
+  <label class="unit-switch"><span class="meta">{{t "tokens"}}</span><span class="toggle"><input type="checkbox" id="unit-switch"><span class="slider"></span></span><span class="meta">{{t "chars"}}</span></label>
+</div>
+{{template "_session_filter_bar.html" .Filter}}
+
+<div class="card card-column" id="agent-card">
+  <div class="card-row">
+    <span class="section-label section-label-fit">{{t "Injected context by agent"}}</span>
+    {{if .TokenNotice}}<span class="badge badge-dim">{{.TokenNotice}}</span>{{end}}
+  </div>
+  <div class="agent-chips" id="agent-chips">
+    {{range .ScopeLinks}}<a class="badge {{if .IsActive}}badge-ok{{else}}badge-dim{{end}}" href="{{.Url}}">{{t .Label}}</a>{{end}}
+    {{if not .Scope.IsAll}}<span class="meta">{{t "showing"}} <code>{{.Scope.Param}}</code></span>{{end}}
+  </div>
+  <input type="checkbox" class="table-top-toggle" id="agent-top">
+  <div class="table-scroll">
+  <table class="files-table table-top" id="agent-table" data-sortable>
+    <thead><tr>
+      <th data-sort="text">{{t "Agent"}}</th>
+      <th data-sort="text">{{t "Description"}}</th>
+      <th data-sort="text">{{t "Model"}}</th>
+      <th data-sort="num" title="{{t "one injection = one hook output, file read or subagent prompt the agent received"}}">{{t "Injections"}}</th>
+      <th data-sort="num" class="u-chars">{{t "Chars"}}</th>
+      <th data-sort="num" class="u-tokens">{{t "Tokens"}}</th>
+      <th data-sort="num">{{t "Pending"}}</th>
+    </tr></thead>
+    <tbody>
+      {{range .Agents}}
+      <tr{{if .IsDimmed}} class="agent-dim"{{end}} title="{{.Id}}">
+        <td><a href="{{.Url}}"><span class="agent-kind">{{.Kind}}</span>{{.Name}}</a></td>
+        <td><span class="meta">{{.Description}}</span></td>
+        <td><span class="meta">{{.Model}}</span></td>
+        <td data-value="{{.Items}}">{{.Items}}</td>
+        <td data-value="{{.Chars}}" class="u-chars">{{.Chars}}</td>
+        <td data-value="{{.Tokens}}" class="u-tokens">{{.Tokens}}</td>
+        <td data-value="{{.Pending}}"{{if .PendingTitle}} title="{{.PendingTitle}}"{{end}}>{{.Pending}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+    <tfoot><tr><td colspan="3"><b>{{t "Total"}}</b></td><td>{{.Totals.Items}}</td><td class="u-chars">{{.Totals.Chars}}</td><td class="u-tokens">{{.Totals.Tokens}}</td><td>{{.Totals.Pending}}</td></tr></tfoot>
+  </table>
+  </div>
+  {{if gt (len .Agents) 3}}<label class="table-top-label" for="agent-top"><span class="table-top-more">{{t "show all"}} {{len .Agents}}</span><span class="table-top-less">{{t "show top 3"}}</span></label>{{end}}
+  {{if .PendingNotice}}<p class="pending-note"{{if .Counting}} data-counting-url="{{.CountingUrl}}"{{end}}>{{.PendingNotice}}</p>{{end}}
+</div>
+
+
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "SessionStart"}}</span><span class="sh-count"><span class="count-note">{{len .GlobalRows}}</span></span>{{template "_section_size" (index .KindSizes "global")}}<span class="sh-tags">{{range index .SectionTags "global"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .GlobalRows}}
+  {{template "_section_controls" .}}
+  <div class="table-scroll">
+  <table class="files-table">
+    <thead><tr><th>{{t "Source"}}</th><th>{{t "Agents"}}</th><th>{{t "Injections"}}</th>{{template "_unit_heads"}}</tr></thead>
+    <tbody>{{range .GlobalRows}}{{template "_section_row" (sectionCells "global" .)}}{{end}}</tbody>
+  </table>
+  </div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+
+{{if or .SkillRows (not .HasFilter)}}
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "Skill context"}}</span><span class="sh-count"><span class="count-note">{{len .SkillRows}}</span></span>{{template "_section_size" (index .KindSizes "skill")}}<span class="sh-tags">{{range index .SectionTags "skill"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .SkillRows}}
+  {{template "_section_controls" .}}
+  <div class="table-scroll">
+  <table class="files-table">
+    <thead><tr><th>{{t "Skill"}}</th><th>{{t "Entries"}}</th><th>{{t "Agents"}}</th><th>{{t "Injections"}}</th>{{template "_unit_heads"}}</tr></thead>
+    <tbody>{{range .SkillRows}}{{template "_section_row" (sectionCells "skills" .)}}{{end}}</tbody>
+  </table>
+  </div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+{{end}}
+
+{{if or .ProjectionRows (not .HasFilter)}}
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "ACDSL projections"}}</span><span class="sh-count"><span class="count-note">{{len .ProjectionRows}}</span></span>{{template "_section_size" (index .KindSizes "acdsl_projection")}}<span class="sh-tags">{{range index .SectionTags "acdsl_projection"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .ProjectionRows}}
+  {{template "_section_controls" .}}
+  <div class="table-scroll">
+  <table class="files-table">
+    <thead><tr><th>{{t "File"}}</th><th>{{t "Rules"}}</th><th>{{t "Agents"}}</th><th>{{t "Reads"}}</th>{{template "_unit_heads"}}</tr></thead>
+    <tbody>{{range .ProjectionRows}}{{template "_section_row" (sectionCells "projections" .)}}{{end}}</tbody>
+  </table>
+  </div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+{{end}}
+
+{{if or .PlanFamilies (not .HasFilter)}}
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "Plan-time rules"}}</span><span class="sh-count"><span class="count-note">{{len .PlanFamilies}}</span></span>{{template "_section_size" (index .KindSizes "plan_rules")}}<span class="sh-tags">{{range index .SectionTags "plan_rules"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .PlanFamilies}}{{template "_section_controls" .}}
+  {{end}}
+  {{if .PlanFamilies}}<div class="id-family-grid">{{template "_id_families.html" .PlanFamilies}}</div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+{{end}}
+
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "Context files read"}}</span><span class="sh-count"><span class="count-note">{{len .FileReadRows}}</span></span>{{template "_section_size" (index .KindSizes "file_reads")}}<span class="sh-tags">{{range index .SectionTags "file_reads"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .FileReadRows}}
+  {{template "_section_controls" .}}
+  <div class="table-scroll">
+  <table class="files-table">
+    <thead><tr><th>{{t "Path"}}</th><th>{{t "Lines"}}</th><th>{{t "Coverage"}}</th><th>{{t "Agents"}}</th><th>{{t "Reads"}}</th>{{template "_unit_heads"}}</tr></thead>
+    <tbody>{{range .FileReadRows}}{{template "_section_row" (sectionCells "files" .)}}{{end}}</tbody>
+  </table>
+  </div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "Subagent prompts"}}</span><span class="sh-count"><span class="count-note">{{len .PromptRows}}</span></span>{{template "_section_size" (index .KindSizes "subagent_prompt")}}<span class="sh-tags">{{range index .SectionTags "subagent_prompt"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .PromptRows}}
+  {{template "_section_controls" .}}
+  <div class="table-scroll">
+  <table class="files-table">
+    <thead><tr><th>{{t "Prompt"}}</th><th>{{t "Spawned by"}}</th><th>{{t "Paths"}}</th><th>{{t "Ids"}}</th>{{template "_unit_heads"}}</tr></thead>
+    <tbody>{{range .PromptRows}}{{template "_section_row" (sectionCells "prompts" .)}}{{end}}</tbody>
+  </table>
+  </div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+
+<details class="section report-section" open>
+  <summary class="section-head"><span class="sh-title">{{t "Hook injections"}}</span><span class="sh-count"><span class="count-note">{{len .HookRows}}</span></span>{{template "_section_size" (index .KindSizes "hooks")}}<span class="sh-tags">{{range index .SectionTags "hooks"}}{{template "_mechanism_tag" .}}{{end}}</span></summary>
+  {{if .HookRows}}
+  {{template "_section_controls" .}}
+  <div class="table-scroll">
+  <table class="files-table">
+    <thead><tr><th>{{t "Hook"}}</th><th>{{t "Subject"}}</th><th>{{t "Agents"}}</th><th>{{t "Injections"}}</th>{{template "_unit_heads"}}</tr></thead>
+    <tbody>{{range .HookRows}}{{template "_section_row" (sectionCells "hooks" .)}}{{end}}</tbody>
+  </table>
+  </div>
+  {{else}}<span class="meta">—</span>{{end}}
+</details>
+</div>
+
+{{end}}
+
+<h2>{{t "Session features"}}</h2>
+{{if .FeaturesErr}}<div class="empty">{{.FeaturesErr}}</div>{{end}}
+{{if .Features}}
+<div class="table-scroll">
+<table class="files-table" id="feature-table">
+  <thead><tr><th>{{t "Feature"}}</th><th>{{t "Hook"}}</th><th>{{t "Injection"}}</th><th>{{t "State"}}</th><th>{{t "Changes"}}</th></tr></thead>
+  <tbody>
+    {{range .Features}}
+    <tr class="feature-row">
+      <td>{{if .Events}}<button type="button" class="feature-toggle">{{.Feature}}</button>{{else}}<code>{{.Feature}}</code>{{end}}</td>
+      <td><span class="meta">{{.Hook}}</span></td>
+      <td>{{range .Tags}}{{template "_mechanism_tag" .}}{{end}}</td>
+      <td>{{.State}}{{if .Hint}}<span class="warn-mark" title="{{.Hint}}">⚠</span>{{end}}</td>
+      <td>{{len .Events}}</td>
+    </tr>
+    {{if .Events}}
+    <tr class="feature-detail" hidden>
+      <td colspan="5"><ul class="feature-events">{{range .Events}}<li><span class="meta">{{.At}}</span> {{.Action}}</li>{{end}}</ul></td>
+    </tr>
+    {{end}}
+    {{end}}
+  </tbody>
+</table>
+</div>
+{{end}}
+
+<h2>{{t "Invoked skills"}}</h2>
+{{if .InvokedSkills}}
+<table class="files-table">
+  <thead><tr><th>{{t "Skill"}}</th><th>{{t "Version"}}</th><th>{{t "Skill tokens"}}</th><th>{{t "Source"}}</th><th>{{t "Started"}}</th><th>{{t "Ended"}}</th></tr></thead>
+  <tbody>
+    {{range .InvokedSkills}}
+    <tr>
+      <td><span class="skill-pill">/{{.Skill}}</span></td>
+      <td>{{if ne .Version "—"}}<span class="badge badge-dim badge-version"{{if .IsVersionAssumed}} title="{{t "the version deployed now — the transcript recorded none"}}"{{end}}>{{if .IsVersionAssumed}}≈{{end}}v{{.Version}}</span>{{else}}—{{end}}</td>
+      <td>{{.SkillTokens}}</td>
+      <td><span class="badge badge-dim">{{.Source}}</span></td>
+      <td>{{.Started}}</td>
+      <td>{{.Ended}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else if .IsRootInScope}}<div class="empty">{{t "No skills invoked."}}</div>
+{{else}}<div class="empty">{{t "Skill invocations belong to the root agent, which is not in the selection."}}</div>{{end}}
+
+<h2>{{t "Touched files"}}</h2>
+{{if .FileGroups}}
+<input class="files-search" type="search" placeholder="{{t "filter paths…"}}" data-search-target="#touched-files">
+<div id="touched-files">
+  {{range .FileGroups}}
+  <details class="section" data-search-group>
+    <summary><span class="touched-group-name">{{.Name}}</span> <span class="count-note">{{len .Files}}</span></summary>
+    <table class="files-table">
+      <thead><tr><th>{{t "Path"}}</th><th>{{t "Agents"}}</th><th>{{t "Reads"}}</th><th>{{t "Writes"}}</th></tr></thead>
+      <tbody>
+        {{range .Files}}<tr data-search="{{toLower .Path.Rel}}"><td>{{template "_path" .Path}}</td><td><span class="meta">{{.Agents}}</span></td><td>{{.Reads}}</td><td>{{.Writes}}</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </details>
+  {{end}}
+</div>
+{{else}}<div class="empty">{{t "No files touched."}}</div>{{end}}
+<script>
+  (function () {
+    var search = document.querySelector('.files-search');
+    if (search) search.addEventListener('input', function (evt) {
+      var root = document.querySelector(evt.target.getAttribute('data-search-target'));
+      var query = evt.target.value.toLowerCase();
+      root.querySelectorAll('tr[data-search]').forEach(function (row) {
+        row.hidden = query !== '' && row.getAttribute('data-search').indexOf(query) === -1;
+      });
+      root.querySelectorAll('details[data-search-group]').forEach(function (group) {
+        if (query !== '') group.open = group.querySelectorAll('tr[data-search]:not([hidden])').length > 0;
+      });
+    });
+
+    // unit switch: off shows tokens, on shows chars; the choice survives
+    // the reload the counting poll triggers because it lives in localStorage
+    var report = document.getElementById('context-report');
+    var unitSwitch = document.getElementById('unit-switch');
+    if (report && unitSwitch) {
+      var unit = 'tokens';
+      try { unit = localStorage.getItem('report-unit') || 'tokens'; } catch (err) {}
+      var applyUnit = function () {
+        report.setAttribute('data-unit', unit);
+        unitSwitch.checked = unit === 'chars';
+      };
+      unitSwitch.addEventListener('change', function () {
+        unit = unitSwitch.checked ? 'chars' : 'tokens';
+        try { localStorage.setItem('report-unit', unit); } catch (err) {}
+        applyUnit();
+      });
+      applyUnit();
+    }
+
+    // cost unit: plan % or dollars; the choice is remembered only where a plan % exists
+    var costTile = document.querySelector('.tile-cost');
+    if (costTile) {
+      var chips = costTile.querySelectorAll('[data-set-unit]');
+      var hasPlan = !costTile.querySelector('[data-set-unit="plan"]').disabled;
+      var costUnit = costTile.getAttribute('data-cost-unit');
+      if (hasPlan) { try { costUnit = localStorage.getItem('cost-unit') || costUnit; } catch (err) {} }
+      var applyCostUnit = function () {
+        costTile.setAttribute('data-cost-unit', costUnit);
+        chips.forEach(function (chip) {
+          var active = chip.getAttribute('data-set-unit') === costUnit;
+          chip.classList.toggle('badge-ok', active);
+          chip.classList.toggle('badge-dim', !active);
+        });
+      };
+      chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          costUnit = chip.getAttribute('data-set-unit');
+          try { localStorage.setItem('cost-unit', costUnit); } catch (err) {}
+          applyCostUnit();
+        });
+      });
+      applyCostUnit();
+    }
+
+    // expand / collapse: "all" scopes every section, "section" the enclosing one
+    document.querySelectorAll('button[data-expand]').forEach(function (button) {
+      button.addEventListener('click', function (evt) {
+        evt.preventDefault();
+        evt.stopPropagation();
+        var open = button.getAttribute('data-open') === 'true';
+        var scope = button.getAttribute('data-expand') === 'all' ? document : button.closest('details.section');
+        if (scope !== document) scope.open = true;
+        scope.querySelectorAll('details').forEach(function (d) { d.open = open; });
+        scope.querySelectorAll('tr.row-detail').forEach(function (detail) {
+          detail.hidden = !open;
+          var row = detail.previousElementSibling;
+          if (row) row.classList.toggle('row-open', open);
+        });
+      });
+    });
+
+    // background token count: poll until the run ends, then reload once. The
+    // reload carries ?counted so that load starts no further run; the marker
+    // is dropped from the address bar so a manual reload counts again.
+    var countingNote = document.querySelector('[data-counting-url]');
+    if (countingNote) {
+      var countingPoll = setInterval(function () {
+        fetch(countingNote.getAttribute('data-counting-url'))
+          .then(function (response) { return response.json(); })
+          .then(function (status) {
+            if (status.counting) return;
+            clearInterval(countingPoll);
+            var next = new URL(window.location.href);
+            next.searchParams.set('counted', '1');
+            window.location.replace(next.toString());
+          })
+          .catch(function () { clearInterval(countingPoll); });
+      }, 2000);
+    }
+    if (new URLSearchParams(window.location.search).has('counted')) {
+      var clean = new URL(window.location.href);
+      clean.searchParams.delete('counted');
+      history.replaceState(null, '', clean.toString());
+    }
+
+    // path prefix toggle; a click elsewhere on a section row opens or closes
+    // its detail row, links inside a row keep their own behavior
+    document.addEventListener('click', function (evt) {
+      var path = evt.target.closest('.path');
+      if (path) {
+        path.classList.toggle('path-full');
+        return;
+      }
+      var feature = evt.target.closest('.feature-toggle');
+      if (feature) {
+        var featureRow = feature.closest('tr');
+        var history = featureRow.nextElementSibling;
+        history.hidden = !history.hidden;
+        featureRow.classList.toggle('row-open', !history.hidden);
+        return;
+      }
+      if (evt.target.closest('a')) return;
+      var row = evt.target.closest('tr.row-toggle');
+      if (!row || row.classList.contains('row-plain')) return;
+      var detail = row.nextElementSibling;
+      if (!detail || !detail.classList.contains('row-detail')) return;
+      detail.hidden = !detail.hidden;
+      row.classList.toggle('row-open', !detail.hidden);
+    });
+  })();
+</script>
+{{template "_table_sort"}}
+{{template "foot" .}}

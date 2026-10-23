@@ -2,36 +2,20 @@
 {{template "nav" .}}
 <h1>Config</h1>
 {{template "_config_tabs" .}}
-<div class="card card-actions">
-  <form hx-post="/api/config/{{.Target}}/sync/revert" hx-target="#op-result"
-        hx-confirm="Overwrite the live {{.Target}} settings with the repo fragment?">
-    <button type="submit" title="repo fragment → live: overwrite the live {{.Target}} settings with the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Sync</button>
-  </form>
-  <form hx-post="/api/config/{{.Target}}/sync/apply" hx-target="#op-result"
-        hx-confirm="Overwrite the repo fragment with the live {{.Target}} settings?">
-    <button type="submit" title="live → repo fragment: write the current live {{.Target}} settings back into the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Persist overrides</button>
-  </form>
-  {{if .FragmentMissing}}<span class="meta">repo fragment missing: {{.FragmentPath}}</span>{{end}}
-</div>
-<div id="op-result"></div>
+{{template "_sync_actions" .}}
 <h2>settings</h2>
 <div class="section-controls">
   <button class="small" onclick="document.querySelectorAll('details.section').forEach(d => d.open = true)">Expand all</button>
   <button class="small" onclick="document.querySelectorAll('details.section').forEach(d => d.open = false)">Collapse all</button>
 </div>
 
-{{/* Persist/Sync replace whole files; the body re-pulls itself on config-op
-     (mirrors #repo-list). The hx-get-on-load sections re-fire inside the
-     fresh content. */}}
+{{/* Sync, Force sync and Persist replace whole files; only they fire config-op,
+     on which the body re-pulls itself (mirrors #repo-list) and the hx-get-on-load
+     sections re-fire. A row or section mutation swaps its own fragment and sends
+     the summary badges out of band; a row's placement refreshes on the next load. */}}
 <div id="config-body" hx-get="/config/{{.Target}}" hx-trigger="config-op from:body"
      hx-select="#config-body" hx-swap="outerHTML" hx-disinherit="*">
 {{if eq .Target "claude"}}
-<details id="hooks" class="section"{{if eq .Open "hooks"}} open{{end}}><summary>Hooks <span id="ovr-hooks"></span></summary>
-  <div hx-get="/api/hooks" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
-</details>
-<details id="permissions" class="section"{{if eq .Open "permissions"}} open{{end}}><summary>Permissions <span id="ovr-permissions"></span></summary>
-  <div hx-get="/api/permissions" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
-</details>
 <details id="mcp" class="section"{{if eq .Open "mcp"}} open{{end}}><summary>MCP Servers <span id="ovr-mcp"></span></summary>
   <div hx-get="/api/mcp" hx-trigger="load" hx-swap="outerHTML"><div class="empty">Loading…</div></div>
 </details>
@@ -49,13 +33,13 @@
 {{end}}
 
 {{range .Groups}}
-<details id="group-{{domID $.Target .Category}}" class="section"><summary>{{.Category}}{{if .Overridden}} <span class="badge badge-action">{{.Overridden}} overridden</span>{{end}}</summary>
+<details id="group-{{domID $.Target .Category}}" class="section"><summary>{{.Category}} <span id="ovr-{{domID $.Target .Category}}">{{if .Overridden}}<span class="badge badge-action">{{.Overridden}} overridden</span>{{end}}</span></summary>
   {{range .Rows}}{{template "_config_row.html" .}}{{end}}
 </details>
 {{end}}
 {{if .Available}}
 <details id="available-{{.Target}}" class="section">
-  <summary>Show available ({{.AvailableCount}}){{if .AvailableOverridden}} <span class="badge badge-action">{{.AvailableOverridden}} overridden</span>{{end}}</summary>
+  <summary>Show available ({{.AvailableCount}}) <span id="ovr-available-{{.Target}}">{{if .AvailableOverridden}}<span class="badge badge-action">{{.AvailableOverridden}} overridden</span>{{end}}</span></summary>
   {{range .Available}}
   <h2>{{.Category}}</h2>
   {{range .Rows}}{{template "_config_row.html" .}}{{end}}
@@ -64,18 +48,17 @@
 {{end}}
 </div>
 <script>
-  // Mutations fire config-op → #config-body re-pulls; the fresh HTML renders
-  // every section closed (only ?open= survives). Carry the client's open set
-  // across the swap (D4).
-  let openSections = [];
-  document.body.addEventListener('htmx:beforeSwap', (event) => {
-    if (event.detail.target.id !== 'config-body') return;
-    openSections = Array.from(
-      document.querySelectorAll('#config-body details.section[open]'),
-      (section) => section.id).filter(Boolean);
-  });
-  document.body.addEventListener('htmx:afterSwap', (event) => {
-    if (event.detail.target.id !== 'config-body') return;
+  // Mutations swap a section or re-pull #config-body; the fresh HTML renders
+  // every details.section closed (only ?open= survives). Track what the user
+  // opened and reopen it after every swap (D3).
+  const openSections = new Set();
+  document.body.addEventListener('toggle', (event) => {
+    const section = event.target;
+    if (!(section instanceof HTMLDetailsElement) || !section.id) return;
+    if (!section.classList.contains('section')) return;
+    if (section.open) openSections.add(section.id); else openSections.delete(section.id);
+  }, true);
+  document.body.addEventListener('htmx:afterSwap', () => {
     for (const id of openSections) {
       const section = document.getElementById(id);
       if (section) section.open = true;
@@ -84,8 +67,41 @@
 </script>
 {{template "foot" .}}
 
+{{/* the Sync, Force sync and Persist overrides forms of one target; the Claude tab wraps them in its card, the Permissions tab in its own with the overridden badge */}}
+{{define "_sync_actions"}}
+<div class="card card-actions">
+  {{template "_sync_forms" .}}
+</div>
+<div id="op-result"></div>
+{{end}}
+{{define "_sync_forms"}}
+  <form hx-post="/api/config/{{.Target}}/sync/revert" hx-target="#op-result"
+        hx-confirm="Overwrite the live {{.Target}} settings with the repo fragment?">
+    <button type="submit" title="repo fragment → live: overwrite the live {{.Target}} settings with the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Sync</button>
+  </form>
+  {{if eq .Target "claude"}}
+  {{/* the preview lists what the rebuild drops; its confirm posts confirmed=on to the force route */}}
+  <form hx-post="/api/config/{{.Target}}/sync/force/preview" hx-target="#op-result">
+    <button type="submit" title="repo template → live: preview what a rebuild of the live {{.Target}} settings from base plus the selected components' fragments drops"{{if .FragmentMissing}} disabled{{end}}>Force sync</button>
+  </form>
+  {{else}}
+  <form hx-post="/api/config/{{.Target}}/sync/force" hx-target="#op-result"
+        hx-confirm="Overwrite the live {{.Target}} settings with the repo fragment? The previous file goes to the trash.">
+    <input type="hidden" name="confirmed" value="on">
+    <button type="submit" title="repo fragment → live: overwrite the live {{.Target}} settings with the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Force sync</button>
+  </form>
+  {{end}}
+  <form hx-post="/api/config/{{.Target}}/sync/apply" hx-target="#op-result"
+        hx-confirm="Overwrite the repo fragment with the live {{.Target}} settings?">
+    <button type="submit" title="live → repo fragment: write the current live {{.Target}} settings back into the repo fragment"{{if .FragmentMissing}} disabled{{end}}>Persist overrides</button>
+  </form>
+  {{if .FragmentMissing}}<span class="meta">repo fragment missing: {{.FragmentPath}}</span>{{end}}
+{{end}}
 {{define "_config_tabs"}}
 <div class="tabs">
+  <a href="/config/smine" {{if eq .Page "config-smine"}}class="active"{{end}}>Smine</a>
+  <a href="/config/hooks" {{if eq .Page "config-hooks"}}class="active"{{end}}>Hooks</a>
+  {{if hasComponent "gate"}}<a href="/config/permissions" {{if eq .Page "config-permissions"}}class="active"{{end}}>Permissions</a>{{end}}
   <a href="/config/claude" {{if eq .Page "config-claude"}}class="active"{{end}}>Claude</a>
   <a href="/config/codex" {{if eq .Page "config-codex"}}class="active"{{end}}>Codex</a>
 </div>

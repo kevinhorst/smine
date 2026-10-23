@@ -1,0 +1,1214 @@
+{{template "head" .}}
+{{template "nav" .}}
+{{if .Picker}}
+<h1>Skills</h1>
+{{template "_skills_tabs" .}}
+<div class="card card-filter">
+  <select class="scope-select" title="skill" onchange="location.href='/scripts/skills/graph?skill='+encodeURIComponent(this.value)">
+    {{range .Picker}}<option value="{{.Value}}"{{if .IsSelected}} selected{{end}}>/{{.Label}}</option>{{end}}
+  </select>
+  <a class="meta" href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}">open /{{.Skill.Name}}</a>
+</div>
+{{else}}
+{{template "_skill_head" .}}
+{{end}}
+{{if .LoadError}}
+<div class="card card-error st-warnings">
+  <span class="label">The skill model does not load</span>
+  <pre class="value-view">{{.LoadError}}</pre>
+  {{if eq .Skill.Origin "home"}}<p class="meta">Deployed copies carry no model — <a href="/scripts/skills/repo/{{.Skill.Name}}/graph">open the repo skill</a>.</p>{{end}}
+</div>
+{{else}}
+<div class="st-toolbar">
+  <button type="button" class="st-btn" data-st="zoom-out" title="Zoom out">−</button>
+  <span class="st-zoom" id="st-zoom-level">100%</span>
+  <button type="button" class="st-btn" data-st="zoom-in" title="Zoom in">+</button>
+  <button type="button" class="st-btn" data-st="fit" title="Fit width">fit</button>
+  <span class="st-sep"></span>
+  <button type="button" class="st-btn" data-st="expand">expand all</button>
+  <button type="button" class="st-btn" data-st="collapse">collapse all</button>
+  <button type="button" class="st-btn" data-st="reset-layout" title="Return every moved tile to the computed layout">reset layout</button>
+  <span class="st-sep"></span>
+  <input type="search" class="st-filter" id="st-filter" placeholder="filter entries…">
+  <label class="st-toggle"><input type="checkbox" id="st-formal"> formal layer</label>
+  <span class="st-sep"></span>
+  <label class="st-toggle"><input type="checkbox" class="st-slot-toggle" data-slot="defs" checked> defs</label>
+  <label class="st-toggle"><input type="checkbox" class="st-slot-toggle" data-slot="rules" checked> rules</label>
+  <label class="st-toggle"><input type="checkbox" class="st-slot-toggle" data-slot="quality" checked> quality</label>
+  <label class="st-toggle"><input type="checkbox" class="st-slot-toggle" data-slot="flow" checked> flow</label>
+  <label class="st-toggle"><input type="checkbox" class="st-slot-toggle" data-slot="payloads" checked> payloads</label>
+  <span class="st-sep"></span>
+  <button type="button" class="st-btn" id="st-warnings-toggle" title="Everything the battery and the structure checks flag">all warnings <span class="count-note" id="st-warnings-count">0</span></button>
+  <span class="st-tier" title="analysis tier declared in the skill's model file —strict: typed atoms, the z3 battery and the skill's queries apply; annotations: clauses only have to parse">{{.Tier}} · {{.EntryCount}} entries</span>
+</div>
+<div class="st-findings-slot" id="st-findings-slot" hx-get="{{.Base}}/findings" hx-trigger="load" hx-swap="innerHTML"><span class="st-battery">battery: running…</span></div>
+<details class="st-diff-card" hx-get="{{.Base}}/diff" hx-trigger="toggle once" hx-target="#st-diff-body" hx-swap="innerHTML">
+  <summary>uncommitted changes</summary>
+  <div id="st-diff-body"><p class="meta">loading…</p></div>
+</details>
+{{with .Note}}<div class="st-skill-note"><span class="st-compartment-label">note</span> <span id="st-skill-note-text">{{.}}</span></div>{{end}}
+<div class="st-stage">
+<div class="st-viewport" id="st-viewport">
+  <div class="st-canvas st-hide-formal" id="st-canvas">
+    <svg class="st-edges" id="st-edges" aria-hidden="true">
+      <defs>
+        <marker id="st-arrow-out" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="st-arrow-out" d="M0,0 L8,4 L0,8 z"></path></marker>
+        <marker id="st-arrow-in" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="st-arrow-in" d="M0,0 L8,4 L0,8 z"></path></marker>
+        <marker id="st-arrow-route" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="st-arrow-route" d="M0,0 L8,4 L0,8 z"></path></marker>
+      </defs>
+    </svg>
+    <div class="st-grid">
+    {{if .ContextEntries}}
+    <div class="st-top-band">
+      {{template "_st_context_entries" .}}
+    </div>
+    {{end}}
+    {{if or .Args .Inputs .Env}}
+    <div class="st-invocation" id="st-invocation">
+      {{if .Env}}
+      <span class="st-chip st-kind-chip">env</span>
+      {{range .Env}}
+      <div class="st-tile st-tile-env st-env-{{.State}}" data-env="{{.Name}}" title="{{.Name}} — {{.Source}}{{with .Cause}} · {{.}}{{end}}">
+        <span class="st-tile-mark">{{.Mark}}</span>
+        <span class="st-tile-name">{{.Key}}</span>
+        <button type="button" class="st-tile-detail" data-env-detail="{{.Name}}" title="interface, source, readers">›</button>
+      </div>
+      {{end}}
+      {{end}}
+      {{if .Args}}
+      <span class="st-chip st-kind-chip">args</span>
+      {{range .Args}}
+      <div class="st-tile{{if .Input}} st-tile-toggle{{end}}" data-arg="{{.Name}}"{{if .Input}} data-input="{{.Input}}" data-atom="{{(index .Grants 0).Atom}}"{{end}} title="{{.Effect}}">
+        {{if .Input}}<span class="st-tile-dot"></span>{{end}}
+        <span class="st-tile-name">{{.Name}}</span>
+        {{if .Form}}<span class="st-chip st-arg-form-chip">{{.Form}}</span>{{end}}
+        {{if not .Owners}}<span class="st-badge st-badge-warn" title="names no owning entry — link one in its Effect cell">⚠</span>{{end}}
+        <button type="button" class="st-tile-detail" data-arg-detail="{{.Name}}" title="form, default, effect, flows to">›</button>
+      </div>
+      {{end}}
+      {{end}}
+      {{if .Inputs}}
+      <span class="st-chip st-kind-chip">session</span>
+      {{range .Inputs}}
+      <div class="st-tile st-tile-toggle" data-input="{{.Id}}" data-atom="{{.Atom}}" title="session state the conditions read"><span class="st-tile-dot"></span><span class="st-tile-name">{{.Label}}</span></div>
+      {{end}}
+      {{end}}
+    </div>
+    {{end}}
+      <div class="st-spine">
+        {{range .Spine}}{{template "_st_card" .}}{{end}}
+      </div>
+      <div class="st-rail st-rail-context">
+        {{template "_st_title_states" .}}
+        {{range .Contexts}}{{template "_st_card" .}}{{end}}
+        {{template "_st_graph_rails" .}}
+      </div>
+    </div>
+  </div>
+</div>
+<aside class="st-panel st-panel-warnings" id="st-warnings" hidden>
+  <div class="st-panel-bar"><span class="st-compartment-label">all warnings</span><button type="button" class="st-btn" id="st-warnings-close">close</button></div>
+  <div class="st-panel-body" id="st-warnings-body"></div>
+</aside>
+<aside class="st-panel" id="st-panel" hidden>
+  <div class="st-panel-bar"><button type="button" class="st-btn" id="st-close-all">close all</button></div>
+  <div class="st-panel-body" id="st-panel-body"></div>
+</aside>
+</div>
+<script type="application/json" id="graph-data">{{.DataJson}}</script>
+<script>
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('graph-data').textContent);
+  const projection = data.projection;
+  const payloads = data.payloads || {};
+  const argByName = {};
+  for (const arg of data.args || []) argByName[arg.name] = arg;
+  const envByName = {};
+  for (const row of data.env || []) envByName[row.name] = row;
+  // Reader kinds that sit on an entry row: its statement, a param, its field flags.
+  const ROW_READERS = new Set(['entry', 'param', 'flags']);
+  // Reverse maps for the entry card: the args that flow into an entry, the env
+  // keys it reads.
+  const ownersByEntry = {};
+  for (const arg of data.args || []) for (const id of arg.owners || []) (ownersByEntry[id] = ownersByEntry[id] || []).push(arg.name);
+  const envByEntry = {};
+  for (const row of data.env || []) {
+    for (const reader of row.readers || []) {
+      if (ROW_READERS.has(reader.kind)) (envByEntry[reader.id] = envByEntry[reader.id] || []).push(row.key);
+    }
+  }
+  const entryById = {};
+  for (const state of projection.states) {
+    for (const entry of state.entries || []) entryById[entry.id] = entry;
+  }
+  const base = document.getElementById('st-findings-slot').getAttribute('hx-get').replace(/\/findings$/, '');
+
+  // --- pan/zoom over the canvas transform -------------------------------
+  const viewport = document.getElementById('st-viewport');
+  const canvas = document.getElementById('st-canvas');
+  const zoomLabel = document.getElementById('st-zoom-level');
+  const view = { x: 0, y: 0, scale: 1 };
+  const apply = () => {
+    canvas.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
+    zoomLabel.textContent = Math.round(view.scale * 100) + '%';
+  };
+  const clampScale = (s) => Math.min(2, Math.max(0.25, s));
+  const fit = () => {
+    const width = canvas.scrollWidth;
+    view.scale = clampScale(width > 0 ? Math.min(1, (viewport.clientWidth - 24) / width) : 1);
+    view.x = 12; view.y = 12;
+    apply();
+  };
+  viewport.addEventListener('wheel', (event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.1 : 0.9;
+    const next = clampScale(view.scale * factor);
+    const rect = viewport.getBoundingClientRect();
+    const px = event.clientX - rect.left, py = event.clientY - rect.top;
+    view.x = px - (px - view.x) * (next / view.scale);
+    view.y = py - (py - view.y) * (next / view.scale);
+    view.scale = next;
+    apply();
+  }, { passive: false });
+  let drag = null;
+  viewport.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.st-entry, .st-tile, summary, button, input, a')) return;
+    drag = { x: event.clientX - view.x, y: event.clientY - view.y };
+    viewport.setPointerCapture(event.pointerId);
+    viewport.classList.add('st-grabbing');
+  });
+  viewport.addEventListener('pointermove', (event) => {
+    if (!drag) return;
+    view.x = event.clientX - drag.x;
+    view.y = event.clientY - drag.y;
+    apply();
+  });
+  viewport.addEventListener('pointerup', () => { drag = null; viewport.classList.remove('st-grabbing'); });
+
+  // --- edge overlay ------------------------------------------------------
+  const edgeLayer = document.getElementById('st-edges');
+  const rectOf = (element) => {
+    const rect = element.getBoundingClientRect();
+    const base = canvas.getBoundingClientRect();
+    const scale = view.scale || 1;
+    return {
+      x: (rect.left - base.left) / scale, y: (rect.top - base.top) / scale,
+      w: rect.width / scale, h: rect.height / scale,
+    };
+  };
+  const anchorEl = (element, side) => {
+    const box = rectOf(element);
+    if (side === 'top') return { x: box.x + box.w / 2, y: box.y };
+    if (side === 'bottom') return { x: box.x + box.w / 2, y: box.y + box.h };
+    if (side === 'left') return { x: box.x, y: box.y + box.h / 2 };
+    return { x: box.x + box.w, y: box.y + box.h / 2 };
+  };
+  const cardOf = (id) => canvas.querySelector(`[data-state-id="${CSS.escape(id)}"]`);
+  const rowOf = (id) => canvas.querySelector(`.st-entry[data-entry-id="${CSS.escape(id)}"]`);
+  // curve 'right' / 'left' bulges sideways (link lines), 'across' is a
+  // horizontal S between a row and the card beside it; anything else runs top
+  // to bottom (chain edges).
+  const drawPath = (from, to, cls, curve) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const dy = Math.max(24, Math.abs(to.y - from.y) / 2) * (to.y >= from.y ? 1 : -1);
+    const bulge = curve === 'left' ? -60 : 60;
+    const dx = to.x >= from.x ? 40 : -40;
+    let d = `M ${from.x} ${from.y} C ${from.x} ${from.y + dy}, ${to.x} ${to.y - dy}, ${to.x} ${to.y}`;
+    if (curve === 'right' || curve === 'left') {
+      d = `M ${from.x} ${from.y} C ${from.x + bulge} ${from.y}, ${to.x + bulge} ${to.y}, ${to.x} ${to.y}`;
+    }
+    if (curve === 'across') {
+      d = `M ${from.x} ${from.y} C ${from.x + dx} ${from.y}, ${to.x - dx} ${to.y}, ${to.x} ${to.y}`;
+    }
+    path.setAttribute('d', d);
+    path.setAttribute('class', cls);
+    edgeLayer.appendChild(path);
+    return path;
+  };
+  // tileOf: the tile an element sits in — a row's card, or the element itself
+  // outside one.
+  const tileOf = (element) => element.closest('.st-card') || element;
+  // connect draws one line on the sides of its two tiles that face each
+  // other. A row line (fallbackSide set) runs left/right between tiles in
+  // different columns, else keeps fallbackSide (bulged link); a chain line
+  // runs bottom/top between tiles at different heights, else left/right.
+  const connect = (fromEl, toEl, cls, fallbackSide) => {
+    const a = rectOf(tileOf(fromEl)), b = rectOf(tileOf(toEl));
+    const gapX = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w));
+    const gapY = Math.max(b.y - (a.y + a.h), a.y - (b.y + b.h));
+    const isAcross = fallbackSide ? gapX > 0 : gapY <= 0 && gapX > 0;
+    let from, to, curve;
+    if (isAcross) {
+      const isRight = b.x > a.x;
+      from = anchorEl(fromEl, isRight ? 'right' : 'left');
+      to = anchorEl(toEl, isRight ? 'left' : 'right');
+      curve = 'across';
+    } else if (fallbackSide) {
+      from = anchorEl(fromEl, fallbackSide);
+      to = anchorEl(toEl, fallbackSide);
+      curve = fallbackSide;
+    } else {
+      const isDown = b.y >= a.y;
+      from = anchorEl(fromEl, isDown ? 'bottom' : 'top');
+      to = anchorEl(toEl, isDown ? 'top' : 'bottom');
+    }
+    return { path: drawPath(from, to, cls, curve), from, to, curve };
+  };
+  // Chain edges. The spine is a run of cards: phase parts and, between the
+  // parts they split, route cards. The chain runs green from part to part —
+  // down a left lane where route cards stand in between — and every route
+  // draws its split line from the part above it and its reentry line to the
+  // entry the chain continues at: amber when active, gray when undetermined,
+  // nothing when inactive.
+  const LANE = 24;
+  // visibleAnchor: a row inside a closed card still lays out below it — the
+  // closed card stands in.
+  const visibleAnchor = (row) => row.closest('.st-card:not([open])') || row;
+  // sectionOf: a continuation card `<id>~<n>` belongs to section `<id>`.
+  const sectionOf = (card) => card.dataset.stateId.split('~')[0];
+  const drawBypass = (fromEl, toEl) => {
+    const a = rectOf(fromEl), b = rectOf(toEl);
+    drawPath({ x: a.x + LANE, y: a.y + a.h }, { x: b.x + LANE, y: b.y }, 'st-edge st-edge-flow');
+  };
+  const drawRoute = (host, route, isAdjacent) => {
+    if (route.classList.contains('st-inactive')) return;
+    const isActive = route.classList.contains('st-route-active');
+    const cls = isActive ? 'st-edge st-edge-route' : 'st-edge st-edge-route st-edge-route-unknown';
+    const arrow = isActive ? 'url(#st-arrow-route)' : '';
+    if (host) connect(host, route, cls, isAdjacent ? undefined : 'right').path.setAttribute('marker-end', arrow);
+    const reentry = rowOf((data.reentries || {})[route.dataset.stateId] || '');
+    if (reentry) connect(route, visibleAnchor(reentry), cls, 'right').path.setAttribute('marker-end', arrow);
+  };
+  const drawChain = () => {
+    let previous = null;
+    let pending = [];
+    const lastPart = {};
+    for (const card of canvas.querySelectorAll('.st-spine > .st-card')) {
+      const earlier = lastPart[sectionOf(card)];
+      lastPart[sectionOf(card)] = card;
+      if (card.classList.contains('st-kind-route')) {
+        // A route's own continuation follows its first part; a route card
+        // waits for the part behind it.
+        if (earlier) connect(earlier, card, 'st-edge st-edge-flow'); else pending.push(card);
+        continue;
+      }
+      if (previous && pending.length) drawBypass(previous, card);
+      if (previous && !pending.length) connect(previous, card, 'st-edge st-edge-flow');
+      pending.forEach((route, index) => drawRoute(previous, route, index === 0));
+      previous = card;
+      pending = [];
+    }
+    pending.forEach((route, index) => drawRoute(previous, route, index === 0));
+  };
+  const drawEdges = () => {
+    edgeLayer.setAttribute('width', canvas.scrollWidth);
+    edgeLayer.setAttribute('height', canvas.scrollHeight);
+    for (const old of [...edgeLayer.children]) if (old.tagName !== 'defs') old.remove();
+    drawChain();
+    drawConnections();
+    drawResourceEdges();
+  };
+  // openAround opens the card around an element; true means a closed card
+  // was opened.
+  const openAround = (element) => {
+    let opened = false;
+    for (let card = element.closest('.st-card'); card; card = card.parentElement.closest('.st-card')) {
+      if (!card.open) { card.open = true; opened = true; }
+    }
+    return opened;
+  };
+
+  // --- sticky on-demand link lines for the focused row --------------------
+  // Selection is state: it persists across redraws until re-click, Esc, or
+  // a click on empty canvas. Outgoing refs leave the row's right edge (neon,
+  // arrow at the target); incoming refs arrive at its left edge (orange,
+  // arrow into the row) — the same link read from the other end.
+  let focusedId = null;
+  const LINKS = [
+    { key: 'refs', side: 'right', outgoing: true, cls: 'st-conn-ref', marker: 'url(#st-arrow-out)', label: 'ref' },
+    { key: 'refBy', side: 'left', outgoing: false, cls: 'st-conn-refby', marker: 'url(#st-arrow-in)', label: 'ref by' },
+  ];
+  // connLabel sits on the curve's bulge, outside the cards: right of a
+  // right-side line, left of a left-side one.
+  const connLabel = (from, to, label, cls, side) => {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const isLeft = side === 'left';
+    const isAcross = side === 'across';
+    text.setAttribute('x', isAcross ? (from.x + to.x) / 2 : isLeft ? Math.min(from.x, to.x) - 48 : Math.max(from.x, to.x) + 48);
+    text.setAttribute('y', (from.y + to.y) / 2 - 4);
+    text.setAttribute('text-anchor', isAcross ? 'middle' : isLeft ? 'end' : 'start');
+    text.setAttribute('class', 'st-conn st-conn-label ' + cls);
+    text.textContent = label;
+    edgeLayer.appendChild(text);
+  };
+  // drawLinks draws one direction; false means a closed card was opened and a
+  // full redraw is queued.
+  const drawLinks = (focusedRow, entry, link) => {
+    for (const id of entry[link.key] || []) {
+      const other = rowOf(id);
+      if (!other) continue;
+      if (openAround(other)) { requestAnimationFrame(drawEdges); return false; }
+      const line = link.outgoing
+        ? connect(focusedRow, other, 'st-edge st-conn ' + link.cls, link.side)
+        : connect(other, focusedRow, 'st-edge st-conn ' + link.cls, link.side);
+      line.path.setAttribute('marker-end', link.marker);
+      connLabel(line.from, line.to, link.label, link.cls + '-label', line.curve);
+    }
+    return true;
+  };
+  // --- tile links: an arg tile to the entries its Effect cell names, an env
+  // tile to the rows and anchors reading it. One focused tile at a time, the
+  // same sticky semantics as a focused row.
+  let focusedTile = null;
+  const tileEl = (tile) => canvas.querySelector(`.st-tile[data-${tile.kind}="${CSS.escape(tile.name)}"]`);
+  const tileTargets = (tile) => {
+    if (tile.kind === 'arg') {
+      return ((argByName[tile.name] || {}).owners || []).map((id) => ({ el: rowOf(id), cls: 'st-conn-arg', label: 'arg' }));
+    }
+    const targets = [];
+    for (const reader of (envByName[tile.name] || {}).readers || []) {
+      if (ROW_READERS.has(reader.kind)) targets.push({ el: rowOf(reader.id), cls: 'st-conn-env', label: reader.kind });
+      if (reader.kind === 'anchor') targets.push({ el: canvas.querySelector(`[data-enforce-anchor="${CSS.escape(reader.id)}"]`), cls: 'st-conn-env', label: 'anchor' });
+    }
+    return targets;
+  };
+  // drawTileConnections: false means a closed card was opened and a full
+  // redraw is queued.
+  const drawTileConnections = () => {
+    if (!focusedTile) return true;
+    const from = tileEl(focusedTile);
+    if (!from) return true;
+    for (const target of tileTargets(focusedTile)) {
+      if (!target.el) continue;
+      if (openAround(target.el)) { requestAnimationFrame(drawEdges); return false; }
+      const line = connect(from, visibleAnchor(target.el), 'st-edge st-conn ' + target.cls, 'right');
+      line.path.setAttribute('marker-end', 'url(#st-arrow-out)');
+      connLabel(line.from, line.to, target.label, target.cls + '-label', line.curve);
+    }
+    return true;
+  };
+  const drawConnections = () => {
+    for (const old of edgeLayer.querySelectorAll('.st-conn')) old.remove();
+    if (!drawTileConnections()) return;
+    if (!focusedId) return;
+    const focusedRow = rowOf(focusedId);
+    const entry = entryById[focusedId];
+    if (!focusedRow || !entry) return;
+    for (const link of LINKS) if (!drawLinks(focusedRow, entry, link)) return;
+  };
+  const focusRow = (id) => {
+    focusedId = (focusedId === id) ? null : id;
+    for (const row of canvas.querySelectorAll('.st-entry.st-focused')) row.classList.remove('st-focused');
+    if (focusedId) rowOf(focusedId)?.classList.add('st-focused');
+    drawConnections();
+  };
+  const focusTile = (kind, name) => {
+    const isSame = focusedTile && focusedTile.kind === kind && focusedTile.name === name;
+    focusedTile = isSame ? null : { kind, name };
+    for (const tile of canvas.querySelectorAll('.st-tile.st-focused')) tile.classList.remove('st-focused');
+    if (focusedTile) tileEl(focusedTile)?.classList.add('st-focused');
+    drawConnections();
+  };
+  const clearFocus = () => {
+    if (focusedId) focusRow(focusedId);
+    if (focusedTile) focusTile(focusedTile.kind, focusedTile.name);
+  };
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { clearFocus(); clearAtomFilter(); } });
+
+  // --- expand / collapse / filter / toggles ------------------------------
+  const cards = [...canvas.querySelectorAll('.st-card')];
+  const redraw = () => requestAnimationFrame(drawEdges);
+  for (const card of cards) card.addEventListener('toggle', redraw);
+  document.querySelector('[data-st="expand"]').addEventListener('click', () => { cards.forEach((c) => { c.open = true; }); redraw(); });
+  document.querySelector('[data-st="collapse"]').addEventListener('click', () => { cards.forEach((c) => { c.open = false; }); redraw(); });
+  document.querySelector('[data-st="zoom-in"]').addEventListener('click', () => { view.scale = clampScale(view.scale * 1.2); apply(); });
+  document.querySelector('[data-st="zoom-out"]').addEventListener('click', () => { view.scale = clampScale(view.scale / 1.2); apply(); });
+  document.querySelector('[data-st="fit"]').addEventListener('click', fit);
+
+  // --- movable tiles -------------------------------------------------------
+  // A tile moves by dragging its header: its offset is a translate on top of
+  // the flow layout, so expanding a card still reflows its neighbours.
+  // Offsets are per viewer and per skill; a moved tile never covers another.
+  const DRAG_THRESHOLD = 4;
+  const TILE_GAP = 16;
+  const layoutKey = 'structure-layout:' + location.pathname;
+  const offsets = (() => {
+    try { return JSON.parse(localStorage.getItem(layoutKey) || '{}') || {}; } catch { return {}; }
+  })();
+  const saveLayout = () => {
+    try { localStorage.setItem(layoutKey, JSON.stringify(offsets)); } catch { /* storage unavailable: layout stays for this page view */ }
+  };
+  const placeTile = (tile) => {
+    const offset = offsets[tile.dataset.stateId];
+    tile.style.translate = offset ? `${offset.x}px ${offset.y}px` : '';
+  };
+  // Tiles are the top-level cards; a route card nested in a phase moves with it.
+  const tiles = cards.filter((card) => !card.parentElement.closest('.st-card'));
+  const overlaps = (a, b) => a.x < b.x + b.w + TILE_GAP && b.x < a.x + a.w + TILE_GAP
+    && a.y < b.y + b.h + TILE_GAP && b.y < a.y + a.h + TILE_GAP;
+  // resolveOverlap moves a covering tile to the nearest spot clear of every
+  // obstacle: candidates sit flush beside each obstacle, the shortest free
+  // one wins — beyond the outermost obstacle one always is.
+  const resolveOverlap = (tile) => {
+    const others = tiles.filter((other) => other !== tile).map(rectOf);
+    const box = rectOf(tile);
+    const isFree = (e) => !others.some((o) => overlaps({ x: box.x + e.x, y: box.y + e.y, w: box.w, h: box.h }, o));
+    if (isFree({ x: 0, y: 0 })) return;
+    const exits = others.flatMap((o) => [
+      { x: o.x + o.w + TILE_GAP - box.x, y: 0 },
+      { x: o.x - TILE_GAP - (box.x + box.w), y: 0 },
+      { x: 0, y: o.y + o.h + TILE_GAP - box.y },
+      { x: 0, y: o.y - TILE_GAP - (box.y + box.h) },
+    ]).filter(isFree);
+    if (!exits.length) return;
+    const exit = exits.reduce((best, e) => (Math.abs(e.x) + Math.abs(e.y) < Math.abs(best.x) + Math.abs(best.y) ? e : best));
+    const offset = offsets[tile.dataset.stateId] || { x: 0, y: 0 };
+    offsets[tile.dataset.stateId] = { x: offset.x + exit.x, y: offset.y + exit.y };
+    placeTile(tile);
+  };
+  tiles.forEach(placeTile);
+
+  let tileDrag = null;
+  let swallowClick = false;
+  canvas.addEventListener('pointerdown', (event) => {
+    const summary = event.target.closest('.st-card > summary');
+    if (!summary || event.button !== 0 || event.target.closest('button, [data-pred], [data-atom]')) return;
+    const tile = summary.parentElement;
+    if (!tiles.includes(tile)) return;
+    tileDrag = { tile, x: event.clientX, y: event.clientY, base: offsets[tile.dataset.stateId] || { x: 0, y: 0 }, moved: false };
+    summary.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove', (event) => {
+    if (!tileDrag) return;
+    const dx = (event.clientX - tileDrag.x) / view.scale, dy = (event.clientY - tileDrag.y) / view.scale;
+    if (!tileDrag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    tileDrag.moved = true;
+    tileDrag.tile.classList.add('st-dragging');
+    offsets[tileDrag.tile.dataset.stateId] = { x: tileDrag.base.x + dx, y: tileDrag.base.y + dy };
+    placeTile(tileDrag.tile);
+    redraw();
+  });
+  canvas.addEventListener('pointerup', () => {
+    if (!tileDrag) return;
+    const { tile, moved } = tileDrag;
+    tileDrag = null;
+    if (!moved) return;
+    tile.classList.remove('st-dragging');
+    swallowClick = true;
+    resolveOverlap(tile);
+    saveLayout();
+    redraw();
+  });
+  // The click ending a drag lands on the header — it must not toggle the card.
+  canvas.addEventListener('click', (event) => {
+    if (!swallowClick) return;
+    swallowClick = false;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  // An expand can grow a card under a moved tile — moved tiles yield.
+  for (const card of cards) {
+    card.addEventListener('toggle', () => {
+      for (const tile of tiles) if (offsets[tile.dataset.stateId]) resolveOverlap(tile);
+      saveLayout();
+    });
+  }
+  document.querySelector('[data-st="reset-layout"]').addEventListener('click', () => {
+    for (const id of Object.keys(offsets)) delete offsets[id];
+    tiles.forEach(placeTile);
+    saveLayout();
+    redraw();
+  });
+  document.getElementById('st-formal').addEventListener('change', (event) => {
+    canvas.classList.toggle('st-hide-formal', !event.target.checked);
+  });
+  for (const toggle of document.querySelectorAll('.st-slot-toggle')) {
+    toggle.addEventListener('change', () => {
+      canvas.classList.toggle('st-hide-' + toggle.dataset.slot, !toggle.checked);
+      redraw();
+    });
+  }
+  const filter = document.getElementById('st-filter');
+  filter.addEventListener('input', () => {
+    const needle = filter.value.trim().toLowerCase();
+    for (const row of canvas.querySelectorAll('.st-entry')) {
+      const hit = !needle || (row.dataset.search || '').includes(needle);
+      row.classList.toggle('st-dim', !hit);
+    }
+    for (const card of cards) {
+      const hits = needle && [...card.querySelectorAll('.st-entry')].some((row) => (row.dataset.search || '').includes(needle));
+      card.classList.toggle('st-hit', Boolean(hits));
+      if (hits) card.open = true;
+    }
+    redraw();
+  });
+
+  // --- scenario ------------------------------------------------------------
+  // One invocation per page: the inputs switched on. Tiles and route header
+  // chips change it through the scenario endpoint; the verdict sets the
+  // classes, the hash carries the on list for deep links.
+  const on = new Set(((location.hash.match(/^#on=([^&]*)$/) || [])[1] || '').split(',').filter(Boolean));
+  const routeTitle = (id) => cardOf(id)?.querySelector('.st-card-title')?.textContent || id;
+  const applyScenario = (result) => {
+    on.clear();
+    for (const id of result.on || []) on.add(id);
+    history.replaceState(null, '', on.size ? '#on=' + [...on].join(',') : location.pathname + location.search);
+    for (const tile of canvas.querySelectorAll('[data-input]')) tile.classList.toggle('st-on', on.has(tile.dataset.input));
+    for (const [id, status] of Object.entries(result.states || {})) {
+      // A section's status reaches its continuation cards `<id>~<n>` too.
+      for (const card of canvas.querySelectorAll(`[data-state-id="${CSS.escape(id)}"], [data-state-id^="${CSS.escape(id)}~"]`)) {
+        card.classList.toggle('st-inactive', status === 'inactive');
+        card.classList.toggle('st-route-active', card.classList.contains('st-kind-route') && status === 'active');
+      }
+    }
+    for (const row of canvas.querySelectorAll('.st-entry[data-entry-id]')) {
+      const id = row.dataset.entryId;
+      const replacedBy = (result.replaced || {})[id];
+      row.classList.toggle('st-inactive', (result.entries || {})[id] === 'inactive');
+      row.title = replacedBy ? `replaced by ${routeTitle(replacedBy)}` : '';
+    }
+    redraw();
+  };
+  const fetchScenario = async (flip) => {
+    const params = new URLSearchParams();
+    for (const id of on) params.append('on', id);
+    if (flip) params.set('flip', flip);
+    // location.origin never carries userinfo — a page opened as
+    // http://user:pass@host/… would make a relative fetch throw.
+    const response = await fetch(new URL(`${base}/scenario?${params}`, location.origin));
+    if (!response.ok) return null;
+    const result = await response.json();
+    applyScenario(result);
+    return result;
+  };
+  const revealTile = (id) => {
+    const tile = canvas.querySelector(`[data-input="${CSS.escape(id)}"]`);
+    if (!tile) return;
+    tile.scrollIntoView({ block: 'center' });
+    tile.classList.add('st-flash');
+    setTimeout(() => tile.classList.remove('st-flash'), 1200);
+  };
+  const revealCard = (id) => {
+    const card = cardOf(id);
+    if (!card) return;
+    openAround(card);
+    card.scrollIntoView({ block: 'center' });
+    card.classList.add('st-flash');
+    setTimeout(() => card.classList.remove('st-flash'), 1200);
+    redraw();
+  };
+  const toggleInput = (id) => {
+    if (on.has(id)) on.delete(id); else on.add(id);
+    fetchScenario();
+  };
+  // A pred the server cannot flip — no input controls it — points at the
+  // tiles of the atoms it reads instead.
+  const flipPred = async (pred) => {
+    const result = await fetchScenario(pred);
+    if (!result || result.flipped) return;
+    const atoms = new Set(tokensOf(pred));
+    for (const tile of canvas.querySelectorAll('[data-input][data-atom]')) {
+      if (atoms.has(tile.dataset.atom)) revealTile(tile.dataset.input);
+    }
+  };
+
+  // --- atom cross-highlight ----------------------------------------------
+  // A pred or post chip is a question about atoms: who produces them
+  // (st-producer) and who needs them (st-consumer). No dimming.
+  const KEYWORDS = new Set(['and', 'or', 'not']);
+  const tokensOf = (text) => [...new Set(((text || '').match(/[A-Za-z_]\w*/g) || []).filter((t) => !KEYWORDS.has(t)))];
+  const clearAtomFilter = () => {
+    for (const chip of canvas.querySelectorAll('.st-chip-active')) chip.classList.remove('st-chip-active');
+    for (const row of canvas.querySelectorAll('.st-entry')) row.classList.remove('st-producer', 'st-consumer');
+  };
+  const atomFilter = (atoms) => {
+    const wanted = new Set(atoms);
+    for (const row of canvas.querySelectorAll('.st-entry[data-entry-id]')) {
+      const entry = entryById[row.dataset.entryId];
+      if (!entry) continue;
+      const produces = (entry.post || []).some((atom) => wanted.has(atom));
+      const consumes = tokensOf(entry.pred).some((atom) => wanted.has(atom));
+      row.classList.toggle('st-producer', produces);
+      row.classList.toggle('st-consumer', consumes && !produces);
+      if ((produces || consumes)) openAround(row);
+    }
+    redraw();
+  };
+  canvas.addEventListener('click', (event) => {
+    const detail = event.target.closest('[data-arg-detail]');
+    if (detail) {
+      const name = detail.dataset.argDetail;
+      focusTile('arg', name);
+      openCard('arg:' + name, null, !event.shiftKey, () => buildArgCard(name));
+      return;
+    }
+    const envDetail = event.target.closest('[data-env-detail]');
+    if (envDetail) {
+      const name = envDetail.dataset.envDetail;
+      focusTile('env', name);
+      openCard('env:' + name, null, !event.shiftKey, () => buildEnvCard(name));
+      return;
+    }
+    const envTile = event.target.closest('.st-tile[data-env]');
+    if (envTile) { focusTile('env', envTile.dataset.env); return; }
+    const tile = event.target.closest('[data-input]');
+    if (tile) { event.preventDefault(); toggleInput(tile.dataset.input); return; }
+    const plainTile = event.target.closest('.st-tile[data-arg]');
+    if (plainTile) {
+      const name = plainTile.dataset.arg;
+      focusTile('arg', name);
+      openCard('arg:' + name, null, !event.shiftKey, () => buildArgCard(name));
+      return;
+    }
+    const headChip = event.target.closest('.st-card > summary .st-pred[data-pred]');
+    if (headChip) { event.preventDefault(); event.stopPropagation(); flipPred(headChip.dataset.pred); return; }
+    const goto = event.target.closest('[data-goto-input]');
+    if (goto) { event.stopPropagation(); revealTile(goto.dataset.gotoInput); return; }
+    // Atom chips win over their host rows.
+    const atomBtn = event.target.closest('[data-atom]');
+    if (atomBtn) {
+      event.stopPropagation();
+      event.preventDefault();
+      const active = atomBtn.classList.contains('st-chip-active');
+      clearAtomFilter();
+      if (active) return;
+      atomBtn.classList.add('st-chip-active');
+      atomFilter([atomBtn.dataset.atom]);
+      return;
+    }
+    const chip = event.target.closest('.st-pred[data-pred], .st-post');
+    if (chip) {
+      event.stopPropagation();
+      const active = chip.classList.contains('st-chip-active');
+      clearAtomFilter();
+      if (active) return;
+      chip.classList.add('st-chip-active');
+      atomFilter(tokensOf(chip.dataset.pred || chip.textContent.replace(/^grants /, '')));
+      return;
+    }
+    const subst = event.target.closest('[data-open-entry]');
+    if (subst) {
+      event.stopPropagation();
+      const id = subst.dataset.openEntry;
+      focusRow(id);
+      const row = rowOf(id);
+      if (row) {
+        openAround(row);
+        row.scrollIntoView({ block: 'center' });
+      }
+      openCard(id, null, !event.shiftKey);
+      return;
+    }
+    const row = event.target.closest('.st-entry[data-entry-id]');
+    if (row) {
+      clearAtomFilter();
+      focusRow(row.dataset.entryId);
+      openCard(row.dataset.entryId, null, !event.shiftKey);
+      return;
+    }
+    // Empty-canvas click clears the sticky selection.
+    if (!event.target.closest('.st-card')) { clearFocus(); clearAtomFilter(); }
+  });
+
+  // --- entry card stack ----------------------------------------------------
+  const panel = document.getElementById('st-panel');
+  const panelBody = document.getElementById('st-panel-body');
+  const escapeHtml = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // renderRich: escaped text + inline code + entry links where referenced.
+  const renderRich = (text) => escapeHtml(text)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(#(skill-[a-z0-9-]+)\)/g, '<a href="#" class="st-ref-link" data-ref-slug="$2">$1</a>');
+  const idBySlug = {};
+  for (const id of Object.keys(entryById)) idBySlug[id.toLowerCase()] = id;
+  const chipHtml = (label, cls) => `<span class="st-chip ${cls}">${label}</span>`;
+  const syncSelection = () => {
+    const open = new Set([...panelBody.querySelectorAll('.st-entry-card')].map((card) => card.dataset.entryId));
+    for (const row of canvas.querySelectorAll('.st-entry')) {
+      row.classList.toggle('st-selected', open.has(row.dataset.entryId));
+    }
+    panel.hidden = open.size === 0;
+  };
+  const stateOf = (id) => projection.states.find((state) => (state.entries || []).some((entry) => entry.id === id));
+  const buildCard = (id) => {
+    const entry = entryById[id];
+    if (!entry) return null;
+    const card = document.createElement('div');
+    card.className = 'st-entry-card';
+    card.dataset.entryId = id;
+    const state = stateOf(id);
+    let html = `<button type="button" class="st-panel-close" data-close>×</button>`;
+    html += `<div class="st-panel-head">${chipHtml(entry.role, 'st-role st-role-' + entry.role)} <strong>${escapeHtml(entry.title)}</strong></div>`;
+    html += `<div class="st-panel-id">${escapeHtml(entry.id)}</div>`;
+    if (entry.statement) html += `<p class="st-panel-statement">${renderRich(entry.statement)}</p>`;
+    if (state && state.kind === 'route' && state.pred) html += `<div class="st-panel-clause">route: <code>${escapeHtml(state.pred)}</code></div>`;
+    if (entry.pred) html += `<div class="st-panel-clause">when (pred): <code>${escapeHtml(entry.pred)}</code></div>`;
+    if (entry.post && entry.post.length) html += `<div class="st-panel-clause">grants (post): <code>${escapeHtml(entry.post.join(' and '))}</code></div>`;
+    if (entry.channel && entry.channel !== 'prose') html += `<div class="st-panel-clause">channel: <code>${escapeHtml(entry.channel)}</code></div>`;
+    if (entry.gate) html += `<div class="st-panel-clause">gate: <code>${escapeHtml(entry.gate)}</code></div>`;
+    if (entry.hook) html += `<div class="st-panel-clause">hook: <code>${escapeHtml(entry.hook)}</code></div>`;
+    if (entry.schema) html += `<div class="st-panel-clause">schema: <code>${escapeHtml(entry.schema)}</code></div>`;
+    if (entry.custom && entry.custom.length) html += `<div class="st-panel-clause">custom: <code>${escapeHtml(entry.custom.join(', '))}</code></div>`;
+    for (const param of entry.params || []) html += `<div class="st-panel-param">• ${renderRich(param)}</div>`;
+    if (ownersByEntry[id]) html += `<div class="st-panel-clause">args: ${ownersByEntry[id].map((name) => `<code>${escapeHtml(name)}</code>`).join(' ')}</div>`;
+    if (envByEntry[id]) html += `<div class="st-panel-clause">env: ${envByEntry[id].map((key) => `<code>${escapeHtml(key)}</code>`).join(' ')}</div>`;
+    if (payloads[id]) html += `<pre class="st-payload">${escapeHtml(payloads[id])}</pre>`;
+    if (entry.refs && entry.refs.length) html += `<button type="button" class="st-btn st-refs-btn" data-open-links="refs">refs ▾ <span class="count-note">${entry.refs.length}</span></button>`;
+    if (entry.refBy && entry.refBy.length) html += `<button type="button" class="st-btn st-refs-btn st-refby-btn" data-open-links="refBy">referenced by ▾ <span class="count-note">${entry.refBy.length}</span></button>`;
+    if ((data.entryNotes || {})[id]) html += `<div class="st-panel-note">note: ${escapeHtml(data.entryNotes[id])}</div>`;
+    for (const finding of findingsById[id] || []) html += `<div class="st-panel-finding st-finding-${escapeHtml(finding.severity)}"><code>${escapeHtml(finding.check)}</code> ${escapeHtml(finding.message)}</div>`;
+    card.innerHTML = html;
+    return card;
+  };
+  // buildArgCard: the detail card for one invocation arg — form, default,
+  // effect; same panel semantics as entry cards.
+  const buildArgCard = (name) => {
+    const arg = argByName[name];
+    if (!arg) return null;
+    const card = document.createElement('div');
+    card.className = 'st-entry-card';
+    card.dataset.entryId = 'arg:' + name;
+    let html = `<button type="button" class="st-panel-close" data-close>×</button>`;
+    html += `<div class="st-panel-head">${chipHtml('arg', 'st-role st-role-arg')} <strong>${escapeHtml(name)}</strong></div>`;
+    if (arg.form) html += `<div class="st-panel-clause">form: <code>${escapeHtml(arg.form)}</code></div>`;
+    if (arg.default) html += `<div class="st-panel-clause">default: <code>${escapeHtml(arg.default)}</code></div>`;
+    for (const grant of arg.grants || []) html += `<div class="st-panel-clause">sets: <code>${escapeHtml(grant.label)}</code></div>`;
+    for (const id of arg.owners || []) html += `<div class="st-panel-clause">flows to: <button type="button" class="st-subst-link" data-open-entry="${escapeHtml(id)}">${escapeHtml((entryById[id] || {}).title || id)}</button></div>`;
+    if (arg.effect) html += `<p class="st-panel-statement">${renderRich(arg.effect)}</p>`;
+    card.innerHTML = html;
+    return card;
+  };
+  // buildEnvCard: the detail card for one variable — interface, scope, source,
+  // value or cause, then every reader; entry readers open their row.
+  const buildEnvCard = (name) => {
+    const row = envByName[name];
+    if (!row) return null;
+    const card = document.createElement('div');
+    card.className = 'st-entry-card';
+    card.dataset.entryId = 'env:' + name;
+    let html = `<button type="button" class="st-panel-close" data-close>×</button>`;
+    html += `<div class="st-panel-head">${chipHtml('env', 'st-role st-role-env')} <strong>${escapeHtml(row.key)}</strong> <span class="st-tile-mark st-env-${escapeHtml(row.state)}">${escapeHtml(row.mark)}</span></div>`;
+    html += `<div class="st-panel-id">${escapeHtml(name)}</div>`;
+    html += `<div class="st-panel-clause">interface: <code>${escapeHtml(row.interface)}</code> · ${escapeHtml(row.scope)}-scoped · ${row.isRequired ? 'required' : 'optional'}</div>`;
+    if (row.summary) html += `<p class="st-panel-statement">${escapeHtml(row.summary)}</p>`;
+    html += `<div class="st-panel-clause">source: <code>${escapeHtml(row.source)}</code>${row.value ? ` · value: <code>${escapeHtml(row.value)}</code>` : ''}${row.cause ? ` · ✗ ${escapeHtml(row.cause)}` : ''}</div>`;
+    for (const reader of row.readers || []) {
+      const isRow = ROW_READERS.has(reader.kind);
+      const target = isRow ? `<button type="button" class="st-subst-link" data-open-entry="${escapeHtml(reader.id)}">${escapeHtml(reader.label)}</button>` : `<code>${escapeHtml(reader.label)}</code>`;
+      html += `<div class="st-panel-param">${escapeHtml(reader.kind)}: ${target}</div>`;
+    }
+    card.innerHTML = html;
+    return card;
+  };
+  // openCard: plain click replaces the stack (replace=true); shift+click and
+  // ref buttons append. build defaults to entry cards; arg cards pass their own.
+  const openCard = (id, afterCard, replace, build) => {
+    if (replace) {
+      for (const card of panelBody.querySelectorAll('.st-entry-card')) {
+        if (card.dataset.entryId !== id) card.remove();
+      }
+    }
+    const existing = panelBody.querySelector(`.st-entry-card[data-entry-id="${CSS.escape(id)}"]`);
+    if (existing) {
+      syncSelection();
+      existing.scrollIntoView({ block: 'nearest' });
+      existing.classList.add('st-flash');
+      setTimeout(() => existing.classList.remove('st-flash'), 1200);
+      return existing;
+    }
+    const card = (build || buildCard)(id);
+    if (!card) return null;
+    if (afterCard && afterCard.parentElement === panelBody) afterCard.after(card);
+    else panelBody.appendChild(card);
+    syncSelection();
+    return card;
+  };
+  panelBody.addEventListener('click', (event) => {
+    const closer = event.target.closest('[data-close]');
+    if (closer) {
+      closer.closest('.st-entry-card').remove();
+      syncSelection();
+      return;
+    }
+    const linksBtn = event.target.closest('[data-open-links]');
+    if (linksBtn) {
+      const card = linksBtn.closest('.st-entry-card');
+      const entry = entryById[card.dataset.entryId];
+      let last = card;
+      for (const id of entry[linksBtn.dataset.openLinks] || []) last = openCard(id, last) || last;
+      return;
+    }
+    const link = event.target.closest('a.st-ref-link');
+    if (link) {
+      event.preventDefault();
+      const id = idBySlug[link.dataset.refSlug];
+      if (id) openCard(id, link.closest('.st-entry-card'));
+    }
+  });
+
+  document.getElementById('st-close-all').addEventListener('click', () => {
+    panelBody.innerHTML = '';
+    syncSelection();
+  });
+
+  // --- battery findings ---------------------------------------------------
+  // The findings slot loads after the page; its JSON blob badges every
+  // finding's entry rows and marks their cards, errors over warnings.
+  const findingsById = {};
+  let batteryFindings = [];
+  let batteryNote = 'battery: running…';
+  const decorateFindings = (slot) => {
+    const blob = slot.querySelector('.st-findings-data');
+    batteryFindings = blob ? JSON.parse(blob.textContent) || [] : [];
+    batteryNote = blob ? '' : slot.textContent.trim();
+    renderWarnings();
+    if (!blob) return;
+    for (const badge of canvas.querySelectorAll('.st-finding')) badge.remove();
+    for (const card of cards) card.classList.remove('st-has-error', 'st-has-warning');
+    for (const id of Object.keys(findingsById)) delete findingsById[id];
+    for (const finding of batteryFindings) {
+      for (const id of finding.entryIds || []) (findingsById[id] = findingsById[id] || []).push(finding);
+    }
+    for (const [id, list] of Object.entries(findingsById)) {
+      const row = rowOf(id);
+      if (!row) continue;
+      const severity = list.some((finding) => finding.severity === 'error') ? 'error' : 'warning';
+      const badge = document.createElement('span');
+      badge.className = `st-badge st-finding st-finding-${severity}`;
+      badge.title = list.map((finding) => `${finding.check}: ${finding.message}`).join('\n');
+      badge.textContent = '⚠';
+      row.querySelector('.st-badge-marks')?.appendChild(badge);
+      row.closest('.st-card')?.classList.add(`st-has-${severity}`);
+    }
+  };
+  document.body.addEventListener('htmx:afterSwap', (event) => {
+    if (event.detail.target.id === 'st-findings-slot') decorateFindings(event.detail.target);
+  });
+
+  // Entry links outside the canvas (the battery's error list) reveal the row
+  // and open its detail card.
+  const revealEntry = (id) => {
+    const row = rowOf(id);
+    if (row) openAround(row);
+    if (focusedId !== id) focusRow(id);
+    row?.scrollIntoView({ block: 'center' });
+    openCard(id, null, true);
+  };
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('.st-findings-slot [data-open-entry]');
+    if (link) revealEntry(link.dataset.openEntry);
+  });
+
+  // --- all warnings ----------------------------------------------------------
+  // One list of everything wrong: the battery's findings once its fragment
+  // lands, then the structural warnings the page data carries. A row's target
+  // opens the entry, the section card or the atom row it names.
+  const warningsPanel = document.getElementById('st-warnings');
+  const warningsBody = document.getElementById('st-warnings-body');
+  const warningsCount = document.getElementById('st-warnings-count');
+  const warningTarget = (kind, id, label) => `<button type="button" class="st-subst-link" data-warning-kind="${kind}" data-warning-target="${escapeHtml(id)}" title="${escapeHtml(id)}">${escapeHtml(label)}</button>`;
+  // An entry id inside a finding's message renders as its title chip; ids the
+  // message does not name follow as chips, so every entry shows once.
+  const ENTRY_ID = /SKILL-[A-Z0-9]+(?:-[A-Z0-9]+)+[a-z]?/g;
+  const titleOf = (id) => rowOf(id)?.querySelector('.st-entry-title')?.textContent || id;
+  const richMessage = (message) => escapeHtml(message).replace(ENTRY_ID, (id) => (rowOf(id) ? warningTarget('entry', id, titleOf(id)) : id));
+  const findingRow = (finding) => {
+    const unnamed = (finding.entryIds || []).filter((id) => !finding.message.includes(id)).map((id) => warningTarget('entry', id, titleOf(id)));
+    return `<div class="st-panel-finding st-finding-${escapeHtml(finding.severity)}"><code>${escapeHtml(finding.check)}</code> ${richMessage(finding.message)} ${unnamed.join(' ')}</div>`;
+  };
+  const structureRow = (warning) => `<div class="st-panel-finding st-finding-warning">${warningTarget(warning.kind, warning.target, warning.title)} ${escapeHtml(warning.message)}</div>`;
+  const renderWarnings = () => {
+    const structure = data.warnings || [];
+    const groups = [
+      ['battery errors', batteryFindings.filter((finding) => finding.severity === 'error').map(findingRow)],
+      ['battery warnings', batteryFindings.filter((finding) => finding.severity !== 'error').map(findingRow)],
+      ['structure', structure.filter((warning) => warning.kind !== 'atom').map(structureRow)],
+      ['atoms', structure.filter((warning) => warning.kind === 'atom').map(structureRow)],
+    ];
+    let html = batteryNote ? `<div class="st-panel-note">${escapeHtml(batteryNote)}</div>` : '';
+    let total = 0;
+    for (const [label, rows] of groups) {
+      if (!rows.length) continue;
+      total += rows.length;
+      html += `<div class="st-compartment-label">${label} · ${rows.length}</div>${rows.join('')}`;
+    }
+    if (!total) html += '<div class="st-panel-note">nothing flagged</div>';
+    warningsBody.innerHTML = html;
+    warningsCount.textContent = total;
+  };
+  warningsBody.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-warning-target]');
+    if (!button) return;
+    const id = button.dataset.warningTarget;
+    switch (button.dataset.warningKind) {
+      case 'arg': {
+        const tile = canvas.querySelector(`.st-tile[data-arg="${CSS.escape(id)}"]`);
+        if (!tile) break;
+        tile.scrollIntoView({ block: 'center' });
+        tile.classList.add('st-flash');
+        setTimeout(() => tile.classList.remove('st-flash'), 1200);
+        break;
+      }
+      case 'entry':
+        revealEntry(id);
+        break;
+      case 'section':
+        revealCard(id);
+        break;
+      case 'atom': {
+        const row = canvas.querySelector(`.st-atom-row[data-search="${CSS.escape(id)}"]`);
+        if (!row) break;
+        openAround(row);
+        row.scrollIntoView({ block: 'center' });
+        break;
+      }
+    }
+  });
+  document.getElementById('st-warnings-toggle').addEventListener('click', () => { warningsPanel.hidden = !warningsPanel.hidden; });
+  document.getElementById('st-warnings-close').addEventListener('click', () => { warningsPanel.hidden = true; });
+  renderWarnings();
+
+  // --- resource nodes -------------------------------------------------------
+  // A resource node (subagent type, workflow, schema, script) toggles its edges:
+  // one line from every referencing entry row to the node, classed by the
+  // edge kind (spawns, uses-schema, script), and a highlight on those rows.
+  let activeResource = null;
+  const drawResourceEdges = () => {
+    for (const old of edgeLayer.querySelectorAll('.st-res-edge')) old.remove();
+    if (!activeResource) return;
+    const cls = `st-edge st-res-edge st-res-${activeResource.dataset.edgeKind}`;
+    for (const id of activeResource.dataset.refEntries.split(',').filter(Boolean)) {
+      const row = rowOf(id);
+      if (row) connect(row, activeResource, cls, 'right');
+    }
+  };
+  canvas.addEventListener('click', (event) => {
+    const node = event.target.closest('[data-resource-id]');
+    if (!node) return;
+    activeResource = activeResource === node ? null : node;
+    for (const chip of canvas.querySelectorAll('[data-resource-id]')) chip.classList.toggle('st-chip-active', chip === activeResource);
+    const wanted = new Set(activeResource ? activeResource.dataset.refEntries.split(',').filter(Boolean) : []);
+    for (const row of canvas.querySelectorAll('.st-entry[data-entry-id]')) {
+      const isHit = wanted.has(row.dataset.entryId);
+      row.classList.toggle('st-ref-hit', isHit);
+      if (isHit) openAround(row);
+    }
+    redraw();
+  });
+
+  // --- notes -----------------------------------------------------------------
+  // Section notes sit under their card head, entry notes badge their rows; the
+  // entry detail card prints the full note.
+  for (const [id, note] of Object.entries(data.sectionNotes || {})) {
+    const head = cardOf(id)?.querySelector('summary');
+    if (!head) continue;
+    const line = document.createElement('div');
+    line.className = 'st-card-note';
+    line.textContent = note;
+    head.after(line);
+  }
+  for (const [id, note] of Object.entries(data.entryNotes || {})) {
+    const badge = document.createElement('span');
+    badge.className = 'st-badge st-note-badge';
+    badge.title = note;
+    badge.textContent = '✎';
+    rowOf(id)?.querySelector('.st-badge-marks')?.appendChild(badge);
+  }
+
+  // --- enforcement card ------------------------------------------------------
+  // An anchor row or an anchor button toggles the highlight of that anchor and
+  // of every check and judgment point referencing it.
+  let activeAnchor = null;
+  canvas.addEventListener('click', (event) => {
+    const source = event.target.closest('[data-enforce-ref], [data-enforce-anchor]');
+    if (!source) return;
+    const id = source.dataset.enforceRef || source.dataset.enforceAnchor;
+    activeAnchor = activeAnchor === id ? null : id;
+    const anchorRow = activeAnchor ? canvas.querySelector(`[data-enforce-anchor="${CSS.escape(activeAnchor)}"]`) : null;
+    const users = new Set(anchorRow ? anchorRow.dataset.usedBy.split(',').filter(Boolean) : []);
+    for (const row of canvas.querySelectorAll('.st-enf-row')) {
+      row.classList.toggle('st-ref-hit', row === anchorRow || users.has(row.dataset.enforceId));
+    }
+  });
+
+  // Deep link: #on=<id>,<id> switches those inputs on at load.
+  if (on.size) fetchScenario();
+
+  // Deep link: #atoms=a,b preselects the atom cross-highlight on load.
+  const hashAtoms = (location.hash.match(/^#atoms=([\w,]+)$/) || [])[1];
+  if (hashAtoms) atomFilter(hashAtoms.split(','));
+
+  // Deep link: #focus=<entry-id> focuses a row on load — its card open, both
+  // link directions drawn, its detail card in the panel.
+  const hashFocus = (location.hash.match(/^#focus=([\w-]+)$/) || [])[1];
+  if (hashFocus && entryById[hashFocus]) {
+    const focusCard = rowOf(hashFocus)?.closest('.st-card');
+    if (focusCard) focusCard.open = true;
+    focusRow(hashFocus);
+    openCard(hashFocus, null, true);
+  }
+
+  new ResizeObserver(redraw).observe(canvas);
+  fit();
+  redraw();
+})();
+</script>
+{{end}}
+{{template "foot" .}}
+
+{{define "_st_card"}}
+<details class="st-card st-kind-{{.Kind}}{{if eq .Status "inactive"}} st-inactive{{end}}{{if and (eq .Kind "route") (eq .Status "active")}} st-route-active{{end}}" data-state-id="{{.Id}}"{{if .Pred}} data-state-pred="{{.Pred}}"{{end}}{{if .Status}} data-status="{{.Status}}"{{end}}>
+  <summary>
+    <span class="st-chip st-kind-chip">{{.Kind}}</span>
+    <span class="st-card-title">{{.Title}}</span>
+    {{if .Pred}}<span class="st-chip st-pred" data-pred="{{.Pred}}">{{"{"}}{{.Pred}}{{"}"}}</span>{{end}}
+    {{if .RoleCounts}}<span class="st-counts">{{.RoleCounts}}</span>{{end}}
+    {{if .Warnings}}<span class="st-badge st-badge-warn" title="{{range .Warnings}}{{.}} {{end}}">⚠</span>{{end}}
+  </summary>
+  {{if or .Produces .Consumes}}
+  <div class="st-iface st-formal-chip">{{if .Produces}}<span class="st-iface-part">produces {{range .Produces}}<button type="button" class="st-iface-atom" data-atom="{{.}}">{{.}}</button>{{end}}</span>{{end}}{{if and .Produces .Consumes}} · {{end}}{{if .Consumes}}<span class="st-iface-part">consumes {{range .Consumes}}<button type="button" class="st-iface-atom" data-atom="{{.}}">{{.}}</button>{{end}}</span>{{end}}</div>
+  {{end}}
+  {{if .SetBy}}
+  <div class="st-subst">set by {{range $i, $s := .SetBy}}{{if $i}} · {{end}}<button type="button" class="st-subst-link" data-goto-input="{{$s.Id}}">{{$s.Label}}</button>{{end}}</div>
+  {{end}}
+  {{if .Anchor}}
+  <div class="st-subst">{{.AnchorKind}}{{if .ReplacedCount}} {{.ReplacedCount}} entries —{{end}} {{range .Anchor}}<button type="button" class="st-subst-link" data-open-entry="{{.FirstId}}">{{.FirstTitle}}</button>{{if ne .FirstId .LastId}} … <button type="button" class="st-subst-link" data-open-entry="{{.LastId}}">{{.LastTitle}}</button>{{end}}{{end}}</div>
+  {{end}}
+  {{range .Compartments}}
+  <div class="st-compartment st-slot-{{.Label}}{{if .Flow}} st-flow{{end}}">
+    <div class="st-compartment-label">{{.Label}}</div>
+    {{$sub := ""}}
+    {{range .Rows}}
+    {{if and .Subsection (ne .Subsection $sub)}}{{$sub = .Subsection}}<div class="st-subsection">{{.Subsection}}</div>{{end}}
+    <div class="st-entry{{if .Indent}} st-indent{{end}}{{if .Stop}} st-stop{{end}}{{if eq .Status "inactive"}} st-inactive{{end}}" data-entry-id="{{.Id}}" data-search="{{toLower .Id}} {{toLower .Title}}"{{if .ReplacedBy}} title="replaced by {{.ReplacedBy}}"{{end}}>
+      {{if .Seq}}<span class="st-seq">{{.Seq}}.</span>{{else if .Stop}}<span class="st-seq st-seq-stop">⇒</span>{{end}}
+      <span class="st-chip st-role st-role-{{.Role}}">{{.Role}}</span>
+      {{if eq .Role "spawn"}}<span class="st-fanout" title="spawns a subagent">⑃</span>{{end}}
+      <span class="st-entry-title">{{.Title}}</span>
+      {{if .Channel}}<span class="st-chip st-channel">[{{.Channel}}]</span>{{end}}
+      {{if .TitleState}}<span class="st-chip st-title-state" title="session title while this gate waits">[{{.TitleState}}]</span>{{end}}
+      <span class="st-badges">
+        <span class="st-badge-counts">
+        {{- if .RefCount}}<span class="st-badge st-badge-refs" title="{{.RefCount}} reference(s) — click the row, then refs ▾">↗{{.RefCount}}</span>{{end -}}
+        {{- if .RefByCount}}<span class="st-badge st-badge-refby" title="referenced by {{.RefByCount}} entry(ies) — click the row, then referenced by ▾">↙{{.RefByCount}}</span>{{end -}}
+        </span>
+        <span class="st-badge-tags">
+        {{- if .Gate}}<span class="st-tag st-tag-gate" title="gate: {{.Gate}}">{{.Gate}}</span>{{end -}}
+        {{- if .Hook}}<span class="st-tag st-tag-hook" title="hook: {{.Hook}}">{{.Hook}}</span>{{end -}}
+        {{- if .Schema}}<span class="st-badge st-badge-schema" title="schema: {{.Schema}}">{{"{}"}}</span>{{end -}}
+        {{- if .Script}}<span class="st-tag st-tag-script" title="script: {{.Script}}">{{.ScriptShort}}</span>{{end -}}
+        {{- if .Custom}}<span class="st-badge st-badge-custom" title="custom: {{.Custom}}"><span class="st-shape st-shape-diamond"></span></span>{{end -}}
+        </span>
+        <span class="st-badge-marks">
+        {{- if .Warnings}}<span class="st-badge st-badge-warn" title="{{.Warnings}}">⚠</span>{{end -}}
+        </span>
+      </span>
+      {{if or .Pred .Post}}<span class="st-clauses st-formal-chip">{{if .Pred}}<span class="st-chip st-pred" data-pred="{{.Pred}}">when {{"{"}}{{.Pred}}{{"}"}}</span>{{end}}{{if .Post}}<span class="st-chip st-post">grants {{.Post}}</span>{{end}}</span>{{end}}
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</details>
+{{end}}
+
+{{define "_st_context_entries"}}
+{{if .ContextEntries}}
+<details class="st-card st-kind-context-entries" data-state-id="context-entries" open>
+  <summary><span class="st-chip st-kind-chip">context</span><span class="st-card-title">Context entries</span><span class="st-counts">{{len .ContextEntries}} declared</span></summary>
+  <div class="st-compartment st-chip-row">{{range .ContextEntries}}{{if .Href}}<a class="st-chip st-ref-item" href="{{.Href}}">{{.Name}}</a>{{else}}<span class="st-chip st-ref-item st-ref-glob" title="glob — resolved at invocation against the context index">{{.Name}}</span>{{end}}{{end}}</div>
+</details>
+{{end}}
+{{end}}
+
+{{define "_st_title_states"}}
+{{with .TitleStates}}
+<details class="st-card st-kind-title" data-state-id="title-states" open>
+  <summary><span class="st-chip st-kind-chip">title</span><span class="st-card-title">Title states</span><span class="st-counts">{{len .States}} states</span></summary>
+  <div class="st-compartment">
+    <div class="st-compartment-label">states — the session title while a gate waits, set by the gate entry's command</div>
+    {{range .States}}
+    <div class="st-entry st-title-row" data-search="{{toLower .State}}">
+      <span class="st-chip st-title-state">{{.State}}</span>
+      <span class="st-entry-title">{{.Meaning}}</span>
+      <button type="button" class="st-subst-link" data-open-entry="{{.Entry}}">{{.EntryTitle}}</button>
+      <code class="st-enf-code st-enf-line">{{.Command}}</code>
+    </div>
+    {{end}}
+  </div>
+</details>
+{{end}}
+{{end}}
+
+{{define "_st_graph_rails"}}
+{{with .Enforce}}
+<details class="st-card st-kind-enforce" data-state-id="enforce">
+  <summary><span class="st-chip st-kind-chip">enforce</span><span class="st-card-title">Enforcement</span><span class="st-counts">{{len .Anchors}} anchors · {{len .Checks}} checks · {{len .Judgment}} judgment</span></summary>
+  {{if .Gate}}
+  <div class="st-compartment">
+    <div class="st-compartment-label">gate rules — tool-policy gate, per call</div>
+    {{range .Gate}}<div class="st-enf-gate"><span class="st-enf-sentence" title="{{.Label}}">{{.Sentence}}</span>{{range .Values}}<code class="st-enf-code">{{.}}</code>{{end}}</div>{{end}}
+  </div>
+  {{end}}
+  {{if .Checks}}
+  <div class="st-compartment">
+    <div class="st-compartment-label">checks — heartbeat, per run</div>
+    {{range .Checks}}
+    <div class="st-entry st-enf-row" data-enforce-id="check:{{.Id}}" data-search="{{.Id}}">
+      <span class="st-chip st-role st-role-enforce">{{.Kind}}</span>
+      <span class="st-entry-title">{{.Reason}}</span>
+      <span class="st-enf-line"><code class="st-enf-code">{{.Id}}</code>{{range .Anchors}} · <button type="button" class="st-iface-atom" data-enforce-ref="{{.Anchor}}">{{.Role}} {{.Anchor}}</button>{{end}}</span>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+  {{if .Judgment}}
+  <div class="st-compartment">
+    <div class="st-compartment-label">judgment points — runtime watcher</div>
+    {{range .Judgment}}
+    <div class="st-entry st-enf-row" data-enforce-id="judgment:{{.Id}}" data-search="{{.Id}}">
+      <span class="st-chip st-role st-role-enforce">judgment</span>
+      <span class="st-entry-title">{{.Question}}</span>
+      <span class="st-enf-line"><code class="st-enf-code">{{.Id}}</code> · <button type="button" class="st-iface-atom" data-enforce-ref="{{.Anchor}}">at {{.Anchor}}</button></span>
+      <span class="st-enf-line st-enf-evidence">evidence: {{.Evidence}}</span>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+  {{if .Anchors}}
+  <details class="st-compartment st-disclosure">
+    <summary class="st-compartment-label">anchors — the calls heartbeat recognizes</summary>
+    {{range .Anchors}}
+    <div class="st-entry st-enf-row" data-enforce-anchor="{{.Id}}" data-used-by="{{.UsedBy}}" data-search="{{.Id}}">
+      <span class="st-chip st-role st-role-enforce">{{.Agent}}</span>
+      <span class="st-entry-title">{{.Id}}</span>
+      <span class="st-chip st-arg-form-chip" title="{{.Tool}}">{{.ToolLabel}}</span>
+      {{range .Match}}<code class="st-enf-code st-enf-line">{{.}}</code>{{end}}
+      {{range .Captures}}<span class="st-chip st-enf-capture st-enf-line">captures {{.}}</span>{{end}}
+    </div>
+    {{end}}
+  </details>
+  {{end}}
+</details>
+{{end}}
+{{if .Atoms}}
+<details class="st-card st-kind-atoms" data-state-id="atoms">
+  <summary><span class="st-chip st-kind-chip">atoms</span><span class="st-card-title">Vocabulary</span><span class="st-counts">{{len .Atoms}} atoms</span></summary>
+  <div class="st-compartment">
+    {{range .Atoms}}<div class="st-entry st-atom-row" data-search="{{.Id}}" title="{{.Kind}} · sort: {{.Sort}}{{if .Source}} · source: {{.Source}}{{end}}"><span class="st-chip st-role st-role-atom">{{.Kind}}</span><button type="button" class="st-iface-atom" data-atom="{{.Id}}">{{.Id}}</button>{{if .IsShared}}<span class="st-chip st-shared-chip" title="shared vocabulary — skills/vocabulary.cue">shared</span>{{end}}<span class="st-atom-usage">{{if .Source}}source: {{.Source}}{{else}}granted by {{.GrantedBy}}{{end}} · read by {{.ReadBy}}</span>{{if .IsUnread}}<span class="st-badge st-badge-warn" title="no pred reads it — delete it and the posts granting it">⚠</span>{{end}}</div>{{end}}
+  </div>
+</details>
+{{end}}
+{{if .References}}
+<details class="st-card st-kind-refs" data-state-id="references">
+  <summary><span class="st-chip st-kind-chip">refs</span><span class="st-card-title">Resources</span></summary>
+  {{range .References}}
+  <div class="st-compartment">
+    <div class="st-compartment-label">{{.Label}}{{with .EdgeKind}} · {{.}}{{end}}</div>
+    {{$edge := .EdgeKind}}
+    <div class="st-chip-row">{{range .Items}}<button type="button" class="st-chip st-ref-item st-res-node" data-resource-id="{{.Id}}" data-ref-entries="{{.EntryIds}}" data-edge-kind="{{$edge}}" title="{{$edge}} edges from the entries using it">{{.Name}} <span class="count-note">{{.Count}}</span></button>{{end}}</div>
+  </div>
+  {{end}}
+</details>
+{{end}}
+{{end}}

@@ -8,7 +8,7 @@
   <td><a href="/routines/{{pathEscape .Routine.Name}}">{{.Routine.Name}}</a></td>
   <td colspan="4">{{.Routine.LoadError}}</td>
   {{else}}
-  <td><input type="radio" name="rt-select" value="{{pathEscape .Routine.Name}}"
+  <td class="row-tools"><input type="radio" name="rt-select" value="{{pathEscape .Routine.Name}}"
        {{if .Loaded}}data-loaded="1"{{end}}
        {{if and .Routine.ScheduleSupported (eq (len .Routine.Schedule) 1)}}{{with index .Routine.Schedule 0}}data-reschedule="1"
        data-hour="{{intOrEmpty .Hour}}" data-minute="{{intOrEmpty .Minute}}" data-weekday="{{intOrEmpty .Weekday}}" data-day="{{intOrEmpty .Day}}"{{end}}{{else if .Routine.Unscheduled}}data-reschedule="1"{{end}}></td>
@@ -20,6 +20,10 @@
     {{else}}
     <span class="badge badge-dim">stopped</span>
     {{end}}
+    {{if .Paused}}<span class="badge badge-dim" title="process tree SIGSTOPped — Resume continues it">paused</span>{{end}}
+    {{if .PendingReload}}<span class="badge badge-dim" title="config saved during a live run; applies when it ends">reload pending</span>{{end}}
+    {{if eq .SteerState "queued"}}<span class="badge badge-action" title="steer queued — delivered as a user message at the run's next turn boundary">steered</span>
+    {{else if eq .SteerState "delivered"}}<span class="badge badge-ok" title="the steer prompt reached the run as a user message">steered</span>{{end}}
   </td>
   <td><a href="/routines/{{pathEscape .Routine.Name}}">{{.Routine.Name}}</a>{{if .Pinned}} <span class="badge badge-dim" title="always listed first">pinned</span>{{end}}</td>
   <td>
@@ -30,16 +34,11 @@
   <td class="run-cell">
     {{with .Routine.LastRun}}
       {{stampDate .Timestamp}}<br>{{stampTime .Timestamp}}<br>
-      {{if eq .ExitStatus 0}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">exit {{.ExitStatus}}</span>{{end}}
+      {{if and .IsRunning $.Routine.IsLive}}<span class="badge">running</span>{{else if .IsRunning}}<span class="badge badge-dim" title="the run died without a final row">interrupted</span>{{else if eq .ExitStatus 0}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">exit {{.ExitStatus}}</span>{{end}}
     {{else}}never{{end}}
   </td>
-  <td>
-    {{if .Session}}
-      {{if .Session.Live}}<span class="badge badge-ok">live</span>{{end}}
-      {{$peekURL := peekSessionURL .Session.Id}}
-      {{if $peekURL}}<a href="{{$peekURL}}" title="{{.Session.Id}} — open in peek">{{if .Session.Title}}{{.Session.Title}}{{else}}(untitled){{end}}</a>{{else}}{{.Session.Title}}{{end}}
-    {{else}}–{{end}}
-  </td>
+  <td class="session-cell" hx-get="/routines/{{pathEscape .Routine.Name}}/sessions"
+      hx-trigger="load" hx-swap="innerHTML"><span class="meta">…</span></td>
   <td class="run-cell">{{if not .Routine.NextRun.IsZero}}{{.Routine.NextRun.Format "2006-01-02"}}<br>{{.Routine.NextRun.Format "15:04"}}{{else}}–{{end}}</td>
   {{end}}
 </tr>

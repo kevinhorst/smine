@@ -1,12 +1,12 @@
-// Package routines manages local launchd routines that wrap claude -p —
-// discovery from the routines directory (the directory is the registry, D4),
-// plist schedules, results.jsonl histories, and launchctl control.
+// Package routines manages local scheduled routines that wrap claude -p.
 package routines
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -14,12 +14,23 @@ import (
 	"time"
 
 	"howett.net/plist"
+
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
 // historyLimit caps the run-history view (concept limit).
 const historyLimit = 50
 
+// SubtypeStarted marks the row the runner appends once a run's worktree exists.
+const SubtypeStarted = "started"
+
+// PendingReloadMarker marks a saved config whose reload is deferred past a live run.
+const PendingReloadMarker = ".pending-reload"
+
 var namePattern = regexp.MustCompile(`^[a-z0-9-]+$`)
+
+// labelPattern keeps quotes and shell metacharacters out: the Windows scheduler embeds labels in PowerShell literals.
+var labelPattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 
 type CalendarInterval struct {
 	Day     *int
@@ -48,8 +59,6 @@ func (i *CalendarInterval) matches(t time.Time) bool {
 	return true
 }
 
-// String renders the interval for schedule display; pointer fields print
-// only when set.
 func (i CalendarInterval) String() string {
 	var parts []string
 	if i.Month != nil {
@@ -97,40 +106,42 @@ type Routine struct {
 	DefaultDisabled   bool
 	Dir               string
 	Env               map[string]string
+	Group             string // manifest group; empty = the routine stands alone
+	IsLive            bool   // LastRun is a started row and the scheduler runs the job
 	Label             string
 	LastRun           *RunResult // nil when never run
 	LoadError         string     // non-empty = contract violation, degraded row (D29)
+	ManifestPath      string
 	Name              string
 	NextRun           time.Time // zero when unsupported/unsatisfiable
 	PlistPath         string
 	ResultsPath       string
 	Schedule          []CalendarInterval
 	ScheduleSupported bool
-	Unscheduled       bool // no StartCalendarInterval and no other trigger — schedulable, not yet scheduled
-	WrapperPath       string
+	Skill             string // leaf of the manifest prompt's leading /<skill>; empty when it declares none
+	Unscheduled       bool   // no StartCalendarInterval and no other trigger — schedulable, not yet scheduled
 }
 
 type RunResult struct {
+	Branch       string  `json:"branch,omitempty"`
 	ExitStatus   int     `json:"exit_status"`
+	IsError      bool    `json:"is_error"`
+	Item         string  `json:"item,omitempty"`
 	NumTurns     int     `json:"num_turns"`
 	Result       string  `json:"result"`
 	SessionId    string  `json:"session_id"`
+	Stage        string  `json:"stage,omitempty"`
 	Subtype      string  `json:"subtype"`
 	Timestamp    string  `json:"timestamp"`
 	TotalCostUsd float64 `json:"total_cost_usd"`
 }
 
-// IsRunning reports a start marker row — a run in progress when it is the
-// newest line; History drops superseded ones.
+// IsRunning relies on History dropping superseded start markers.
 func (r *RunResult) IsRunning() bool {
-	return r.Subtype == "started"
+	return r.Subtype == SubtypeStarted
 }
 
-// History returns up to limit results from results.jsonl, newest first.
-// Malformed lines are skipped — a broken line never hides the readable rest.
-// A "started" marker row is kept only as the newest line (a live run); any
-// newer line supersedes it — finished and crashed runs alike leave no
-// permanent RUNNING row.
+// History keeps a started row only as the newest line, so crashed runs leave no permanent RUNNING row.
 func History(resultsPath string, limit int) ([]RunResult, error) {
 	data, err := os.ReadFile(resultsPath)
 	if err != nil {
@@ -176,9 +187,7 @@ func HistoryLimit() int {
 	return historyLimit
 }
 
-// Scan discovers contract-conformant routines: one subdir per routine with
-// run.sh + exactly one <label>.plist; underscore-prefixed dirs (templates)
-// are skipped. Violations yield a degraded row, never an error (D29).
+// Scan yields a degraded row for a contract violation, never an error.
 func Scan(dir string) ([]Routine, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -214,18 +223,26 @@ func lastResult(resultsPath string) (*RunResult, error) {
 }
 
 func load(routineDir, name string) Routine {
-	routine := Routine{Dir: routineDir, Name: name, ResultsPath: filepath.Join(routineDir, "results.jsonl")}
+	routine := Routine{Dir: routineDir, Name: name, ResultsPath: filepath.Join(routineDir, ResultsFileName)}
 
 	if _, err := os.Stat(filepath.Join(routineDir, "default-disabled")); err == nil {
 		routine.DefaultDisabled = true
 	}
 
-	wrapper := filepath.Join(routineDir, "run.sh")
-	if _, err := os.Stat(wrapper); err != nil {
-		routine.LoadError = "missing run.sh"
+	manifestPath := filepath.Join(routineDir, ManifestFileName)
+	if _, err := os.Stat(manifestPath); err != nil {
+		routine.LoadError = "missing " + ManifestFileName
 		return routine
 	}
-	routine.WrapperPath = wrapper
+
+	manifest, err := LoadManifest(routineDir)
+	if err != nil {
+		routine.LoadError = err.Error()
+		return routine
+	}
+	routine.ManifestPath = manifestPath
+	routine.Group = manifest.Group
+	routine.Skill = manifest.Skill()
 
 	plists, err := filepath.Glob(filepath.Join(routineDir, "*.plist"))
 	if err != nil || len(plists) != 1 {
@@ -234,6 +251,10 @@ func load(routineDir, name string) Routine {
 	}
 	routine.PlistPath = plists[0]
 	routine.Label = strings.TrimSuffix(filepath.Base(plists[0]), ".plist")
+	if !labelPattern.MatchString(routine.Label) {
+		routine.LoadError = fmt.Sprintf("invalid label %q: only letters, digits, '.', '_' and '-'", routine.Label)
+		return routine
+	}
 
 	schedule, err := parseSchedule(plists[0])
 	if err != nil {
@@ -246,6 +267,10 @@ func load(routineDir, name string) Routine {
 
 	env, err := parseEnv(plists[0])
 	if err != nil {
+		routine.LoadError = err.Error()
+		return routine
+	}
+	if err := ValidateEnvKeys(env); err != nil {
 		routine.LoadError = err.Error()
 		return routine
 	}
@@ -262,7 +287,17 @@ func load(routineDir, name string) Routine {
 		return routine
 	}
 	routine.LastRun = last
+	routine.IsLive = isLiveRun(last, routine.Label)
 	return routine
+}
+
+// isLiveRun treats a started row whose run died without a final row as an orphan.
+func isLiveRun(last *RunResult, label string) bool {
+	if last == nil || !last.IsRunning() {
+		return false
+	}
+	running, err := IsRunning(context.Background(), label)
+	return err == nil && running
 }
 
 func Duplicate(name, newName, routinesDir string) error {
@@ -285,9 +320,9 @@ func Duplicate(name, newName, routinesDir string) error {
 		newLabel = prefix + "." + newName
 	}
 
-	wrapper, err := os.ReadFile(source.WrapperPath)
+	manifest, err := os.ReadFile(source.ManifestPath)
 	if err != nil {
-		return fmt.Errorf("Duplicate: Failed to read %s: %w", source.WrapperPath, err)
+		return fmt.Errorf("Duplicate: Failed to read %s: %w", source.ManifestPath, err)
 	}
 
 	data, err := os.ReadFile(source.PlistPath)
@@ -315,22 +350,20 @@ func Duplicate(name, newName, routinesDir string) error {
 		}
 	}
 	if !pointsAtCopy {
-		return fmt.Errorf("Duplicate: ProgramArguments of %s does not reference %s, the copy would run the source wrapper", source.PlistPath, source.Dir)
+		return fmt.Errorf("Duplicate: ProgramArguments of %s does not reference %s, the copy would run the source routine", source.PlistPath, source.Dir)
 	}
 
-	// The log paths carry the routine name, not its directory, so the directory
-	// substitution above never reaches them — without this the copy would append
-	// to the source routine's log files.
+	// Log paths carry the routine name, which the directory substitution above never reaches.
 	for _, key := range []string{"StandardErrorPath", "StandardOutPath"} {
 		text, ok := content[key].(string)
 		if !ok {
 			continue
 		}
-		base := filepath.Base(text)
+		base := path.Base(text)
 		if !strings.Contains(base, name) {
 			return fmt.Errorf("Duplicate: %s of %s does not contain %q, the copy would share the source log file", key, source.PlistPath, name)
 		}
-		content[key] = filepath.Join(filepath.Dir(text), strings.Replace(base, name, newName, 1))
+		content[key] = path.Join(path.Dir(text), strings.Replace(base, name, newName, 1))
 	}
 
 	rewritten, err := plist.MarshalIndent(content, plist.XMLFormat, "\t")
@@ -341,13 +374,81 @@ func Duplicate(name, newName, routinesDir string) error {
 	if err := os.Mkdir(targetDir, 0o755); err != nil {
 		return fmt.Errorf("Duplicate: Failed to create %s: %w", targetDir, err)
 	}
-	if err := os.WriteFile(filepath.Join(targetDir, "run.sh"), wrapper, 0o755); err != nil {
-		return fmt.Errorf("Duplicate: Failed to write run.sh: %w", err)
+	if err := os.WriteFile(filepath.Join(targetDir, ManifestFileName), manifest, 0o644); err != nil {
+		return fmt.Errorf("Duplicate: Failed to write %s: %w", ManifestFileName, err)
 	}
 	if err := os.WriteFile(filepath.Join(targetDir, newLabel+".plist"), rewritten, 0o644); err != nil {
 		return fmt.Errorf("Duplicate: Failed to write plist: %w", err)
 	}
 	return nil
+}
+
+// Delete moves the directory and the log files into the trash; a tracked routine resurfaces as a git deletion (master E6).
+func Delete(ctx context.Context, name, routinesDir string, store *trash.Store) error {
+	routine := load(filepath.Join(routinesDir, name), name)
+	if routine.Label == "" {
+		// Broken beyond a label: nothing can be loaded — just remove the files.
+		return removeRoutineFiles(&routine, store)
+	}
+
+	running, err := IsRunning(ctx, routine.Label)
+	if err != nil {
+		return fmt.Errorf("Delete: %s: %w", name, err)
+	}
+	if running {
+		return fmt.Errorf("Delete: %s: A run is active — stop it or wait for it to finish", name)
+	}
+
+	loaded, err := IsLoaded(ctx, routine.Label)
+	if err != nil {
+		return fmt.Errorf("Delete: %s: %w", name, err)
+	}
+	if loaded {
+		if output, err := Stop(ctx, routine.Label); err != nil {
+			return fmt.Errorf("Delete: %s: %s: %w", name, output, err)
+		}
+	}
+	if output, err := Unregister(ctx, routine.Label); err != nil {
+		return fmt.Errorf("Delete: %s: %s: %w", name, output, err)
+	}
+
+	return removeRoutineFiles(&routine, store)
+}
+
+// removeRoutineFiles moves the plist-named log files, then the routine dir, into the trash.
+func removeRoutineFiles(routine *Routine, store *trash.Store) error {
+	for _, logPath := range plistLogPaths(routine.PlistPath) {
+		entry := &trash.Entry{Action: "routine delete " + routine.Name, Reason: "log file of the deleted routine"}
+		if _, err := store.Move(logPath, entry); err != nil {
+			return fmt.Errorf("removeRoutineFiles: %s: %w", logPath, err)
+		}
+	}
+
+	entry := &trash.Entry{Action: "routine delete " + routine.Name, Reason: "routine dir with results, runs, stamps and plist"}
+	if _, err := store.Move(routine.Dir, entry); err != nil {
+		return fmt.Errorf("removeRoutineFiles: %s: %w", routine.Dir, err)
+	}
+	return nil
+}
+
+// plistLogPaths yields none for a broken plist; the delete still proceeds on the dir.
+func plistLogPaths(plistPath string) []string {
+	data, err := os.ReadFile(plistPath)
+	if err != nil {
+		return nil
+	}
+	var content map[string]any
+	if _, err := plist.Unmarshal(data, &content); err != nil {
+		return nil
+	}
+
+	var paths []string
+	for _, key := range []string{"StandardErrorPath", "StandardOutPath"} {
+		if text, ok := content[key].(string); ok {
+			paths = append(paths, text)
+		}
+	}
+	return paths
 }
 
 func matchesAny(schedule []CalendarInterval, candidate time.Time) bool {

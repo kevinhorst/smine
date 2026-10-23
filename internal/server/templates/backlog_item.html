@@ -1,0 +1,85 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="detail-head">
+  <h1>{{.Item.Item.Id}} {{.Item.Item.Title}}</h1>
+</div>
+<div class="meta detail-meta"><a href="/backlog">← backlog</a> · <code>{{.StoreRel}}</code></div>
+<div id="op-result"></div>
+<div class="card card-column">
+  <div class="bl-head">
+    <select name="status" autocomplete="off" hx-post="/api/backlog/{{.Item.Item.Id}}/status" hx-swap="none" title="writes the item's status and a changelog row; done and rejected move the item to the archive">
+      {{range .Item.Statuses}}<option {{if eq . $.Item.Item.Status}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+    {{template "_backlog_pri" .Item}}
+    <span class="badge badge-dim">{{.Item.Item.Size}}</span>
+    <span class="badge badge-dim">{{.Item.Item.Theme}}</span>
+    <select name="epic" autocomplete="off" hx-post="/api/backlog/{{.Item.Item.Id}}/epic" hx-swap="none" title="moves the item to another epic">
+      {{range .Epics}}<option {{if eq . $.Item.Item.Section}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+  </div>
+  <div class="item-fields">
+    <span class="field-key">deps</span><span>{{if .Item.Deps}}{{range .Item.Deps}}{{if .IsActive}}<a class="dep-link" href="/backlog/{{.Id}}">needs {{.Id}}</a>{{else}}<span class="meta">needs {{.Id}} · archived</span>{{end}} {{end}}{{else}}–{{end}}</span>
+    <span class="field-key">route</span><span>{{template "_backlog_route" .Item}}</span>
+    <span class="field-key">link</span><span>{{if .Item.Item.Link}}{{.Item.Item.Link}}{{else}}–{{end}}</span>
+    {{if .Item.Item.Mined}}<span class="field-key">from</span><span>{{template "_backlog_mined_by" .Item}}</span>{{end}}
+  </div>
+</div>
+<div class="card card-column">
+  <div class="item-desc">{{.Item.Description}}</div>
+  {{if .Item.DoneWhen}}
+  <span class="section-label">acceptance</span>
+  <div class="item-desc">{{.Item.DoneWhen}}</div>
+  {{end}}
+  {{if .Item.Evidence}}
+  <span class="section-label">evidence</span>
+  <ul class="item-evidence">
+    {{range .Item.Evidence}}
+    <li>{{template "_backlog_session_link" .}}</li>
+    {{end}}
+  </ul>
+  {{end}}
+</div>
+{{if .Item.RoutineMissing}}
+<div class="card card-column routine-missing">
+  <span class="missing-title">ROUTINE MISSING.</span>
+  <span class="meta">No routine runs <code>/{{.Item.RouteSkill}}</code> (a routine declares its skill by the leading <code>/skill</code> of its wrapper's PROMPT). Dispatch is disabled until one exists — create it with <code>/skillroutine-create routine</code>, never from this page.</span>
+</div>
+{{else if .Item.Routine}}
+<div class="card card-filter card-column">
+  <div class="card-row">
+    <span class="section-label" title="Run Now on the chosen backlog routine that runs this item's route skill; the item is appended to the routine's prompt">Dispatch</span>
+    <form id="dispatch-form" hx-post="/api/backlog/{{.Item.Item.Id}}/dispatch" hx-target="#op-result"
+          hx-confirm="Dispatch {{.Item.Item.Id}} now? Budget and model come from the chosen routine's env.">
+      {{template "_backlog_routine_select" .Item}}
+      <span class="meta" title="the runner writes status and link into the live backlog store once the run's claude stage ends; after publish it commits the store in the plans archive">records {{if .Stage}}status <strong>{{.Stage}}</strong> and {{end}}the run branch as link</span>
+      <input type="text" name="prompt" placeholder="extra prompt for this run">
+      <button type="submit" title="a stopped routine or one with a run active refuses the dispatch with its reason">Dispatch</button>
+    </form>
+  </div>
+</div>
+<h2>routine <span class="meta">the row polls after a dispatch, exactly as on the Routines page</span></h2>
+<div class="routines-layout">
+<table class="md-body checklist-table">
+  <thead><tr><th></th><th>State</th><th>Name</th><th>Schedule</th><th>Last run</th><th>Session</th><th>Next run</th></tr></thead>
+  <tbody>{{template "_routine_row.html" .Row}}</tbody>
+</table>
+</div>
+{{end}}
+<h2>sessions <span class="meta">peek-mcp · sessions of this item's runs, plus titles carrying the token {{.Item.Item.Id}}</span></h2>
+{{if .Item.Sessions}}
+<table class="md-body checklist-table">
+  <thead><tr><th>State</th><th>Session</th><th>Branch / cwd</th><th>Last active</th></tr></thead>
+  <tbody>
+    {{range .Item.Sessions}}
+    <tr>
+      <td>{{if .Live}}<span class="badge badge-ok">live</span>{{else}}<span class="badge badge-dim">ended</span>{{end}}</td>
+      <td>{{$peekURL := peekSessionURL .Id}}{{$title := titleView .Title}}{{$label := $title.Text}}{{if not $label}}{{$label = printf "%.8s" .Id}}{{end}}{{if $peekURL}}<a href="{{$peekURL}}" title="{{.Id}} — open in peek">{{$label}}</a>{{else}}{{$label}}{{end}} {{template "_title_state" $title}}</td>
+      <td><code>{{if .GitBranch}}{{.GitBranch}}{{else}}{{.Cwd}}{{end}}</code></td>
+      <td>{{.LastActive.Format "2006-01-02 15:04"}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}<div class="empty">No sessions matched.</div>{{end}}
+{{template "_backlog_runs.html" .Item}}
+{{template "foot" .}}

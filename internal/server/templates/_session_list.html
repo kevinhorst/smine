@@ -1,6 +1,9 @@
 {{define "_session_list.html"}}
 <div id="session-list">
   {{$page := .}}
+  {{range .Days}}
+  <details class="section session-day"{{if .IsOpen}} open{{end}}>
+  <summary><code>{{.Label}}</code> <span class="count-note">{{len .Sessions}}</span></summary>
   {{range .Sessions}}
   <details id="session-{{.Session.Id}}" class="card card-column session-card"{{if or .Selected (eq $page.Open .Session.Id)}} open{{end}}>
     <summary>
@@ -9,26 +12,29 @@
       <span class="meta">id: {{if $peekURL}}<a href="{{$peekURL}}" title="{{t "open in peek"}}"><code title="{{.Session.Id}}">{{.ShortId}}</code></a>{{else}}<code title="{{.Session.Id}}">{{.ShortId}}</code>{{end}}</span>
       {{if .Session.Repo}}<span class="badge badge-dim">{{.Session.Repo}}</span>{{end}}
       {{if .Session.Type}}<span class="badge badge-dim">{{.Session.Type}}</span>{{end}}
-      {{if .Session.Signal}}<span class="badge badge-ok" title="{{.Session.Signal}}">{{t .SignalLabel}}</span>{{end}}
+      {{if .Live}}<span class="badge badge-ok">{{t "live"}}</span>{{end}}
+      {{if .HasReport}}<a class="badge badge-dim" href="/sessions-report/{{pathEscape .Session.Id}}" title="{{t "context report"}}">{{t "context"}}</a>{{end}}
       <input type="checkbox" class="session-select" name="session" value="{{.Session.Id}}"
              {{if .Selected}}checked{{end}} onclick="event.stopPropagation()"
-             hx-get="/sessions/{{$page.Batch.Batch.Scope}}/{{$page.Batch.Batch.Number}}{{if $page.Dimension}}?dimension={{$page.Dimension}}{{end}}"
+             hx-get="/sessions/{{$page.Week.Scope}}/{{$page.Week.Key}}{{if $page.Dimension}}?dimension={{$page.Dimension}}{{end}}"
              hx-include=".session-select:checked"
              hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">
       {{if .Session.Skipped}}<span class="badge badge-error">{{t "skipped"}}</span>{{end}}
+      {{if .Session.Signal}}<span class="meta session-signal">{{t .SignalLabel}}</span>{{end}}
     </summary>
     {{if .Session.Skipped}}
       {{if .Session.SkipReason}}<div class="meta">{{.Session.SkipReason}}</div>{{end}}
     {{else}}
-      {{if .Session.DataGaps}}
-      <div class="meta data-gaps">⚠ {{t "data gaps:"}} {{.Session.DataGaps}}</div>
-      {{end}}
-      {{range .Findings}}
-      <div class="finding">
-        <span class="badge {{if $page.Dimension}}badge-ok{{else}}badge-dim{{end}}">{{t .Dimension}}</span>
-        <span class="label">{{.Summary}}</span>
+      {{range .Rows}}
+      <details class="finding-card" id="{{.Anchor}}">
+        <summary>
+          <span class="badge {{if $page.Dimension}}badge-ok{{else}}badge-dim{{end}}">{{t .Dimension}}</span>
+          <span class="headline">{{.Headline}}</span>
+          {{if .QuoteCount}}<span class="meta quote-count">{{.QuoteCount}} {{t "quotes"}}</span>{{end}}
+        </summary>
+        <p class="finding-summary">{{.Summary}}</p>
         {{range .Quotes}}
-        <blockquote class="meta">{{.}}</blockquote>
+        <blockquote class="meta">{{if .Turn}}<span class="quote-turn">{{t "turn"}} {{.Turn}}</span>{{end}}{{.Text}}</blockquote>
         {{end}}
         {{range .Snippets}}
         <details class="snippet">
@@ -36,7 +42,10 @@
           <pre><code>{{.Code}}</code></pre>
         </details>
         {{end}}
-      </div>
+      </details>
+      {{end}}
+      {{if .Session.DataGaps}}
+      <details class="data-gaps"><summary>⚠ {{t "data gaps"}}</summary><div class="meta">{{.Session.DataGaps}}</div></details>
       {{end}}
       {{if and (or (not $page.Dimension) (eq $page.Dimension "frustration")) .Session.Frustration}}
       <div class="finding">
@@ -55,6 +64,8 @@
       </div>
       {{end}}
     {{end}}
+  </details>
+  {{end}}
   </details>
   {{end}}
   {{if not .Sessions}}<div class="empty">{{t "No sessions match the current filter."}}</div>{{end}}

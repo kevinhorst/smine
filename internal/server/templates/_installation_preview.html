@@ -1,0 +1,23 @@
+{{define "_installation_preview.html"}}
+{{if .Error}}
+<div class="card card-error"><span class="label">{{.Error}}</span></div>
+{{else}}
+<div class="card card-column install-preview">
+  {{range .Notes}}<p class="meta">{{.}}</p>{{end}}
+  {{if .Steps}}
+  <p class="meta">{{t "Apply selection runs these steps, in this order:"}}</p>
+  <ul>{{range .Steps}}<li><code>{{.Component}}</code> {{.Action}} {{.Detail}}</li>{{end}}</ul>
+  {{else}}
+  <p class="meta">{{t "No steps — the machine already matches this selection; Apply selection only stores it."}}</p>
+  {{end}}
+  <p class="meta">{{t "Skills"}}: {{.SkillsMode}}{{if .ChosenSkills}} — {{join .ChosenSkills ", "}}{{end}}{{if .IsSkillsConfirmed}} · {{t "confirmed: the terminal installer skips its skill question"}}{{else}} · {{t "the terminal installer asks for skills again"}}{{end}}</p>
+  <form hx-post="/profile/installation/apply" hx-target="#op-result" hx-disabled-elt="find button">
+    {{range .Components}}<input type="hidden" name="component" value="{{.}}">{{end}}
+    <input type="hidden" name="skills_mode" value="{{.SkillsMode}}">
+    {{range .ChosenSkills}}<input type="hidden" name="skill" value="{{.}}">{{end}}
+    {{if .IsSkillsConfirmed}}<input type="hidden" name="skills_confirmed" value="1">{{end}}
+    <button type="submit">{{t "Apply selection"}}</button>
+  </form>
+</div>
+{{end}}
+{{end}}

@@ -1,0 +1,13 @@
+{{define "_routine_sessions.html"}}
+{{if .Sessions}}
+  {{range .Sessions}}
+  <div class="session-line">
+    {{if .Live}}<span class="badge badge-ok">live</span>{{end}}
+    {{$peekURL := peekSessionURL .Id}}
+    {{if $peekURL}}<a class="session-title" href="{{$peekURL}}" title="{{.Id}}{{if .Title}} — {{.Title}}{{end}} — open in peek">{{printf "%.8s" .Id}}</a>{{else}}<span class="session-title" title="{{.Id}}{{if .Title}} — {{.Title}}{{end}}">{{printf "%.8s" .Id}}</span>{{end}}
+    <span class="meta">{{relTime .LastActive}}</span>
+  </div>
+  {{end}}
+{{else if .Unavailable}}<span class="meta" title="peek-mcp unavailable: {{.Unavailable}}">–</span>
+{{else}}–{{end}}
+{{end}}

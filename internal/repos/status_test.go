@@ -10,169 +10,247 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// statusFixture mirrors the script's 14-column printf contract, captured from
-// a real run (D10 — hand-written rows that contradict the script's arithmetic
-// are banned): a probe-upgraded row (VERDICTS resolved:1, starred FROM entry
-// in IN, UNPICKED 0), the "unknown" FROM row with all "-"/"–" sentinels, an
-// untracked-blocked row, a worktree-less row contained via resolved picks
-// (twin sweep), and a worktree-less row with genuinely unpicked work.
-const statusFixture = `#    BRANCH                               FROM             DIRTY  UNTRACKED AHEAD  BEHIND  UNPICKED  VERDICTS             MERGED           IN                       LAST-COMMIT      WORKTREE
-1    claude/feature-a                     origin/main      0      0         1      2       0         resolved:1           -                origin/main*             2026-07-10 12:30 /tmp/repo/.claude/worktrees/feature-a
-2    claude/feature-b                     unknown          -      -         -      -       0         -                    -                -                        2026-07-09 08:15 –
-3    claude/feature-c                     main             0      3         0      0       0         -                    -                main                     2026-07-08 09:00 /tmp/repo/.claude/worktrees/feature-c
-4    claude/feature-d                     main             -      -         2      0       0         picked-resolved:2    -                main*                    2026-07-11 10:00 –
-5    claude/feature-e                     main             -      -         1      0       1         -                    -                -                        2026-07-11 10:05 –
-`
-
-func TestParseStatusFixture(t *testing.T) {
-	statuses, err := parseStatus(statusFixture)
+// statusFixture is a three-row document captured from a real `agentwt status
+// --format json` run (behind lists cut to two entries): a sha-base row with a
+// clean, locked worktree, a live Claude session and one unpicked commit; a
+// ref-base row without worktree and three unpicked commits; a detached Codex
+// row with its rollout session (kept from the previous capture — the rollout
+// has aged out of the live repo since).
+func statusFixture(t *testing.T) string {
+	t.Helper()
+	fixture, err := os.ReadFile(filepath.Join("testdata", "status_document.json"))
 	require.NoError(t, err)
-	require.Len(t, statuses, 5)
+	return string(fixture)
+}
 
-	// Probe-upgraded row: the conflicted pick resolved on origin/main, so
-	// VERDICTS carries resolved:1, IN keeps the starred FROM entry, and the
-	// branch is safe via the applied-probe.
+func TestStatusDecodesDocument(t *testing.T) {
+	scan, err := decodeStatus(statusFixture(t))
+	require.NoError(t, err)
+	statuses := scan.Rows
+	require.Len(t, statuses, 3)
+
 	first := statuses[0]
-	assert.Equal(t, "claude/feature-a", first.Branch)
-	assert.Equal(t, "origin/main", first.From)
+	assert.Equal(t, "claude/worktree-pool-diagnosis-f85b2a", first.Branch)
+	assert.Equal(t, "claude", first.Kind)
+	assert.False(t, first.Detached)
+	assert.Equal(t, "main", first.From)
+	assert.Equal(t, "sha", first.FromResolution)
 	assert.Equal(t, 0, first.Dirty)
 	assert.Equal(t, 0, first.Untracked)
 	assert.Equal(t, 1, first.Ahead)
-	assert.Equal(t, 2, first.Behind)
-	assert.Equal(t, 0, first.Unpicked)
-	assert.Equal(t, "resolved:1", first.Verdicts)
-	assert.Empty(t, first.MergedInto)
-	assert.Equal(t, []string{"origin/main*"}, first.In)
-	assert.Equal(t, "2026-07-10 12:30", first.LastCommit)
-	assert.Equal(t, "/tmp/repo/.claude/worktrees/feature-a", first.Worktree)
-	assert.True(t, first.SafeToRemove)
-	assert.True(t, first.SafeViaProbe)
+	assert.Equal(t, 1, first.Behind)
+	// The own commit is on no non-agent branch: no containment, one unpicked commit.
+	assert.Equal(t, 1, first.Unpicked)
+	assert.Nil(t, first.Contained)
+	require.Len(t, first.UnpickedCommits, 1)
+	assert.Equal(t, "23c2b82f732cfd3230f5c946009f84f3b6e1582b", first.UnpickedCommits[0].Sha)
+	assert.Equal(t, "2026-09-25 20:11", first.LastCommit)
+	assert.Equal(t, "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/worktree-deletion-bug-996e7b", first.Worktree)
+	assert.False(t, first.SafeToRemove)
+	assert.Equal(t, []string{"unpicked(1)"}, first.UnsafeReasons)
+	require.NotNil(t, first.Order)
+	assert.Equal(t, "clean", first.Order.State)
+	assert.Equal(t, 2, first.Order.TrainPosition)
+	require.NotNil(t, first.Session)
+	assert.Equal(t, "claude", first.Session.Agent)
+	assert.Equal(t, "3d7f877a-10dd-4ae7-9fba-5c4edca1c765", first.Session.Id)
+	require.NotNil(t, first.Session.Alive)
+	assert.True(t, *first.Session.Alive)
+	assert.Equal(t, "idle", first.Session.Status)
+	assert.Equal(t, "CC, FD - Worktree pool branch mismatch diagnosis", first.Session.Name)
 
 	second := statuses[1]
-	assert.Equal(t, "unknown", second.From)
+	assert.Equal(t, "claude/skillroutine-eval-railroad-review-09145b", second.Branch)
+	assert.Equal(t, "claude", second.Kind)
+	assert.Equal(t, "main", second.From)
+	assert.Equal(t, "ref", second.FromResolution)
 	assert.Equal(t, noWorktreeDirty, second.Dirty)
 	assert.Equal(t, noWorktreeDirty, second.Untracked)
-	assert.Equal(t, unknownCount, second.Ahead)
-	assert.Equal(t, unknownCount, second.Behind)
-	assert.Empty(t, second.Verdicts)
-	assert.Empty(t, second.MergedInto)
-	assert.Empty(t, second.In)
 	assert.Empty(t, second.Worktree)
+	assert.Equal(t, 3, second.Ahead)
+	assert.Equal(t, 315, second.Behind)
+	assert.Equal(t, 3, second.Unpicked)
+	assert.Nil(t, second.Contained)
 	assert.False(t, second.SafeToRemove)
-	assert.False(t, second.SafeViaProbe)
-	assert.Equal(t, []string{"work contained nowhere", "no worktree"}, second.UnsafeReasons)
+	assert.Equal(t, []string{"unpicked(3)", "no worktree"}, second.UnsafeReasons)
+	assert.Nil(t, second.Session)
+	require.NotNil(t, second.Order)
+	assert.Equal(t, "clean", second.Order.State)
+	assert.Equal(t, 1, second.Order.TrainPosition)
+	assert.Len(t, second.AheadCommits, 3)
+	assert.Len(t, second.BehindCommits, 2)
+	assert.True(t, second.BehindTruncated)
+	// Unpicked = the list the binary sends, in ahead order.
+	require.Len(t, second.UnpickedCommits, 3)
+	assert.Equal(t, "a043df217ac0f18962014f9ef060835f6a128ea1", second.UnpickedCommits[0].Sha)
+	assert.Equal(t, "a043df21  2026-09-17 11:18  evals.railroad-review: Added the 2026-09-16-a34281 bootstrap eval run", second.UnpickedCommits[0].Line)
 
-	// Untracked files alone must break the safe contract — the remove script
-	// blocks on them even when the work is contained elsewhere. Plain "main"
-	// IN entry (no star) means exact containment, not a probe upgrade.
 	third := statuses[2]
+	assert.Empty(t, third.Branch)
+	assert.Equal(t, "0d079e76", third.Head)
+	assert.True(t, third.Detached)
+	assert.Equal(t, "codex", third.Kind)
+	assert.Equal(t, unknownBase, third.From)
+	assert.Equal(t, "unknown", third.FromResolution)
+	assert.Equal(t, unknownCount, third.Ahead)
+	assert.Equal(t, unknownCount, third.Behind)
 	assert.Equal(t, 0, third.Dirty)
-	assert.Equal(t, 3, third.Untracked)
-	assert.Equal(t, []string{"main"}, third.In)
-	assert.False(t, third.SafeToRemove)
-	assert.False(t, third.SafeViaProbe)
-	assert.Equal(t, []string{"untracked(3)"}, third.UnsafeReasons)
-
-	// No worktree left, work transferred as manually resolved picks: safety
-	// is containment alone — safe, with the resolved-pick count surfaced so
-	// the UI can flag that reconciliation is no longer automatic.
-	fourth := statuses[3]
-	assert.Equal(t, noWorktreeDirty, fourth.Dirty)
-	assert.Equal(t, "picked-resolved:2", fourth.Verdicts)
-	assert.Equal(t, 2, fourth.ResolvedPicks)
-	assert.Equal(t, []string{"main*"}, fourth.In)
-	assert.True(t, fourth.SafeToRemove)
-	assert.True(t, fourth.SafeViaProbe)
-	assert.Empty(t, fourth.UnsafeReasons)
-
-	// No worktree but genuinely unpicked work: unsafe, and the reasons name
-	// the unpicked count instead of a generic ✗.
-	fifth := statuses[4]
-	assert.Equal(t, noWorktreeDirty, fifth.Dirty)
-	assert.Equal(t, 1, fifth.Unpicked)
-	assert.False(t, fifth.SafeToRemove)
-	assert.Equal(t, []string{"unpicked(1)", "no worktree"}, fifth.UnsafeReasons)
+	assert.Equal(t, "/Users/devuser/.codex/worktrees/ffc8/claude-configs", third.Worktree)
+	assert.True(t, third.SafeToRemove)
+	assert.Empty(t, third.UnsafeReasons)
+	assert.Equal(t, &Containment{Branch: "main", Reason: "ancestor", Rank: "default"}, third.Contained)
+	require.NotNil(t, third.Session)
+	assert.Equal(t, "codex", third.Session.Agent)
+	assert.Nil(t, third.Session.Alive)
 }
 
-func TestParseStatusNoBranches(t *testing.T) {
-	statuses, err := parseStatus("No agent branches (claude/*, claude-routines/*) found.\n")
+func TestStatusRejectsUnknownSchema(t *testing.T) {
+	_, err := decodeStatus(`{"schema":2,"repo":{"default_branch":"main"},"rows":[]}`)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported schema 2")
+}
+
+func TestStatusRejectsMalformedDocument(t *testing.T) {
+	_, err := decodeStatus("error: not json")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "Decode")
+}
+
+func TestStatusEmptyRows(t *testing.T) {
+	scan, err := decodeStatus(`{"schema":1,"repo":{"default_branch":"main"},"rows":[]}`)
 	require.NoError(t, err)
-	assert.Nil(t, statuses)
+	assert.Empty(t, scan.Rows)
+	assert.Equal(t, StatusTimings{}, scan.Timings)
 }
 
-func TestParseStatusShortRowFails(t *testing.T) {
-	// Too few fields, and a legacy 13-column row (pre-VERDICTS) — both fail.
-	for _, row := range []string{
-		"1 claude/x main 0 1\n",
-		"1 claude/x main 0 0 0 0 0 develop main 2026-07-10 12:30 /tmp/wt\n",
-	} {
-		_, err := parseStatus(row)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "Unparseable row")
+func TestStatusDecodesTimings(t *testing.T) {
+	document := `{"schema":1,"repo":{"default_branch":"main"},"rows":[],` +
+		`"timings":{"analysis_ms":540,"worktrees_ms":213,"order_ms":77,"gitstate_ms":541}}`
+	scan, err := decodeStatus(document)
+	require.NoError(t, err)
+	expected := StatusTimings{AnalysisMs: 540, OrderMs: 77, WorktreesMs: 213}
+	assert.Equal(t, expected, scan.Timings)
+}
+
+func TestStatusDecodesKinds(t *testing.T) {
+	withKinds := `{"schema":1,"repo":{"default_branch":"main"},"rows":[],"kinds":["claude","codex","claude-routines"]}`
+	scan, err := decodeStatus(withKinds)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"claude", "codex", "claude-routines"}, scan.Kinds)
+
+	withoutKinds := `{"schema":1,"repo":{"default_branch":"main"},"rows":[]}`
+	scan, err = decodeStatus(withoutKinds)
+	require.NoError(t, err)
+	assert.Nil(t, scan.Kinds)
+}
+
+func TestCommitsByClass(t *testing.T) {
+	status := &WorktreeStatus{
+		AheadCommits:    []Commit{{Sha: "a"}},
+		BehindCommits:   []Commit{{Sha: "b"}, {Sha: "c"}},
+		UnpickedCommits: []Commit{{Sha: "u"}},
+	}
+	cases := []struct {
+		class string
+		want  []string
+	}{
+		{class: "ahead", want: []string{"a"}},
+		{class: "behind", want: []string{"b", "c"}},
+		{class: "unpicked", want: []string{"u"}},
+		{class: "bogus", want: nil},
+	}
+	for _, c := range cases {
+		var shas []string
+		for _, commit := range Commits(c.class, status) {
+			shas = append(shas, commit.Sha)
+		}
+		assert.Equalf(t, c.want, shas, "class=%s", c.class)
 	}
 }
 
-func TestParseStatusNonNumericCountFails(t *testing.T) {
-	row := "1    claude/x    main    0    0    x    0    0    -    develop    main    2026-07-10 12:30 /tmp/wt\n"
-	_, err := parseStatus(row)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "AHEAD")
+func TestUnpickedLinesFollowsList(t *testing.T) {
+	ahead := []statusCommitEntry{
+		{Sha: "n", ShortSha: "n1234567", Subject: "newest", CommittedAt: "2026-07-15T10:02:00Z"},
+		{Sha: "m", ShortSha: "m1234567", Subject: "merge", CommittedAt: "2026-07-15T10:01:00Z", IsMerge: true},
+		{Sha: "p", ShortSha: "p1234567", Subject: "picked", CommittedAt: "2026-07-15T10:00:30Z"},
+		{Sha: "o", ShortSha: "o1234567", Subject: "own", CommittedAt: "2026-07-15T10:00:00Z"},
+	}
+	lines := unpickedLines(ahead, []string{"o", "n"})
+	require.Len(t, lines, 2)
+	assert.Equal(t, "n", lines[0].Sha)
+	assert.Equal(t, "o", lines[1].Sha)
+	assert.Equal(t, "o1234567  2026-07-15 10:00  own", lines[1].Line)
 }
 
-func TestParseCommits(t *testing.T) {
-	assert.Nil(t, parseCommits("Commits ahead:\n"))
-	assert.Nil(t, parseCommits("Commits ahead:\n(none)\n"))
-
-	// Verdict suffixes from the detail-mode probe pass through verbatim in Line.
-	commits := parseCommits("Commits unpicked for claude/x:\nabc1234 fix the thing  (applied on origin/main, conflict resolved)\ndef5678 another\n")
-	require.Len(t, commits, 2)
-	assert.Equal(t, "abc1234", commits[0].Sha)
-	assert.Equal(t, "abc1234 fix the thing  (applied on origin/main, conflict resolved)", commits[0].Line)
-
-	commits = parseCommits("Commits unpicked for claude/x:\nabc1234 genuinely unpicked\n")
-	require.Len(t, commits, 1)
-	assert.Equal(t, "abc1234 genuinely unpicked", commits[0].Line)
-}
-
-// writeStatusStub creates a stub status script: no args → the overview
-// fixture, known branch → a commit list echoing its argv, unknown branch →
-// the script's error contract (exit 1).
+// writeStatusStub creates a stub agentwt binary: `status` prints the fixture
+// document, anything else the binary's error contract (exit 1).
 func writeStatusStub(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
+	fixturePath := filepath.Join(dir, "document.json")
+	require.NoError(t, os.WriteFile(fixturePath, []byte(statusFixture(t)), 0o644))
 	script := `#!/bin/sh
-if [ $# -eq 0 ]; then
-	printf '%s' "` + statusFixture + `"
-elif [ "$1" = "claude/missing" ]; then
-	echo "error: unknown branch $1"
-	exit 1
-else
-	echo "Commits $2 for $1:"
-	echo "abc1234 stub commit"
-fi
+for arg in "$@"; do
+	if [ "$arg" = "status" ]; then
+		cat "` + fixturePath + `"
+		exit 0
+	fi
+done
+echo "agentwt: unknown command $*" >&2
+exit 1
 `
-	require.NoError(t, os.WriteFile(filepath.Join(dir, statusScript), []byte(script), 0o755))
-	return dir
+	stub := filepath.Join(dir, "agentwt")
+	require.NoError(t, os.WriteFile(stub, []byte(script), 0o755))
+	return stub
 }
 
-func TestCommitsRunsDetailModeByBranch(t *testing.T) {
-	scriptsDir := writeStatusStub(t)
-	commits, err := Commits(context.Background(), "claude/feature-b", "ahead", t.TempDir(), scriptsDir)
+func TestStatusRunsBinaryInRepoPath(t *testing.T) {
+	stub := writeStatusStub(t)
+	scan, err := Status(context.Background(), stub, "", t.TempDir())
 	require.NoError(t, err)
-	require.Len(t, commits, 1)
-	assert.Equal(t, "abc1234", commits[0].Sha)
+	assert.Len(t, scan.Rows, 3)
 }
 
-func TestCommitsUnknownBranchFails(t *testing.T) {
-	scriptsDir := writeStatusStub(t)
-	_, err := Commits(context.Background(), "claude/missing", "ahead", t.TempDir(), scriptsDir)
+func TestStatusBinaryFailureKeepsOutput(t *testing.T) {
+	dir := t.TempDir()
+	stub := filepath.Join(dir, "agentwt")
+	require.NoError(t, os.WriteFile(stub, []byte("#!/bin/sh\necho 'agentwt: no default branch could be determined' >&2\nexit 1\n"), 0o755))
+	_, err := Status(context.Background(), stub, "", t.TempDir())
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "unknown branch")
+	assert.Contains(t, err.Error(), "no default branch could be determined")
 }
 
-func TestStatusRunsScriptInRepoPath(t *testing.T) {
-	scriptsDir := writeStatusStub(t)
-	statuses, err := Status(context.Background(), t.TempDir(), scriptsDir)
+// writeArgvStub creates a stub agentwt binary that records its argv and
+// prints an empty status document holding one kind.
+func writeArgvStub(t *testing.T) (string, string) {
+	t.Helper()
+	dir := t.TempDir()
+	argvPath := filepath.Join(dir, "argv")
+	script := `#!/bin/sh
+echo "$@" > "` + argvPath + `"
+echo '{"schema":1,"repo":{"default_branch":"main"},"rows":[],"kinds":["claude"]}'
+`
+	stub := filepath.Join(dir, "agentwt")
+	require.NoError(t, os.WriteFile(stub, []byte(script), 0o755))
+	return stub, argvPath
+}
+
+func TestStatusKindArgument(t *testing.T) {
+	repoPath := t.TempDir()
+
+	stub, argvPath := writeArgvStub(t)
+	scan, err := Status(context.Background(), stub, "", repoPath)
 	require.NoError(t, err)
-	assert.Len(t, statuses, 5)
+	argv, err := os.ReadFile(argvPath)
+	require.NoError(t, err)
+	assert.Equal(t, "--format json -C "+repoPath+" status\n", string(argv))
+	assert.Equal(t, []string{"claude"}, scan.Kinds)
+
+	stub, argvPath = writeArgvStub(t)
+	scan, err = Status(context.Background(), stub, "claude-routines", repoPath)
+	require.NoError(t, err)
+	argv, err = os.ReadFile(argvPath)
+	require.NoError(t, err)
+	assert.Equal(t, "--format json -C "+repoPath+" status --kind=claude-routines\n", string(argv))
+	assert.Equal(t, []string{"claude"}, scan.Kinds)
 }

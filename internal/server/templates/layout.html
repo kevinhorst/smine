@@ -6,12 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{.Title}}</title>
 <script src="/assets/htmx.min.js"></script>
-<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/style.css?v={{assetVersion}}">
 </head>
 <body>
 <div id="error-banner" class="error-banner"></div>
 <script>
   document.body.addEventListener('htmx:responseError', function (evt) {
+    // A rotated access token: the browser re-asks only on a page load.
+    if (evt.detail.xhr.status === 401) {
+      window.location.reload();
+      return;
+    }
     var banner = document.getElementById('error-banner');
     banner.textContent = evt.detail.xhr.responseText;
     banner.style.display = 'block';
@@ -26,30 +31,47 @@
 <nav>
   <a href="/" {{if eq .Page "overview"}}class="active"{{end}}>{{t "Overview"}}</a>
   {{if initWelcome}}<a href="/welcome" {{if eq .Page "welcome"}}class="active"{{end}}>Welcome</a>{{end}}
-  {{if isDeveloperAudience}}<a href="/config/claude" {{if or (eq .Page "config-claude") (eq .Page "config-codex")}}class="active"{{end}}>Config</a>{{end}}
-  <a href="/profile" {{if eq .Page "profile"}}class="active"{{end}}>{{t "Profile"}}</a>
   <a href="/sessions" {{if eq .Page "sessions"}}class="active"{{end}}>{{t "Sessions"}}</a>
-  <a href="/proposals" {{if eq .Page "proposals"}}class="active"{{end}}>{{t "Proposals"}}</a>
-  {{if not isDeveloperAudience}}<a href="/repos" {{if eq .Page "repos"}}class="active"{{end}}>{{t "Projects"}}</a>{{end}}
+  {{if hasProposals}}{{$open := openProposalCount}}<a href="/proposals" {{if eq .Page "proposals"}}class="active"{{end}}>{{t "Proposals"}}{{if $open.Count}}<span class="count-note" title="{{$open.Count}} {{t "open proposals"}}">{{$open.Count}}</span>{{end}}</a>{{end}}
   {{if isDeveloperAudience}}
-  <a href="/scripts/skills" {{if eq .Page "skills"}}class="active"{{end}}>Skills</a>
-  <a href="/context" {{if eq .Page "context"}}class="active"{{end}}>Context</a>
+  {{if hasComponent "routines"}}<a href="/backlog" {{if eq .Page "backlog"}}class="active"{{end}}>Backlog</a>{{end}}
   <a href="/repos" {{if eq .Page "repos"}}class="active"{{end}}>Repos</a>
-  <a href="/routines" {{if eq .Page "routines"}}class="active"{{end}}>Routines</a>
-  <a href="/tools" {{if eq .Page "tools"}}class="active"{{end}}>Tools</a>
-  <a href="/docs/checklist" {{if eq .Page "checklist"}}class="active"{{end}}>Checklist</a>
-  {{if peekDashboardURL}}<a href="{{peekDashboardURL}}">Peek</a>{{end}}
+  {{if hasComponent "skills"}}<a href="/scripts/skills" {{if eq .Page "skills"}}class="active"{{end}}>Skills</a>{{end}}
+  {{if hasComponent "context"}}<a href="/context" {{if eq .Page "context"}}class="active"{{end}}>Context</a>{{end}}
+  {{if hasComponent "routines"}}<a href="/routines" {{if eq .Page "routines"}}class="active"{{end}}>Routines</a>{{end}}
+  {{if hasComponent "heartbeat"}}<a href="/fleet" {{if or (eq .Page "fleet") (eq .Page "runtime")}}class="active"{{end}}>Fleet</a>{{end}}
+  <a href="/config" {{if or (eq .Page "config-smine") (eq .Page "config-hooks") (eq .Page "config-permissions") (eq .Page "config-claude") (eq .Page "config-codex")}}class="active"{{end}}>Config</a>
+  {{else}}
+  <a href="/repos" {{if eq .Page "repos"}}class="active"{{end}}>{{t "Projects"}}</a>
   {{end}}
-  <span class="nav-brand">smine.<span class="nav-version">v{{appVersion}}</span></span>
+  {{if hasUsage}}<a href="/usage" {{if eq .Page "usage"}}class="active"{{end}}>{{t "Usage"}}</a>{{end}}
+  {{if isDeveloperAudience}}{{if peekDashboardURL}}<a href="{{peekDashboardURL}}">Peek</a>{{end}}{{end}}
+  <a class="nav-brand{{if eq .Page "profile"}} active{{end}}" href="/profile">smine.<span class="nav-version">v{{appVersion}}</span></a>
 </nav>
+{{end}}
+
+{{define "_heartbeat_tabs"}}
+<div class="tabs">
+  <a href="/fleet" {{if eq .Page "fleet"}}class="active"{{end}}>Fleet</a>
+  <a href="/runtime" {{if eq .Page "runtime"}}class="active"{{end}}>Runtime</a>
+</div>
+{{end}}
+
+{{define "_skills_tabs"}}
+<div class="tabs">
+  <a href="/scripts/skills" {{if eq .Tab "skills"}}class="active"{{end}}>Skills</a>
+  <a href="/scripts/skills/environment" {{if eq .Tab "environment"}}class="active"{{end}}>Environment</a>
+  <a href="/scripts/skills/graph" {{if eq .Tab "graph"}}class="active"{{end}}>Graph</a>
+</div>
 {{end}}
 
 {{define "foot"}}
 <script>
   // Terminal-window chrome. pre.file-view: amber collapses to the title bar,
-  // green toggles a fullscreen overlay, red is decorative. .window-card
-  // (configure widget): only the rose dot, which closes the container named
-  // by data-close. Overlay buttons keep the dots pure CSS.
+  // green toggles a fullscreen overlay. The rose dot closes only an element
+  // carrying data-close (transient output, the configure widget) by emptying
+  // the container it names; elsewhere it is drawn dimmed and inert.
+  // .window-card carries the rose dot only. Overlay buttons keep the dots pure CSS.
   (function () {
     var DOTS = [
       { left: 12, title: 'close' },
@@ -65,12 +87,15 @@
       if (title === 'minimize') { pre.classList.remove('maximized'); pre.classList.toggle('minimized'); return; }
       pre.classList.remove('minimized'); pre.classList.toggle('maximized');
     }
+    function hasDot(pre, title) {
+      if (title === 'close') return !!pre.dataset.close;
+      return !pre.classList.contains('window-card');
+    }
     function decorate(root) {
       root.querySelectorAll('pre.file-view:not([data-term]), .window-card:not([data-term])').forEach(function (pre) {
         pre.setAttribute('data-term', '1');
-        var isWindowCard = pre.classList.contains('window-card');
         DOTS.forEach(function (spec) {
-          if (isWindowCard !== (spec.title === 'close')) return;
+          if (!hasDot(pre, spec.title)) return;
           var dot = document.createElement('button');
           dot.type = 'button';
           dot.className = 'term-dot';
@@ -91,14 +116,27 @@
     });
   })();
 
-  // Bulk select-all: a summary's .bulk-all checkbox toggles every .bulk-check
-  // inside its <details>; the click never toggles the section itself.
+  // Bulk select-all: a summary's .bulk-all checkbox toggles every visible .bulk-check
+  // inside its <details>; rows a filter hides stay untouched.
   document.body.addEventListener('click', function (evt) {
     var all = evt.target.closest('.bulk-all');
     if (!all) { return; }
     evt.stopPropagation();
     all.closest('details').querySelectorAll('.bulk-check').forEach(function (box) {
+      if (box.closest('.hidden')) { return; }
       box.checked = all.checked;
+    });
+  });
+
+  // Reach picker: a reserved option (data-exclusive) stands alone — ticking it
+  // unticks every other option, ticking a repo unticks the reserved ones.
+  document.body.addEventListener('change', function (evt) {
+    var box = evt.target;
+    if (!box.matches('.reach-options input[name="reach"]') || !box.checked) { return; }
+    var exclusive = box.hasAttribute('data-exclusive');
+    box.closest('.reach-options').querySelectorAll('input[name="reach"]').forEach(function (other) {
+      if (other === box) { return; }
+      if (exclusive || other.hasAttribute('data-exclusive')) { other.checked = false; }
     });
   });
 
@@ -116,6 +154,52 @@
     });
     toggle.textContent = expanded ? toggle.dataset.more : 'hide';
   });
+</script>
+<script>
+  // Chip filter: one active value per group, groups combine; client-side.
+  // A filter card names its rows in data-filter-for, chips carry data-group /
+  // data-value, rows carry data-<group>. Shared by the backlog board and the
+  // proposals page; htmx swaps re-apply the active chips.
+  (function () {
+    function setup(card) {
+      var active = {};
+      var rows = card.dataset.filterFor;
+      function apply() {
+        card.querySelectorAll('.badge[data-group]').forEach(function (chip) {
+          var isOn = (active[chip.dataset.group] || '') === chip.dataset.value;
+          chip.classList.toggle('badge-ok', isOn);
+          chip.classList.toggle('badge-dim', !isOn);
+        });
+        document.querySelectorAll(rows).forEach(function (row) {
+          var hidden = Object.keys(active).some(function (group) {
+            return active[group] && row.dataset[group] !== active[group];
+          });
+          row.classList.toggle('hidden', hidden);
+        });
+      }
+      card.addEventListener('click', function (e) {
+        var chip = e.target.closest('.badge[data-group]');
+        if (!chip) { return; }
+        e.preventDefault();
+        var group = chip.dataset.group;
+        active[group] = active[group] === chip.dataset.value ? '' : chip.dataset.value;
+        apply();
+      });
+      card.filterApply = apply;
+      apply();
+    }
+    function init() {
+      document.querySelectorAll('.card-filter[data-filter-for]:not([data-filter-ready])').forEach(function (card) {
+        card.setAttribute('data-filter-ready', '1');
+        setup(card);
+      });
+      document.querySelectorAll('.card-filter[data-filter-ready]').forEach(function (card) {
+        if (card.filterApply) { card.filterApply(); }
+      });
+    }
+    init();
+    document.body.addEventListener('htmx:afterSwap', init);
+  })();
 </script>
 </body>
 </html>

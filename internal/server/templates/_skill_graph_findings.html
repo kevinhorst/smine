@@ -1,0 +1,10 @@
+{{define "_skill_graph_findings.html"}}
+{{if .Error}}
+<span class="st-battery st-battery-off" title="{{.Error}}">battery unavailable — {{.Error}}</span>
+{{else}}
+<span class="st-battery{{if .Errors}} st-battery-error{{end}}" title="warnings mark their entries with ⚠ — hover the badge or open the entry">battery: {{if or .Errors .WarningCount}}{{len .Errors}} error(s) · {{.WarningCount}} warning(s){{else}}clean{{end}}</span>
+{{if .Errors}}<ul class="st-finding-list">{{range .Errors}}{{template "_skill_graph_finding" .}}{{end}}</ul>{{end}}
+<script type="application/json" class="st-findings-data">{{.FindingsJson}}</script>
+{{end}}
+{{end}}
+{{define "_skill_graph_finding"}}<li class="st-finding-{{.Severity}}"><code>{{.Check}}</code> {{.Message}}{{range .EntryIds}} <button type="button" class="st-subst-link" data-open-entry="{{.}}">{{.}}</button>{{end}}</li>{{end}}

@@ -1,0 +1,19 @@
+{{define "_force_preview.html"}}
+<div class="card card-column force-preview">
+  {{if .Report.IsEmpty}}
+  <p class="meta">{{t "Force sync rebuilds the live settings from the repo template; nothing is dropped."}}</p>
+  {{else}}
+  <p class="meta">{{t "Force sync rebuilds the live settings from the repo template and drops:"}}</p>
+  {{with .Report.Groups}}<span class="section-label section-label-fit">{{t "hook groups"}}</span><ul>{{range .}}<li><code>{{.}}</code></li>{{end}}</ul>{{end}}
+  {{with .Report.EnvKeys}}<span class="section-label section-label-fit">{{t "env keys"}}</span><ul>{{range .}}<li><code>{{.}}</code></li>{{end}}</ul>{{end}}
+  {{with .Report.Permissions}}<span class="section-label section-label-fit">{{t "permission entries"}}</span><ul>{{range .}}<li><code>{{.}}</code></li>{{end}}</ul>{{end}}
+  {{with .Report.Keys}}<span class="section-label section-label-fit">{{t "keys the template does not declare"}}</span><ul>{{range .}}<li><code>{{.}}</code></li>{{end}}</ul>{{end}}
+  {{with .Report.Parked}}<span class="section-label section-label-fit">{{t "parked hook groups"}}</span><ul>{{range .}}<li><code>{{.}}</code></li>{{end}}</ul>{{end}}
+  {{end}}
+  <form hx-post="/api/config/{{.Target}}/sync/force" hx-target="#op-result" hx-disabled-elt="find button"
+        hx-confirm="{{t "Rebuild now? The previous settings.json and hooks.disabled.json go to the trash."}}">
+    <input type="hidden" name="confirmed" value="on">
+    <button type="submit">{{t "Rebuild now"}}</button>
+  </form>
+</div>
+{{end}}

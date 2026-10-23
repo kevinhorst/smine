@@ -1,0 +1,92 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="detail-head">
+  <h1>{{.Routine.Name}} — run {{.Report.RunId}}</h1>
+  <span class="badge badge-dim">{{.Report.Mode}}</span>
+  {{if eq .Report.Totals.ExitStatus 0}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">exit {{.Report.Totals.ExitStatus}}</span>{{end}}
+</div>
+<div class="meta">
+  {{stampDate .Report.Started}} {{stampTime .Report.Started}}{{if .Report.Finished}} → {{stampTime .Report.Finished}}{{end}}
+  · ${{printf "%.4f" .Report.Totals.CostUsd}}
+  {{if .Report.Branch}}· <code>{{.Report.Branch}}</code>{{end}}
+</div>
+
+<h2>Stages</h2>
+<table class="md-body checklist-table">
+  <thead>
+    <tr><th>Stage</th><th>Exit</th><th>Turns</th><th>Cost</th><th>Session</th></tr>
+  </thead>
+  <tbody>
+    {{range .Report.Stages}}
+    <tr>
+      <td>{{.Stage}}</td>
+      <td>{{if eq .ExitStatus 0}}<span class="badge badge-ok">0</span>{{else}}<span class="badge badge-error">{{.ExitStatus}}</span>{{end}}</td>
+      <td>{{.NumTurns}}</td>
+      <td>${{printf "%.4f" .TotalCostUsd}}</td>
+      <td>
+        {{if .SessionId}}
+          {{$peekURL := peekSessionURL .SessionId}}
+          {{if $peekURL}}<a href="{{$peekURL}}" title="open in peek"><code>{{.SessionId}}</code></a>
+          {{else}}<code>{{.SessionId}}</code>{{end}}
+        {{else}}–{{end}}
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{range .Report.Stages}}
+{{if .Result}}
+<details class="section">
+  <summary>{{.Stage}} result</summary>
+  <pre class="file-view">{{.Result}}</pre>
+</details>
+{{end}}
+{{end}}
+
+{{if .Report.Publish}}
+<h2>Publish</h2>
+<div class="meta">{{if .Report.Publish.Commit}}<code>{{.Report.Publish.Commit}}</code>{{else}}no commit{{end}}</div>
+{{if .Report.Publish.Files}}
+<table class="md-body checklist-table">
+  <thead><tr><th></th><th>File</th></tr></thead>
+  <tbody>
+    {{range .Report.Publish.Files}}
+    <tr><td><span class="badge badge-dim">{{.Status}}</span></td><td><code>{{.Path}}</code></td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{if .Report.Publish.CommitBody}}<pre class="file-view">{{.Report.Publish.CommitBody}}</pre>{{end}}
+{{end}}
+
+{{if .Report.Changes}}
+<h2>Changes</h2>
+<table class="md-body checklist-table">
+  <thead><tr><th>Change</th><th>Commit</th><th>Verdict</th><th>Reason</th></tr></thead>
+  <tbody>
+    {{range .Report.Changes}}
+    <tr>
+      <td><code>{{.Id}}</code></td>
+      <td><code>{{.Sha}}</code></td>
+      <td>{{if eq .Verdict "ready"}}<span class="badge badge-ok">ready</span>{{else}}<span class="badge badge-error">{{.Verdict}}</span>{{end}}</td>
+      <td>{{.Reason}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+
+{{if .Report.Orchestrate}}
+<h2>Orchestrate</h2>
+<div class="meta">
+  {{if .Report.Orchestrate.Merged}}<span class="badge badge-ok">merged</span>{{else}}<span class="badge badge-dim">not merged</span>{{end}}
+  {{if .Report.Orchestrate.MainSha}}· main <code>{{.Report.Orchestrate.MainSha}}</code>{{end}}
+</div>
+{{if .Report.Orchestrate.Report}}<pre class="file-view">{{.Report.Orchestrate.Report}}</pre>{{end}}
+{{end}}
+
+<details class="section">
+  <summary>Raw report JSON</summary>
+  <pre class="file-view">{{.RawJson}}</pre>
+</details>
+{{template "foot" .}}

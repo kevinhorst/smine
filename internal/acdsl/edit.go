@@ -9,14 +9,10 @@ import (
 	"github.com/kevinhorst/smine/internal/reach"
 )
 
-// reachAttrRe matches the reach attribute on a marker line, including its
-// leading space, so replacement and removal are symmetric.
+// The match includes the leading space so replacement and removal are symmetric.
 var reachAttrRe = regexp.MustCompile(` reach="[^"]*"`)
 
-// SetRuleReach rewrites the reach attribute of the doctrine marker at
-// path:line to value — replacing an existing attr in place, else inserting
-// it directly after the verifier token. The rest of the line and the rest
-// of the file survive byte-identical.
+// A missing attribute is inserted after the verifier token; the rest of the file stays byte-identical.
 func SetRuleReach(path string, line int, value string) error {
 	if !reach.Valid(value) {
 		return fmt.Errorf("SetRuleReach: invalid reach %q", value)

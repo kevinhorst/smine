@@ -1,0 +1,71 @@
+{{define "_runtime_status.html"}}
+<div id="runtime-status" hx-get="/runtime/status" hx-trigger="every 5s" hx-swap="outerHTML" hx-disinherit="*">
+{{if .StatusErr}}
+<div class="card card-error"><span class="label">runtime state unavailable: {{.StatusErr}}</span></div>
+{{else}}
+<h2>watches</h2>
+{{if .Document.Subscriptions}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr><th>watcher</th><th>watches</th><th>mode</th><th>since</th><th>last digest</th></tr></thead>
+  <tbody>
+  {{range .Document.Subscriptions}}
+  <tr>
+    <td>{{.Title}}</td>
+    <td>{{if .TargetTitle}}{{.TargetTitle}}{{else}}<code>{{.Target}}</code>{{end}}</td>
+    <td><span class="badge">{{.Mode}}</span></td>
+    <td>{{.Since}}</td>
+    <td>{{with .LastDigest}}{{.Id}} · {{.Outcome}} · {{.At}}{{else}}—{{end}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No runtime watcher — run /runtime session: &lt;title&gt; in another session.</div>
+{{end}}
+
+<h2>runs</h2>
+{{if .Document.Runs}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr><th>session</th><th>skill</th><th>version</th><th>state</th><th>anchors</th><th>failures</th><th>findings</th></tr></thead>
+  <tbody>
+  {{range .Document.Runs}}
+  <tr>
+    <td>{{with titleView .Title}}{{.Text}} {{template "_title_state" .}}{{end}}</td>
+    <td>{{.Skill}}</td>
+    <td>{{.Version}}</td>
+    <td><span class="badge{{if eq .State "killed"}} badge-error{{else if eq .State "ended"}} badge-dim{{end}}">{{.State}}</span>{{if and .Reason (eq .State "ended")}} {{.Reason}}{{end}}</td>
+    <td>{{$hits := .Anchors}}{{with anchorTrack $hits}}<span class="anchor-track" title="{{len $hits}} anchored calls, in order; a count folds repeats, the last pill is where the run stands">{{range .}}<span class="anchor-step" title="seq {{.Seq}}{{if gt .Count 1}} – {{.LastSeq}}{{end}}">{{.Id}}{{if gt .Count 1}}<span class="anchor-count">×{{.Count}}</span>{{end}}</span>{{end}}</span>{{else}}—{{end}}</td>
+    <td>{{range $i, $failure := .Failures}}{{if $i}} · {{end}}{{$failure.Check}} ×{{$failure.Count}}{{else}}—{{end}}</td>
+    <td>{{.Findings}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No runs since the subscription began.</div>
+{{end}}
+
+<h2>findings</h2>
+{{if .Document.Findings}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr><th>finding</th><th>kind</th><th>check</th><th>reason</th><th>evidence</th><th>moves</th><th>acted</th></tr></thead>
+  <tbody>
+  {{range .Document.Findings}}
+  <tr>
+    <td><code title="{{.Id}}">{{.Id}}</code></td>
+    <td><span class="badge{{if eq .Kind "check_failed"}} badge-error{{end}}">{{.Kind}}</span></td>
+    <td>{{.Entry}}</td>
+    <td>{{.Reason}}</td>
+    <td>{{range $i, $line := .Evidence}}{{if $i}}<br>{{end}}<code>{{$line}}</code>{{else}}—{{end}}</td>
+    <td>{{range $i, $move := .Moves}}{{if $i}} · {{end}}{{$move}}{{end}}</td>
+    <td>{{.Acted}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No findings.</div>
+{{end}}
+{{end}}
+</div>
+{{end}}

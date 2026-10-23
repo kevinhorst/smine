@@ -54,15 +54,83 @@ func TestParseScheduleArrayOfDicts(t *testing.T) {
 	assert.Equal(t, 1, *schedule.Intervals[1].Weekday)
 }
 
-func TestParseScheduleUnknownKeyFails(t *testing.T) {
-	path := writePlist(t, plistHeader+`<plist version="1.0"><dict>
-		<key>StartCalendarInterval</key>
-		<dict><key>Second</key><integer>30</integer></dict>
-	</dict></plist>`)
+func TestParseScheduleErrors(t *testing.T) {
+	type testCase struct {
+		_id          string
+		_expectedErr string
 
-	_, err := parseSchedule(path)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Unknown key Second")
+		path string
+	}
+
+	tests := make([]*testCase, 0)
+
+	// missing-file
+	tests = append(tests, &testCase{
+		_id:          "missing-file",
+		_expectedErr: "Failed to read",
+
+		path: filepath.Join(t.TempDir(), "absent.plist"),
+	})
+
+	// malformed-plist
+	tests = append(tests, &testCase{
+		_id:          "malformed-plist",
+		_expectedErr: "Failed to parse",
+
+		path: writePlist(t, plistHeader+`<plist version="1.0"><dict><key>Label</key>`),
+	})
+
+	// unknown-key
+	tests = append(tests, &testCase{
+		_id:          "unknown-key",
+		_expectedErr: "Unknown key Second",
+
+		path: writePlist(t, plistHeader+`<plist version="1.0"><dict>
+			<key>StartCalendarInterval</key>
+			<dict><key>Second</key><integer>30</integer></dict>
+		</dict></plist>`),
+	})
+
+	// non-integer-value
+	tests = append(tests, &testCase{
+		_id:          "non-integer-value",
+		_expectedErr: "Unexpected value type string",
+
+		path: writePlist(t, plistHeader+`<plist version="1.0"><dict>
+			<key>StartCalendarInterval</key>
+			<dict><key>Hour</key><string>six</string></dict>
+		</dict></plist>`),
+	})
+
+	// interval-wrong-type
+	tests = append(tests, &testCase{
+		_id:          "interval-wrong-type",
+		_expectedErr: "Unexpected StartCalendarInterval type string",
+
+		path: writePlist(t, plistHeader+`<plist version="1.0"><dict>
+			<key>StartCalendarInterval</key><string>daily</string>
+		</dict></plist>`),
+	})
+
+	// array-item-not-dict
+	tests = append(tests, &testCase{
+		_id:          "array-item-not-dict",
+		_expectedErr: "Unexpected interval type uint64",
+
+		path: writePlist(t, plistHeader+`<plist version="1.0"><dict>
+			<key>StartCalendarInterval</key>
+			<array><integer>6</integer></array>
+		</dict></plist>`),
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			_, err := parseSchedule(test.path)
+
+			assert.ErrorContains(t, err, test._expectedErr)
+		})
+	}
 }
 
 func TestParseScheduleMissingKeyIsUnscheduled(t *testing.T) {
@@ -107,6 +175,58 @@ func TestParseEnv(t *testing.T) {
 	env, err = parseEnv(bare)
 	require.NoError(t, err)
 	assert.Nil(t, env)
+}
+
+func TestValidateEnvKeys(t *testing.T) {
+	type testCase struct {
+		_id         string
+		_shouldPass bool
+
+		env map[string]string
+	}
+
+	tests := make([]*testCase, 0)
+
+	// pass-runner-knobs
+	tests = append(tests, &testCase{
+		_id:         "pass-runner-knobs",
+		_shouldPass: true,
+
+		env: map[string]string{"ROUTINE_MODEL": "sonnet", "SMINE_APPLY_CAP": "3"},
+	})
+
+	// pass-empty
+	tests = append(tests, &testCase{
+		_id:         "pass-empty",
+		_shouldPass: true,
+
+		env: nil,
+	})
+
+	// fail-skill-input
+	tests = append(tests, &testCase{
+		_id:         "fail-skill-input",
+		_shouldPass: false,
+
+		env: map[string]string{"ROUTINE_MODEL": "sonnet", "SKILLEVAL_TARGET_REPO": "/repo"},
+	})
+
+	// fail-harness-key
+	tests = append(tests, &testCase{
+		_id:         "fail-harness-key",
+		_shouldPass: false,
+
+		env: map[string]string{"CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "64"},
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			err := ValidateEnvKeys(test.env)
+
+			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
+		})
+	}
 }
 
 func TestSetEnvPreservesUnrelatedKeys(t *testing.T) {
@@ -210,6 +330,18 @@ func TestPlistMetaLabelAndEnv(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "com.test.meta", label)
 	assert.Equal(t, map[string]string{"ROUTINE_GROUP": "demo"}, env)
+}
+
+func TestPlistMetaRejectsForeignEnvKey(t *testing.T) {
+	path := writePlist(t, plistHeader+`<plist version="1.0"><dict>
+		<key>Label</key><string>com.test.meta</string>
+		<key>EnvironmentVariables</key>
+		<dict><key>SKILLEVAL_TARGET_REPO</key><string>/repo</string></dict>
+	</dict></plist>`)
+
+	_, _, err := PlistMeta(filepath.Dir(path))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "SKILLEVAL_TARGET_REPO")
 }
 
 func TestPlistMetaRequiresExactlyOnePlist(t *testing.T) {

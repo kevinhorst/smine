@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "smine change task",
+  "description": "One miner's task file under .smine-run/changes/<kind>-<slug>.json; the run report stores it and the Proposals card shows problem, evidence and fix",
+  "type": "object",
+  "required": ["id", "kind", "title", "problem", "evidence", "fix", "sessions", "target", "change", "notes"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+/[a-z0-9-]+$",
+      "description": "<kind>/<slug>"
+    },
+    "backlog": {
+      "type": "string",
+      "pattern": "^B-[0-9]{3,}$",
+      "description": "the backlog item this task picks up"
+    },
+    "kind": {
+      "enum": ["acdsl", "context", "memory", "permissions", "skills", "routines", "judge"]
+    },
+    "title": {
+      "type": "string"
+    },
+    "problem": {
+      "type": "string",
+      "maxLength": 160,
+      "description": "one plain sentence stating what is wrong for a reader who was not in the session; task-check refuses ids, shas, paths, counts and code in it"
+    },
+    "evidence": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["session", "quote", "finding"],
+        "additionalProperties": false,
+        "properties": {
+          "session": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "maxLength": 160,
+            "description": "a verbatim excerpt of the record's finding quote, at most 160 characters"
+          },
+          "finding": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "index of the session record finding the quote is taken from"
+          }
+        }
+      }
+    },
+    "fix": {
+      "type": "string",
+      "maxLength": 240,
+      "description": "why the change fixes it, at most 240 characters"
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "target": {
+      "type": "string",
+      "description": "repo-relative path"
+    },
+    "change": {
+      "type": "string",
+      "description": "one imperative sentence"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

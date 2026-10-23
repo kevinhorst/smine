@@ -10,44 +10,75 @@ import (
 
 type statusEntry struct {
 	Fingerprint string
+	Kinds       []string
 	ScannedAt   time.Time
 	Statuses    []repos.WorktreeStatus
+	Timings     repos.StatusTimings
 }
 
-// statusCache holds the last parsed worktree scan per repo so plain fragment
-// loads render without a subprocess; ?refresh=1 replaces the entry wholesale.
-// Stored slices are treated as immutable — renders read, never mutate.
+type statusKey struct {
+	Kind string
+	Repo string
+}
+
+// statusCache treats stored slices as immutable: renders read, never mutate.
 type statusCache struct {
 	// mu guards entries (declared directly above the map it guards).
 	mu      sync.RWMutex
-	entries map[string]statusEntry
+	entries map[statusKey]statusEntry
 }
 
 func newStatusCache() *statusCache {
-	cache := &statusCache{entries: make(map[string]statusEntry)}
+	cache := &statusCache{entries: make(map[statusKey]statusEntry)}
 	return cache
 }
 
-// Delete drops a repo's entry entirely (registry removal).
+// Delete drops every scope of a repo (registry removal).
 func (c *statusCache) Delete(repoName string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	delete(c.entries, repoName)
+	for key := range c.entries {
+		if key.Repo == repoName {
+			delete(c.entries, key)
+		}
+	}
 }
 
-// DropBranches removes the given branches' rows from the cached entry so
-// plain loads agree with an optimistic removal immediately. The entry is
-// replaced with a freshly built slice (stored slices stay immutable);
-// ScannedAt is kept — it is still the last scan, minus removed rows. The
-// pre-removal Fingerprint is kept too, deliberately: the removal changed the
-// real ref/worktree set, so the next plain load mismatches and re-scans.
+// DropBranches keeps the pre-removal Fingerprint on purpose, so the next plain load mismatches and re-scans.
 func (c *statusCache) DropBranches(repoName string, branches []string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	entry, ok := c.entries[repoName]
-	if !ok {
-		return
+	for key, entry := range c.entries {
+		if key.Repo != repoName {
+			continue
+		}
+		c.entries[key] = droppedBranches(branches, entry)
 	}
+}
+
+func (c *statusCache) Get(key statusKey) (statusEntry, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	entry, ok := c.entries[key]
+	return entry, ok
+}
+
+func (c *statusCache) Store(key statusKey, fingerprint string, scan *repos.StatusScan) statusEntry {
+	entry := statusEntry{
+		Fingerprint: fingerprint,
+		Kinds:       scan.Kinds,
+		ScannedAt:   time.Now(),
+		Statuses:    scan.Rows,
+		Timings:     scan.Timings,
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.entries[key] = entry
+	return entry
+}
+
+// droppedBranches builds a fresh slice because stored slices stay immutable.
+func droppedBranches(branches []string, entry statusEntry) statusEntry {
 	kept := make([]repos.WorktreeStatus, 0, len(entry.Statuses))
 	for _, status := range entry.Statuses {
 		if !slices.Contains(branches, status.Branch) {
@@ -55,20 +86,5 @@ func (c *statusCache) DropBranches(repoName string, branches []string) {
 		}
 	}
 	entry.Statuses = kept
-	c.entries[repoName] = entry
-}
-
-func (c *statusCache) Get(repoName string) (statusEntry, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	entry, ok := c.entries[repoName]
-	return entry, ok
-}
-
-func (c *statusCache) Store(repoName, fingerprint string, statuses []repos.WorktreeStatus) statusEntry {
-	entry := statusEntry{Fingerprint: fingerprint, ScannedAt: time.Now(), Statuses: statuses}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.entries[repoName] = entry
 	return entry
 }

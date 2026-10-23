@@ -1,8 +1,4 @@
 // Package catalog embeds the key-reference catalog for the config editor.
-// catalog.json is generated from the SchemaStore Claude Code settings schema
-// and the Codex config-schema JSON (enum values backfilled from the Codex
-// config-reference page); the /catalog-refresh skill (backlog) must emit the
-// same flat Entry array.
 package catalog
 
 import (
@@ -25,6 +21,7 @@ const (
 	TypeArray  = "array"
 	TypeBool   = "bool"
 	TypeEnum   = "enum"
+	TypeMap    = "map"
 	TypeNumber = "number"
 	TypeObject = "object"
 	TypeString = "string"
@@ -67,8 +64,7 @@ func ForTarget(entries []Entry, target string) []Entry {
 	return result
 }
 
-// Validate checks a submitted string value against the entry's type.
-// Structured types (array/object/table) are validated target-side (D8).
+// Validate leaves structured types (array, object, table) to target-side validation.
 func Validate(e *Entry, value string) error {
 	switch e.Type {
 	case TypeBool:
@@ -83,6 +79,17 @@ func Validate(e *Entry, value string) error {
 		if !slices.Contains(e.Values, value) {
 			return fmt.Errorf("Validate: Key %s: Not an allowed value: %s", e.Key, value)
 		}
+	}
+	return nil
+}
+
+// ValidateEntry checks one map entry's value; map keys carry a closed value set.
+func ValidateEntry(e *Entry, value string) error {
+	if e.Type != TypeMap {
+		return fmt.Errorf("ValidateEntry: Key %s: Not a map", e.Key)
+	}
+	if !slices.Contains(e.Values, value) {
+		return fmt.Errorf("ValidateEntry: Key %s: Not an allowed value: %s", e.Key, value)
 	}
 	return nil
 }

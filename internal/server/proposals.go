@@ -1,752 +1,720 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"maps"
-	"math/rand/v2"
+	"log"
 	"net/http"
 	"net/url"
-	"path"
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/kevinhorst/smine/internal/proposals"
+	"github.com/kevinhorst/smine/internal/backlog"
+	"github.com/kevinhorst/smine/internal/components"
+	"github.com/kevinhorst/smine/internal/repos"
+	"github.com/kevinhorst/smine/internal/routines"
 	"github.com/kevinhorst/smine/internal/server/respond"
 	"github.com/kevinhorst/smine/internal/sessions"
 )
 
 const (
-	pageProposals    = "proposals"
-	tmplProposals    = "proposals.html"
-	tmplProposalCard = "_proposal_card.html"
+	badgeAction = "badge-action"
+	badgeDim    = "badge-dim"
+	badgeOk     = "badge-ok"
 
-	maxVoteCommentLength = 500
-	voteAccept           = "+"
-	votePostpone         = "p"
-	voteReject           = "-"
+	pageProposals     = "proposals"
+	tmplProposals     = "proposals.html"
+	tmplProposalsBody = "_proposals_body.html"
 
-	stateFilterPrefix = "state:"
+	// changeTarget is the branch a change is picked onto.
+	changeTarget = "main"
+	hoursPerDay  = 24
+	// maxFileDiffLines caps the patch a card shows per file.
+	maxFileDiffLines = 200
+	// proposalCountTimeout bounds the nav count's git and agentwt calls.
+	proposalCountTimeout = 5 * time.Second
+	// historyPickLimit bounds the main log scan for picked changes.
+	historyPickLimit = 200
+
+	outcomePicked   = "picked"
+	tabHistory      = "history"
+	unknownNight    = "unknown night"
+	verdictConflict = "conflict"
+	verdictReady    = "ready"
+	verdictRejected = "rejected"
+	verdictUnjudged = "unjudged"
 )
 
-// kindDimension is the default deep-link dimension per proposals kind;
-// evidence-level dimension overrides it.
-var kindDimension = map[string]string{
-	"context":     "rule",
-	"permissions": "harness-friction",
-	"routines":    "routine-candidate",
-	"skills":      "skill-candidate",
+// commitShaPattern admits only full ids: the pick form posts the sha the card rendered, never an abbreviation.
+var commitShaPattern = regexp.MustCompile(`^[0-9a-f]{40}([0-9a-f]{24})?$`)
+
+type changeCardView struct {
+	Branch       string
+	Commit       repos.ChangeCommit
+	Files        []changeFileView
+	IsApplicable bool // applies on main right now
+	IsDisabled   bool // the Welcome demo and the conflicts block: no pick
+	Night        string
+	Problem      string // the first task's problem sentence, else the subject
+	ProbeReason  string // agentwt's reason when the dry-run pick failed
+	SessionAge   string
+	Sessions     []sessionLink
+	ShortSha     string
+	Tasks        []changeTaskView // one per change id with a record, in id order
+	Verdict      changeVerdictView
 }
 
-type proposalsPage struct {
-	Files      []fileView
-	HappyWord  string
-	HasGroups  bool
-	LoadErrors []string
-	Page       string
-	Tab        string
-	Title      string
+type changeFileView struct {
+	Added     int
+	Deleted   int
+	DiffLines []diffLine
+	IsDiffCut bool
+	Path      string
+	Status    string
 }
 
-// happyWords feeds the Open tab's empty state — things that happen
-// inside the LLM while there is nothing left to vote on.
-var happyWords = []string{
-	"Combobulating", "Confabulating", "Percolating", "Ruminating",
-	"Cogitating", "Tokenizing", "Attending", "Embedding",
-	"Extrapolating", "Recalibrating",
+// changeNightView is one nightly branch's open change commits, newest first.
+type changeNightView struct {
+	Branch    string
+	Cards     []changeCardView
+	Conflicts []changeCardView // dry-run pick failed; rendered closed after the cards
+	Night     string
 }
 
-type fileView struct {
-	AllURL     string
-	Categories []categoryView
-	File       proposals.File
-	Filter     string
-	FilterRows []proposalFilterRow
-	Groups     []groupView
+type changeTaskView struct {
+	Backlog  string
+	Evidence []evidenceView
 }
 
-// proposalFilterRow is one labeled chip row of a kind's filter card — the
-// skills kind splits into a skills row and a workflows row (plan D10).
-type proposalFilterRow struct {
-	Filters []proposalFilter
-	Label   string
-}
-
-// categoryView is one derived top-level card. A Solo category wraps exactly
-// one group and renders it bare — kinds without a taxonomy stay flat.
-type categoryView struct {
-	CountLabel     string
-	DataSection    string
-	Groups         []groupView
-	IsFilterTarget bool
-	Solo           bool
-	Title          string
-}
-
-// subgroupView is one derived per-target bar inside an authored group.
-type subgroupView struct {
-	CountLabel     string
-	DataSection    string
-	IsFilterTarget bool
-	Proposals      []proposalView
-	Title          string
-}
-
-// proposalFilter is one badge in a kind's filter row (D3/D4). Label is the
-// chip text (the value minus a wf: namespace); Value stays the URL token.
-type proposalFilter struct {
-	Active bool
+type changeVerdictView struct {
+	Class  string
 	Label  string
-	URL    string
-	Value  string
-}
-
-type groupView struct {
-	Accepted       stateNote
-	Count          int
-	CountLabel     string
-	DataSection    string
-	IsFilterTarget bool
-	Postponed      stateNote
-	Proposals      []proposalView
-	Rejected       stateNote
-	Solo           bool
-	Subgroups      []subgroupView
-	Title          string
-	Total          int
-}
-
-// stateNote is one element of a group's compact summary notation
-// "(accepted/total)[rejected][postponed]" — itself the clickable state
-// filter (the global filter row carries only id/RULE badges). An active
-// note links to the cleared filter; the tooltip decodes the notation.
-type stateNote struct {
-	Active  bool
-	Count   int
-	Tooltip string
-	URL     string
-}
-
-type proposalView struct {
-	Disabled       bool
-	Evidence       []evidenceView
-	IsRevert       bool
-	Kind           string
-	PendingComment string
-	PendingDate    string // date part of the pending vote's Ts
-	PendingVote    string
-	Proposal       proposals.Proposal
+	Reason string
 }
 
 type evidenceView struct {
-	Item  proposals.Evidence
-	Links []sessionLink
+	Quote   string
+	Session sessionLink
+	URL     string // the session URL plus the finding fragment; empty without a record
+}
+
+type historyDayView struct {
+	Entries []historyEntryView
+	Night   string
+}
+
+type historyEntryView struct {
+	Outcome      string
+	OutcomeClass string
+	Problem      string
+	Reason       string
+	ShortSha     string
+	Subject      string
+}
+
+type openProposalView struct {
+	Count int
+}
+
+type pickOutcomeView struct {
+	NewCommit string
+	Outcome   string
+	Reason    string
+	ShortSha  string
+	Subject   string
+}
+
+type proposalsPage struct {
+	History       []historyDayView
+	KindCounts    []backlogFilterCount
+	LoadErrors    []string
+	NightCounts   []backlogFilterCount
+	Nights        []changeNightView
+	OpenCount     int
+	Page          string
+	Results       []pickOutcomeView
+	Tab           string
+	Title         string
+	Total         int
+	VerdictCounts []backlogFilterCount
 }
 
 type sessionLink struct {
-	Id   string
-	Note string
-	URL  string // empty when the id is not in any loaded batch
+	Id         string
+	LastActive string // RFC3339 from the record, empty when unloaded
+	URL        string // empty when the id is not in any loaded session record
 }
 
 func (s *Server) handleProposals(w http.ResponseWriter, r *http.Request) {
-	files, loadErrors, err := proposals.Load(s.proposalsDir)
+	if !s.hasProposals() {
+		s.renderComponentOff(w, pageProposals, "Proposals", components.Mining, components.Agentwt)
+		return
+	}
+
+	s.reloadSessions()
+	repoPath, isNightlyKnown := s.nightlyRepo()
+	if !isNightlyKnown {
+		data := proposalsPage{Page: pageProposals, Title: translate(s.presentation.language(), "Proposals")}
+		s.renderFragment(w, tmplProposals, data)
+		return
+	}
+	if r.URL.Query().Get("tab") == tabHistory {
+		s.renderFragment(w, tmplProposals, s.historyPage(r.Context(), repoPath))
+		return
+	}
+	s.renderFragment(w, tmplProposals, s.proposalsPage(r.Context(), nil, repoPath))
+}
+
+// handleProposalPick picks the selected open changes in branch order and re-renders the body with each outcome.
+func (s *Server) handleProposalPick(w http.ResponseWriter, r *http.Request) {
+	repoPath, isNightlyKnown := s.nightlyRepo()
+	if !isNightlyKnown {
+		respond.WithNotFound("no nightly routine configured", w)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
+
+	snapshot, err := s.proposals.Snapshot(r.Context(), s.agentwt, repoPath, changeTarget)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
-	tab := r.URL.Query().Get("tab")
-	isKnownTab := tab == "notes"
-	if !isKnownTab {
-		tab = "open"
+
+	selected, err := selectedChanges(snapshot.Open, r.Form["sha"])
+	if err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
 	}
 
-	votes, votesErr := proposals.LoadVotes(s.votesPath())
-	if votesErr != nil {
-		loadErrors = append(loadErrors, votesErr.Error())
+	results, err := s.pickSelected(r.Context(), repoPath, selected)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	s.renderFragment(w, tmplProposalsBody, s.proposalsPage(r.Context(), results, repoPath))
+}
+
+// handleProposalPickOne picks the one change the path names: the card's own Pick button.
+func (s *Server) handleProposalPickOne(w http.ResponseWriter, r *http.Request) {
+	repoPath, isNightlyKnown := s.nightlyRepo()
+	if !isNightlyKnown {
+		respond.WithNotFound("no nightly routine configured", w)
+		return
 	}
 
-	// One filter per kind, param name = kind: ?skills=<id>&rules=<prefix>…
-	active := make(map[string]string, len(files))
-	for _, file := range files {
-		if value := r.URL.Query().Get(file.Kind); value != "" {
-			active[file.Kind] = value
+	snapshot, err := s.proposals.Snapshot(r.Context(), s.agentwt, repoPath, changeTarget)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+
+	selected, err := selectedChanges(snapshot.Open, []string{r.PathValue("sha")})
+	if err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
+
+	results, err := s.pickSelected(r.Context(), repoPath, selected)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	s.renderFragment(w, tmplProposalsBody, s.proposalsPage(r.Context(), results, repoPath))
+}
+
+// handleProposalReject writes the rejected ref of every selected change; they leave the page and the count.
+func (s *Server) handleProposalReject(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
+	s.rejectChanges(w, r, r.Form["sha"])
+}
+
+// handleProposalRejectOne rejects the one change the path names: the card's own Reject button.
+func (s *Server) handleProposalRejectOne(w http.ResponseWriter, r *http.Request) {
+	s.rejectChanges(w, r, []string{r.PathValue("sha")})
+}
+
+// rejectChanges writes one rejected ref per open change the shas name, with the prompt's reason as a backlog row, and re-renders the body.
+func (s *Server) rejectChanges(w http.ResponseWriter, r *http.Request, shas []string) {
+	repoPath, isNightlyKnown := s.nightlyRepo()
+	if !isNightlyKnown {
+		respond.WithNotFound("no nightly routine configured", w)
+		return
+	}
+
+	snapshot, err := s.proposals.Snapshot(r.Context(), s.agentwt, repoPath, changeTarget)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+
+	selected, err := selectedChanges(snapshot.Open, shas)
+	if err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
+
+	reason := strings.TrimSpace(r.Header.Get("HX-Prompt"))
+	reports := s.nightlyReports()
+	for _, change := range selected {
+		if reason != "" {
+			row := &backlog.ArchiveRow{
+				Commit:      change.Commit.Sha,
+				Description: strings.TrimSpace(change.Message.Subject + "\n\n" + change.Message.Body),
+				Link:        change.Branch,
+				Reason:      reason,
+				Title:       cardProblem(change.Message.ChangeIds, reports, change.Message.Subject),
+			}
+			if err := backlog.AppendRejected(s.backlogStorePath(), row); err != nil {
+				respond.WithInternalServerError(err, w)
+				return
+			}
+		}
+		if err := repos.Reject(r.Context(), repoPath, change.Commit.Sha); err != nil {
+			respond.WithInternalServerError(err, w)
+			return
 		}
 	}
+	s.renderFragment(w, tmplProposalsBody, s.proposalsPage(r.Context(), nil, repoPath))
+}
 
+// historyPage carries the open count from the store and the settled changes; it builds no card.
+func (s *Server) historyPage(ctx context.Context, repoPath string) proposalsPage {
+	data := s.newProposalsPage(nil)
+	data.Tab = tabHistory
+	snapshot, err := s.proposals.Snapshot(ctx, s.agentwt, repoPath, changeTarget)
+	if err != nil {
+		data.LoadErrors = append(data.LoadErrors, err.Error())
+	}
+	data.OpenCount = snapshot.Count()
+	data.History = s.proposalHistory(ctx, repoPath)
+	return data
+}
+
+func (s *Server) newProposalsPage(results []pickOutcomeView) proposalsPage {
 	data := proposalsPage{
-		Files:      proposalViews(active, files, s.presentation.language(), s.sessions.SessionRefs(), tab, votes),
-		HappyWord:  happyWords[rand.IntN(len(happyWords))],
-		LoadErrors: loadErrors,
-		Page:       pageProposals,
-		Tab:        tab,
-		Title:      translate(s.presentation.language(), "Proposals"),
+		Page:    pageProposals,
+		Results: results,
+		Title:   translate(s.presentation.language(), "Proposals"),
 	}
-	for _, file := range data.Files {
-		if len(file.Groups) > 0 {
-			data.HasGroups = true
-		}
-	}
-	s.renderFragment(w, tmplProposals, data)
+	return data
 }
 
-func proposalViews(active map[string]string, files []proposals.File, language string, refs map[string]sessions.SessionRef, tab string, votes map[string]proposals.Vote) []fileView {
-	views := make([]fileView, 0, len(files))
-	for _, file := range files {
-		view := fileView{
-			AllURL: filterURL(active, file.Kind, ""),
-			File:   file,
-			Filter: active[file.Kind],
-			Groups: groupViews(active, file, language, refs, tab, votes),
-		}
-		view.Categories = categoryViews(file.Kind, view.Groups)
-		view.FilterRows = filterRows(&file, active, view.Filter)
-		views = append(views, view)
-	}
-	return views
-}
-
-// filterRows renders a kind's chip rows: the skills kind splits skill chips
-// from wf:-namespaced workflow chips into two labeled rows, every other kind
-// keeps one unlabeled row (plan D10).
-func filterRows(file *proposals.File, active map[string]string, activeValue string) []proposalFilterRow {
-	var skills, workflows []proposalFilter
-	for _, value := range filterValues(file) {
-		filter := proposalFilter{
-			Active: value == activeValue,
-			Label:  strings.TrimPrefix(value, workflowFilterPrefix),
-			URL:    filterURL(active, file.Kind, value),
-			Value:  value,
-		}
-		if strings.HasPrefix(value, workflowFilterPrefix) {
-			workflows = append(workflows, filter)
-			continue
-		}
-		skills = append(skills, filter)
-	}
-	if len(workflows) == 0 {
-		if len(skills) == 0 {
-			return nil
-		}
-		row := proposalFilterRow{Filters: skills}
-		return []proposalFilterRow{row}
-	}
-	rows := []proposalFilterRow{
-		{Filters: skills, Label: "skills"},
-		{Filters: workflows, Label: "workflows"},
-	}
-	return rows
-}
-
-// filterURL builds /proposals with this kind's filter set to value ("" to
-// clear), preserving every other kind's active filter.
-func filterURL(active map[string]string, kind, value string) string {
-	query := url.Values{}
-	for activeKind, activeValue := range active {
-		if activeKind != kind {
-			query.Set(activeKind, activeValue)
-		}
-	}
-	if value != "" {
-		query.Set(kind, value)
-	}
-	if len(query) == 0 {
-		return "/proposals"
-	}
-	return "/proposals?" + query.Encode()
-}
-
-// filterValues lists the file's selectable values: proposal ids for named
-// kinds, band + entry prefixes for context (D3/D4) — one level, never deeper.
-func filterValues(file *proposals.File) []string {
-	values := make(map[string]bool)
-	for _, group := range file.Groups {
-		for index := range group.Proposals {
-			for _, value := range proposalFilterKeys(&group.Proposals[index], file.Kind) {
-				values[value] = true
-			}
-		}
-	}
-	return slices.Sorted(maps.Keys(values))
-}
-
-// effectiveState is the state a proposal counts and filters under: a
-// pending vote wins over the stored status.
-func effectiveState(proposal *proposals.Proposal, kind string, votes map[string]proposals.Vote) string {
-	vote, ok := votes[proposals.VoteKey(kind, proposal.Id)]
-	if !ok {
-		return proposal.Status
-	}
-
-	switch vote.Vote {
-	case voteAccept:
-		return "accepted"
-	case voteReject:
-		return "rejected"
-	case votePostpone:
-		return "postponed"
-	}
-	return proposal.Status
-}
-
-// stateFilterTarget parses a state filter token "state:<group>:<state>"
-// into its group index and state; ok is false for non-state filters.
-func stateFilterTarget(filter string) (int, string, bool) {
-	rest, isStateFilter := strings.CutPrefix(filter, stateFilterPrefix)
-	if !isStateFilter {
-		return 0, "", false
-	}
-
-	indexPart, state, isTwoPart := strings.Cut(rest, ":")
-	if !isTwoPart {
-		return 0, "", false
-	}
-	index, err := strconv.Atoi(indexPart)
+// nightlyReports degrades an unreadable runs dir to no verdicts; cards render unjudged.
+func (s *Server) nightlyReports() []routines.RunReport {
+	reports, err := routines.Reports(filepath.Join(s.routinesDir, pinnedRoutine), routines.HistoryLimit())
 	if err != nil {
-		return 0, "", false
-	}
-	return index, state, true
-}
-
-// visibleUnderStateFilter scopes a state filter to the group it was
-// clicked on: that group narrows to the state, statusless (rerouted /
-// considered) entries hide everywhere, every other group stays complete.
-func visibleUnderStateFilter(proposal *proposals.Proposal, kind string, isTargetGroup bool, state string, votes map[string]proposals.Vote) bool {
-	if proposal.Status == "" {
-		return false
-	}
-	if !isTargetGroup {
-		return true
-	}
-	return effectiveState(proposal, kind, votes) == state
-}
-
-var (
-	// entryPrefixPattern captures a canon entry id minus its number
-	// (identity grammar: ACTION|RULE|FACT-SCOPE[-TOPIC]) — the context
-	// kind's filter category.
-	entryPrefixPattern = regexp.MustCompile(`((?:ACTION|RULE|FACT)-[A-Z]+(?:-[A-Z]+)?)-[0-9]`)
-	splitIdPattern     = regexp.MustCompile(`--\d+$`)
-)
-
-// workflowFilterPrefix namespaces workflow chips inside a kind's one filter
-// param, so skills and workflows can render as separate rows.
-const workflowFilterPrefix = "wf:"
-
-// namedProposalFilterKey is what a skills/routines proposal filters under:
-// workflow proposals by their bundled script (wf: namespace), edits by their
-// target skill, everything else by its split-stripped id (plan D9).
-func namedProposalFilterKey(proposal *proposals.Proposal) string {
-	if strings.Contains(proposal.Target, "/workflows/") {
-		base := path.Base(proposal.Target)
-		return workflowFilterPrefix + strings.TrimSuffix(base, ".js")
-	}
-	if proposal.Target != "" && !strings.Contains(proposal.Target, "/") {
-		return proposal.Target
-	}
-	return splitIdPattern.ReplaceAllString(proposal.Id, "")
-}
-
-// proposalFilterKeys returns what a proposal matches on: its target skill or
-// workflow (falling back to the base id — split siblings share their
-// candidate's badge), or for context the ACDSL-vs-prose band key plus every
-// canon entry prefix mentioned in title and fields. Only actual proposals
-// participate — rerouted/considered entries carry no status and never become
-// filter values (nor match one).
-func proposalFilterKeys(proposal *proposals.Proposal, kind string) []string {
-	if proposal.Status == "" {
 		return nil
 	}
-	if kind != "context" {
-		key := namedProposalFilterKey(proposal)
-		if key == "" {
-			return nil
-		}
-		return []string{key}
-	}
-
-	keys := []string{gateFilterKey(&proposal.Gate)}
-	seen := make(map[string]bool)
-	scan := func(text string) {
-		for _, match := range entryPrefixPattern.FindAllStringSubmatch(text, -1) {
-			if prefix := match[1]; !seen[prefix] {
-				seen[prefix] = true
-				keys = append(keys, prefix)
-			}
-		}
-	}
-	scan(proposal.Title)
-	for _, field := range proposal.Fields {
-		scan(field.Label)
-		scan(field.Text)
-	}
-	return keys
+	return reports
 }
 
-// gateFilterKey is the ACDSL-vs-prose axis: bands F/A/D are gate-backed
-// ("acdsl"), band J and a missing gate are prose.
-func gateFilterKey(gate *proposals.Gate) string {
-	switch gate.Band {
-	case "F", "A", "D":
-		return "acdsl"
-	}
-	return "prose"
-}
-
-func groupViews(active map[string]string, file proposals.File, language string, refs map[string]sessions.SessionRef, tab string, votes map[string]proposals.Vote) []groupView {
-	filter := active[file.Kind]
-	stateGroup, filterState, isStateFilter := stateFilterTarget(filter)
-
-	groups := make([]groupView, 0, len(file.Groups))
-	for groupIndex := range file.Groups {
-		group := &file.Groups[groupIndex]
-		view := groupView{Title: group.Title}
-		counts := make(map[string]int)
-		for index := range group.Proposals {
-			proposal := &group.Proposals[index]
-			// Counts and total always cover the FULL group — an active
-			// filter narrows the cards, never the numbers.
-			if proposal.Status != "" {
-				counts[effectiveState(proposal, file.Kind, votes)]++
-				view.Total++
-			}
-
-			isVisible := true
-			switch {
-			case filter == "":
-			case isStateFilter:
-				isVisible = visibleUnderStateFilter(proposal, file.Kind, groupIndex == stateGroup, filterState, votes)
-			default:
-				isVisible = slices.Contains(proposalFilterKeys(proposal, file.Kind), filter)
-			}
-			if !isVisible {
-				continue
-			}
-			view.Proposals = append(view.Proposals, proposalCardView(file.Kind, proposal, refs, votes))
-		}
-		// Statusless groups (rerouted/blocked/considered notes) live on
-		// the Notes tab; votable groups on Open.
-		if (tab == "notes") != (view.Total == 0) {
-			continue
-		}
-		if len(view.Proposals) == 0 {
-			continue
-		}
-
-		// A filter narrows to what the user asked for — its sections open
-		// (id filters everywhere, a state-note only its own group); plain
-		// swaps keep the client-side state.
-		switch {
-		case filter == "":
-		case isStateFilter:
-			view.IsFilterTarget = groupIndex == stateGroup
-		default:
-			view.IsFilterTarget = true
-		}
-
-		acceptedCount := counts["accepted"] + counts["applied"] + counts["building"]
-		acceptedTooltip := fmt.Sprintf(translate(language, "%d of %d accepted"), acceptedCount, view.Total)
-		view.Accepted = stateNoteFor("accepted", acceptedCount, acceptedTooltip, active, file.Kind, groupIndex)
-		view.Rejected = stateNoteFor("rejected", counts["rejected"], fmt.Sprintf(translate(language, "%d rejected"), counts["rejected"]), active, file.Kind, groupIndex)
-		view.Postponed = stateNoteFor("postponed", counts["postponed"], fmt.Sprintf(translate(language, "%d postponed"), counts["postponed"]), active, file.Kind, groupIndex)
-
-		// The count pill mirrors what the bar contains: votable proposals
-		// on Open, notes on Notes.
-		view.Count = view.Total
-		if tab == "notes" {
-			view.Count = len(view.Proposals)
-		}
-		view.CountLabel = countLabel(view.Count)
-		view.DataSection = file.Kind + "/" + view.Title
-		view.Subgroups = subgroupViews(file.Kind, &view)
-		groups = append(groups, view)
-	}
-	return groups
-}
-
-// countLabel keeps the summary pill two digits wide.
-func countLabel(n int) string {
-	if n > 99 {
-		return "99+"
-	}
-	return strconv.Itoa(n)
-}
-
-// contextCategory maps a context group title onto the context-surface
-// taxonomy; unmatched titles (project-local, external, reroutes) become
-// solo cards.
-func contextCategory(title string) (name string, solo bool) {
-	switch {
-	case strings.HasPrefix(title, "context/rules/"):
-		return "rules", false
-	case strings.HasPrefix(title, "context/actions/"):
-		return "actions", false
-	case strings.HasPrefix(title, "context/facts/"):
-		return "facts", false
-	case strings.HasPrefix(title, "acdsl/"):
-		return "acdsl", false
-	}
-	return title, true
-}
-
-// categoryViews wraps the authored groups in derived top-level cards: the
-// context kind buckets by contextCategory in first-appearance order, every
-// other kind gets one Solo card per group (rendered bare).
-func categoryViews(kind string, groups []groupView) []categoryView {
-	categories := make([]categoryView, 0, len(groups))
-	byName := make(map[string]int)
-	for index := range groups {
-		group := &groups[index]
-		name, solo := group.Title, true
-		if kind == "context" {
-			name, solo = contextCategory(group.Title)
-		}
-		group.Solo = solo
-
-		position, exists := byName[name]
-		if !exists || solo {
-			position = len(categories)
-			byName[name] = position
-			categories = append(categories, categoryView{
-				DataSection: kind + "/cat:" + name,
-				Solo:        solo,
-				Title:       name,
-			})
-		}
-		category := &categories[position]
-		category.Groups = append(category.Groups, *group)
-		category.IsFilterTarget = category.IsFilterTarget || group.IsFilterTarget
-	}
-	for index := range categories {
-		category := &categories[index]
-		count := 0
-		for _, group := range category.Groups {
-			count += group.Count
-		}
-		category.CountLabel = countLabel(count)
-	}
-	return categories
-}
-
-// subgroupKey is what a proposal separates on inside its authored group:
-// the target skill/surface, else the split-id base.
-func subgroupKey(p *proposals.Proposal) string {
-	if p.Target != "" {
-		return p.Target
-	}
-	return splitIdPattern.ReplaceAllString(p.Id, "")
-}
-
-// subgroupViews derives per-target bars inside a votable authored group.
-// The context kind already separates per surface via its group titles, and
-// a group with one distinct key stays flat.
-func subgroupViews(kind string, group *groupView) []subgroupView {
-	if kind == "context" || group.Total == 0 {
-		return nil
+// nightlyRepo derives the checkout from the routines dir, as the routine runner does.
+func (s *Server) nightlyRepo() (string, bool) {
+	if s.routinesDir == "" {
+		return "", false
 	}
 
-	subgroups := make([]subgroupView, 0, len(group.Proposals))
-	byKey := make(map[string]int)
-	for _, proposal := range group.Proposals {
-		key := subgroupKey(&proposal.Proposal)
-		position, exists := byKey[key]
-		if !exists {
-			position = len(subgroups)
-			byKey[key] = position
-			subgroups = append(subgroups, subgroupView{
-				DataSection: kind + "/" + group.Title + "/" + key,
-				Title:       key,
-			})
-		}
-		subgroups[position].Proposals = append(subgroups[position].Proposals, proposal)
-	}
-	if len(subgroups) < 2 {
-		return nil
-	}
-	for index := range subgroups {
-		subgroups[index].CountLabel = countLabel(len(subgroups[index].Proposals))
-		// A filter narrows to what the user asked for — the bars holding
-		// the matches open with their group.
-		subgroups[index].IsFilterTarget = group.IsFilterTarget
-	}
-	return subgroups
-}
-
-// stateNoteFor builds one summary-notation element: count, decoding
-// tooltip, and the group-scoped toggle URL (active note links to the
-// cleared filter).
-func stateNoteFor(state string, count int, tooltip string, active map[string]string, kind string, groupIndex int) stateNote {
-	key := fmt.Sprintf("%s%d:%s", stateFilterPrefix, groupIndex, state)
-	isActive := key == active[kind]
-	urlValue := key
-	action := "click to filter this set"
-	if isActive {
-		urlValue = ""
-		action = "click to clear the filter"
-	}
-
-	note := stateNote{
-		Active: isActive,
-		Count:  count,
-	}
-	// A zero count is information, not a control — filtering on it would
-	// empty the set and take the clear link with it.
-	if count == 0 && !isActive {
-		note.Tooltip = tooltip
-		return note
-	}
-
-	note.Tooltip = tooltip + " — " + action
-	note.URL = filterURL(active, kind, urlValue)
-	return note
-}
-
-// votesPath is the sidecar location next to the proposal JSONs.
-func (s *Server) votesPath() string {
-	return filepath.Join(s.proposalsDir, "votes.jsonl")
-}
-
-func (s *Server) handleProposalVote(w http.ResponseWriter, r *http.Request) {
-	kind := r.PathValue("kind")
-	if _, ok := kindDimension[kind]; !ok {
-		respond.WithNotFound("unknown proposal kind", w)
-		return
-	}
-
-	vote := r.FormValue("vote")
-	isKnownVote := vote == voteAccept || vote == voteReject || vote == votePostpone
-	if !isKnownVote {
-		respond.WithBadRequest("vote must be +, - or p", w)
-		return
-	}
-
-	comment := r.FormValue("comment")
-	if len(comment) > maxVoteCommentLength {
-		respond.WithBadRequest("comment exceeds 500 characters", w)
-		return
-	}
-
-	files, _, err := proposals.Load(s.proposalsDir)
+	routinesDir, err := filepath.Abs(s.routinesDir)
 	if err != nil {
-		respond.WithInternalServerError(err, w)
-		return
+		return "", false
 	}
-	proposal := findProposal(files, kind, r.PathValue("id"))
-	if proposal == nil {
-		respond.WithNotFound("unknown proposal id", w)
-		return
-	}
-
-	decision := &proposals.Vote{
-		Id:      proposal.Id,
-		Comment: comment,
-		Kind:    kind,
-		Title:   proposal.Title,
-		Ts:      time.Now().UTC().Format(time.RFC3339),
-		Vote:    vote,
-	}
-	if err := proposals.SetVote(s.votesPath(), decision); err != nil {
-		respond.WithInternalServerError(err, w)
-		return
-	}
-
-	votes := map[string]proposals.Vote{proposals.VoteKey(kind, proposal.Id): *decision}
-	card := proposalCardView(kind, proposal, s.sessions.SessionRefs(), votes)
-	s.renderFragment(w, tmplProposalCard, card)
+	return filepath.Dir(routinesDir), true
 }
 
-// findProposal resolves a votable proposal by kind and id.
-func findProposal(files []proposals.File, kind, id string) *proposals.Proposal {
-	for index := range files {
-		if files[index].Kind == kind {
-			return findProposalInFile(&files[index], id)
+// openProposals serves the nav closure and the Overview tile: a bounded context, errors read as zero.
+func (s *Server) openProposals() openProposalView {
+	repoPath, isNightlyKnown := s.nightlyRepo()
+	if !isNightlyKnown {
+		return openProposalView{}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), proposalCountTimeout)
+	defer cancel()
+
+	snapshot, err := s.proposals.Snapshot(ctx, s.agentwt, repoPath, changeTarget)
+	if err != nil {
+		log.Printf("Server.openProposals: %v", err)
+	}
+	return openProposalView{Count: snapshot.Count()}
+}
+
+// pickSelected picks the resolved changes in their given order and collects one outcome each.
+func (s *Server) pickSelected(ctx context.Context, repoPath string, selected []*repos.OpenChange) ([]pickOutcomeView, error) {
+	results := make([]pickOutcomeView, 0, len(selected))
+	for _, change := range selected {
+		pick, err := repos.Pick(ctx, s.agentwt, changeTarget, repoPath, change.Commit.Sha)
+		if err != nil {
+			return nil, fmt.Errorf("Server.pickSelected: %w", err)
+		}
+		results = append(results, pickOutcome(change, pick))
+	}
+	return results, nil
+}
+
+// proposalHistory lists every picked, rejected and dropped change per night, newest night first.
+func (s *Server) proposalHistory(ctx context.Context, repoPath string) []historyDayView {
+	reports := s.nightlyReports()
+	entries := map[string][]historyEntryView{}
+	order := make([]string, 0)
+	add := func(night string, entry historyEntryView) {
+		if _, seen := entries[night]; !seen {
+			order = append(order, night)
+		}
+		entries[night] = append(entries[night], entry)
+	}
+
+	picks, err := repos.PickedChanges(ctx, historyPickLimit, repoPath, changeTarget)
+	if err != nil {
+		log.Printf("Server.proposalHistory: %v", err)
+	}
+	for index := range picks {
+		pick := &picks[index]
+		add(historyNight(pick.SourceSha, pick.Date, reports), pickedEntry(pick, reports))
+	}
+
+	settled, err := repos.SettledChanges(ctx, repoPath)
+	if err != nil {
+		log.Printf("Server.proposalHistory: %v", err)
+	}
+	store, err := s.loadBacklog()
+	if err != nil {
+		log.Printf("Server.proposalHistory: %v", err)
+		store = &backlog.Store{}
+	}
+	reasons := map[string]string{}
+	for _, row := range store.Archive.Rejected {
+		reasons[row.Commit] = row.Reason
+	}
+	for index := range settled {
+		change := &settled[index]
+		add(historyNight(change.Sha, change.Date, reports), settledEntry(change, reasons, reports))
+	}
+
+	slices.Sort(order)
+	slices.Reverse(order)
+	days := make([]historyDayView, 0, len(order))
+	for _, night := range order {
+		days = append(days, historyDayView{Entries: entries[night], Night: night})
+	}
+	return days
+}
+
+// proposalsPage lists the open changes with their applicability from the store; results carries a pick's outcomes.
+func (s *Server) proposalsPage(ctx context.Context, results []pickOutcomeView, repoPath string) proposalsPage {
+	data := s.newProposalsPage(results)
+	snapshot, err := s.proposals.Snapshot(ctx, s.agentwt, repoPath, changeTarget)
+	if err != nil {
+		data.LoadErrors = append(data.LoadErrors, err.Error())
+	}
+
+	reports := s.nightlyReports()
+	refs := s.sessions.SessionRefs()
+	nights := map[string]*changeNightView{}
+	order := make([]string, 0)
+	for index := range snapshot.Open {
+		change := &snapshot.Open[index]
+		probe := snapshot.Probes[change.Commit.Sha]
+		card := changeCard(change, snapshot.Commits[change.Commit.Sha], &probe, refs, reports)
+
+		night, ok := nights[card.Branch]
+		if !ok {
+			night = &changeNightView{Branch: card.Branch, Night: card.Night}
+			nights[card.Branch] = night
+			order = append(order, card.Branch)
+		}
+		if card.IsApplicable {
+			night.Cards = append([]changeCardView{*card}, night.Cards...)
+		} else {
+			night.Conflicts = append([]changeCardView{*card}, night.Conflicts...)
 		}
 	}
-	return nil
+	for _, branch := range order {
+		data.Nights = append(data.Nights, *nights[branch])
+	}
+	data.OpenCount, data.Total = snapshot.Count(), snapshot.Count()
+	cardCounts(&data)
+	return data
 }
 
-func findProposalInFile(file *proposals.File, id string) *proposals.Proposal {
-	if id == "" {
-		return nil
-	}
-
-	for index := range file.Groups {
-		proposal := findProposalInGroup(&file.Groups[index], id)
-		if proposal != nil {
-			return proposal
-		}
-	}
-	return nil
-}
-
-// findProposalInGroup matches votable proposals only — statusless
-// (rerouted/considered) entries are not proposals and never match (D5).
-func findProposalInGroup(group *proposals.Group, id string) *proposals.Proposal {
-	for index := range group.Proposals {
-		proposal := &group.Proposals[index]
-		if proposal.Status != "" && proposal.Id == id {
-			return proposal
-		}
-	}
-	return nil
-}
-
-func proposalCardView(kind string, proposal *proposals.Proposal, refs map[string]sessions.SessionRef, votes map[string]proposals.Vote) proposalView {
-	view := proposalView{
-		Evidence: evidenceViews(*proposal, kind, refs),
-		Kind:     kind,
-		Proposal: *proposal,
-	}
-
-	vote, ok := votes[proposals.VoteKey(kind, proposal.Id)]
-	if !ok {
-		return view
-	}
-
-	isRevertTarget := proposal.Status == "accepted" || proposal.Status == "building"
-	view.IsRevert = vote.Vote != voteAccept && isRevertTarget
-	view.PendingComment = vote.Comment
-	view.PendingDate = datePart(vote.Ts)
-	view.PendingVote = vote.Vote
-	return view
-}
-
-// datePart reduces an RFC3339 timestamp to its date.
-func datePart(ts string) string {
-	if len(ts) < len("2006-01-02") {
-		return ts
-	}
-	return ts[:len("2006-01-02")]
-}
-
-func evidenceViews(proposal proposals.Proposal, kind string, refs map[string]sessions.SessionRef) []evidenceView {
-	views := make([]evidenceView, 0, len(proposal.Evidence))
-	for _, item := range proposal.Evidence {
-		views = append(views, evidenceView{Item: item, Links: sessionLinks(item, kind, refs)})
-	}
-	return views
-}
-
-func sessionLinks(item proposals.Evidence, kind string, refs map[string]sessions.SessionRef) []sessionLink {
-	dimension := item.Dimension
-	if dimension == "" {
-		dimension = kindDimension[kind]
-	}
-
-	links := make([]sessionLink, 0, len(item.Sessions))
-	for _, session := range item.Sessions {
-		link := sessionLink{Id: session.Id, Note: session.Note}
-		if ref, ok := refs[session.Id]; ok {
-			query := url.Values{"session": {session.Id}}
-			if dimension != "" {
-				query.Set("dimension", dimension)
+// cardCounts fills the three filter rows from the rendered cards, conflicts included.
+func cardCounts(data *proposalsPage) {
+	verdicts, kinds, nightNames := map[string]int{}, map[string]int{}, map[string]int{}
+	nightOrder := make([]string, 0, len(data.Nights))
+	kindOrder := make([]string, 0)
+	for _, night := range data.Nights {
+		nightOrder = append(nightOrder, night.Night)
+		for _, card := range slices.Concat(night.Cards, night.Conflicts) {
+			verdicts[card.Verdict.Label]++
+			nightNames[night.Night]++
+			if _, seen := kinds[card.Commit.Kind]; !seen {
+				kindOrder = append(kindOrder, card.Commit.Kind)
 			}
-			link.URL = fmt.Sprintf("/sessions/%s/%d?%s", ref.Scope, ref.BatchNumber, query.Encode())
+			kinds[card.Commit.Kind]++
+		}
+	}
+	slices.Sort(kindOrder)
+	data.VerdictCounts = filterCounts([]string{verdictReady, verdictRejected, verdictUnjudged}, verdicts)
+	data.KindCounts = filterCounts(kindOrder, kinds)
+	data.NightCounts = filterCounts(nightOrder, nightNames)
+}
+
+// cardFiles classifies each file's capped patch and marks its cut.
+func cardFiles(commit *repos.ChangeCommit) []changeFileView {
+	files := make([]changeFileView, 0, len(commit.Files))
+	for _, file := range commit.Files {
+		lines := diffLinesFromPatch(file.Diff)
+		if file.IsDiffCut {
+			lines = append(lines, diffLine{Kind: diffSkip, Text: "⋯ diff truncated"})
+		}
+		view := changeFileView{Added: file.Added, Deleted: file.Deleted, DiffLines: lines, IsDiffCut: file.IsDiffCut, Path: file.Path, Status: file.Status}
+		files = append(files, view)
+	}
+	return files
+}
+
+// cardProblem is the first recorded task's problem sentence; a change without a record shows its subject.
+func cardProblem(ids []string, reports []routines.RunReport, subject string) string {
+	for _, id := range ids {
+		if task := routines.FindTask(reports, id); task != nil {
+			return task.Problem
+		}
+	}
+	return subject
+}
+
+// changeCard renders one open change from the store's payload and probe outcome; no git runs here.
+func changeCard(change *repos.OpenChange, commit *repos.ChangeCommit, probe *repos.ProbeEntry, refs map[string]sessions.SessionRef, reports []routines.RunReport) *changeCardView {
+	links := sessionLinks(change.Message.Sessions, refs)
+	card := &changeCardView{
+		Branch:       change.Branch,
+		Commit:       *commit,
+		Files:        cardFiles(commit),
+		IsApplicable: probe.IsApplicable(),
+		IsDisabled:   !probe.IsApplicable(),
+		Night:        nightLabel(change.Branch),
+		Problem:      cardProblem(commit.ChangeIds, reports, commit.Subject),
+		SessionAge:   sessionAge(links, time.Now()),
+		Sessions:     links,
+		ShortSha:     change.Commit.ShortSha,
+		Tasks:        cardTasks(commit.ChangeIds, reports, refs),
+		Verdict:      changeVerdict(change.Branch, change.Commit.Sha, reports),
+	}
+	if !card.IsApplicable {
+		card.ProbeReason = probe.Reason
+		card.Verdict = changeVerdictView{Class: badgeAction, Label: verdictConflict, Reason: probe.Reason}
+	}
+	return card
+}
+
+// cardTasks resolves one record per change id over the reports, newest first; an id without a record is skipped.
+func cardTasks(ids []string, reports []routines.RunReport, refs map[string]sessions.SessionRef) []changeTaskView {
+	tasks := make([]changeTaskView, 0, len(ids))
+	for _, id := range ids {
+		task := routines.FindTask(reports, id)
+		if task == nil {
+			continue
+		}
+		tasks = append(tasks, taskView(task, refs))
+	}
+	return tasks
+}
+
+// changeVerdict matches shas by prefix either way: a report may record a short sha.
+func changeVerdict(branch, sha string, reports []routines.RunReport) changeVerdictView {
+	unjudged := changeVerdictView{Class: badgeDim, Label: verdictUnjudged}
+	for index := range reports {
+		if reports[index].Branch != branch {
+			continue
+		}
+
+		change := findReportChange(reports[index].Changes, sha)
+		if change == nil {
+			return unjudged
+		}
+		return verdictView(change)
+	}
+	return unjudged
+}
+
+// evidenceURL points at the finding the quote came from; without a record the session page alone.
+func evidenceURL(item *routines.ChangeEvidence, link sessionLink) string {
+	if link.URL == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s#f-%s-%d", link.URL, item.Session, item.Finding)
+}
+
+func findReportChange(changes []routines.RunReportChange, sha string) *routines.RunReportChange {
+	for index := range changes {
+		if shaMatches(changes[index].Sha, sha) {
+			return &changes[index]
+		}
+	}
+	return nil
+}
+
+// historyNight resolves the night of a settled sha: the newest report holding it, else the commit date it came with.
+func historyNight(sha, date string, reports []routines.RunReport) string {
+	for index := range reports {
+		if findReportChange(reports[index].Changes, sha) != nil {
+			return nightLabel(reports[index].Branch)
+		}
+	}
+	if date == "" {
+		return unknownNight
+	}
+	return date
+}
+
+// nightLabel is the date stem: "2026-10-05" or "2026-10-05-2".
+func nightLabel(branch string) string {
+	return strings.TrimSuffix(strings.TrimPrefix(branch, repos.NightBranchPrefix), repos.ProposalsSuffix)
+}
+
+func outcomeClass(outcome string) string {
+	switch outcome {
+	case outcomePicked:
+		return badgeOk
+	case repos.SettledOutcomeRejected:
+		return badgeAction
+	case repos.SettledOutcomeDropped:
+		return badgeDim
+	}
+	return badgeDim
+}
+
+// pickedEntry shows a placed change under the proposal's sha, so it matches the card it came from.
+func pickedEntry(pick *repos.PickedChange, reports []routines.RunReport) historyEntryView {
+	return historyEntryView{
+		Outcome:      outcomePicked,
+		OutcomeClass: outcomeClass(outcomePicked),
+		Problem:      cardProblem(pick.Message.ChangeIds, reports, pick.Message.Subject),
+		ShortSha:     shortId(pick.SourceSha),
+		Subject:      pick.Message.Subject,
+	}
+}
+
+func pickOutcome(change *repos.OpenChange, pick *repos.PickResult) pickOutcomeView {
+	return pickOutcomeView{
+		NewCommit: pick.NewCommit,
+		Outcome:   pick.Outcome,
+		Reason:    pick.Reason,
+		ShortSha:  change.Commit.ShortSha,
+		Subject:   change.Message.Subject,
+	}
+}
+
+// selectedChanges resolves posted shas against the open list, oldest night first, parent before child.
+func selectedChanges(open []repos.OpenChange, shas []string) ([]*repos.OpenChange, error) {
+	selected := make([]*repos.OpenChange, 0, len(shas))
+	for _, sha := range shas {
+		if !commitShaPattern.MatchString(sha) {
+			return nil, errors.New("selectedChanges: sha must be a full commit id")
+		}
+
+		index := slices.IndexFunc(open, func(change repos.OpenChange) bool { return change.Commit.Sha == sha })
+		if index < 0 {
+			return nil, fmt.Errorf("selectedChanges: %s is not an open change commit", sha)
+		}
+		selected = append(selected, &open[index])
+	}
+	if len(selected) == 0 {
+		return nil, errors.New("selectedChanges: No change selected")
+	}
+
+	position := func(change *repos.OpenChange) int {
+		return slices.IndexFunc(open, func(candidate repos.OpenChange) bool { return candidate.Commit.Sha == change.Commit.Sha })
+	}
+	slices.SortFunc(selected, func(a, b *repos.OpenChange) int {
+		if byBranch := strings.Compare(a.Branch, b.Branch); byBranch != 0 {
+			return byBranch
+		}
+		return position(a) - position(b)
+	})
+	return selected, nil
+}
+
+// settledEntry shows a rejected or dropped change under its own sha with the problem sentence and the subject.
+func settledEntry(change *repos.SettledChange, reasons map[string]string, reports []routines.RunReport) historyEntryView {
+	return historyEntryView{
+		Outcome:      change.Outcome,
+		OutcomeClass: outcomeClass(change.Outcome),
+		Problem:      cardProblem(change.Message.ChangeIds, reports, change.Message.Subject),
+		Reason:       reasons[change.Sha],
+		ShortSha:     shortId(change.Sha),
+		Subject:      change.Message.Subject,
+	}
+}
+
+// sessionAge is the newest evidence session's last activity in whole days; empty when no record is loaded.
+func sessionAge(links []sessionLink, now time.Time) string {
+	youngest := -1
+	for _, link := range links {
+		stamp, err := time.Parse(time.RFC3339, link.LastActive)
+		if err != nil {
+			continue
+		}
+
+		days := int(now.Sub(stamp).Hours() / hoursPerDay)
+		if youngest < 0 || days < youngest {
+			youngest = days
+		}
+	}
+	if youngest < 0 {
+		return ""
+	}
+	return fmt.Sprintf("~%dd ago", youngest)
+}
+
+func sessionLinks(ids []string, refs map[string]sessions.SessionRef) []sessionLink {
+	links := make([]sessionLink, 0, len(ids))
+	for _, id := range ids {
+		link := sessionLink{Id: id}
+		if ref, ok := refs[id]; ok {
+			query := url.Values{"session": {id}}
+			link.LastActive = ref.LastActive
+			link.URL = fmt.Sprintf("/sessions/%s/%s?%s", url.PathEscape(ref.Scope), url.PathEscape(ref.Week), query.Encode())
 		}
 		links = append(links, link)
 	}
 	return links
+}
+
+// shaMatches compares a recorded sha with a full one either way: a report may record a short sha.
+func shaMatches(recorded, sha string) bool {
+	if recorded == "" {
+		return false
+	}
+	return strings.HasPrefix(sha, recorded) || strings.HasPrefix(recorded, sha)
+}
+
+func taskView(task *routines.ChangeTask, refs map[string]sessions.SessionRef) changeTaskView {
+	evidence := make([]evidenceView, 0, len(task.Evidence))
+	for _, item := range task.Evidence {
+		link := sessionLinks([]string{item.Session}, refs)[0]
+		view := evidenceView{Quote: item.Quote, Session: link, URL: evidenceURL(&item, link)}
+		evidence = append(evidence, view)
+	}
+	return changeTaskView{Backlog: task.Backlog, Evidence: evidence}
+}
+
+// verdictView renders a verdict outside the ready/rejected contract verbatim and dim.
+func verdictView(change *routines.RunReportChange) changeVerdictView {
+	switch change.Verdict {
+	case verdictReady:
+		return changeVerdictView{Class: badgeOk, Label: verdictReady}
+	case verdictRejected:
+		return changeVerdictView{Class: badgeAction, Label: verdictRejected, Reason: change.Reason}
+	}
+	return changeVerdictView{Class: badgeDim, Label: change.Verdict, Reason: change.Reason}
 }

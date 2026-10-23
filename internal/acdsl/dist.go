@@ -16,29 +16,16 @@ import (
 	"github.com/kevinhorst/smine/internal/shell"
 )
 
-// DistHeader marks a synced gate file — baseline-owned, overwritten on
-// every sync; target-owned rules live in any other *.acdsl file and
-// registry overrides in acdsl/registry.local.json.
 const DistHeader = "# synced from smine — do not edit; add repo-owned rules in any *.acdsl file, registry overrides in acdsl/registry.local.json"
 
-// verifierBinDir is where shipped verifier binaries land in a target,
-// relative to its root — the rewritten registry argv points here.
 const verifierBinDir = "bin/verifiers"
 
-// verifierArgvRe matches smine's own go-run argv package path — the only
-// shape the rewrite understands; anything else ships verbatim.
+// Only smine's own go-run argv is rewritten; anything else ships verbatim.
 var verifierArgvRe = regexp.MustCompile(`^\./cmd/acdsl/verifiers/[a-z0-9]+$`)
 
-// exhaustiveToolNote documents the one shipped verifier that needs a
-// target-side toolchain dependency (DEC-7): the binary runs go tool
-// exhaustive against the target module.
 const exhaustiveToolNote = " — requires the exhaustive tool dependency in the target go.mod (go tool exhaustive), or override in registry.local.json"
 
-// Dist writes a target's gate slice into dest: the reach-covered doctrine
-// rules as dest/acdsl/rules.acdsl, the registry subset those rules name
-// (argv rewritten to shipped binaries), and the prebuilt bin/acdsl plus one
-// binary per rewritten entry. No rule reaching target writes nothing.
-// includeTask additionally ships task-lifetime rules; doctrine always ships.
+// No rule reaching target writes nothing; task-lifetime rules ship only with includeTask.
 func Dist(ctx context.Context, root, target, dest string, includeTask bool) ([]string, error) {
 	discovery, err := DiscoverRules(ctx, root)
 	if err != nil {
@@ -68,9 +55,7 @@ func Dist(ctx context.Context, root, target, dest string, includeTask bool) ([]s
 		return []string{fmt.Sprintf("no rules reach %s", target)}, nil
 	}
 
-	// The no-match contract stands everywhere: a doctrine anchor matching
-	// nothing is tool breakage. A rule ships only when the target has files
-	// it governs; skipped rules land on a later re-sync once files exist.
+	// A rule ships only when the target has files it governs; a later re-sync picks it up.
 	destUniverse, err := FileUniverse(ctx, dest)
 	if err != nil {
 		return nil, fmt.Errorf("Dist: %w", err)
@@ -128,8 +113,6 @@ func Dist(ctx context.Context, root, target, dest string, includeTask bool) ([]s
 	return lines, nil
 }
 
-// countVerbatim counts shipped registry entries that were not rewritten —
-// argv outside the go-run shape ships verbatim and builds nothing.
 func countVerbatim(shipped []Rule, registry map[string]RegistryEntry, built map[string]string) int {
 	seen := map[string]bool{}
 	count := 0
@@ -147,9 +130,7 @@ func countVerbatim(shipped []Rule, registry map[string]RegistryEntry, built map[
 	return count
 }
 
-// writeRules renders DistHeader plus the shipped rules' original marker
-// lines (verbatim from their declaration files) into dest/acdsl/rules.acdsl.
-// A pre-existing unheadered file is target-owned — refuse to overwrite it.
+// A pre-existing file without DistHeader is target-owned and never overwritten.
 func writeRules(root, dest string, shipped []Rule) error {
 	dst := filepath.Join(dest, "acdsl", "rules.acdsl")
 	if existing, err := os.ReadFile(dst); err == nil {
@@ -177,8 +158,7 @@ func writeRules(root, dest string, shipped []Rule) error {
 	return nil
 }
 
-// markerLine reads a rule's original declaration line — shipped byte-
-// identical so reach labels, params, and whys survive verbatim.
+// The line ships byte-identical so reach labels, params and whys survive.
 func markerLine(root string, rule Rule) (string, error) {
 	raw, err := os.ReadFile(filepath.Join(root, rule.File))
 	if err != nil {
@@ -191,10 +171,6 @@ func markerLine(root string, rule Rule) (string, error) {
 	return strings.TrimSpace(lines[rule.Line-1]), nil
 }
 
-// writeDistRegistry writes the subset registry into dest/acdsl/registry.json:
-// every verifier a shipped rule names. Argv matching the go-run shape is
-// rewritten to the shipped binary path and returned in built (name → source
-// package); anything else ships verbatim.
 func writeDistRegistry(dest string, shipped []Rule, registry map[string]RegistryEntry) (map[string]string, error) {
 	subset := map[string]RegistryEntry{}
 	built := map[string]string{}
@@ -227,11 +203,7 @@ func writeDistRegistry(dest string, shipped []Rule, registry map[string]Registry
 	return built, nil
 }
 
-// writePolicy ships the self-management policy into dest: mode rewritten
-// from dist_mode (falling back to the source mode), dist_mode stripped — a
-// target never re-distributes. The schema ships verbatim beside it, and both
-// copies are baseline-owned like the registry subset. No source policy ships
-// nothing and returns "".
+// dist_mode and base_ref are stripped: a target never re-distributes and resolves its own base.
 func writePolicy(root, dest string) (PolicyMode, error) {
 	policy, err := LoadPolicy(root)
 	if err != nil {
@@ -243,6 +215,7 @@ func writePolicy(root, dest string) (PolicyMode, error) {
 	if policy.DistMode != "" {
 		policy.Mode = policy.DistMode
 	}
+	policy.BaseRef = ""
 	policy.DistMode = ""
 	data, err := json.MarshalIndent(policy, "", "  ")
 	if err != nil {
@@ -260,10 +233,7 @@ func writePolicy(root, dest string) (PolicyMode, error) {
 	return policy.Mode, nil
 }
 
-// buildBinaries ships the runner and every rewritten entry's binary into the
-// target: bin/acdsl plus bin/verifiers/<name>. A prebuilt exe in the smine
-// repo's bin/ (Windows installer payload) is copied; otherwise go build —
-// dev machines always build fresh.
+// A prebuilt binary in bin/ — make build's or the Windows installer payload's — is copied; only a missing one is built.
 func buildBinaries(ctx context.Context, root, dest string, built map[string]string) error {
 	if err := os.MkdirAll(filepath.Join(dest, verifierBinDir), 0o755); err != nil {
 		return fmt.Errorf("buildBinaries: %w", err)
@@ -272,16 +242,14 @@ func buildBinaries(ctx context.Context, root, dest string, built map[string]stri
 		return fmt.Errorf("buildBinaries: %w", err)
 	}
 	for name, pkg := range built {
-		if err := shipBinary(ctx, root, filepath.Join(root, "bin", "verifiers"), filepath.Join(dest, verifierBinDir), name, pkg); err != nil {
+		if err := shipBinary(ctx, root, filepath.Join(root, verifierBinDir), filepath.Join(dest, verifierBinDir), name, pkg); err != nil {
 			return fmt.Errorf("buildBinaries: %w", err)
 		}
 	}
 	return nil
 }
 
-// shipBinary copies srcDir/name(.exe) to destDir when a prebuilt exists,
-// else go-builds pkg there. Windows outputs always carry .exe so CreateProcess
-// and Git Bash agree the file is executable.
+// Windows outputs always carry .exe so CreateProcess and Git Bash agree the file is executable.
 func shipBinary(ctx context.Context, root, srcDir, destDir, name, pkg string) error {
 	out := name
 	if runtime.GOOS == "windows" {
@@ -295,6 +263,16 @@ func shipBinary(ctx context.Context, root, srcDir, destDir, name, pkg string) er
 			return nil
 		}
 	}
+
+	// build-audit names a binary after its package dir; dist ships it under the registry name.
+	built := filepath.Join(srcDir, verifierBinaryName(pkg))
+	if info, err := os.Stat(built); err == nil && !info.IsDir() {
+		if err := fsx.CopyFile(built, filepath.Join(destDir, out)); err != nil {
+			return fmt.Errorf("shipBinary: %s: %w", name, err)
+		}
+		return nil
+	}
+
 	if output, err := shell.Run(ctx, root, "go", "build", "-o", filepath.Join(destDir, out), pkg); err != nil {
 		return fmt.Errorf("shipBinary: %s: %w\n%s", name, err, output)
 	}

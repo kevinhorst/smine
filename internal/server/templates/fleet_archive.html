@@ -1,0 +1,88 @@
+{{template "head" .}}
+{{template "nav" .}}
+{{with .Archived}}
+<div class="detail-head">
+  <h1>Fleet {{.Fleet}} <span class="badge badge-dim" title="{{.Instance}}">run {{.ShortInstance}}</span> <span class="badge badge-dim">dissolved</span></h1>
+</div>
+<div class="meta"><a href="/fleet">← fleet</a> · archived run, read-only · <code>{{.Instance}}</code></div>
+<div class="meta">started {{stampTime .StartedAt}} · dissolved {{stampTime .DissolvedAt}}{{if .Repo}} · {{.Repo}}{{end}}{{if .Target}} · target {{.Target}}{{end}}{{if .MergeBranch}} · merge branch {{.MergeBranch}}{{end}}{{if .Synced}} · <span class="badge badge-ok">synced</span>{{end}}</div>
+
+<h2>members</h2>
+{{if .Members}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr>
+    <th title="member token; T1-O is the operator">member</th>
+    <th title="session; for a worker, the orchestrator that registered it">session</th>
+    <th title="joined, subscriber or worker">via</th>
+    <th title="its branch, last seen">branch</th>
+    <th title="reported done, last seen">delivered</th>
+    <th>joined</th>
+    <th title="left, or the run dissolved">left</th>
+  </tr></thead>
+  <tbody>
+  {{range .Members}}
+  <tr>
+    <td><span class="badge badge-dim">{{.Token}}</span></td>
+    <td><code>{{.SessionId}}</code></td>
+    <td>{{.Via}}</td>
+    <td>{{.Branch}}</td>
+    <td>{{if .Delivered}}<span class="badge badge-ok">delivered</span>{{end}}</td>
+    <td>{{stampTime .JoinedAt}}</td>
+    <td>{{stampTime .LeftAt}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No members.</div>
+{{end}}
+
+<h2>subscriptions</h2>
+{{if .Subscriptions}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr>
+    <th>session</th><th>target</th><th>state</th><th title="why it ended">detail</th><th>since</th>
+  </tr></thead>
+  <tbody>
+  {{range .Subscriptions}}
+  <tr>
+    <td><code>{{.SessionId}}</code></td>
+    <td title="{{.Repo}}">{{.Target}}</td>
+    <td><span class="badge badge-dim">{{.State}}</span></td>
+    <td>{{.Detail}}</td>
+    <td>{{stampTime .Since}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No subscriptions.</div>
+{{end}}
+
+<h2>journal</h2>
+{{if .Journal}}
+<div class="table-scroll"><table class="md-body checklist-table fl-journal">
+  <thead><tr>
+    <th title="when the orchestrator recorded it">at</th>
+    <th title="assigned, decided, merged, spawned or note">kind</th>
+    <th title="member letters the entry concerns">members</th>
+    <th>subject</th>
+    <th title="why, or the evidence">detail</th>
+  </tr></thead>
+  <tbody>
+  {{range .Journal}}
+  <tr>
+    <td title="{{.By}}">{{stampTime .At}}</td>
+    <td><span class="badge badge-dim">{{.Kind}}</span></td>
+    <td>{{join .Members ", "}}</td>
+    <td>{{.Subject}}</td>
+    <td>{{.Detail}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No journal entries.</div>
+{{end}}
+{{end}}
+{{template "foot" .}}

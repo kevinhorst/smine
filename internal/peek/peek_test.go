@@ -16,6 +16,27 @@ import (
 // touches: initialize, the initialized notification, and session_list.
 func newStubPeek(t *testing.T, sessions []map[string]any, toolError bool) *httptest.Server {
 	t.Helper()
+	listing := map[string]any{"sessions": sessions}
+	return newStubPeekFunc(t, func(map[string]any) (map[string]any, bool) {
+		return listing, toolError
+	})
+}
+
+// newStubPeekPerAgent answers session_list with the sessions listed for the
+// call's arguments.agent; the call for failingAgent returns a tool error.
+func newStubPeekPerAgent(t *testing.T, sessionsByAgent map[string][]map[string]any, failingAgent string) *httptest.Server {
+	t.Helper()
+	return newStubPeekFunc(t, func(arguments map[string]any) (map[string]any, bool) {
+		agent, _ := arguments["agent"].(string)
+		listing := map[string]any{"sessions": sessionsByAgent[agent]}
+		return listing, agent == failingAgent
+	})
+}
+
+// newStubPeekFunc serves the minimal MCP surface and answers every tools/call
+// with respond(params.arguments) — structuredContent and isError.
+func newStubPeekFunc(t *testing.T, respond func(arguments map[string]any) (map[string]any, bool)) *httptest.Server {
+	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
 			Id     any            `json:"id"`
@@ -41,10 +62,12 @@ func newStubPeek(t *testing.T, sessions []map[string]any, toolError bool) *httpt
 				"serverInfo":      map[string]any{"name": "stub-peek", "version": "1.0.5"},
 			}
 		case "tools/call":
+			arguments, _ := request.Params["arguments"].(map[string]any)
+			structured, isToolError := respond(arguments)
 			result = map[string]any{
 				"content":           []any{},
-				"isError":           toolError,
-				"structuredContent": map[string]any{"sessions": sessions},
+				"isError":           isToolError,
+				"structuredContent": structured,
 			}
 		default:
 			w.WriteHeader(http.StatusNotFound)
@@ -110,19 +133,46 @@ func TestSessionIndexLiveWindowBoundary(t *testing.T) {
 
 func TestSessionsById(t *testing.T) {
 	now := time.Now()
-	stub := newStubPeek(t, []map[string]any{
-		{"id": "live", "meta": map[string]any{"cwd": "/repo"}, "title": "live", "last_active": rfc3339(now.Add(-time.Minute))},
-		{"id": "stale", "meta": map[string]any{"cwd": "/repo"}, "title": "stale", "last_active": rfc3339(now.Add(-16 * time.Minute))},
-		{"id": "nometa", "title": "meta-less", "last_active": rfc3339(now)},
-	}, false)
+	sessionsByAgent := map[string][]map[string]any{
+		"claude": {
+			{"id": "live", "meta": map[string]any{"cwd": "/repo", "git_branch": "claude/x", "model": "claude-opus-5-5"}, "title": "live", "last_active": rfc3339(now.Add(-time.Minute))},
+			{"id": "stale", "meta": map[string]any{"cwd": "/repo"}, "title": "stale", "last_active": rfc3339(now.Add(-16 * time.Minute))},
+			{"id": "nometa", "title": "meta-less", "last_active": rfc3339(now)},
+		},
+		"codex": {
+			{"id": "codex-run", "meta": map[string]any{"cwd": "/repo", "model": "gpt-6-astra"}, "title": "codex", "last_active": rfc3339(now)},
+		},
+	}
+	stub := newStubPeekPerAgent(t, sessionsByAgent, "")
 	defer stub.Close()
 
 	sessions, err := NewClient(stub.URL).SessionsById(t.Context())
 	require.NoError(t, err)
-	require.Len(t, sessions, 3, "every session keyed by id, cwd-less ones included")
+	require.Len(t, sessions, 4, "every session of both agents keyed by id, cwd-less ones included")
 	assert.True(t, sessions["live"].Live)
+	assert.Equal(t, "claude/x", sessions["live"].GitBranch)
 	assert.False(t, sessions["stale"].Live)
 	assert.True(t, sessions["nometa"].Live)
+	assert.Empty(t, sessions["nometa"].Cwd)
+	assert.Empty(t, sessions["nometa"].Model)
+	assert.Equal(t, "claude", sessions["live"].Agent)
+	assert.Equal(t, "claude-opus-5-5", sessions["live"].Model)
+	assert.Equal(t, "codex", sessions["codex-run"].Agent)
+	assert.Equal(t, "gpt-6-astra", sessions["codex-run"].Model)
+}
+
+func TestSessionsByIdAgentToolError(t *testing.T) {
+	sessionsByAgent := map[string][]map[string]any{
+		"claude": {
+			{"id": "live", "meta": map[string]any{"cwd": "/repo"}, "last_active": rfc3339(time.Now())},
+		},
+	}
+	stub := newStubPeekPerAgent(t, sessionsByAgent, "codex")
+	defer stub.Close()
+
+	_, err := NewClient(stub.URL).SessionsById(t.Context())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "Tool returned an error")
 }
 
 func TestSessionIndexUnreachableEndpoint(t *testing.T) {

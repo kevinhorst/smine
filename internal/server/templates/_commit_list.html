@@ -7,14 +7,6 @@
       {{range .Commits}}
       <tr>
         <td><code>{{.Line}}</code></td>
-        {{if eq $.Class "unpicked"}}
-        <td>
-          <form hx-post="/repos/{{pathEscape $.Repo}}/cherry-pick" hx-target="#op-result">
-            <input type="hidden" name="commit" value="{{.Sha}}">
-            <button type="submit">cherry-pick</button>
-          </form>
-        </td>
-        {{end}}
       </tr>
       {{end}}
     </tbody>

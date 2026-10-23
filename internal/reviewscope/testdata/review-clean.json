@@ -1,0 +1,24 @@
+{
+  "dispositions": [],
+  "ranked_plan": [],
+  "unverified": [],
+  "funnel": {"produced": 0, "tail": 0, "confirmed": 0, "unverified": 0, "duplicates": 0, "rejected": 0, "debunked": 0},
+  "permanent_checks": [],
+  "base_health": {"build": "ok", "tests": "ok"},
+  "build_test": {"build": "ok", "tests": "ok"},
+  "debunked": [],
+  "resolved": [],
+  "intentional_deviations": [],
+  "coverage_gaps": [],
+  "definition_of_done": [
+    {"criterion": "Build green at review head", "status": "PASS", "notes": "build_test.build = ok"},
+    {"criterion": "Tests green at review head", "status": "PASS", "notes": "build_test.tests = ok"},
+    {"criterion": "No open confirmed blocking finding", "status": "PASS", "notes": "correctness lane produced 0 findings"},
+    {"criterion": "Every assigned file reviewed (no coverage gap)", "status": "PASS", "notes": "coverage_gaps empty"}
+  ],
+  "escalations": [],
+  "recommendation": "APPROVE",
+  "handoff_json": "/artifacts/round-1/review.json",
+  "probes": [],
+  "probes_dir": ""
+}

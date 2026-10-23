@@ -1,0 +1,646 @@
+{
+  "schema": 1,
+  "staging_target": "develop",
+  "heartbeat": {
+    "version": "0.1.0",
+    "claude_home": "/Users/devuser/.claude",
+    "addr": "127.0.0.1:6101",
+    "started_at": "2026-09-28T01:16:07.399295Z",
+    "events_applied": 1826,
+    "scans_completed": 12,
+    "scan_in_flight_high_water": 1
+  },
+  "sensors": [
+    {
+      "name": "hooks",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.439235Z"
+    },
+    {
+      "name": "registry",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.429214Z"
+    },
+    {
+      "name": "process_exit",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.399444Z"
+    },
+    {
+      "name": "ledger",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.43038Z"
+    },
+    {
+      "name": "git",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.439199Z"
+    },
+    {
+      "name": "agentwt",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.749367Z"
+    },
+    {
+      "name": "peek",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.448096Z"
+    },
+    {
+      "name": "action_ledger",
+      "state": "ok",
+      "since": "2026-09-28T01:16:07.40064Z"
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+      "state": "running",
+      "state_since": "2026-09-28T01:17:38.531773Z",
+      "since_restart": true,
+      "pid": 64318,
+      "cwd": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/p3-orchestrator-acceptance-tests-d7a96e",
+      "title": "CC,FImpl - P3 orchestrator loop acceptance tests - [READY]",
+      "last_event": {
+        "name": "PreToolUse",
+        "at": "2026-09-28T01:17:55.938452Z"
+      },
+      "subagents": [
+        {
+          "agent_id": "a3ede1d975161fb7f",
+          "agent_type": "general-purpose",
+          "state": "stopped",
+          "started_at": "2026-09-28T01:17:52.535062Z"
+        },
+        {
+          "agent_id": "a3f9dddaa73f88493",
+          "agent_type": "general-purpose",
+          "state": "running",
+          "started_at": "2026-09-27T22:27:59.253993685Z"
+        },
+        {
+          "agent_id": "ac05a6b6c3819c4e9",
+          "agent_type": "general-purpose",
+          "state": "stopped",
+          "started_at": "2026-09-28T00:39:04.484005257Z"
+        },
+        {
+          "agent_id": "ade7f46dfdd6d8002",
+          "agent_type": "general-purpose",
+          "state": "running",
+          "started_at": "2026-09-27T22:23:03.259531967Z"
+        }
+      ]
+    }
+  ],
+  "repos": [
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "name": "claude-configs",
+      "warnings": []
+    }
+  ],
+  "branches": [
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude-routines/backlog-idea-2026-09-27",
+      "worktree": "/Users/devuser/.cache/claude-routine/worktrees/backlog-idea",
+      "state": "uncommitted",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "sessions": [],
+      "work_items": [],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude-routines/smine-nightly-2026-09-27",
+      "state": "conflicting",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "train_position": 1,
+      "sessions": [],
+      "work_items": [],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude/agent-a3ede1d975161fb7f",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/agent-a3ede1d975161fb7f",
+      "state": "uncommitted",
+      "since": "2026-09-28T01:17:54.047018Z",
+      "sessions": [],
+      "work_items": [],
+      "agents": [
+        {
+          "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+          "agent_id": "a3ede1d975161fb7f"
+        }
+      ]
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude/golden-review-triage-b68d35",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "state": "conflicting",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "train_position": 2,
+      "sessions": [
+        "bae5881a-ad8c-49d4-a122-b06af18b894a"
+      ],
+      "work_items": [
+        "2026-09-27-acdsl-policy-base-trust-wip-2cb5c7a",
+        "2026-09-27-skill-permission-manifests-wip-2cb5c7a",
+        "2026-09-27-smine-data-hygiene-wip-2cb5c7a",
+        "2026-09-28-config-server-correctness-wip-6ed0341",
+        "2026-09-28-config-sync-install-markers-wip-6ed0341",
+        "2026-09-28-orphan-workflow-scripts-wip-6ed0341"
+      ],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude/heartbeat-test-session-9a6ef8",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/heartbeat-test-session-9a6ef8",
+      "state": "no_work",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "target": "feature/x",
+      "sessions": [],
+      "work_items": [],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude/p3-orchestrator-acceptance-tests-d7a96e",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/p3-orchestrator-acceptance-tests-d7a96e",
+      "state": "removable",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "sessions": [
+        "bd080288-be15-4ddb-b88f-993e49c1ffd9"
+      ],
+      "work_items": [],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude/skill-protocol-v2-p2-be0aa4",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skill-protocol-v2-p2-be0aa4",
+      "state": "uncommitted",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "train_position": 3,
+      "sessions": [
+        "4245e290-5a62-41ff-b8db-13d0ac5a90a7"
+      ],
+      "work_items": [
+        "2026-09-27-skill-protocol-v2-wip-c2228c3"
+      ],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "claude/skillroutine-eval-railroad-review-09145b",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/wonderful-joliot-e2328d",
+      "state": "merge_ready",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "train_position": 4,
+      "sessions": [],
+      "work_items": [],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "worktree": "/Users/devuser/.codex/worktrees/640a/claude-configs",
+      "state": "removable",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "sessions": [],
+      "work_items": [],
+      "agents": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "worktree": "/Users/devuser/.codex/worktrees/ffc8/claude-configs",
+      "state": "removable",
+      "since": "2026-09-28T01:16:10.712058Z",
+      "sessions": [],
+      "work_items": [],
+      "agents": []
+    }
+  ],
+  "work_items": [
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-27-acdsl-policy-base-trust-wip-2cb5c7a",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "branch": "claude/golden-review-triage-b68d35",
+      "planned_files": [
+        "acdsl/README.md",
+        "acdsl/policy.json",
+        "acdsl/rules.acdsl",
+        "acdsl/sh-baseline.txt",
+        "cmd/hooks/acdsl-policy-guard.sh",
+        "cmd/toolpolicy/acdsl.go",
+        "cmd/toolpolicy/acdsl_test.go",
+        "cmd/toolpolicy/decide.go",
+        "docs/acdsl-spec.md",
+        "docs/permissions.md",
+        "internal/acdsl/dist.go",
+        "internal/acdsl/dist_test.go",
+        "internal/acdsl/policy.go",
+        "internal/acdsl/policy_test.go",
+        "settings/claude_code/components/gate.json"
+      ],
+      "planned_symbols": [
+        "cmd/toolpolicy/decide.go::newProtectedSet",
+        "cmd/toolpolicy/decide.go::protectedSet",
+        "cmd/toolpolicy/decide.go::protectedSet.cause",
+        "internal/acdsl/dist.go::writePolicy",
+        "internal/acdsl/dist_test.go::writePolicy",
+        "internal/acdsl/policy.go::basePolicy",
+        "internal/acdsl/policy.go::classViolations",
+        "internal/acdsl/policy.go::effectiveAllowlist",
+        "internal/acdsl/policy.go::policyBase",
+        "internal/acdsl/policy.go::policyRuleDelta",
+        "internal/acdsl/policy.go::ruleDelta"
+      ]
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-27-skill-permission-manifests-wip-2cb5c7a",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "branch": "claude/golden-review-triage-b68d35",
+      "planned_files": [
+        "cmd/toolpolicy/skillgrants_test.go",
+        "skills/smine/smine-apply/SKILL.md",
+        "skills/smine/smine-apply/changelog.json",
+        "skills/smine/smine-orchestrate/SKILL.md",
+        "skills/smine/smine-orchestrate/changelog.json",
+        "skills/smine/smine-orchestrate/testdata/permission-commands.json",
+        "skills/smine/smine-orchestrate/testdata/permission-forbidden.json"
+      ],
+      "planned_symbols": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-27-smine-data-hygiene-wip-2cb5c7a",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "branch": "claude/golden-review-triage-b68d35",
+      "planned_files": [
+        "cmd/configserver/main.go",
+        "cmd/stylecheck/main.go",
+        "internal/presentation/style.go",
+        "internal/presentation/style_test.go",
+        "internal/redact/redact.go",
+        "internal/redact/redact_test.go",
+        "internal/server/presentation.go",
+        "internal/sessions/record.go",
+        "internal/sessions/record_test.go",
+        "skills/smine/smine-batch/SKILL.md",
+        "skills/smine/smine-batch/changelog.json",
+        "skills/smine/smine-batch/reference/session.schema.json",
+        "skills/smine/smine-style/SKILL.md",
+        "skills/smine/smine-style/changelog.json"
+      ],
+      "planned_symbols": [
+        "cmd/configserver/main.go::DefaultStylePath",
+        "cmd/configserver/main.go::main",
+        "internal/server/presentation.go::DefaultStylePath",
+        "internal/server/presentation.go::main",
+        "internal/sessions/record.go::ParseRecord",
+        "internal/sessions/record.go::RenderRecord",
+        "internal/sessions/record.go::recordParser",
+        "internal/sessions/record.go::recordParser.parsePermissions"
+      ]
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-28-config-server-correctness-wip-6ed0341",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "branch": "claude/golden-review-triage-b68d35",
+      "planned_files": [
+        "internal/server/i18n.go",
+        "internal/server/permissions.go",
+        "internal/server/permissions_test.go",
+        "internal/server/profilesettings.go",
+        "internal/server/profilesettings_test.go",
+        "internal/server/repos.go",
+        "internal/server/repos_test.go",
+        "internal/server/server.go",
+        "internal/server/sessions.go",
+        "internal/server/sessions_test.go",
+        "internal/server/templates/profile.html",
+        "internal/server/templates/repo_detail.html",
+        "internal/server/templates/sessions_archive.html",
+        "internal/server/templates/sessions_index.html",
+        "internal/sessions/sessions_test.go"
+      ],
+      "planned_symbols": [
+        "internal/server/permissions.go::Server.handleTogglePermission",
+        "internal/server/profilesettings.go::Server.handleProfileSave",
+        "internal/server/repos.go::Server.handleReposAdd",
+        "internal/server/sessions.go::Server.handleSessionsScopeDelete",
+        "internal/server/sessions.go::Server.handleSessionsScopeUnarchive"
+      ]
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-28-config-sync-install-markers-wip-6ed0341",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "branch": "claude/golden-review-triage-b68d35",
+      "planned_files": [
+        "cmd/configserver/main.go",
+        "internal/codex/codex.go",
+        "internal/config/config.go",
+        "internal/config/installenv.go",
+        "internal/config/installenv_test.go",
+        "internal/peek/spawn.go",
+        "internal/peek/spawn_test.go",
+        "internal/server/config.go",
+        "internal/server/config_sync.go",
+        "internal/server/config_sync_test.go",
+        "internal/server/hooks.go",
+        "internal/server/permissions.go",
+        "internal/server/presentation.go",
+        "internal/server/presentation_test.go",
+        "internal/server/server.go"
+      ],
+      "planned_symbols": [
+        "internal/config/config.go::LoadFragment",
+        "internal/server/presentation.go::newPresentationStore",
+        "internal/server/server.go::Options",
+        "internal/server/server.go::Server"
+      ]
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-28-orphan-workflow-scripts-wip-6ed0341",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/golden-review-triage-b68d35",
+      "branch": "claude/golden-review-triage-b68d35",
+      "planned_files": [
+        "docs/workflows.md",
+        "skills/README.md",
+        "skills/feature/fdesign/SKILL.md",
+        "skills/feature/fdesign/changelog.json",
+        "skills/feature/fdesign/workflows/subsystem-grounding.js",
+        "skills/feature/fimplement/SKILL.md",
+        "skills/feature/fimplement/changelog.json",
+        "skills/feature/fimplement/workflows/config-ui-fidelity-gate.js",
+        "skills/git/package-commit/SKILL.md",
+        "skills/git/package-commit/changelog.json",
+        "skills/git/package-commit/workflows/foreign-toolchain-pretag.js",
+        "skills/smine/smine-apply/SKILL.md",
+        "skills/smine/smine-apply/changelog.json",
+        "skills/smine/smine-batch/SKILL.md",
+        "skills/smine/smine-batch/changelog.json"
+      ],
+      "planned_symbols": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "plan_dir": "2026-09-27-skill-protocol-v2-wip-c2228c3",
+      "worktree": "/Users/devuser/GolandProjects/claude-configs/.claude/worktrees/skill-protocol-v2-p2-be0aa4",
+      "branch": "claude/skill-protocol-v2-p2-be0aa4",
+      "planned_files": [
+        "AGENTS.md",
+        "README.md",
+        "acdsl/rules.acdsl",
+        "acdsl/testdata/ACDSL-SKILL-011/{pass,fail}/",
+        "cmd/acdsl/verifiers/skillmeta/*_test.go",
+        "cmd/acdsl/verifiers/skillmeta/main.go",
+        "cmd/skillmigrate/main.go",
+        "cmd/skillmodel/render.go",
+        "cmd/skillmodel/render_test.go",
+        "context/context.json",
+        "context/rules/skills.md",
+        "docs/skillcue.md",
+        "internal/skillgraph/*_test.go",
+        "internal/skillgraph/check.go",
+        "internal/skillgraph/load.go",
+        "internal/skillgraph/markdown.go",
+        "internal/skillgraph/model.go",
+        "internal/skillgraph/pipeline.go",
+        "internal/skillgraph/schema.cue",
+        "internal/skillimport/*_test.go",
+        "internal/skillimport/importer.go",
+        "internal/skills/format.go",
+        "internal/skills/format_test.go",
+        "internal/skills/help.go",
+        "internal/skills/help_test.go",
+        "skills/**/SKILL.md",
+        "skills/**/skill.cue",
+        "skills/README.md",
+        "skills/SKILLMAP.md",
+        "skills/skillroutine/skillroutine-create/skill.cue"
+      ],
+      "planned_symbols": [
+        "internal/skillgraph/check.go::Block",
+        "internal/skillgraph/check.go::renderBlock",
+        "internal/skillgraph/markdown.go::Block",
+        "internal/skillgraph/markdown.go::renderBlock",
+        "internal/skillgraph/model.go::Block",
+        "internal/skillgraph/model.go::renderBlock"
+      ]
+    }
+  ],
+  "collisions": [
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "level": "planned_file",
+      "a": "claude/golden-review-triage-b68d35",
+      "b": "claude/skill-protocol-v2-p2-be0aa4",
+      "paths": [
+        "acdsl/rules.acdsl",
+        "skills/README.md",
+        "skills/feature/fdesign/SKILL.md",
+        "skills/feature/fimplement/SKILL.md",
+        "skills/git/package-commit/SKILL.md",
+        "skills/smine/smine-apply/SKILL.md",
+        "skills/smine/smine-batch/SKILL.md",
+        "skills/smine/smine-orchestrate/SKILL.md",
+        "skills/smine/smine-style/SKILL.md"
+      ],
+      "symbols": [],
+      "plans": [
+        "2026-09-27-acdsl-policy-base-trust-wip-2cb5c7a",
+        "2026-09-27-skill-permission-manifests-wip-2cb5c7a",
+        "2026-09-27-skill-protocol-v2-wip-c2228c3",
+        "2026-09-27-smine-data-hygiene-wip-2cb5c7a",
+        "2026-09-28-config-server-correctness-wip-6ed0341",
+        "2026-09-28-config-sync-install-markers-wip-6ed0341",
+        "2026-09-28-orphan-workflow-scripts-wip-6ed0341"
+      ],
+      "since": "2026-09-28T01:16:10.712058Z"
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "level": "confirmed",
+      "a": "claude-routines/smine-nightly-2026-09-27",
+      "b": "claude/golden-review-triage-b68d35",
+      "paths": [
+        "skills/feature/fimplement/SKILL.md"
+      ],
+      "symbols": [],
+      "plans": [],
+      "since": "2026-09-28T01:16:10.712058Z"
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "level": "confirmed",
+      "a": "claude-routines/smine-nightly-2026-09-27",
+      "b": "claude/skill-protocol-v2-p2-be0aa4",
+      "paths": [
+        "skills/feature/fdesign/SKILL.md"
+      ],
+      "symbols": [],
+      "plans": [],
+      "since": "2026-09-28T01:16:10.712058Z"
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "level": "confirmed",
+      "a": "claude/golden-review-triage-b68d35",
+      "b": "claude/skill-protocol-v2-p2-be0aa4",
+      "paths": [
+        "docs/workflows.md"
+      ],
+      "symbols": [],
+      "plans": [],
+      "since": "2026-09-28T01:16:10.712058Z"
+    }
+  ],
+  "trains": [
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "base": "main",
+      "steps": [
+        {
+          "branch": "claude-routines/smine-nightly-2026-09-27",
+          "position": 1,
+          "state": "blocked",
+          "blocked_by": [],
+          "paths": [
+            "skills/feature/fdesign/changelog.json"
+          ]
+        },
+        {
+          "branch": "claude/golden-review-triage-b68d35",
+          "position": 2,
+          "state": "blocked",
+          "blocked_by": [],
+          "paths": [
+            "cmd/configserver/main.go"
+          ]
+        },
+        {
+          "branch": "claude/skill-protocol-v2-p2-be0aa4",
+          "position": 3,
+          "state": "blocked",
+          "blocked_by": [],
+          "paths": [
+            "skills/concept/concept/SKILL.md"
+          ]
+        },
+        {
+          "branch": "claude/skillroutine-eval-railroad-review-09145b",
+          "position": 4,
+          "state": "clean",
+          "blocked_by": [],
+          "paths": []
+        }
+      ]
+    }
+  ],
+  "fleets": [
+    {
+      "id": "T1",
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "target": "main",
+      "target_state": "open",
+      "members": 5,
+      "foreign": [],
+      "subscriptions": [
+        {
+          "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+          "fleet": "T1",
+          "repo": "/Users/devuser/GolandProjects/claude-configs",
+          "target": "main",
+          "state": "active",
+          "since": "2026-09-28T01:17:45.831985Z",
+          "socket_path": "/tmp/cc-socks-502/64318.sock",
+          "pending": 1
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "fleet": "T1",
+      "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+      "via": "subscriber",
+      "branch": "claude/p3-orchestrator-acceptance-tests-d7a96e"
+    },
+    {
+      "fleet": "T1",
+      "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+      "via": "worker",
+      "branch": "claude/agent-a3ede1d975161fb7f"
+    },
+    {
+      "fleet": "T1",
+      "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+      "via": "worker",
+      "branch": "claude/agent-a3f9dddaa73f88493"
+    },
+    {
+      "fleet": "T1",
+      "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+      "via": "worker",
+      "branch": "claude/agent-ac05a6b6c3819c4e9"
+    },
+    {
+      "fleet": "T1",
+      "session_id": "bd080288-be15-4ddb-b88f-993e49c1ffd9",
+      "via": "worker",
+      "branch": "claude/agent-ade7f46dfdd6d8002"
+    }
+  ],
+  "landings": [
+    {
+      "repo": "/Users/devuser/GolandProjects/agent-plans",
+      "branch": "develop",
+      "release": {
+        "exists": false,
+        "releasable": false,
+        "unreleased": 0
+      },
+      "queue": []
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "develop",
+      "release": {
+        "exists": true,
+        "releasable": true,
+        "unreleased": 3
+      },
+      "holder": {
+        "session_id": "83985202-8be5-450e-8d92-586ced8742d5",
+        "title": "CC,FD - Permission jailbreak fix continuation - [DONE]",
+        "since": "2026-10-01T14:00:00Z"
+      },
+      "queue": [
+        {
+          "session_id": "4db43599-30f5-4200-a130-331604e5ebaf",
+          "since": "2026-10-01T14:00:05Z"
+        }
+      ]
+    },
+    {
+      "repo": "/Users/devuser/GolandProjects/claude-configs",
+      "branch": "feature/x",
+      "holder": {
+        "session_id": "7c1e9a40-2b3d-4f5e-8a6b-9c0d1e2f3a4b",
+        "title": "CC,FImpl - Feature x slice - [DONE]",
+        "since": "2026-10-01T14:02:00Z"
+      },
+      "queue": []
+    }
+  ]
+}

@@ -1,39 +1,44 @@
+{{define "_permissions_overridden"}}{{if .OverriddenCount}}<span class="badge badge-action" title="rules that differ from the repo fragment — every local and repo-only rule is marked inside the section; defaultMode lives on the Claude tab">{{.OverriddenCount}} overridden</span>{{end}}{{end}}
 {{define "_permissions.html"}}
-<span id="ovr-permissions" hx-swap-oob="true">{{if .Overridden}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}</span>
+{{/* a mutation answer carries the badge out of band into the sync card; the page renders it there itself */}}
+{{if .IsFragment}}<span id="ovr-permissions" hx-swap-oob="true" class="push-right">{{template "_permissions_overridden" .}}</span>{{end}}
 <div id="permissions-section">
-  <h2 class="first">Permissions — Allow</h2>
-  {{if not .Allow}}<div class="empty">None</div>{{end}}
-  {{range .Allow}}
-  <div class="card {{if or (not .Enabled) (eq .Source "repoOnly")}}card-disabled{{end}}">
-    <span class="label">{{.Value}}</span>
-    {{if eq .Source "local"}}<span class="badge badge-action" title="in your live settings but not the repo fragment — added locally">local</span>{{end}}
-    {{if eq .Source "repoOnly"}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{end}}
-    {{if ne .Source "repoOnly"}}
-    <label class="toggle">
-      <input type="checkbox" {{if .Enabled}}checked{{end}}
-             hx-post="/api/permissions/{{.List}}/{{.Index}}/toggle"
-             hx-target="#permissions-section" hx-swap="outerHTML">
-      <span class="slider"></span>
-    </label>
+  {{range $listIndex, $list := .Lists}}
+  <h2 class="perm-list-head{{if eq .Key "allow"}} first{{end}}">{{.Name}} <span class="badge badge-dim">{{len .Heads}} heads</span></h2>
+  {{if not .Heads}}<div class="empty">None</div>{{end}}
+  {{range $headIndex, $head := .Heads}}
+  <details class="section perm-head" id="perms-{{$list.Key}}-{{.Head}}"{{if and (eq $listIndex 0) (eq $headIndex 0)}} open{{end}}>
+    <summary><span class="perm-head-title">{{.Head}}</span>
+      <span class="summary-tags"><span class="badge badge-dim">{{len .Rows}}</span>{{if .Parked}} <span class="badge badge-error">{{.Parked}} off</span>{{end}}{{if .Local}} <span class="badge badge-action" title="rules in your live settings but not the repo fragment">{{.Local}} local</span>{{end}}{{if .RepoOnly}} <span class="badge badge-dim" title="rules the repo fragment declares that your live settings lack">{{.RepoOnly}} repo only</span>{{end}}</span>
+    </summary>
+    {{range .Rows}}
+    <div class="card {{if or (not .Enabled) (eq .Source "repoOnly")}}card-disabled{{end}}">
+      <span class="label"><code>{{.Value}}</code></span>
+      {{if eq .Source "local"}}<span class="badge badge-action" title="in your live settings but not the repo fragment — added locally">local</span>{{end}}
+      {{if eq .Source "repoOnly"}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{end}}
+      {{if ne .Source "repoOnly"}}
+      <label class="toggle push-right">
+        <input type="checkbox" {{if .Enabled}}checked{{end}}
+               hx-post="/api/permissions/{{.List}}/{{.Index}}/toggle"
+               hx-target="#permissions-section" hx-swap="outerHTML">
+        <span class="slider"></span>
+      </label>
+      <button class="small" hx-delete="/api/permissions/{{.List}}/{{.Index}}"
+              hx-confirm="Remove {{.Value}} from the live settings?"
+              hx-target="#permissions-section" hx-swap="outerHTML">×</button>
+      {{end}}
+    </div>
     {{end}}
-  </div>
+  </details>
   {{end}}
-  <h2>Permissions — Ask</h2>
-  {{if not .Ask}}<div class="empty">None</div>{{end}}
-  {{range .Ask}}
-  <div class="card {{if or (not .Enabled) (eq .Source "repoOnly")}}card-disabled{{end}}">
-    <span class="label">{{.Value}}</span>
-    {{if eq .Source "local"}}<span class="badge badge-action" title="in your live settings but not the repo fragment — added locally">local</span>{{end}}
-    {{if eq .Source "repoOnly"}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{end}}
-    {{if ne .Source "repoOnly"}}
-    <label class="toggle">
-      <input type="checkbox" {{if .Enabled}}checked{{end}}
-             hx-post="/api/permissions/{{.List}}/{{.Index}}/toggle"
-             hx-target="#permissions-section" hx-swap="outerHTML">
-      <span class="slider"></span>
-    </label>
-    {{end}}
-  </div>
+  <details class="list-add">
+    <summary class="meta">add rule</summary>
+    <form class="inline-form" hx-post="/api/permissions/{{.Key}}/items"
+          hx-target="#permissions-section" hx-swap="outerHTML">
+      <input type="text" name="value" placeholder="Bash(git log*)" class="grow">
+      <button type="submit" class="small">Add</button>
+    </form>
+  </details>
   {{end}}
 </div>
 {{end}}

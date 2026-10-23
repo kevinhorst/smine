@@ -1,27 +1,24 @@
 {{define "_welcome_checks.html"}}
-<div class="welcome-progress">setup checks: <span class="welcome-progress-count">{{.CountOk}}</span>/{{.Total}} green — the nightly routine needs all of them</div>
-{{range .Groups}}
-<h2>{{.Name}}</h2>
-{{range .Checks}}
-<div class="card{{if not .Ok}} card-error{{end}}" id="check-{{.Id}}">
+<div class="welcome-progress">components: <span class="welcome-progress-count">{{.CountDown}}</span> down — off is a choice, changed in <a href="/profile#installation">Profile → Installation</a></div>
+{{if .LoadError}}<div class="card card-error"><span class="label">{{.LoadError}}</span></div>{{end}}
+{{range .Rows}}
+<div class="card{{if eq .State "down"}} card-error{{end}}" id="component-{{.Id}}">
   <div class="check-row">
-    {{if .Ok}}<span class="badge badge-ok">ok</span>{{else}}<span class="badge badge-error">missing</span>{{end}}
-    <span class="check-name">{{.Name}}</span>
-    <span class="check-detail">{{.Detail}}</span>
-    {{if and (eq .Id "routine-token") $.CanVerify}}
+    {{template "_component_state" .}}
+    <span class="check-name">{{.Title}}</span>
+    <span class="check-detail">{{if .Detail}}{{.Detail}}{{else}}{{.Summary}}{{end}}</span>
+    {{if and (eq .Id "token") (eq .State "on" "down") $.CanVerify}}
     <button class="verify-button" hx-post="/welcome/verify-token" hx-target="#verify-result" hx-swap="innerHTML"
             hx-indicator="#verify-indicator" hx-disabled-elt="this"
             hx-confirm="This performs one paid claude API call. Continue?">Verify token</button>
     <span id="verify-indicator" class="htmx-indicator">verifying — one claude call, ~10s…</span>
     {{end}}
   </div>
-  {{if not .Ok}}
-  <div class="fix"><span class="fix-label">fix:</span> {{.Fix}}</div>
+  {{if eq .State "down"}}<div class="fix"><span class="fix-label">fix:</span> {{.Fix}}</div>{{end}}
+  {{if eq .State "off"}}
+  <div class="meta">{{.Summary}} Off: {{join .Without "; "}} — <a href="/profile#installation">turn it on</a></div>
   {{end}}
-  {{if eq .Id "routine-token"}}
-  <div id="verify-result" hx-preserve="true"></div>
-  {{end}}
+  {{if eq .Id "token"}}<div id="verify-result" hx-preserve="true"></div>{{end}}
 </div>
-{{end}}
 {{end}}
 {{end}}

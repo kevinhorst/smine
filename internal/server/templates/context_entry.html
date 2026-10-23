@@ -4,6 +4,7 @@
 <div class="detail-head">
   <h1>{{.Entry.Id}}</h1>
   <span class="badge {{if eq .Entry.Kind "action"}}badge-ok{{else}}badge-dim{{end}}">{{.Entry.Kind}}</span>
+  {{if .Entry.Role}}<span class="badge badge-dim" title="{{roleTitle .Entry.Role}}">{{.Entry.Role}}</span>{{end}}
   {{if .Entry.Enforcement}}<span class="badge badge-dim" title="{{enforcementTitle .Entry.Enforcement}}">{{.Entry.Enforcement}}</span>{{end}}
   {{if eq .Entry.Reach "none"}}<span class="badge badge-error" title="disabled — deploys nowhere">disabled</span>
   {{else}}<span class="badge {{if eq .Entry.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Entry.Reach "smine"}}binds only in smine (this repo), never deploys{{else if eq .Entry.Reach "global"}}binds in any repo{{else}}deploys exactly to the named repos{{end}}">{{.Entry.Reach}}</span>{{end}}
@@ -15,7 +16,7 @@
   <form method="post" action="/context/entry/{{pathEscape .Entry.Id}}/reach">
     {{template "_reach_picker.html" .Picker}}
     <button type="submit">set reach</button>
-    <span class="meta">check the deploy targets — disabled and global stand alone; disabled entries deploy nowhere</span>
+    <span class="meta">check the deploy targets — disabled, global and always stand alone; disabled entries deploy nowhere; always entries inject into every session</span>
   </form>
 </div>
 <h2>content</h2>

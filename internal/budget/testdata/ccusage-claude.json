@@ -1,0 +1,139 @@
+{
+  "sessions": [
+    {
+      "cacheCreationTokens": 24659748,
+      "cacheReadTokens": 1357630263,
+      "firstActivity": "2026-10-02T01:50:55.568Z",
+      "inputTokens": 11454,
+      "lastActivity": "2026-10-03T00:16:51.186Z",
+      "modelBreakdowns": [
+        {
+          "cacheCreationTokens": 17023851,
+          "cacheReadTokens": 794543442,
+          "cost": 355.6977363999986,
+          "inputTokens": 7410,
+          "modelName": "claude-opus-5-5",
+          "outputTokens": 3028430
+        },
+        {
+          "cacheCreationTokens": 7006320,
+          "cacheReadTokens": 558982396,
+          "cost": 332.39751899999976,
+          "inputTokens": 3932,
+          "modelName": "claude-fable-5-1",
+          "outputTokens": 1049724
+        },
+        {
+          "cacheCreationTokens": 629577,
+          "cacheReadTokens": 4104425,
+          "cost": 3.6473770000000005,
+          "inputTokens": 112,
+          "modelName": "claude-sonnet-5-5",
+          "outputTokens": 30796
+        }
+      ],
+      "modelsUsed": [
+        "claude-fable-5-1",
+        "claude-opus-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "outputTokens": 4108950,
+      "projectPath": "-Users-devuser-GolandProjects-claude-configs--claude-worktrees-config-server-auth-defects-66814b",
+      "sessionId": "e8d99d86-d43e-4a75-93d8-1f966ee54139",
+      "totalCost": 691.7426324000008,
+      "totalTokens": 1386410415
+    },
+    {
+      "cacheCreationTokens": 839558,
+      "cacheReadTokens": 134563149,
+      "firstActivity": "2026-10-03T12:00:20.652Z",
+      "inputTokens": 479,
+      "lastActivity": "2026-10-03T14:19:13.948Z",
+      "modelBreakdowns": [
+        {
+          "cacheCreationTokens": 767195,
+          "cacheReadTokens": 134365673,
+          "cost": 63.049328249999995,
+          "inputTokens": 471,
+          "modelName": "claude-fable-5-1",
+          "outputTokens": 282186
+        },
+        {
+          "cacheCreationTokens": 72363,
+          "cacheReadTokens": 197476,
+          "cost": 0.6955312,
+          "inputTokens": 8,
+          "modelName": "claude-opus-5-5",
+          "outputTokens": 3855
+        }
+      ],
+      "modelsUsed": [
+        "claude-fable-5-1",
+        "claude-opus-5-5"
+      ],
+      "outputTokens": 286041,
+      "projectPath": "-Users-devuser-GolandProjects-claude-configs--claude-worktrees-harness-facts-workarounds-c35c0b",
+      "sessionId": "a46baac0-dfee-436f-ba1d-247f5aafe552",
+      "totalCost": 63.74485944999999,
+      "totalTokens": 135689227
+    },
+    {
+      "cacheCreationTokens": 565375,
+      "cacheReadTokens": 19685326,
+      "firstActivity": "2026-10-03T12:57:16.671Z",
+      "inputTokens": 294,
+      "lastActivity": "2026-10-03T13:01:44.441Z",
+      "modelBreakdowns": [
+        {
+          "cacheCreationTokens": 565375,
+          "cacheReadTokens": 19685326,
+          "cost": 10.209121200000002,
+          "inputTokens": 294,
+          "modelName": "claude-opus-5-5",
+          "outputTokens": 87394
+        }
+      ],
+      "modelsUsed": [
+        "claude-opus-5-5"
+      ],
+      "outputTokens": 87394,
+      "projectPath": "-Users-devuser-GolandProjects-claude-configs--claude-worktrees-harness-facts-workarounds-c35c0b/a46baac0-dfee-436f-ba1d-247f5aafe552/subagents/workflows",
+      "sessionId": "wf_f3260aff-aff",
+      "totalCost": 10.209121200000002,
+      "totalTokens": 20338389
+    },
+    {
+      "cacheCreationTokens": 445248,
+      "cacheReadTokens": 14823573,
+      "firstActivity": "2026-10-03T13:36:17.807Z",
+      "inputTokens": 222,
+      "lastActivity": "2026-10-03T13:40:42.040Z",
+      "modelBreakdowns": [
+        {
+          "cacheCreationTokens": 445248,
+          "cacheReadTokens": 14823573,
+          "cost": 7.4226265999999965,
+          "inputTokens": 222,
+          "modelName": "claude-opus-5-5",
+          "outputTokens": 44752
+        }
+      ],
+      "modelsUsed": [
+        "claude-opus-5-5"
+      ],
+      "outputTokens": 44752,
+      "projectPath": "-Users-devuser-GolandProjects-claude-configs--claude-worktrees-harness-facts-workarounds-c35c0b/a46baac0-dfee-436f-ba1d-247f5aafe552/subagents/workflows",
+      "sessionId": "wf_4c0c6356-b51",
+      "totalCost": 7.4226265999999965,
+      "totalTokens": 15313795
+    }
+  ],
+  "totals": {
+    "cacheCreationTokens": 47225965,
+    "cacheReadTokens": 2374272098,
+    "inputTokens": 27176,
+    "outputTokens": 7449190,
+    "totalCost": 1281.7143713500009,
+    "totalTokens": 2428974429
+  }
+}

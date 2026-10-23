@@ -1,0 +1,54 @@
+{
+  "v": 1,
+  "instance": "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a2b",
+  "fleet": "T1",
+  "started_at": "2026-09-28T10:00:00Z",
+  "dissolved_at": "2026-09-28T11:00:00Z",
+  "repo": "/r1",
+  "target": "main",
+  "merge_branch": "claude-orch/T1",
+  "synced": true,
+  "members": [
+    {
+      "token": "T1-O",
+      "session_id": "o",
+      "via": "subscriber",
+      "branch": "claude-orch/T1",
+      "delivered": false,
+      "joined_at": "2026-09-28T10:01:00Z",
+      "left_at": "2026-09-28T11:00:00Z"
+    },
+    {
+      "token": "T1-MA",
+      "session_id": "w1",
+      "via": "joined",
+      "branch": "claude/w1",
+      "delivered": true,
+      "joined_at": "2026-09-28T10:00:00Z",
+      "left_at": "2026-09-28T10:50:00Z"
+    }
+  ],
+  "subscriptions": [
+    {
+      "session_id": "o",
+      "fleet": "T1",
+      "repo": "/r1",
+      "target": "main",
+      "state": "ended",
+      "detail": "unsubscribed by the session",
+      "since": "2026-09-28T11:00:00Z",
+      "socket_path": "/tmp/o.sock",
+      "pending": 0
+    }
+  ],
+  "journal": [
+    {
+      "kind": "merged",
+      "members": ["A"],
+      "subject": "merged claude/w1",
+      "detail": "delivered and merge-ready",
+      "by": "o",
+      "at": "2026-09-28T10:55:00Z"
+    }
+  ]
+}

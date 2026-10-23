@@ -2,6 +2,7 @@ package acdsl
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,6 +49,39 @@ func newPolicyRepo(t *testing.T, basePolicyJson string) string {
 	policyGit(t, root, "add", ".")
 	policyGit(t, root, "commit", "-q", "-m", "base")
 	policyGit(t, root, "checkout", "-q", "-b", "work")
+	return root
+}
+
+// commitOnBase commits one file on main and recreates the work branch from
+// it — base-side state the work branch then diffs against.
+func commitOnBase(t *testing.T, root, rel, content string) {
+	t.Helper()
+	policyGit(t, root, "checkout", "-q", "main")
+	writePolicyFile(t, root, rel, content)
+	policyGit(t, root, "add", "-A")
+	policyGit(t, root, "commit", "-q", "-m", "base "+rel)
+	policyGit(t, root, "checkout", "-q", "-B", "work")
+}
+
+// commitWork stages everything on the checked-out branch and commits it —
+// the committed-change shape the base-trust attacks rely on.
+func commitWork(t *testing.T, root string) {
+	t.Helper()
+	policyGit(t, root, "add", "-A")
+	policyGit(t, root, "commit", "-q", "-m", "work")
+}
+
+// newTrunkRepo builds a repo whose only branch is trunk — no default policy
+// base candidate resolves.
+func newTrunkRepo(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	policyGit(t, root, "init", "-q", "-b", "trunk")
+	policyGit(t, root, "config", "user.email", "test@example.com")
+	policyGit(t, root, "config", "user.name", "test")
+	writePolicyFile(t, root, "acdsl/policy.json", gatedBasePolicy+"\n")
+	policyGit(t, root, "add", ".")
+	policyGit(t, root, "commit", "-q", "-m", "base")
 	return root
 }
 
@@ -275,17 +309,317 @@ func TestCheckPolicyTaskContractExempt(t *testing.T) {
 	diagnostics, err = CheckPolicy(context.Background(), root, gatedPolicy())
 	require.NoError(t, err)
 	assert.Contains(t, policyMessages(diagnostics), "rule TASK-1 added")
+
+	// a task contract modified task→task stays exempt
+	root = newPolicyRepo(t, `{"mode": "strict"}`)
+	commitOnBase(t, root, "plans/feature/task.acdsl", taskRule+"\n")
+	writePolicyFile(t, root, "plans/feature/task.acdsl", `//acdsl:TASK-1 gofmt anchor="\.go$" lifetime="task" why="task contract, revised"`+"\n")
+	diagnostics, err = CheckPolicy(context.Background(), root, gatedPolicy())
+	require.NoError(t, err)
+	assert.Empty(t, diagnostics)
 }
 
-func TestCheckPolicyUnresolvableBase(t *testing.T) {
-	root := newPolicyRepo(t, gatedBasePolicy)
-	policy := gatedPolicy()
-	policy.BaseRef = "nosuchref"
+func TestCheckPolicyBaseSideBaseRef(t *testing.T) {
+	type testCase struct {
+		_id              string
+		_expectedError   string
+		_expectedMessage string
+		_shouldPass      bool
 
-	_, err := CheckPolicy(context.Background(), root, policy)
+		root string
+	}
+
+	protectedRule := `//acdsl:ACDSL-PLAN-101 gofmt anchor="^plans/" why="agent plan addition"`
+	tests := make([]*testCase, 0)
+
+	// base-ref-resolves-and-gates
+	root := newPolicyRepo(t, `{"mode": "gated", "editable_scopes": ["GOLANG"], "base_ref": "main"}`)
+	writePolicyFile(t, root, "acdsl/rules.acdsl", policyBaseGolangRule+"\n"+policyBasePlanRule+"\n"+protectedRule+"\n")
+	tests = append(tests, &testCase{
+		_id:              "base-ref-resolves-and-gates",
+		_expectedError:   "",
+		_expectedMessage: "rule ACDSL-PLAN-101 added outside the editable scopes",
+		_shouldPass:      true,
+
+		root: root,
+	})
+
+	// base-ref-unresolvable
+	root = newPolicyRepo(t, `{"mode": "gated", "editable_scopes": ["GOLANG"], "base_ref": "nosuchref"}`)
+	tests = append(tests, &testCase{
+		_id:              "base-ref-unresolvable",
+		_expectedError:   "No policy base resolves (tried nosuchref)",
+		_expectedMessage: "",
+		_shouldPass:      false,
+
+		root: root,
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			diagnostics, err := CheckPolicy(context.Background(), test.root, gatedPolicy())
+
+			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
+			assert.Contains(t, fmt.Sprint(err), test._expectedError)
+			assert.Contains(t, policyMessages(diagnostics), test._expectedMessage)
+		})
+	}
+}
+
+func TestCheckPolicyNoDefaultBase(t *testing.T) {
+	type testCase struct {
+		_id         string
+		_shouldPass bool
+
+		policy Policy
+	}
+
+	tests := make([]*testCase, 0)
+
+	// working-gated-errors
+	tests = append(tests, &testCase{
+		_id:         "working-gated-errors",
+		_shouldPass: false,
+
+		policy: gatedPolicy(),
+	})
+
+	// working-free-passes
+	tests = append(tests, &testCase{
+		_id:         "working-free-passes",
+		_shouldPass: true,
+
+		policy: Policy{AllowTaskContracts: true, Mode: PolicyModeFree},
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			diagnostics, err := CheckPolicy(context.Background(), newTrunkRepo(t), test.policy)
+
+			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
+			assert.Empty(t, diagnostics)
+		})
+	}
+}
+
+func TestCheckPolicyWorkingBaseRefIgnored(t *testing.T) {
+	type testCase struct {
+		_id string
+
+		root string
+	}
+
+	protectedRule := `//acdsl:ACDSL-PLAN-101 gofmt anchor="^plans/" why="agent plan addition"`
+	rules := policyBaseGolangRule + "\n" + policyBasePlanRule + "\n" + protectedRule + "\n"
+	tests := make([]*testCase, 0)
+
+	// base-ref-head
+	root := newPolicyRepo(t, gatedBasePolicy)
+	writePolicyFile(t, root, "acdsl/policy.json", `{"mode": "gated", "editable_scopes": ["GOLANG"], "base_ref": "HEAD"}`)
+	writePolicyFile(t, root, "acdsl/rules.acdsl", rules)
+	commitWork(t, root)
+	tests = append(tests, &testCase{
+		_id: "base-ref-head",
+
+		root: root,
+	})
+
+	// base-ref-own-branch
+	root = newPolicyRepo(t, gatedBasePolicy)
+	writePolicyFile(t, root, "acdsl/policy.json", `{"mode": "gated", "editable_scopes": ["GOLANG"], "base_ref": "work"}`)
+	writePolicyFile(t, root, "acdsl/rules.acdsl", rules)
+	commitWork(t, root)
+	tests = append(tests, &testCase{
+		_id: "base-ref-own-branch",
+
+		root: root,
+	})
+
+	// base-ref-unresolvable
+	root = newPolicyRepo(t, gatedBasePolicy)
+	writePolicyFile(t, root, "acdsl/policy.json", `{"mode": "free", "base_ref": "nosuchref"}`)
+	writePolicyFile(t, root, "acdsl/rules.acdsl", rules)
+	commitWork(t, root)
+	tests = append(tests, &testCase{
+		_id: "base-ref-unresolvable",
+
+		root: root,
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			working, loadErr := LoadPolicy(test.root)
+			diagnostics, err := CheckPolicy(context.Background(), test.root, working)
+
+			require.NoError(t, loadErr)
+			require.NoError(t, err)
+			assert.Contains(t, policyMessages(diagnostics), "acdsl/policy.json differs from the policy base")
+			assert.Contains(t, policyMessages(diagnostics), "rule ACDSL-PLAN-101 added outside the editable scopes")
+		})
+	}
+}
+
+func TestCheckPolicyRetaggedDoctrineRule(t *testing.T) {
+	root := newPolicyRepo(t, gatedBasePolicy)
+	retagged := `//acdsl:ACDSL-PLAN-100 gofmt anchor="^plans/" lifetime="task" why="base plan rule"`
+	writePolicyFile(t, root, "acdsl/rules.acdsl", policyBaseGolangRule+"\n"+retagged+"\n")
+
+	diagnostics, err := CheckPolicy(context.Background(), root, gatedPolicy())
+
+	require.NoError(t, err)
+	assert.Contains(t, policyMessages(diagnostics), "rule ACDSL-PLAN-100 modified outside the editable scopes")
+}
+
+func TestCheckPolicyVerifierSource(t *testing.T) {
+	type testCase struct {
+		_id              string
+		_expectedLen     int
+		_expectedMessage string
+
+		root string
+	}
+
+	sourceRegistry := `{"gofmt": {"argv": ["go", "run", "./verifiers/gofmt"], "timeout_s": 10, "description": "base"}}` + "\n"
+	newVerifierRepo := func() string {
+		root := newPolicyRepo(t, gatedBasePolicy)
+		commitOnBase(t, root, "verifiers/gofmt/main.go", "package main\n")
+		commitOnBase(t, root, "acdsl/registry.json", sourceRegistry)
+		return root
+	}
+	tests := make([]*testCase, 0)
+
+	// edit-verifier-source
+	root := newVerifierRepo()
+	writePolicyFile(t, root, "verifiers/gofmt/main.go", "package main\n\nfunc main() {}\n")
+	tests = append(tests, &testCase{
+		_id:              "edit-verifier-source",
+		_expectedLen:     1,
+		_expectedMessage: "verifiers/gofmt/main.go is verifier source the base registry runs (verifiers/gofmt)",
+
+		root: root,
+	})
+
+	// add-verifier-file
+	root = newVerifierRepo()
+	writePolicyFile(t, root, "verifiers/gofmt/extra.go", "package main\n")
+	tests = append(tests, &testCase{
+		_id:              "add-verifier-file",
+		_expectedLen:     1,
+		_expectedMessage: "verifiers/gofmt/extra.go is verifier source",
+
+		root: root,
+	})
+
+	// unrelated-file-clean
+	root = newVerifierRepo()
+	writePolicyFile(t, root, "other/main.go", "package main\n")
+	tests = append(tests, &testCase{
+		_id:              "unrelated-file-clean",
+		_expectedLen:     0,
+		_expectedMessage: "",
+
+		root: root,
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			diagnostics, err := CheckPolicy(context.Background(), test.root, gatedPolicy())
+
+			require.NoError(t, err)
+			assert.Len(t, diagnostics, test._expectedLen)
+			assert.Contains(t, policyMessages(diagnostics), test._expectedMessage)
+		})
+	}
+}
+
+func TestCheckPolicyCrlfCheckoutClean(t *testing.T) {
+	root := newPolicyRepo(t, gatedBasePolicy)
+	policyGit(t, root, "config", "core.autocrlf", "true")
+	registry := `{"gofmt": {"argv": ["true"], "timeout_s": 10, "description": "base"}}` + "\r\n"
+	writePolicyFile(t, root, "acdsl/registry.json", registry)
+
+	diagnostics, err := CheckPolicy(context.Background(), root, gatedPolicy())
+
+	require.NoError(t, err)
+	assert.Empty(t, diagnostics)
+}
+
+func TestCheckPolicyMalformedBasePolicy(t *testing.T) {
+	root := newPolicyRepo(t, `{"mode": `)
+
+	_, err := CheckPolicy(context.Background(), root, gatedPolicy())
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "no policy base resolves")
+	assert.Contains(t, err.Error(), "basePolicy")
+}
+
+func TestCheckPolicyGatedNoBaseRegistry(t *testing.T) {
+	root := t.TempDir()
+	policyGit(t, root, "init", "-q", "-b", "main")
+	policyGit(t, root, "config", "user.email", "test@example.com")
+	policyGit(t, root, "config", "user.name", "test")
+	writePolicyFile(t, root, "acdsl/policy.json", gatedBasePolicy+"\n")
+	writePolicyFile(t, root, "acdsl/rules.acdsl", policyBaseGolangRule+"\n")
+	policyGit(t, root, "add", ".")
+	policyGit(t, root, "commit", "-q", "-m", "base without registry")
+	policyGit(t, root, "checkout", "-q", "-b", "work")
+	addedRule := `//acdsl:ACDSL-GOLANG-101 gofmt anchor="\.go$" why="agent addition"`
+	writePolicyFile(t, root, "acdsl/rules.acdsl", policyBaseGolangRule+"\n"+addedRule+"\n")
+
+	diagnostics, err := CheckPolicy(context.Background(), root, gatedPolicy())
+
+	require.NoError(t, err)
+	assert.Contains(t, policyMessages(diagnostics), `rule ACDSL-GOLANG-101 binds verifier "gofmt" outside the sanctioned set`)
+}
+
+func TestPolicyBaseOriginHead(t *testing.T) {
+	type testCase struct {
+		_id               string
+		_expectedBoundary bool
+
+		root string
+	}
+
+	source := newPolicyRepo(t, gatedBasePolicy)
+	policyGit(t, source, "checkout", "-q", "main")
+	newClone := func() string {
+		parent := t.TempDir()
+		policyGit(t, parent, "clone", "-q", source, "clone")
+		return filepath.Join(parent, "clone")
+	}
+	tests := make([]*testCase, 0)
+
+	// on-main-not-boundary
+	tests = append(tests, &testCase{
+		_id:               "on-main-not-boundary",
+		_expectedBoundary: false,
+
+		root: newClone(),
+	})
+
+	// on-agent-branch-boundary
+	agentClone := newClone()
+	policyGit(t, agentClone, "checkout", "-q", "-b", "claude/x")
+	tests = append(tests, &testCase{
+		_id:               "on-agent-branch-boundary",
+		_expectedBoundary: true,
+
+		root: agentClone,
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			_, isBoundary, err := policyBase(context.Background(), DefaultBaseCandidates, test.root)
+
+			require.NoError(t, err)
+			assert.Equal(t, test._expectedBoundary, isBoundary)
+		})
+	}
 }
 
 func TestCheckPolicyNewUntrackedPolicyOnBranch(t *testing.T) {
@@ -311,13 +645,16 @@ func TestRuleDelta(t *testing.T) {
 	// (removed), add one in an untracked file (added)
 	writePolicyFile(t, root, "acdsl/rules.acdsl", `//acdsl:ACDSL-GOLANG-100 gofmt why="base golang rule" anchor="\.go$"`+"\n")
 	writePolicyFile(t, root, "extra.acdsl", `//acdsl:ACDSL-SHELL-100 gofmt anchor="\.sh$" why="untracked addition"`+"\n")
-	base, isBoundary, err := policyBase(context.Background(), root, gatedPolicy())
+	base, isBoundary, err := policyBase(context.Background(), DefaultBaseCandidates, root)
 	require.NoError(t, err)
 	require.True(t, isBoundary)
+	changedPaths, err := GitChangedFiles(context.Background(), root, base)
+	require.NoError(t, err)
 
-	delta, err := ruleDelta(context.Background(), root, base)
+	delta, err := ruleDelta(context.Background(), base, changedPaths, root)
 
 	require.NoError(t, err)
+	assert.Empty(t, delta.changedTask)
 	require.Len(t, delta.added, 1)
 	assert.Equal(t, "ACDSL-SHELL-100", delta.added[0].Id)
 	require.Len(t, delta.changed, 1)

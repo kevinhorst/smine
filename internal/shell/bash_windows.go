@@ -14,11 +14,7 @@ import (
 var bashOnce sync.Once
 var bashResolved string
 
-// BashPath locates Git for Windows bash.exe: SMINE_BASH override, the
-// GitForWindows registry InstallPath (HKLM, HKCU, WOW6432Node), known install
-// dirs, then git.exe's sibling bin\bash.exe. System32's WSL bash is never
-// eligible. Empty result means not found — the exec then fails loudly with
-// the original error.
+// BashPath never picks System32's WSL bash; an SMINE_BASH override naming a missing file means not found.
 func BashPath() string {
 	bashOnce.Do(func() { bashResolved = discoverBash() })
 	return bashResolved
@@ -26,6 +22,9 @@ func BashPath() string {
 
 func discoverBash() string {
 	if p := os.Getenv("SMINE_BASH"); p != "" {
+		if _, err := os.Stat(p); err != nil {
+			return ""
+		}
 		return p
 	}
 	for _, root := range []registry.Key{registry.LOCAL_MACHINE, registry.CURRENT_USER} {

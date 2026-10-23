@@ -1,0 +1,94 @@
+{
+  "id": "c67a1a4c-ebdd-47fc-a84b-677e4eee8e41",
+  "agent": "claude",
+  "context": {
+    "honored": 1,
+    "pack_reads": [
+      "context/actions/implementing.md"
+    ]
+  },
+  "cost": {
+    "activeSeconds": 703,
+    "denials": 0,
+    "inputTokens": 4358638,
+    "outputTokens": 19280,
+    "prompts": 0,
+    "turns": 25,
+    "wallSeconds": 1571
+  },
+  "dataGaps": "context: used-context record not run",
+  "findings": [
+    {
+      "dimension": "exemplar",
+      "headline": "The fix mirrored the nearest guard pattern and was verified on a throwaway build.",
+      "quotes": [
+        {
+          "text": "/proposals (264 labels), /config (307 labels), and /sessions all show zero collapsed labels",
+          "turn": 18
+        }
+      ],
+      "summary": "Fix mirrored the nearest in-repo guard pattern and verification counted results on a throwaway worktree build."
+    },
+    {
+      "contextUse": {
+        "channel": "unknown",
+        "kind": "needed-not-present",
+        "ruleId": "feedback_no-worktree-branch-reminders"
+      },
+      "dimension": "context-use",
+      "headline": "The final report carried a merge-state caveat the user had forbidden.",
+      "quotes": [
+        {
+          "text": "cherry-pick or merge from there, it's not on your checkout",
+          "turn": 9
+        }
+      ],
+      "summary": "Final report carried a merge-state caveat the user later forbade."
+    },
+    {
+      "dimension": "skill-report-card",
+      "headline": "The diagnose run went from sweep to verified fix without a detour.",
+      "snippets": [
+        {
+          "code": ".card .label { flex: 1; word-break: break-all; }",
+          "kind": "violation",
+          "lang": "css",
+          "source": "transcript"
+        }
+      ],
+      "summary": "diagnose-debug swept via one subagent, root-cause table, plan approved, fixed and verified."
+    }
+  ],
+  "format": 2,
+  "frustration": [
+    {
+      "quote": "Please continue from where you left off.",
+      "trigger": "machine sleep mid-verification"
+    }
+  ],
+  "invoked_skills": [
+    "diagnose-debug"
+  ],
+  "lastActive": "2026-07-24T18:02:11Z",
+  "permissions": {
+    "denied": [
+      {
+        "command": "make -C cmd/context record",
+        "tool": "Bash"
+      }
+    ],
+    "granted": [
+      {
+        "command": "make audit",
+        "decision": "prompted_once",
+        "tool": "Bash"
+      }
+    ],
+    "telemetry_present": true
+  },
+  "repo": "claude-configs",
+  "signal": "clean diagnose to fix, verified in fresh build",
+  "title": "Config-server card label collapse sweep",
+  "type": "Diagnose-Debug",
+  "week": "2026-W30"
+}

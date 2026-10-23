@@ -1,24 +1,107 @@
 {{define "_config_row.html"}}
-<div class="card card-config" id="{{domID .Target .Key}}">
-  <span class="label label-key">
-    <strong>{{.Key}}</strong>
-    {{if .Explanation}}<br><span class="meta explanation">{{.Explanation}}</span>{{end}}
-    {{if .Subtables}}<br><span class="meta">subtables: {{range .Subtables}}{{.}} {{end}}</span>{{end}}
-  </span>
-  {{if not .Documented}}<span class="badge badge-action">undocumented</span>
-  {{else if eq .State "set"}}<span class="badge badge-ok">set</span>
-  {{else if eq .State "disabled"}}<span class="badge badge-error">disabled</span>
-  {{else}}<span class="badge badge-dim">unset</span>{{end}}
+{{range .GroupBadges}}<span id="{{.Id}}" hx-swap-oob="true">{{if .Count}}<span class="badge badge-action">{{.Count}} overridden</span>{{end}}</span>{{end}}
+<div class="card card-column card-config" id="{{domID .Target .Key}}">
+  <div class="card-row card-head">
+    <span class="label label-key">
+      <strong>{{.Key}}</strong>
+      {{if .Explanation}}<br><span class="meta explanation">{{.Explanation}}</span>{{end}}
+      {{if .Subtables}}<br><span class="meta">subtables: {{range .Subtables}}{{.}} {{end}}</span>{{end}}
+    </span>
+    <span class="card-tags">
+    {{if not .Documented}}<span class="badge badge-action">undocumented</span>
+    {{else if eq .State "set"}}<span class="badge badge-ok">set</span>
+    {{else if eq .State "disabled"}}<span class="badge badge-error">disabled</span>
+    {{else}}<span class="badge badge-dim">unset</span>{{end}}
+    {{if .Overridden}}
+      {{if and (eq .State "unset") .RepoValue}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{else}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}
+    {{end}}
+    {{if .Source}}<a class="meta" href="{{docHref .Explanation .Source}}" target="_blank" rel="noopener">docs</a>{{end}}
+    </span>
+  </div>
   {{if .Overridden}}
-    {{if and (eq .State "unset") .RepoValue}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{else}}<span class="badge badge-action" title="differs from the repo fragment">overridden</span>{{end}}
+  <div class="card-value">
     {{if not .RepoValue}}<span class="repo-scalar">repo: (unset)</span>
     {{else if .Diff}}<span class="repo-scalar" title="repo fragment → live settings">repo → live:</span>{{template "_diff.html" .Diff}}
-    {{else if or (eq .Type "array") (eq .Type "object") (eq .Type "table")}}<span class="repo-scalar">repo:</span><pre class="value-view repo-view" title="value in the repo fragment (settings/claude_code/settings.json)">{{.RepoValue}}</pre>
-    {{else}}<span class="repo-scalar" title="value in the repo fragment (settings/claude_code/settings.json)">repo: {{.RepoValue}}</span>{{end}}
+    {{else if or (eq .Type "array") (eq .Type "object") (eq .Type "map") (eq .Type "table")}}<span class="repo-scalar">repo:</span><pre class="value-view repo-view" title="value in the repo template (settings/claude_code/components)">{{.RepoValue}}</pre>
+    {{else}}<span class="repo-scalar" title="value in the repo template (settings/claude_code/components)">repo: {{.RepoValue}}</span>{{end}}
+  </div>
   {{end}}
-  {{if .Source}}<a class="meta" href="{{docHref .Explanation .Source}}" target="_blank" rel="noopener">docs</a>{{end}}
 
-  {{if ne .State "disabled"}}
+  {{$isScalar := and (ne .State "disabled") (or (eq .Type "bool") (eq .Type "enum") (eq .Type "number") (eq .Type "string"))}}
+  {{if and (ne .State "disabled") (not $isScalar)}}
+  <div class="card-value">
+    {{if and (eq .Type "array") .Documented}}
+      <div class="list-editor">
+        {{range .Items}}
+        <div class="list-item">
+          <span class="label">{{.Value}}</span>
+          <button class="small" hx-delete="/api/config/{{$.Target}}/{{pathEscape $.Key}}/items/{{.Index}}"
+                  hx-confirm="Remove {{.Value}} from {{$.Key}} in the live settings?"
+                  hx-target="#{{domID $.Target $.Key}}" hx-swap="outerHTML">×</button>
+        </div>
+        {{end}}
+        <details class="list-add">
+          <summary class="meta">add item</summary>
+          <form class="inline-form" hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}/items"
+                hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
+            {{if .Presets}}
+            <select name="value">
+              {{range .Presets}}<option>{{.}}</option>{{end}}
+            </select>
+            {{else}}
+            <input type="text" name="value" placeholder="new item">
+            {{end}}
+            <button type="submit" class="small">Add</button>
+            {{if .PathArray}}
+            <button type="button" class="small" title="pick a folder in the native dialog — the choice is appended as an item"
+                    hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}/choose-folder"
+                    hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">add folder…</button>
+            {{end}}
+          </form>
+        </details>
+      </div>
+    {{else if and (eq .Type "map") .Documented}}
+      <div class="list-editor">
+        {{range .Entries}}
+        {{$entry := .}}
+        <div class="list-item">
+          <span class="label">{{.Name}}</span>
+          <select name="value"
+                  hx-post="/api/config/{{$.Target}}/{{pathEscape $.Key}}/entries"
+                  hx-vals='{"name": "{{.Name}}"}'
+                  hx-target="#{{domID $.Target $.Key}}" hx-swap="outerHTML">
+            {{range $.Values}}<option {{if eq . $entry.Value}}selected{{end}}>{{.}}</option>{{end}}
+          </select>
+          <button class="small" hx-delete="/api/config/{{$.Target}}/{{pathEscape $.Key}}/entries/{{pathEscape .Name}}"
+                  hx-confirm="Remove {{.Name}} from {{$.Key}} in the live settings?"
+                  hx-target="#{{domID $.Target $.Key}}" hx-swap="outerHTML">×</button>
+        </div>
+        {{end}}
+        <details class="list-add">
+          <summary class="meta">add entry</summary>
+          <form class="inline-form" hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}/entries"
+                hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
+            <select name="name">
+              {{range .Presets}}<option>{{.}}</option>{{end}}
+            </select>
+            <select name="value">
+              {{range .Values}}<option>{{.}}</option>{{end}}
+            </select>
+            <button type="submit" class="small">Add</button>
+          </form>
+        </details>
+      </div>
+    {{else if .Diff}}
+    {{else if .Value}}
+      <pre class="value-view">{{.Value}}</pre>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{if or $isScalar .CanToggle (and (eq .State "set") (not .IsTable))}}
+  <div class="card-row card-foot">
+    {{if $isScalar}}
+    <span class="card-control">
     {{if eq .Type "bool"}}
       <input type="checkbox" {{if eq .Value "true"}}checked{{end}}
              hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}"
@@ -37,54 +120,35 @@
         <input type="number" step="any" name="value" value="{{.Value}}">
         <button type="submit" class="small">Save</button>
       </form>
-    {{else if eq .Type "string"}}
+    {{else if .Values}}
+      <select name="value"
+              hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}"
+              hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
+        {{$matched := false}}
+        {{if eq .State "unset"}}<option value="" selected disabled>—</option>{{end}}
+        {{range .Values}}<option {{if eq . $.Value}}selected{{$matched = true}}{{end}}>{{.}}</option>{{end}}
+        {{if and $.Value (not $matched)}}<option selected disabled>{{$.Value}} (not in availableModels)</option>{{end}}
+      </select>
+    {{else}}
       <form class="inline-form" hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}"
             hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
         <input type="text" name="value" value="{{.Value}}">
         <button type="submit" class="small">Save</button>
       </form>
-    {{else if and (eq .Type "array") .Documented}}
-      <div class="list-editor">
-        {{range .Items}}
-        <div class="list-item">
-          <span class="label">{{.Value}}</span>
-          <button class="small" hx-delete="/api/config/{{$.Target}}/{{pathEscape $.Key}}/items/{{.Index}}"
-                  hx-confirm="Remove {{.Value}} from {{$.Key}} in the live settings?"
-                  hx-target="#{{domID $.Target $.Key}}" hx-swap="outerHTML">×</button>
-        </div>
-        {{end}}
-        <form class="inline-form" hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}/items"
-              hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
-          {{if .Presets}}
-          <select name="value">
-            {{range .Presets}}<option>{{.}}</option>{{end}}
-          </select>
-          {{else}}
-          <input type="text" name="value" placeholder="new item">
-          {{end}}
-          <button type="submit" class="small">Add</button>
-          {{if .PathArray}}
-          <button type="button" class="small" title="pick a folder in the native dialog — the choice is appended as an item"
-                  hx-post="/api/config/{{.Target}}/{{pathEscape .Key}}/choose-folder"
-                  hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">add folder…</button>
-          {{end}}
-        </form>
-      </div>
-    {{else if .Diff}}
-    {{else if .Value}}
-      <pre class="value-view">{{.Value}}</pre>
     {{end}}
-  {{end}}
-
-  {{if .CanToggle}}
-    <button class="small" hx-post="/api/config/codex/{{pathEscape .Key}}/toggle"
-            hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
-      {{if eq .State "disabled"}}Enable{{else}}Disable{{end}}</button>
-  {{end}}
-  {{if and (eq .State "set") (not .IsTable)}}
-    <button class="small" hx-delete="/api/config/{{.Target}}/{{pathEscape .Key}}"
-            hx-confirm="Remove {{.Key}} from the live settings?"
-            hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">Remove</button>
+    </span>
+    {{end}}
+    {{if .CanToggle}}
+      <button class="small" hx-post="/api/config/codex/{{pathEscape .Key}}/toggle"
+              hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">
+        {{if eq .State "disabled"}}Enable{{else}}Disable{{end}}</button>
+    {{end}}
+    {{if and (eq .State "set") (not .IsTable)}}
+      <button class="small" hx-delete="/api/config/{{.Target}}/{{pathEscape .Key}}"
+              hx-confirm="Remove {{.Key}} from the live settings?"
+              hx-target="#{{domID .Target .Key}}" hx-swap="outerHTML">Remove</button>
+    {{end}}
+  </div>
   {{end}}
 </div>
 {{end}}

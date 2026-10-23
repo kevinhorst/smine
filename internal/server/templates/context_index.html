@@ -3,19 +3,57 @@
 <h1>Context</h1>
 <div class="card">
   <form class="card-row card-filter" hx-post="/context/sync" hx-target="#op-result" hx-swap="innerHTML show:none"
-        hx-confirm="Write AGENTS.md and context docs into the target repository?">
+        hx-confirm="Build the overlay; with Write to Repo also write context files into the repository's working tree (nothing is committed)?">
     {{template "_repo_select.html" .RepoNames}}
     <label>context folder <input type="text" name="context-dir" value="docs"></label>
-    <button type="submit" title="what ships is decided per entry by its Reach — targets receive only entries that reach them (cmd/rules filter, no per-repo selection here)">Sync context</button>
-    <label><input type="checkbox" name="symlink" checked> CLAUDE.md symlink</label>
-    <label title="deploy the prose pack — actions chapters, rules guides, generated context.json"><input type="checkbox" name="prose" checked> sync prose</label>
-    <label title="ship the reach-covered gate slice — rules.acdsl, registry subset, prebuilt bin/acdsl + verifier binaries; the deployed read hook activates automatically"><input type="checkbox" name="acdsl" checked> sync acdsl</label>
-    <label title="also ship task-lifetime contract rules (plans/*/design/contract.acdsl and other task *.acdsl files) that reach the target"><input type="checkbox" name="task"> sync task</label>
+    <button type="submit" title="builds the repo's overlay in the state dir: context.json and aspects.json plus the patch adding both under the context folder — what ships is decided per entry by its Reach">Sync context</button>
+    <label title="create the context folder in the repository and write context.json and aspects.json into its working tree — nothing is committed"><input type="checkbox" name="write"> write to repo</label>
+    <label title="with write to repo: also project AGENTS.md, the actions chapters, the rules guides and the facts as markdown"><input type="checkbox" name="markdown"> project markdown</label>
+    <label title="with write to repo: ship the reach-covered gate slice — rules.acdsl, registry subset, policy, prebuilt bin/acdsl + verifier binaries; the deployed read hook activates automatically"><input type="checkbox" name="acdsl"> sync acdsl</label>
+    <label title="with write to repo and sync acdsl: also ship task-lifetime contract rules (plans/*/design/contract.acdsl and other task *.acdsl files) that reach the target"><input type="checkbox" name="task"> sync task</label>
   </form>
 </div>
 <div id="op-result"></div>
 {{if .Error}}<div class="card card-error"><span class="label">{{.Error}}</span></div>{{end}}
 {{template "_aspect_bar.html" .AspectBar}}
+{{if and .ShowProse (not .Filter.Active)}}
+<h2>baseline</h2>
+<details class="section">
+  <summary>AGENTS.md template</summary>
+  <pre class="file-view">{{.AgentsTemplate}}</pre>
+</details>
+<h2>global</h2>
+<details class="section">
+  <summary>{{t "Global session context"}}</summary>
+  <p class="meta">{{t "These files are injected verbatim into every session at start. They are rendered from the context system: reach-always entries become always-context.md on sync; the style and presentation profiles are edited on the Profile page."}}</p>
+  {{if .GlobalError}}<div class="card card-error"><span class="label">{{.GlobalError}}</span></div>{{end}}
+  {{if .GlobalFiles}}
+  <table class="grid">
+    <tbody>
+    {{range .GlobalFiles}}
+      <tr>
+        <td><a href="/context/global/{{pathEscape .Name}}">{{.Name}}</a></td>
+        <td class="meta">{{.Size}}</td>
+        <td class="meta">{{.Modified}}</td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="meta">{{t "No global context files yet."}}</p>
+  {{end}}
+  <form class="card-row" method="post" action="/context/global/toggle">
+    <span class="label"><strong>global context hook</strong></span>
+    {{if .GlobalEnabled}}
+    <span class="check-detail">{{t "Injection is ON — these files reach every session."}}</span>
+    <button type="submit">{{t "Turn injection off"}}</button>
+    {{else}}
+    <span class="check-detail">{{t "Injection is OFF — no global context reaches sessions."}}</span>
+    <button type="submit">{{t "Turn injection on"}}</button>
+    {{end}}
+  </form>
+</details>
+{{end}}
 <form id="bulk-reach" method="post" action="/context/reach/bulk">
   <input type="hidden" name="aspect" value="{{.Filter.Aspect}}">
   <input type="hidden" name="topic" value="{{.Filter.Topic}}">
@@ -25,13 +63,6 @@
 {{if .Acdsl.Show}}{{template "_acdsl.html" .Acdsl}}{{end}}
 {{if .ShowProse}}
 <div id="prose-body">
-{{if not .Filter.Active}}
-<h2>baseline</h2>
-<details class="section">
-  <summary>AGENTS.md template</summary>
-  <pre class="file-view">{{.AgentsTemplate}}</pre>
-</details>
-{{end}}
 {{range .Sections}}
 <h2>{{.Kind}}s</h2>
 {{range .Groups}}
@@ -67,6 +98,7 @@
     <span class="badge {{if eq .Entry.Kind "action"}}badge-ok{{else}}badge-dim{{end}}">{{.Entry.Kind}}</span>
     <span class="label"><a href="/context/entry/{{pathEscape .Entry.Id}}"><strong>{{.Entry.Id}}</strong></a></span>
     {{if .Entry.Reach}}<span class="badge {{if eq .Entry.Reach "smine"}}badge-dim{{else}}badge-ok{{end}}" title="{{if eq .Entry.Reach "smine"}}scoped to smine (this repo), never deploys{{else if eq .Entry.Reach "global"}}ships to every target{{else}}ships exactly to the named repos{{end}}">{{.Entry.Reach}}</span>{{end}}
+    {{if .Entry.Role}}<span class="badge badge-dim" title="{{roleTitle .Entry.Role}}">{{.Entry.Role}}</span>{{end}}
     {{if .Entry.Enforcement}}<span class="badge badge-dim" title="{{enforcementTitle .Entry.Enforcement}}">{{.Entry.Enforcement}}</span>{{end}}
     {{if .Entry.Version}}<span class="badge badge-dim badge-version">v{{.Entry.Version}}</span>{{end}}
     {{range .GatedBy}}<a class="badge badge-ok" href="/context/rule/{{pathEscape .}}" title="cited by this acdsl rule's why — the checkable slice is gated">gated: {{.}}</a>{{end}}

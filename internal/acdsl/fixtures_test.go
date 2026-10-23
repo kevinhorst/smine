@@ -44,7 +44,7 @@ func fixtureTree(t *testing.T, ruleId string, passContent, failContent string) s
 func fixtureSetup(t *testing.T) ([]Rule, map[string]RegistryEntry) {
 	t.Helper()
 	rules := []Rule{{Id: "R-001", Verifier: "fake", Anchor: `\.go$`, Why: "w"}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{grepScript(t)}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", grepScript(t)}, TimeoutSec: 10}}
 	return rules, registry
 }
 

@@ -1,0 +1,16 @@
+{{template "head" .}}
+{{template "nav" .}}
+<div class="detail-head">
+  <h1>Fleet{{if .Fleet}} — {{.Fleet}}{{end}}</h1>
+</div>
+{{template "_heartbeat_tabs" .}}
+<div class="meta">heartbeat status document, read-only — what the orchestrator sees</div>
+{{/* Placeholder only — the fragment owns the heartbeat call so the shell
+     paints instantly. `load` fires once here; the swapped-in fragment
+     re-polls itself instead, never `load` (loop). */}}
+<div id="fleet-status"
+     hx-get="/fleet/status{{if .Fleet}}?fleet={{queryEscape .Fleet}}{{end}}"
+     hx-trigger="load" hx-swap="outerHTML" hx-disinherit="*">
+  <div class="empty">Loading fleet status…</div>
+</div>
+{{template "foot" .}}

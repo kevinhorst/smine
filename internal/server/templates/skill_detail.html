@@ -1,21 +1,61 @@
 {{define "_skill_head"}}
 <div class="detail-head">
   <h1>/{{.Skill.Name}}</h1>
+  {{range .Skill.Aliases}}<span class="badge badge-dim">/{{.}}</span>{{end}}
   {{if .Skill.Version}}<span class="badge badge-dim badge-version">v{{.Skill.Version}}</span>{{end}}
+  {{with .Smoke}}{{template "_smoke_badge" .}}{{end}}
+  {{with .Unset}}<span class="badge badge-warn" title="required and unset: {{join . ", "}}">⚠ {{len .}} unset</span>{{end}}
 </div>
-<div class="meta origin">{{if eq .Skill.Origin "home"}}active{{else}}{{.Skill.Origin}}{{end}}</div>
 <div class="tabs">
+  <a href="/scripts/skills" class="tab-back">‹ Skills</a>
   <a href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}" {{if eq .Tab "skill"}}class="active"{{end}}>Skill</a>
   <a href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}/tests" {{if eq .Tab "tests"}}class="active"{{end}}>Tests</a>
+  <a href="/scripts/skills/{{.Skill.Origin}}/{{.Skill.Name}}/graph" {{if eq .Tab "graph"}}class="active"{{end}}>Graph</a>
 </div>
 {{end}}
+{{define "_smoke_badge"}}<span class="badge {{if .IsStale}}badge-dim{{else if .IsPass}}badge-ok{{else}}badge-error{{end}}" title="{{if .IsStale}}no smoke of v{{.Current}} yet — v{{.Version}} {{.Date}}{{else}}smoke of v{{.Version}}{{end}}{{if .Cause}}: {{.Cause}}{{end}}">smoke {{.Verdict}} {{if .IsStale}}v{{.Version}} · stale{{else}}{{.Date}}{{if .Coverage}} · {{.Coverage}}{{end}}{{end}}</span>{{end}}
 {{template "head" .}}
 {{template "nav" .}}
 {{template "_skill_head" .}}
 {{if .Skill.Author}}<div class="meta">by {{.Skill.Author}}</div>{{end}}
-{{if .Skill.AllowedTools}}<div class="meta">allowed-tools: {{.Skill.AllowedTools}}</div>{{end}}
 {{if .Skill.Summary}}<p class="description">{{.Skill.Summary}}</p>{{end}}
-{{if .Skill.Args}}<ul class="skill-args-list">{{range .Skill.Args}}<li><code>{{.Name}}</code> — {{.Doc}}</li>{{end}}</ul>{{end}}
+{{if .InvocationLines}}
+<details class="section skill-invocation">
+  <summary>Invocation example</summary>
+  <pre>{{range $index, $line := .InvocationLines}}{{if $index}}  {{end}}{{$line}}
+{{end}}</pre>
+</details>
+{{end}}
+{{if .Tools}}
+<details class="section skill-tools">
+  <summary>Tools <span class="count-note">{{.ToolCount}}</span></summary>
+  {{range .Tools}}
+  <div class="tool-group">
+    <span class="tool-group-key">{{.Key}}</span>
+    <span class="tool-chips">{{range .Tools}}<span class="tool-chip">{{.}}</span>{{end}}</span>
+  </div>
+  {{end}}
+</details>
+{{end}}
+{{if or .Skill.Docker .Skill.EnableDelegation .Skill.EnforcePermissions}}
+<details class="section skill-tools">
+  <summary>Runtime</summary>
+  {{if .Skill.Docker}}<div class="tool-group"><span class="tool-group-key">docker</span><span class="tool-chips"><span class="tool-chip">{{.Skill.Docker}}</span></span></div>{{end}}
+  {{if .Skill.EnableDelegation}}<div class="tool-group"><span class="tool-group-key">enable-delegation</span><span class="tool-chips"><span class="tool-chip">{{.Skill.EnableDelegation}}</span></span></div>{{end}}
+  {{if .Skill.EnforcePermissions}}<div class="tool-group"><span class="tool-group-key">enforce-permissions</span><span class="tool-chips"><span class="tool-chip">{{.Skill.EnforcePermissions}}</span></span></div>{{end}}
+</details>
+{{end}}
+{{if or .Env.Providers .Env.Standalone}}
+<details class="section skill-env" open>
+  <summary>Environment <span class="count-note">{{.EnvCount}}</span></summary>
+  {{template "_skill_env.html" .Env}}
+</details>
+{{end}}
+{{if .Toc}}
+<nav class="skill-toc">
+  <ol>{{range .Toc}}<li><a href="#{{.Anchor}}">{{.Title}}</a></li>{{end}}</ol>
+</nav>
+{{end}}
 {{if .File}}
 <div class="card">
   <span class="label">{{.File}}</span>
@@ -23,7 +63,7 @@
 </div>
 <pre class="file-view">{{.FileContent}}</pre>
 {{else}}
-<div class="md-body">{{.Body}}</div>
+<div class="md-body skill-doc">{{.Body}}</div>
 {{if .Skill.Files}}
 <h2>Files</h2>
 {{range .Skill.Files}}
@@ -32,6 +72,20 @@
      href="/scripts/skills/{{$.Skill.Origin}}/{{$.Skill.Name}}/file?f={{queryEscape .}}">{{.}}</a>
 </div>
 {{end}}
+{{end}}
+{{if .TitleError}}
+<div class="card card-error"><span class="label">{{.TitleError}}</span></div>
+{{end}}
+{{if .TitleStates}}
+<h2 id="title-states">Title states</h2>
+<table class="md-body checklist-table">
+  <thead><tr><th>State</th><th>Meaning</th><th>Gate entry</th></tr></thead>
+  <tbody>
+    {{range .TitleStates}}
+    <tr><td><span class="badge badge-action">{{.State}}</span></td><td>{{.Meaning}}</td><td><code>{{.Entry}}</code></td></tr>
+    {{end}}
+  </tbody>
+</table>
 {{end}}
 {{if .ChangelogError}}
 <div class="card card-error"><span class="label">{{.ChangelogError}}</span></div>
@@ -46,21 +100,34 @@
     {{end}}
   </tbody>
 </table>
+{{if .ChangelogOlder}}
+<details class="section">
+  <summary>Older versions <span class="count-note">{{len .ChangelogOlder}}</span></summary>
+  <table class="md-body checklist-table">
+    <tbody>
+      {{range .ChangelogOlder}}
+      <tr><td>{{.Version}}</td><td>{{.Date}}</td><td>{{.Text}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</details>
+{{end}}
 {{end}}
 {{if .Invocations}}
 <h2>Invocations ({{len .Invocations}})</h2>
-<table class="md-body checklist-table">
+<table class="md-body checklist-table" id="skill-invocations">
   <thead><tr><th>Batch</th><th>Date</th><th>Session</th></tr></thead>
   <tbody>
     {{range .Invocations}}
-    <tr>
-      <td><a href="/sessions/{{.Scope}}/{{.BatchNumber}}?session={{queryEscape .SessionId}}">{{.Scope}} #{{.BatchNumber}}</a></td>
-      <td>{{.BatchDate}}</td>
+    <tr data-stamp="{{.LastActive}}">
+      <td><a href="/sessions/{{.Scope}}/{{.Week}}?session={{queryEscape .SessionId}}">{{.Scope}} {{.Week}}</a></td>
+      <td>{{.LastActive}}</td>
       <td>{{$peekURL := peekSessionURL .SessionId}}{{if $peekURL}}<a href="{{$peekURL}}" title="{{.SessionId}} — open in peek">{{.SessionTitle}}</a>{{else}}{{.SessionTitle}}{{end}}</td>
     </tr>
     {{end}}
   </tbody>
 </table>
+{{template "_run_bands.html" "skill-invocations"}}
 {{end}}
 {{if .Examples}}
 <h2>Examples</h2>
@@ -72,4 +139,6 @@
 {{end}}
 {{end}}
 {{end}}
+<script src="/assets/mermaid.min.js?v={{assetVersion}}"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
 {{template "foot" .}}

@@ -1,8 +1,4 @@
-// Package acdsl implements the agentic context DSL: rules declared as
-// one-line //acdsl: markers (centrally in acdsl/rules.acdsl, task contracts
-// in *.acdsl files, inline in Go source as the single-file exception),
-// anchors as path regexps over the repo's files, and checks delegated to
-// registered verifiers (exit 0 = pass).
+// Package acdsl implements the agentic context DSL: marker-declared rules checked by registered verifiers.
 package acdsl
 
 import (
@@ -15,9 +11,7 @@ import (
 	"github.com/kevinhorst/smine/internal/reach"
 )
 
-// Marker is the rule-declaration prefix in the //-comment file classes — Go
-// source and standalone .acdsl files. Other file classes declare with their
-// own comment prefix (declarationMarker).
+// Other file classes declare with their own comment prefix (declarationMarker).
 const Marker = "//acdsl:"
 
 // Rule is one declared doctrine rule — data only, never code.
@@ -37,9 +31,7 @@ type Rule struct {
 	Line       int
 }
 
-// Lifetime values. A task entry lives for one job and is archived with it,
-// never synced as pack content. Lifetime is plain data — the tool attaches
-// no meaning to where an entry is declared.
+// A task entry lives for one job and is archived with it, never synced as pack content.
 const (
 	LifetimeDoctrine = "doctrine"
 	LifetimeTask     = "task"
@@ -47,9 +39,7 @@ const (
 
 var fieldRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9-]*)=("(?:[^"\\]|\\.)*")`)
 
-// ParseRules scans fileLines (repo-relative path → lines) for markers.
-// Authoring problems are returned as violations, not errors — mirrors
-// contextdocs.ValidateRules so the CLI prints one line per problem.
+// Authoring problems are violations, not errors, mirroring contextdocs.ValidateRules.
 func ParseRules(fileLines map[string][]string) ([]Rule, []string) {
 	var rules []Rule
 	var violations []string
@@ -91,9 +81,6 @@ func ParseRules(fileLines map[string][]string) ([]Rule, []string) {
 	return rules, violations
 }
 
-// declarationMarker resolves a path's rule-marker form: the file class's
-// trimmed comment prefix + "acdsl:", plus the class's trimmed terminator for
-// block-comment syntaxes. .acdsl files carry the language's own //acdsl: form.
 func declarationMarker(path string) (string, string, bool) {
 	if strings.EqualFold(filepath.Ext(path), ".acdsl") {
 		return Marker, "", true
@@ -105,8 +92,6 @@ func declarationMarker(path string) (string, string, bool) {
 	return strings.TrimSpace(syntax.linePrefix) + "acdsl:", strings.TrimSpace(syntax.lineSuffix), true
 }
 
-// parseMarker parses one declaration's rest — the marker line with its
-// class's marker prefix and terminator already stripped.
 func parseMarker(rest, path string, lineNo int) (Rule, []string) {
 	at := func(msg string) string { return fmt.Sprintf("%s:%d: %s", path, lineNo, msg) }
 
@@ -175,14 +160,15 @@ func parseMarker(rest, path string, lineNo int) (Rule, []string) {
 	}
 	if rule.Reach == "" {
 		rule.Reach = reach.ThisRepo
+	} else if rule.Reach == reach.Always {
+		violations = append(violations, at(rule.Id+": always reach is for context entries — gates run per repo"))
 	} else if !reach.Valid(rule.Reach) {
 		violations = append(violations, at(rule.Id+": reach must be global, none, or a comma-separated repo-name list"))
 	}
 	return rule, violations
 }
 
-// FilterLifetime narrows rules to the selected lifetime: "doctrine", "task",
-// or "all". The audit gates doctrine by default; the task gate is explicit.
+// The audit gates doctrine by default; the task gate is explicit.
 func FilterLifetime(rules []Rule, selector string) ([]Rule, error) {
 	if selector == "all" {
 		return rules, nil
@@ -199,8 +185,7 @@ func FilterLifetime(rules []Rule, selector string) ([]Rule, error) {
 	return filtered, nil
 }
 
-// FilterId narrows rules to one id across all lifetimes — the generation
-// dry-run gates a freshly authored rule repo-wide before it is accepted.
+// The generation dry-run gates a freshly authored rule repo-wide before it is accepted.
 func FilterId(rules []Rule, id string) ([]Rule, error) {
 	for _, rule := range rules {
 		if rule.Id == id {
@@ -210,9 +195,7 @@ func FilterId(rules []Rule, id string) ([]Rule, error) {
 	return nil, fmt.Errorf("FilterId: no rule with id %q", id)
 }
 
-// unquoteField strips the surrounding quotes and resolves only \" and \\ —
-// every other backslash stays literal, so regexp values like \.go$ survive.
-// strconv.Unquote would reject them as invalid Go escapes.
+// Only \" and \\ resolve so regexp values like \.go$ survive; strconv.Unquote would reject them.
 func unquoteField(quoted string) string {
 	inner := quoted[1 : len(quoted)-1]
 	var builder strings.Builder

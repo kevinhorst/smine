@@ -1,0 +1,228 @@
+{{define "_fleet_status.html"}}
+<div id="fleet-status" class="fl-status"
+     hx-get="/fleet/status{{if .Filter}}?fleet={{queryEscape .Filter}}{{end}}"
+     hx-trigger="every 5s, fleet-op from:body" hx-swap="outerHTML" hx-disinherit="*">
+{{if .StatusErr}}
+<div class="card card-error"><span class="label">fleet state unavailable: {{.StatusErr}}</span></div>
+{{else}}
+{{range .Problems}}
+<details class="card card-error fl-problem"><summary class="label">{{.Summary}}</summary>
+  {{range .Details}}<div><code>{{.}}</code></div>{{end}}
+</details>
+{{end}}
+
+<h2>human-layer queue</h2>
+<div class="meta">what only you can act on: permission candidates, members waiting on you, merge-ready members without <code>/done</code>, a sync to run or unblock, and a target ready for main or missing</div>
+{{if .Queue}}
+<div class="table-scroll"><table class="md-body checklist-table fl-queue">
+  <thead><tr>
+    <th title="why this item needs a human">kind</th>
+    <th title="fleet the item belongs to">fleet</th>
+    <th title="member, session or integration branch">subject</th>
+    <th title="candidate rule, wait reason or state detail">detail</th>
+    <th title="when the condition began">since</th>
+  </tr></thead>
+  <tbody>
+  {{range .Queue}}
+  <tr>
+    <td class="fl-kind"><span class="badge badge-error">{{.Kind.Label}}</span></td>
+    <td>{{.Fleet}}</td>
+    <td>{{.Subject}}</td>
+    <td><code>{{.Detail}}</code></td>
+    <td class="fl-time">{{if .Since}}{{stampTime .Since}}{{end}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">Nothing waits on a human.</div>
+{{end}}
+
+{{range .Fleets}}
+{{$fleet := .Fleet.Id}}
+<h2>fleet {{.Fleet.Id}}</h2>
+<div class="item-fields fl-fields">
+  {{if .Fleet.Instance}}<span class="field-key">run</span><span title="{{.Fleet.Instance}}, started {{stampTime .Fleet.StartedAt}}"><code>{{slice .Fleet.Instance 0 8}}</code></span>{{end}}
+  {{if .Fleet.Target}}
+  <span class="field-key">target</span><span title="{{.Fleet.Repo}}"><code>{{.Fleet.Target}}</code></span>
+  <span class="field-key">merge branch</span><span title="the orchestrator's branch every merge lands on"><code>{{.Fleet.MergeBranch}}</code></span>
+  <span class="field-key">state</span><span><span class="badge badge-{{.Fleet.TargetState.Tone}}">{{.Fleet.TargetState}}</span>{{if and .Fleet.Synced (eq .Fleet.TargetState "integrated")}} <span class="badge badge-ok" title="the target holds the merge branch's work">synced</span>{{end}}</span>
+  <span class="field-key">collisions</span><span>{{if .Fleet.OutsideCollisions}}all branches{{else}}fleet branches only{{end}}</span>
+  {{else}}<span class="field-key">state</span><span><span class="badge badge-dim">no active subscription</span></span>{{end}}
+</div>
+{{if .Fleet.Foreign}}<div class="card card-error"><span class="label">joined from another repository, never members: {{join .Fleet.Foreign ", "}}</span></div>{{end}}
+{{if .Train}}<div class="fl-train"><span class="field-key">train</span>
+  {{range .Train}}<span class="badge badge-{{.State.Tone}}" title="{{if .BlockedBy}}blocked by {{join .BlockedBy ", "}} on {{join .Paths ", "}}{{else}}{{.State}}{{end}}">{{.Position}} {{.Branch}}</span>{{end}}
+</div>{{end}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr>
+    <th title="session lifecycle state, for a worker running or ended; delivered once the member ran /done or the orchestrator reported the worker's result">state</th>
+    <th title="member token, then session title or worker name">member</th>
+    <th title="operator (the orchestrator), member (joined) or worker (a cell the orchestrator launched)">role</th>
+    <th title="last Skill tool call">latest skill</th>
+    <th title="plan dirs of the member branch's worktree">work item</th>
+    <th title="member branch in the fleet's repo">branch</th>
+    <th title="integration state against the fleet target">branch state</th>
+    <th title="when the state was entered">since</th>
+    <th title="the session's last hook">last active</th>
+  </tr></thead>
+  <tbody>
+  {{range .Members}}
+  <tr>
+    <td><span class="badge badge-{{.Tone}}">{{.State}}</span>{{if .Delivered}} <span class="badge badge-ok">delivered</span>{{end}}</td>
+    <td title="{{.Id}}">{{if .Token}}<span class="badge badge-dim">{{.Token}}</span> {{end}}{{if .Name}}{{(titleView .Name).Text}}{{else}}{{.Id}}{{end}} {{template "_title_state" titleView .Title}}{{if .MemberId}} <button type="button" class="small"
+          hx-post="/fleet/{{pathEscape $fleet}}/members/{{pathEscape .MemberId}}/remove" hx-swap="none"
+          hx-confirm="Remove {{.Token}} from fleet {{$fleet}}?"
+          title="remove this member — heartbeat remove">Remove</button>{{end}}</td>
+    <td>{{.Role}}</td>
+    <td>{{.Skill}}</td>
+    <td>{{.WorkItem}}</td>
+    <td>{{.Branch}}</td>
+    <td>{{if .BranchState}}<span class="badge badge-{{.BranchState.Tone}}">{{.BranchState}}</span>{{end}}</td>
+    <td class="fl-time">{{if .Since}}{{stampTime .Since}}{{end}}</td>
+    <td class="fl-time">{{if .LastActive}}{{stampTime .LastActive}}{{end}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{with .Fleet.JournalNewestFirst}}
+<div class="table-scroll"><table class="md-body checklist-table fl-journal">
+  <thead><tr>
+    <th title="when the orchestrator recorded it">at</th>
+    <th title="assigned, decided, merged, spawned or note">kind</th>
+    <th title="member letters the entry concerns">members</th>
+    <th>subject</th>
+    <th title="why, or the evidence">detail</th>
+  </tr></thead>
+  <tbody>
+  {{range .}}
+  <tr>
+    <td class="fl-time" title="{{.By}}">{{stampTime .At}}</td>
+    <td><span class="badge badge-dim">{{.Kind}}</span></td>
+    <td>{{join .Members ", "}}</td>
+    <td>{{.Subject}}</td>
+    <td>{{.Detail}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No journal entries.</div>
+{{end}}
+{{end}}
+
+<h2 title="every collision of the fleet's repo when ?fleet= is set, else of all registered repos; the orchestrator acts only where a side is a member branch">collisions</h2>
+{{if .Document.Collisions}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr>
+    <th title="planned_file, planned_symbol, touched, confirmed">level</th>
+    <th>side a</th><th>side b</th>
+    <th>paths</th>
+  </tr></thead>
+  <tbody>
+  {{range .Document.Collisions}}
+  <tr>
+    <td><span class="badge badge-error">{{.Level}}</span></td>
+    <td>{{.A}}</td><td>{{.B}}</td>
+    <td class="fl-paths">{{range headPaths .Paths}}<div title="{{.}}">{{shortPath .}}</div>{{end}}
+      {{with tailPaths .Paths}}<details><summary>+{{len .}} more</summary>{{range .}}<div title="{{.}}">{{shortPath .}}</div>{{end}}</details>{{end}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No collisions.</div>
+{{end}}
+
+<h2 title="per registered repo and landing target: who holds the landing turn and who waits; for the staging target also whether it can be released to the default branch by a fast-forward; nothing here blocks a release">landings</h2>
+{{if .Document.Landings}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr>
+    <th>repo</th>
+    <th title="the branch a landing moves">target</th>
+    <th title="staging target only — releasable: the default branch's tip is in it; diverged: the default branch holds commits it lacks; absent: not created yet">release</th>
+    <th title="commits the staging target holds and the default branch lacks">unreleased</th>
+    <th title="the session that lands now">turn</th>
+    <th title="accepted sessions waiting for the turn, oldest first">queue</th>
+  </tr></thead>
+  <tbody>
+  {{range .Document.Landings}}
+  <tr>
+    <td title="{{.Repo}}">{{shortPath .Repo}}</td>
+    <td>{{.Branch}}</td>
+    <td>{{with .Release}}<span class="badge badge-{{.State.Tone}}">{{.State}}</span>{{end}}</td>
+    <td>{{with .Release}}{{.Unreleased}}{{end}}</td>
+    <td>{{with .Holder}}<span title="{{.SessionId}}">{{if .Title}}{{.Title}}{{else}}{{.SessionId}}{{end}}</span> <span class="meta">{{stampTime .Since}}</span>{{else}}<span class="meta">free</span>{{end}}</td>
+    <td>{{range .Queue}}<div title="{{.SessionId}}">{{if .Title}}{{.Title}}{{else}}{{.SessionId}}{{end}} <span class="meta">{{stampTime .Since}}</span></div>{{end}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No landings.</div>
+{{end}}
+
+<h2 title="sessions of joined members and the orchestrator, plus worker cells in a worker's branch">fleet sessions</h2>
+{{if .Sessions}}
+<div class="table-scroll"><table class="md-body checklist-table">
+  <thead><tr>
+    <th>state</th><th>session</th><th title="last Skill tool call">latest skill</th><th title="subagents running or blocked">subagents</th><th>since</th><th title="the session's last hook">last active</th>
+  </tr></thead>
+  <tbody>
+  {{range .Sessions}}
+  <tr>
+    <td><span class="badge badge-{{.State.Tone}}">{{.State}}</span>{{if .WaitingFor}} <span class="meta">{{.WaitingFor}}</span>{{end}}{{if .Blocked}} <code>{{.Blocked.CandidateRule}}</code>{{end}}</td>
+    <td title="{{.Id}}">{{if .Title}}{{with titleView .Title}}{{.Text}} {{template "_title_state" .}}{{end}}{{else}}{{.Id}}{{end}}{{if .SinceRestart}} <span class="meta" title="state seeded from the registry after a heartbeat restart">*</span>{{end}}</td>
+    <td>{{.ActiveSkill}}</td>
+    <td>{{len .Subagents}}</td>
+    <td class="fl-time">{{stampTime .StateSince}}</td>
+    <td class="fl-time">{{with .LastEvent}}<span title="{{.Name}}">{{stampTime .At}}</span>{{end}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else}}
+<div class="empty">No fleet sessions.</div>
+{{end}}
+
+<div class="meta">heartbeat {{.Document.Heartbeat.Version}} on {{.Document.Heartbeat.Addr}} · {{.Document.Heartbeat.ClaudeHome}} · up since {{stampTime .Document.Heartbeat.StartedAt}} · events applied {{.Document.Heartbeat.EventsApplied}}</div>
+{{end}}
+
+<h2 title="fleet runs that dissolved once no member and no orchestrator remained; each archive file holds the whole run">archived fleets</h2>
+{{if .ArchiveErr}}
+<div class="card card-error"><span class="label">archived fleets unavailable: {{.ArchiveErr}}</span></div>
+{{end}}
+{{if .Archived}}
+<div class="table-scroll"><table class="md-body checklist-table fl-archive">
+  <thead><tr>
+    <th>fleet</th>
+    <th title="the run's UUID">run</th>
+    <th>started</th>
+    <th>dissolved</th>
+    <th title="integration branch, last seen">target</th>
+    <th title="the orchestrator's branch, last seen">merge branch</th>
+    <th title="the target held the merge branch's work, last seen">synced</th>
+    <th title="everyone who was a member, the operator included">members</th>
+    <th title="journal entries">journal</th>
+  </tr></thead>
+  <tbody>
+  {{range .Archived}}
+  <tr>
+    <td><a href="/fleet/archive/{{pathEscape .Instance}}">{{.Fleet}}</a></td>
+    <td title="{{.Instance}}"><code>{{.ShortInstance}}</code></td>
+    <td class="fl-time">{{stampTime .StartedAt}}</td>
+    <td class="fl-time">{{stampTime .DissolvedAt}}</td>
+    <td title="{{.Repo}}">{{.Target}}</td>
+    <td>{{.MergeBranch}}</td>
+    <td>{{if .Synced}}<span class="badge badge-ok">synced</span>{{else if .MergeBranch}}<span class="badge badge-dim">not synced</span>{{end}}</td>
+    <td>{{len .Members}}</td>
+    <td>{{len .Journal}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table></div>
+{{else if not .ArchiveErr}}
+<div class="empty">No archived fleets.</div>
+{{end}}
+</div>
+{{end}}

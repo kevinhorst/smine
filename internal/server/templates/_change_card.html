@@ -1,0 +1,52 @@
+{{define "_change_card.html"}}
+<details class="card card-proposal" id="change-{{.ShortSha}}" data-verdict="{{.Verdict.Label}}" data-kind="{{.Commit.Kind}}" data-night="{{.Night}}">
+  <summary onclick="if (!event.target.closest('.proposal-caret')) event.preventDefault()">
+    <span class="proposal-caret" title="{{t "open or collapse"}}"></span>
+    {{if or (not .IsDisabled) .ProbeReason}}<input type="checkbox" class="bulk-check" name="sha" value="{{.Commit.Sha}}" onclick="event.stopPropagation()">{{end}}
+    <span class="badge badge-dim proposal-kind">{{.Commit.Kind}}</span>
+    <span class="proposal-main">
+      <span class="proposal-title">{{.Problem}}{{range .Tasks}}{{with .Backlog}} <span class="badge badge-dim">{{.}}</span>{{end}}{{end}}</span>
+      {{if .Tasks}}<span class="proposal-subject">{{.Commit.Subject}}</span>{{end}}
+    </span>
+    <span class="proposal-side">
+      <span class="proposal-meta">{{len .Commit.Files}} {{t "files"}} · +{{.Commit.Added}} −{{.Commit.Deleted}}{{with .SessionAge}} · {{.}}{{end}} · <code class="proposal-sha">{{.ShortSha}}</code></span>
+      <span class="badge {{.Verdict.Class}}"{{with .Verdict.Reason}} title="{{.}}"{{end}}>{{t .Verdict.Label}}</span>
+    </span>
+  </summary>
+  <div class="proposal-body">
+    {{if .Verdict.Reason}}<div class="finding"><span class="badge {{.Verdict.Class}}">{{t .Verdict.Label}}</span><span class="finding-content label">{{.Verdict.Reason}}</span></div>{{end}}
+    {{range .Tasks}}
+    {{if .Evidence}}
+    <div class="finding change-evidence"><span class="badge badge-dim">{{t "evidence"}}</span>
+      <div class="finding-content">{{range .Evidence}}<blockquote class="evidence-quote">{{.Quote}} {{if .URL}}<a class="badge badge-dim" href="{{.URL}}" title="{{.Session.Id}}">{{printf "%.8s" .Session.Id}}</a>{{else}}<code title="{{.Session.Id}}">{{printf "%.8s" .Session.Id}}</code>{{end}}</blockquote>{{end}}</div>
+    </div>
+    {{end}}
+    {{end}}
+    {{if and (not .Tasks) .Commit.Body}}<div class="finding"><span class="badge badge-dim">{{t "finding"}}</span><span class="finding-content label change-body">{{.Commit.Body}}</span></div>{{end}}
+    {{if .Files}}
+    <div class="finding change-files"><span class="badge badge-dim">{{t "changes"}}</span>
+      <div class="finding-content">
+        {{range .Files}}
+        <details class="change-file">
+          <summary><span class="change-path">{{.Path}}</span><span class="meta">+{{.Added}} −{{.Deleted}}</span><code class="change-status">{{.Status}}</code></summary>
+          {{if .DiffLines}}{{template "_diff.html" .DiffLines}}{{else}}<div class="meta">{{t "no diff"}}</div>{{end}}
+        </details>
+        {{end}}
+      </div>
+    </div>
+    {{end}}
+    {{if .Sessions}}
+    <div class="finding">
+      <span class="badge badge-dim">{{t "sessions"}}</span>
+      <span class="finding-content meta">{{range $index, $session := .Sessions}}{{if $index}}, {{end}}{{if .URL}}<a href="{{.URL}}" title="{{.Id}}"><code>{{printf "%.8s" .Id}}</code></a>{{else}}<code title="{{.Id}}">{{printf "%.8s" .Id}}</code>{{end}}{{end}}</span>
+    </div>
+    {{end}}
+    {{if or (not .IsDisabled) .ProbeReason}}
+    <div class="pick-row">
+      {{if not .IsDisabled}}<button type="button" class="small pick-one" hx-post="/api/proposals/pick/{{.Commit.Sha}}" hx-params="none" hx-target="#proposals-body" hx-swap="innerHTML" title="{{t "Pick this change onto main"}}">{{t "Pick"}}</button>{{end}}
+      <button type="button" class="small reject-one" hx-post="/api/proposals/reject/{{.Commit.Sha}}" hx-params="none" hx-target="#proposals-body" hx-swap="innerHTML" hx-prompt="{{t "Reject this change — never picked, never proposed again. Reason (optional), logged and shown to the miners:"}}" title="{{t "Reject this change"}}">{{t "Reject"}}</button>
+    </div>
+    {{end}}
+  </div>
+</details>
+{{end}}

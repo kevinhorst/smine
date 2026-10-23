@@ -8,12 +8,7 @@ import (
 	"github.com/kevinhorst/smine/internal/reach"
 )
 
-// SetEntryReach rewrites the Reach bullet of one entry in its source
-// markdown file: replacing an existing "* Reach: " bullet inside the entry's
-// bullet region, else inserting one after the region's last bullet. The
-// bullet region is what parseRulesFile attaches to the entry — the
-// contiguous run of bullet and blank lines directly after the headline. The
-// caller regenerates context.json (WriteContextFile).
+// The bullet region is the run parseRulesFile attaches; the caller regenerates context.json.
 func SetEntryReach(dir string, id string, value string) error {
 	if !reach.Valid(value) {
 		return fmt.Errorf("SetEntryReach: invalid reach %q", value)
@@ -66,8 +61,7 @@ func SetEntryReach(dir string, id string, value string) error {
 
 	insertAt := lastBullet + 1
 	if lastBullet == -1 {
-		// Bullet-less entry: keep the blank separator between the headline
-		// and its first bullet when one is already there.
+		// Bullet-less entry: keep an existing blank separator after the headline.
 		insertAt = start + 1
 		if insertAt < len(lines) && strings.TrimSpace(lines[insertAt]) == "" {
 			insertAt++

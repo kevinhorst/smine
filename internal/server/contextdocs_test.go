@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -11,21 +12,37 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/contextdocs"
+	"github.com/kevinhorst/smine/internal/reach"
+	"github.com/kevinhorst/smine/internal/shell"
 )
+
+func TestEnforcementTitleAndRoleTitle(t *testing.T) {
+	for _, channel := range []string{channelGate, channelHook, channelLint, channelSchema, channelProse} {
+		assert.NotEmpty(t, enforcementTitle(channel), channel)
+	}
+	assert.Empty(t, enforcementTitle("manual"))
+
+	for _, role := range []string{roleStep, roleStop, rolePayload} {
+		assert.NotEmpty(t, roleTitle(role), role)
+	}
+	assert.Empty(t, roleTitle("bogus"))
+}
 
 // writeRegistryFixture returns a repos.json path with one repo "demo" at
 // targetPath, so context tests can select it in the target dropdown.
 func writeRegistryFixture(t *testing.T, targetPath string) string {
 	t.Helper()
 	reposPath := filepath.Join(t.TempDir(), "repos.json")
-	registry := `{"repos": [{"name": "demo", "path": "` + targetPath + `"}]}`
+	registry := `{"repos": [{"name": "demo", "path": ` + jsonString(t, targetPath) + `}]}`
 	require.NoError(t, os.WriteFile(reposPath, []byte(registry), 0o644))
 	return reposPath
 }
 
 func writeContextFixture(t *testing.T) string {
 	t.Helper()
-	src := t.TempDir()
+	src := filepath.Join(t.TempDir(), contextdocs.SourceContextDir)
 	require.NoError(t, os.MkdirAll(filepath.Join(src, "actions"), 0755))
 	require.NoError(t, os.MkdirAll(filepath.Join(src, "rules"), 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(src, "AGENTS.md"), []byte("<!-- template marker -->\n# Agents"), 0644))
@@ -33,20 +50,25 @@ func writeContextFixture(t *testing.T) string {
 	require.NoError(t, os.WriteFile(filepath.Join(src, "rules", "go.md"), []byte("# Go Style"), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(src, "rules", "notes.txt"), []byte("plain"), 0644))
 	require.NoError(t, os.WriteFile(filepath.Join(src, "actions", "navigation.md"),
-		[]byte("**ACTION-NAV-001** `[review]` — Never scan.\n\n* Applies: everywhere.\n"), 0644))
+		[]byte("**ACTION-NAV-001** `[prose]` — Never scan.\n\n* Applies: everywhere.\n"), 0644))
 	contextJson := `{"entries": [
-		{"id": "ACTION-NAV-001", "kind": "action", "scope": "NAV", "content": {"statement": "Never scan."}, "enforcement": "review", "reach": "global", "version": "1.0", "source": "context/actions/navigation.md"},
-		{"id": "RULE-NAV-INTEG-001", "kind": "rule", "scope": "NAV", "topic": "INTEG", "content": {"statement": "Names are verbose."}, "enforcement": "review", "reach": "smine", "version": "1.0", "source": "context/rules/go.md"},
+		{"id": "ACTION-NAV-001", "kind": "action", "origin": "baseline", "scope": "NAV", "content": {"statement": "Never scan.", "applies": "everywhere."}, "enforcement": "prose", "reach": "global", "version": "1.0", "source": "context/actions/navigation.md"},
+		{"id": "RULE-NAV-INTEG-001", "kind": "rule", "scope": "NAV", "topic": "INTEG", "content": {"statement": "Names are verbose."}, "enforcement": "prose", "reach": "smine", "version": "1.0", "source": "context/rules/go.md"},
 		{"id": "FACT-NAV-001", "kind": "fact", "scope": "NAV", "content": {"statement": "Go services."}, "reach": "global", "version": "1.0", "source": "context/facts/repo.md"}],
 		"aspects": [{"name": "INTEG", "scope": "Data integrity", "class": "topic"}, {"name": "NAV", "scope": "Navigation", "class": "scope"}]}`
 	require.NoError(t, os.WriteFile(filepath.Join(src, "context.json"), []byte(contextJson), 0644))
+	aspects := []contextdocs.RuleAspect{
+		{Name: "INTEG", Scope: "Data integrity", Class: "topic"},
+		{Name: "NAV", Scope: "Navigation", Class: "scope"},
+	}
+	require.NoError(t, contextdocs.SaveAspects(src, aspects))
 	return src
 }
 
 func TestContextIndex(t *testing.T) {
 	server := newTestServer(t, &Options{
 		ContextDir: writeContextFixture(t),
-		ReposPath:  writeRegistryFixture(t, "/tmp/target"),
+		ReposPath:  writeRegistryFixture(t, t.TempDir()),
 	})
 
 	response := httptest.NewRecorder()
@@ -73,7 +95,7 @@ func TestContextIndex(t *testing.T) {
 	assert.Contains(t, body, `<option value="demo">demo</option>`)
 	assert.Contains(t, body, `name="context-dir"`)
 	assert.NotContains(t, body, `name="lang"`)
-	assert.Contains(t, body, `name="symlink"`)
+	assert.NotContains(t, body, `name="symlink"`)
 	assert.Contains(t, body, `id="aspect-bar"`)
 	assert.Contains(t, body, ">NAV (0/3)</a>")
 	assert.Contains(t, body, ">INTEG (1)</a>")
@@ -103,9 +125,9 @@ func TestContextIndex(t *testing.T) {
 
 func TestContextFilterURL(t *testing.T) {
 	filter := contextFilter{Aspect: "GOLANG", Layer: "acdsl", Lifetime: "task", Reach: "go", Topic: "ERR"}
-	assert.Equal(t, "/context?aspect=GOLANG&layer=acdsl&lifetime=task&reach=go&topic=ERR", filter.URL())
+	assert.Equal(t, "/context?aspect=GOLANG&layer=acdsl&lifetime=task&reach=go&topic=ERR", filter.URL("/context"))
 	assert.True(t, filter.Active())
-	assert.Equal(t, "/context", contextFilter{}.URL())
+	assert.Equal(t, "/context", contextFilter{}.URL("/context"))
 	assert.False(t, contextFilter{}.Active())
 
 	// changing the scope clears the topic; other axes are preserved
@@ -122,7 +144,7 @@ func TestContextFilterURL(t *testing.T) {
 func TestContextIndexLayerAndLifetimeFilters(t *testing.T) {
 	server := newTestServer(t, &Options{
 		ContextDir: writeContextFixture(t),
-		ReposPath:  writeRegistryFixture(t, "/tmp/target"),
+		ReposPath:  writeRegistryFixture(t, t.TempDir()),
 	})
 
 	get := func(target string) string {
@@ -143,10 +165,36 @@ func TestContextIndexLayerAndLifetimeFilters(t *testing.T) {
 	assert.NotContains(t, body, "template marker")
 	assert.Contains(t, body, `<details class="section" open`)
 
-	// layer=acdsl hides the prose body entirely
+	// layer=acdsl hides the prose body entirely, baseline and global with it
 	body = get("/context?layer=acdsl")
 	assert.Contains(t, body, `id="acdsl-section"`)
 	assert.NotContains(t, body, `id="prose-body"`)
+	assert.NotContains(t, body, "<h2>baseline</h2>")
+	assert.NotContains(t, body, "<h2>global</h2>")
+
+	// unfiltered: baseline renders before global, global before acdsl
+	body = get("/context")
+	baselineAt := strings.Index(body, "<h2>baseline</h2>")
+	globalAt := strings.Index(body, "<h2>global</h2>")
+	acdslAt := strings.Index(body, `id="acdsl-section"`)
+	require.NotEqual(t, -1, baselineAt)
+	require.NotEqual(t, -1, globalAt)
+	require.NotEqual(t, -1, acdslAt)
+	assert.Less(t, baselineAt, globalAt)
+	assert.Less(t, globalAt, acdslAt)
+	assert.Contains(t, body, `action="/context/global/toggle"`)
+	// the global toggle form closes before the bulk form opens, so every item
+	// checkbox below belongs to bulk-reach
+	toggleAt := strings.Index(body, `action="/context/global/toggle"`)
+	bulkFormAt := strings.Index(body, `<form id="bulk-reach"`)
+	require.NotEqual(t, -1, bulkFormAt)
+	assert.Less(t, toggleAt, bulkFormAt)
+	assert.Less(t, bulkFormAt, acdslAt)
+	// the reserved options carry the exclusive marker, repo names do not
+	assert.Contains(t, body, `value="global" data-exclusive`)
+	assert.Contains(t, body, `value="none" data-exclusive`)
+	assert.Contains(t, body, `value="smine" form="bulk-reach"`)
+	assert.NotContains(t, body, `value="smine" data-exclusive`)
 
 	// the filter card carries layer and lifetime chip rows
 	body = get("/context")
@@ -270,53 +318,67 @@ func TestContextDoc(t *testing.T) {
 	})
 }
 
-func TestContextSyncRendersStubOutput(t *testing.T) {
-	syncScripts := t.TempDir()
-	stub := "#!/bin/sh\necho \"context-sync $*\"\n"
-	require.NoError(t, os.WriteFile(filepath.Join(syncScripts, "sync_context.sh"), []byte(stub), 0o755))
+func TestContextSync(t *testing.T) {
+	target := t.TempDir()
+	_, err := shell.Run(context.Background(), target, "git", "init", "-q")
+	require.NoError(t, err)
+	stateDir := t.TempDir()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	server := newTestServer(t, &Options{
-		ContextDir:     writeContextFixture(t),
-		ReposPath:      writeRegistryFixture(t, "/tmp/target"),
-		SyncScriptsDir: syncScripts,
+		ContextDir: writeContextFixture(t),
+		ReposPath:  writeRegistryFixture(t, target),
+		StateDir:   stateDir,
 	})
 
-	t.Run("resolves-name-and-syncs-all-languages", func(t *testing.T) {
+	t.Run("default-builds-the-record-only", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		values := url.Values{
-			"context-dir": {"docs"},
-			"symlink":     {"on"},
-			"prose":       {"on"},
-			"acdsl":       {"on"},
-			"name":        {"demo"},
-		}
+		values := url.Values{"context-dir": {"docs"}, "name": {"demo"}}
 		server.Handler().ServeHTTP(response, formPost("/context/sync", values))
 		require.Equal(t, http.StatusOK, response.Code)
-		assert.Contains(t, response.Body.String(), "context-sync --context-dir docs --langs go --symlink /tmp/target")
+		assert.Contains(t, response.Body.String(), "overlay.patch")
+		assert.Contains(t, response.Body.String(), "not written (write to repo off)")
+		assert.FileExists(t, contextdocs.DeployRecordPath(stateDir, "demo"))
+		assert.NoFileExists(t, filepath.Join(target, "docs", "context.json"))
 	})
 
-	t.Run("unchecked-prose-passes-no-prose", func(t *testing.T) {
+	t.Run("write-to-repo-writes-the-two-files", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		values := url.Values{
-			"context-dir": {"docs"},
-			"acdsl":       {"on"},
-			"name":        {"demo"},
-		}
+		values := url.Values{"context-dir": {"docs"}, "name": {"demo"}, "write": {"on"}}
 		server.Handler().ServeHTTP(response, formPost("/context/sync", values))
 		require.Equal(t, http.StatusOK, response.Code)
-		assert.Contains(t, response.Body.String(), "--no-prose")
-		assert.NotContains(t, response.Body.String(), "--no-acdsl")
+		assert.FileExists(t, filepath.Join(target, "docs", "context.json"))
+		assert.FileExists(t, filepath.Join(target, "docs", "aspects.json"))
+		assert.NoFileExists(t, filepath.Join(target, "AGENTS.md"))
+		index, err := contextdocs.LoadContextFile(filepath.Join(target, "docs", "context.json"))
+		require.NoError(t, err)
+		require.NotNil(t, index.Deploy)
+		assert.True(t, index.Deploy.WriteRepo)
+		assert.Len(t, index.Entries, 2)
 	})
 
-	t.Run("unchecked-acdsl-passes-no-acdsl", func(t *testing.T) {
+	t.Run("markdown-projects-the-tree", func(t *testing.T) {
 		response := httptest.NewRecorder()
-		values := url.Values{
-			"context-dir": {"docs"},
-			"prose":       {"on"},
-			"name":        {"demo"},
-		}
+		values := url.Values{"context-dir": {"docs"}, "name": {"demo"}, "write": {"on"}, "markdown": {"on"}}
 		server.Handler().ServeHTTP(response, formPost("/context/sync", values))
 		require.Equal(t, http.StatusOK, response.Code)
-		assert.Contains(t, response.Body.String(), "--no-acdsl")
+		assert.FileExists(t, filepath.Join(target, "AGENTS.md"))
+		assert.FileExists(t, filepath.Join(target, "docs", "actions", "navigation.md"))
+	})
+
+	t.Run("sub-option-without-write-is-bad-request", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		values := url.Values{"context-dir": {"docs"}, "name": {"demo"}, "markdown": {"on"}}
+		server.Handler().ServeHTTP(response, formPost("/context/sync", values))
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("bad-context-dir-is-bad-request", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		values := url.Values{"context-dir": {"../x"}, "name": {"demo"}}
+		server.Handler().ServeHTTP(response, formPost("/context/sync", values))
+		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
 
 	t.Run("unknown-name-is-bad-request", func(t *testing.T) {
@@ -324,4 +386,27 @@ func TestContextSyncRendersStubOutput(t *testing.T) {
 		server.Handler().ServeHTTP(response, formPost("/context/sync", url.Values{"name": {"ghost"}}))
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
+}
+
+func TestReachChipsSingletonsAndLists(t *testing.T) {
+	assert.Equal(t, []string{reach.Global}, reachChips(reach.Global))
+	assert.Equal(t, []string{reach.Always}, reachChips(reach.Always))
+	assert.Equal(t, []string{"work", "peek-mcp"}, reachChips("work, peek-mcp"))
+	assert.Nil(t, reachChips(reach.None))
+}
+
+func TestReachBarEntriesOrdersReservedFirst(t *testing.T) {
+	entryCounts := map[string]int{
+		"work":       1,
+		reach.Always: 1,
+		reach.Global: 1,
+		"aqms":       1,
+		"smine":      1,
+	}
+	chips := reachBarEntries(nil, entryCounts)
+	names := make([]string, 0, len(chips))
+	for _, chip := range chips {
+		names = append(names, chip.Name)
+	}
+	assert.Equal(t, []string{reach.Global, reach.Always, "smine", "aqms", "work"}, names)
 }

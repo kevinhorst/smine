@@ -1,7 +1,9 @@
 package repos
 
 import (
+	"bytes"
 	"context"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +13,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kevinhorst/smine/internal/contextdocs"
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
 func writeRegistry(t *testing.T, content string) *Registry {
@@ -87,7 +92,7 @@ func TestRegistryAdd(t *testing.T) {
 	t.Run("reserved-name-fails", func(t *testing.T) {
 		registry := writeRegistry(t, `{"repos": []}`)
 		require.NoError(t, registry.Reload())
-		for _, name := range []string{"default", "archived"} {
+		for _, name := range []string{"unknown", "archived", "always", "global", "none"} {
 			err := registry.Add(Repo{Name: name, Path: "/tmp/a"})
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "is reserved")
@@ -127,6 +132,29 @@ func TestRegistryRemove(t *testing.T) {
 
 		require.NoError(t, registry.Reload())
 		assert.Len(t, registry.Repos(), 1)
+	})
+
+	t.Run("stashes-file-and-journals-row", func(t *testing.T) {
+		previous := `{"repos": [{"env": {"SKILL_FDESIGN_BUILD": "make build", "SKILL_FDESIGN_AUDIT": "make audit"}, "name": "a", "path": "/tmp/a"}]}`
+		registry := writeRegistry(t, previous)
+		require.NoError(t, registry.Reload())
+
+		require.NoError(t, registry.Remove("a"))
+
+		store := trash.New(filepath.Dir(registry.path), 0)
+		journal, err := store.Tail(2)
+		require.NoError(t, err)
+		require.Len(t, journal, 2)
+		assert.Equal(t, "repos save", journal[0].Action)
+		assert.Equal(t, trash.KindReplaced, journal[0].Kind)
+		assert.Equal(t, "repos delete", journal[1].Action)
+		assert.Equal(t, trash.KindRemoved, journal[1].Kind)
+		assert.Equal(t, registry.path+"#a", journal[1].Path)
+		assert.Equal(t, "row removed; env keys SKILL_FDESIGN_AUDIT, SKILL_FDESIGN_BUILD", journal[1].Reason)
+
+		stashed, err := os.ReadFile(filepath.Join(filepath.Dir(registry.path), trash.TrashDir, filepath.FromSlash(journal[0].Stash)))
+		require.NoError(t, err)
+		assert.Equal(t, previous, string(stashed))
 	})
 
 	t.Run("unknown-name-fails-file-unchanged", func(t *testing.T) {
@@ -232,6 +260,19 @@ func TestRefreshKeepsLastGoodStateOnParseError(t *testing.T) {
 	assert.Len(t, registry.Repos(), 1)
 }
 
+func TestRegistryFileRemovedAfterLoad(t *testing.T) {
+	registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+	require.NoError(t, registry.Reload())
+	var logged bytes.Buffer
+	log.SetOutput(&logged)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+
+	require.NoError(t, os.Remove(registry.path))
+
+	assert.Empty(t, registry.Repos())
+	assert.Contains(t, logged.String(), "removed")
+}
+
 func TestRegistryDeleteStaysDeletedAcrossInstances(t *testing.T) {
 	registry := writeRegistry(t, `{"repos": [
 		{"name": "a", "path": "/tmp/a"},
@@ -307,29 +348,56 @@ func TestFingerprint(t *testing.T) {
 }
 
 func TestWorktreeCounts(t *testing.T) {
-	t.Run("buckets-by-branch-prefix", func(t *testing.T) {
-		repo := gitRepoWithAgentWorktrees(t)
-		ctx := context.Background()
+	newRepo := func(t *testing.T, branches ...string) string {
+		t.Helper()
+		repo := t.TempDir()
+		run := func(args ...string) {
+			gitArgs := append([]string{"-C", repo, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)
+			output, err := exec.Command("git", gitArgs...).CombinedOutput()
+			require.NoError(t, err, string(output))
+		}
+		run("init", "-q", "-b", "main")
+		run("commit", "-q", "--allow-empty", "-m", "init")
+		for _, branch := range branches {
+			run("worktree", "add", "-q", "-b", branch, filepath.Join(t.TempDir(), "wt"))
+		}
+		return repo
+	}
+
+	t.Run("buckets-per-kind-sorted-non-agent-ignored", func(t *testing.T) {
+		repo := newRepo(t, "claude/session-x", "claude-routines/nightly-x", "claude-review/station-x", "feature/x")
 		expected := []WorktreeKindCount{
 			{Count: 1, Label: "claude"},
+			{Count: 1, Label: "claude-review"},
 			{Count: 1, Label: "claude-routines"},
 		}
-		assert.Equal(t, expected, WorktreeCounts(ctx, repo, []string{"claude/", "claude-routines/"}))
+		assert.Equal(t, expected, WorktreeCounts(context.Background(), repo))
 	})
 
-	t.Run("zero-count-prefix-omitted", func(t *testing.T) {
-		repo := gitRepoWithAgentWorktrees(t)
-		expected := []WorktreeKindCount{{Count: 1, Label: "claude"}}
-		assert.Equal(t, expected, WorktreeCounts(context.Background(), repo, []string{"claude/", "feature/"}))
+	t.Run("detached-codex-pool-counts-as-codex", func(t *testing.T) {
+		repo := newRepo(t, "claude/session-x")
+		codexPool := filepath.Join(t.TempDir(), ".codex", "worktrees", "ffc8", "repo")
+		other := filepath.Join(t.TempDir(), "elsewhere")
+		for _, path := range []string{codexPool, other} {
+			gitArgs := []string{"-C", repo, "worktree", "add", "-q", "--detach", path, "HEAD"}
+			output, err := exec.Command("git", gitArgs...).CombinedOutput()
+			require.NoError(t, err, string(output))
+		}
+		expected := []WorktreeKindCount{
+			{Count: 1, Label: "claude"},
+			{Count: 1, Label: "codex"},
+			{Count: 1, Label: "detached"},
+		}
+		assert.Equal(t, expected, WorktreeCounts(context.Background(), repo))
 	})
 
 	t.Run("non-git-dir-is-nil", func(t *testing.T) {
-		assert.Nil(t, WorktreeCounts(context.Background(), t.TempDir(), []string{"claude/"}))
+		assert.Nil(t, WorktreeCounts(context.Background(), t.TempDir()))
 	})
 
-	t.Run("no-agent-prefix-matches-nothing", func(t *testing.T) {
-		repo := gitRepoWithAgentWorktrees(t)
-		assert.Nil(t, WorktreeCounts(context.Background(), repo, []string{"feature/"}))
+	t.Run("no-agent-worktrees-is-nil", func(t *testing.T) {
+		repo := newRepo(t, "feature/x")
+		assert.Nil(t, WorktreeCounts(context.Background(), repo))
 	})
 }
 
@@ -365,52 +433,107 @@ func TestDetectContext(t *testing.T) {
 	t.Run("source-repo-with-language-guides", func(t *testing.T) {
 		repo := t.TempDir()
 		require.NoError(t, os.MkdirAll(filepath.Join(repo, "context", "rules"), 0o755))
-		require.NoError(t, os.WriteFile(filepath.Join(repo, "context", "context.json"),
-			[]byte(`{"entries": [], "aspects": []}`), 0o644))
+		require.NoError(t, contextdocs.SaveAspects(filepath.Join(repo, "context"), nil))
 		for _, name := range []string{"go.md", "python.md", "plan.md", "commits.md"} {
 			require.NoError(t, os.WriteFile(filepath.Join(repo, "context", "rules", name), []byte("# guide\n"), 0o644))
 		}
 
-		presence := DetectContext(repo)
+		presence := DetectContext(repo, "")
 		assert.Equal(t, ContextSource, presence.State)
 		assert.Equal(t, "context", presence.ContextDir)
 		assert.Equal(t, []string{"go", "python"}, presence.Langs)
 		assert.False(t, presence.Acdsl)
 	})
 
+	t.Run("source-repo-skips-part-guides", func(t *testing.T) {
+		repo := t.TempDir()
+		require.NoError(t, os.MkdirAll(filepath.Join(repo, "context", "rules"), 0o755))
+		require.NoError(t, contextdocs.SaveAspects(filepath.Join(repo, "context"), nil))
+		for _, name := range []string{"go.md", "go_test.md"} {
+			require.NoError(t, os.WriteFile(filepath.Join(repo, "context", "rules", name), []byte("# guide\n"), 0o644))
+		}
+
+		presence := DetectContext(repo, "")
+		assert.Equal(t, []string{"go"}, presence.Langs)
+	})
+
 	t.Run("source-repo-with-acdsl-registry", func(t *testing.T) {
 		repo := t.TempDir()
 		require.NoError(t, os.MkdirAll(filepath.Join(repo, "context"), 0o755))
-		require.NoError(t, os.WriteFile(filepath.Join(repo, "context", "context.json"),
-			[]byte(`{"entries": [], "aspects": []}`), 0o644))
+		require.NoError(t, contextdocs.SaveAspects(filepath.Join(repo, "context"), nil))
 		require.NoError(t, os.MkdirAll(filepath.Join(repo, "acdsl"), 0o755))
 		require.NoError(t, os.WriteFile(filepath.Join(repo, "acdsl", "registry.json"), []byte("{}\n"), 0o644))
 
-		presence := DetectContext(repo)
+		presence := DetectContext(repo, "")
 		assert.Equal(t, ContextSource, presence.State)
 		assert.True(t, presence.Acdsl)
 	})
 
-	t.Run("deployed-target-with-deploy-section", func(t *testing.T) {
+	t.Run("deployed-written-from-record", func(t *testing.T) {
 		repo := t.TempDir()
+		record := filepath.Join(t.TempDir(), "context", "demo", "context.json")
+		require.NoError(t, os.MkdirAll(filepath.Dir(record), 0o755))
+		require.NoError(t, os.WriteFile(record,
+			[]byte(`{"deploy": {"contextDir": "docs", "langs": ["go"], "acdsl": true, "writeRepo": true}, "entries": []}`), 0o644))
 		require.NoError(t, os.MkdirAll(filepath.Join(repo, "docs"), 0o755))
-		require.NoError(t, os.WriteFile(filepath.Join(repo, "docs", "context.json"),
-			[]byte(`{"deploy": {"contextDir": "docs", "langs": ["go"], "acdsl": true}, "entries": []}`), 0o644))
+		require.NoError(t, os.WriteFile(filepath.Join(repo, "docs", "context.json"), []byte(`{"entries": []}`), 0o644))
 
-		presence := DetectContext(repo)
+		presence := DetectContext(repo, record)
 		assert.Equal(t, ContextDeployed, presence.State)
 		assert.Equal(t, "docs", presence.ContextDir)
 		assert.Equal(t, []string{"go"}, presence.Langs)
 		assert.True(t, presence.Acdsl)
+		assert.True(t, presence.IsWritten)
+		assert.Equal(t, filepath.Join(repo, "docs", "context.json"), presence.IndexPath)
+	})
+
+	t.Run("deployed-patch-only", func(t *testing.T) {
+		repo := t.TempDir()
+		record := filepath.Join(t.TempDir(), "context", "demo", "context.json")
+		require.NoError(t, os.MkdirAll(filepath.Dir(record), 0o755))
+		require.NoError(t, os.WriteFile(record,
+			[]byte(`{"deploy": {"contextDir": "docs", "langs": [], "writeRepo": false}, "entries": []}`), 0o644))
+
+		presence := DetectContext(repo, record)
+		assert.Equal(t, ContextDeployed, presence.State)
+		assert.False(t, presence.IsWritten)
+		assert.Equal(t, record, presence.IndexPath)
+	})
+
+	t.Run("deployed-index-beside-aspects-is-not-source", func(t *testing.T) {
+		repo := t.TempDir()
+		require.NoError(t, os.MkdirAll(filepath.Join(repo, "context"), 0o755))
+		require.NoError(t, contextdocs.SaveAspects(filepath.Join(repo, "context"), nil))
+		require.NoError(t, os.WriteFile(filepath.Join(repo, "context", "context.json"),
+			[]byte(`{"deploy": {"contextDir": "context"}, "entries": []}`), 0o644))
+
+		presence := DetectContext(repo, filepath.Join(t.TempDir(), "missing.json"))
+		assert.Equal(t, ContextNone, presence.State)
+	})
+
+	t.Run("record-without-deploy-is-none", func(t *testing.T) {
+		record := filepath.Join(t.TempDir(), "context.json")
+		require.NoError(t, os.WriteFile(record, []byte(`{"entries": []}`), 0o644))
+		presence := DetectContext(t.TempDir(), record)
+		assert.Equal(t, ContextNone, presence.State)
 	})
 
 	t.Run("no-context-json-anywhere", func(t *testing.T) {
 		repo := t.TempDir()
 		// an old-layout dir without context.json is still none
 		require.NoError(t, os.MkdirAll(filepath.Join(repo, "context", "general"), 0o755))
-		presence := DetectContext(repo)
+		presence := DetectContext(repo, "")
 		assert.Equal(t, ContextNone, presence.State)
 		assert.Empty(t, presence.Langs)
+	})
+
+	t.Run("generated-file-without-aspects-source-is-none", func(t *testing.T) {
+		repo := t.TempDir()
+		require.NoError(t, os.MkdirAll(filepath.Join(repo, "context"), 0o755))
+		require.NoError(t, os.WriteFile(filepath.Join(repo, "context", "context.json"),
+			[]byte(`{"entries": [], "aspects": []}`), 0o644))
+		presence := DetectContext(repo, "")
+		assert.Equal(t, ContextNone, presence.State)
 	})
 }
 
@@ -422,7 +545,6 @@ func TestDetectContextCoverage(t *testing.T) {
 
 		presence   ContextPresence
 		repoName   string
-		repoPath   string
 		sourcePath string
 	}
 
@@ -445,58 +567,50 @@ func TestDetectContextCoverage(t *testing.T) {
 	tests := make([]*testCase, 0)
 
 	// fully-synced
-	repo := t.TempDir()
-	writeIndex(repo, "docs/context.json", `{"entries": [{"id": "ACTION-NAV-001"}, {"id": "RULE-GOLANG-ERR-001"}]}`)
+	deployed := writeIndex(t.TempDir(), "docs/context.json", `{"entries": [{"id": "ACTION-NAV-001"}, {"id": "RULE-GOLANG-ERR-001"}]}`)
 	tests = append(tests, &testCase{
 		_id:         "fully-synced",
 		_expected:   ContextCoverage{Expected: 2},
 		_shouldPass: true,
 
-		presence:   ContextPresence{ContextDir: "docs", Langs: []string{"go"}, State: ContextDeployed},
+		presence:   ContextPresence{IndexPath: deployed, Langs: []string{"go"}, State: ContextDeployed},
 		repoName:   "demo",
-		repoPath:   repo,
 		sourcePath: writeIndex(t.TempDir(), "context.json", sourceIndex),
 	})
 
 	// missing-entry
-	repo = t.TempDir()
-	writeIndex(repo, "docs/context.json", `{"entries": [{"id": "RULE-GOLANG-ERR-001"}]}`)
+	deployed = writeIndex(t.TempDir(), "docs/context.json", `{"entries": [{"id": "RULE-GOLANG-ERR-001"}]}`)
 	tests = append(tests, &testCase{
 		_id:         "missing-entry",
 		_expected:   ContextCoverage{Expected: 2, Missing: []string{"ACTION-NAV-001"}},
 		_shouldPass: true,
 
-		presence:   ContextPresence{ContextDir: "docs", Langs: []string{"go"}, State: ContextDeployed},
+		presence:   ContextPresence{IndexPath: deployed, Langs: []string{"go"}, State: ContextDeployed},
 		repoName:   "demo",
-		repoPath:   repo,
 		sourcePath: writeIndex(t.TempDir(), "context.json", sourceIndex),
 	})
 
 	// lang-bound-scope-not-synced
-	repo = t.TempDir()
-	writeIndex(repo, "docs/context.json", `{"entries": [{"id": "ACTION-NAV-001"}]}`)
+	deployed = writeIndex(t.TempDir(), "docs/context.json", `{"entries": [{"id": "ACTION-NAV-001"}]}`)
 	tests = append(tests, &testCase{
 		_id:         "lang-bound-scope-not-synced",
 		_expected:   ContextCoverage{Expected: 1},
 		_shouldPass: true,
 
-		presence:   ContextPresence{ContextDir: "docs", State: ContextDeployed},
+		presence:   ContextPresence{IndexPath: deployed, State: ContextDeployed},
 		repoName:   "demo",
-		repoPath:   repo,
 		sourcePath: writeIndex(t.TempDir(), "context.json", sourceIndex),
 	})
 
 	// reach-covers-other-target
-	repo = t.TempDir()
-	writeIndex(repo, "docs/context.json", `{"entries": [{"id": "ACTION-NAV-001"}, {"id": "RULE-GOLANG-ERR-001"}, {"id": "FACT-REPO-ARCH-001"}]}`)
+	deployed = writeIndex(t.TempDir(), "docs/context.json", `{"entries": [{"id": "ACTION-NAV-001"}, {"id": "RULE-GOLANG-ERR-001"}, {"id": "FACT-REPO-ARCH-001"}]}`)
 	tests = append(tests, &testCase{
 		_id:         "reach-covers-other-target",
 		_expected:   ContextCoverage{Expected: 3},
 		_shouldPass: true,
 
-		presence:   ContextPresence{ContextDir: "docs", Langs: []string{"go"}, State: ContextDeployed},
+		presence:   ContextPresence{IndexPath: deployed, Langs: []string{"go"}, State: ContextDeployed},
 		repoName:   "othertarget",
-		repoPath:   repo,
 		sourcePath: writeIndex(t.TempDir(), "context.json", sourceIndex),
 	})
 
@@ -508,7 +622,6 @@ func TestDetectContextCoverage(t *testing.T) {
 
 		presence:   ContextPresence{ContextDir: "context", State: ContextSource},
 		repoName:   "demo",
-		repoPath:   t.TempDir(),
 		sourcePath: filepath.Join(t.TempDir(), "context.json"),
 	})
 
@@ -518,16 +631,15 @@ func TestDetectContextCoverage(t *testing.T) {
 		_expected:   ContextCoverage{},
 		_shouldPass: false,
 
-		presence:   ContextPresence{ContextDir: "docs", State: ContextDeployed},
+		presence:   ContextPresence{IndexPath: filepath.Join(t.TempDir(), "docs", "context.json"), State: ContextDeployed},
 		repoName:   "demo",
-		repoPath:   t.TempDir(),
 		sourcePath: writeIndex(t.TempDir(), "context.json", sourceIndex),
 	})
 
 	// Run tests
 	for _, test := range tests {
 		t.Run(test._id, func(t *testing.T) {
-			coverage, err := DetectContextCoverage(test.sourcePath, test.repoName, test.repoPath, test.presence)
+			coverage, err := DetectContextCoverage(test.sourcePath, test.repoName, test.presence)
 			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
 			assert.Equal(t, test._expected, coverage)
 		})
@@ -544,6 +656,184 @@ func TestFindAndRepos(t *testing.T) {
 
 	_, ok = registry.Find("nope")
 	assert.False(t, ok)
+}
+
+func TestRepoValidate_Env(t *testing.T) {
+	type testCase struct {
+		_id         string
+		_shouldPass bool
+
+		repo *Repo
+	}
+
+	tests := make([]*testCase, 0)
+
+	// pass-env-set
+	envSet := map[string]string{
+		"SKILL_FIMPLEMENT_BUILD": "make build",
+		"SKILL_FIMPLEMENT_TEST":  `go test -run "TestA B" ./...`,
+	}
+	tests = append(tests, &testCase{
+		_id:         "pass-env-set",
+		_shouldPass: true,
+
+		repo: &Repo{Env: envSet, Name: "a", Path: "/tmp/a"},
+	})
+
+	// pass-no-env
+	tests = append(tests, &testCase{
+		_id:         "pass-no-env",
+		_shouldPass: true,
+
+		repo: &Repo{Env: nil, Name: "a", Path: "/tmp/a"},
+	})
+
+	// fail-bad-key
+	badKeyEnv := map[string]string{"FIMPLEMENT_BUILD": "make build"}
+	tests = append(tests, &testCase{
+		_id:         "fail-bad-key",
+		_shouldPass: false,
+
+		repo: &Repo{Env: badKeyEnv, Name: "a", Path: "/tmp/a"},
+	})
+
+	// fail-empty-value
+	emptyValueEnv := map[string]string{"SKILL_FIMPLEMENT_BUILD": " \n\t"}
+	tests = append(tests, &testCase{
+		_id:         "fail-empty-value",
+		_shouldPass: false,
+
+		repo: &Repo{Env: emptyValueEnv, Name: "a", Path: "/tmp/a"},
+	})
+
+	// pass-multi-line-value
+	multiLineEnv := map[string]string{"SKILL_FIMPLEMENT_TEST": "go test ./...\nmake test-shell"}
+	tests = append(tests, &testCase{
+		_id:         "pass-multi-line-value",
+		_shouldPass: true,
+
+		repo: &Repo{Env: multiLineEnv, Name: "a", Path: "/tmp/a"},
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			err := test.repo.Validate()
+			assert.Equalf(t, test._shouldPass, err == nil, "err = %v", err)
+		})
+	}
+}
+
+func TestRegistryFindByPath(t *testing.T) {
+	type testCase struct {
+		_id           string
+		_expectedName string
+		_isFound      bool
+
+		path string
+	}
+
+	registry := writeRegistry(t, `{"repos": [
+		{"name": "a", "path": "/tmp/a"},
+		{"name": "b", "path": "/tmp/b"}
+	]}`)
+	require.NoError(t, registry.Reload())
+
+	tests := make([]*testCase, 0)
+
+	// match
+	tests = append(tests, &testCase{
+		_id:           "match",
+		_expectedName: "b",
+		_isFound:      true,
+
+		path: "/tmp/b",
+	})
+
+	// trailing-slash-match
+	tests = append(tests, &testCase{
+		_id:           "trailing-slash-match",
+		_expectedName: "a",
+		_isFound:      true,
+
+		path: "/tmp/a/",
+	})
+
+	// unknown
+	tests = append(tests, &testCase{
+		_id:           "unknown",
+		_expectedName: "",
+		_isFound:      false,
+
+		path: "/tmp/c",
+	})
+
+	// Run tests
+	for _, test := range tests {
+		t.Run(test._id, func(t *testing.T) {
+			repo, ok := registry.FindByPath(test.path)
+			assert.Equal(t, test._isFound, ok)
+			assert.Equal(t, test._expectedName, repoName(repo))
+		})
+	}
+}
+
+func repoName(repo *Repo) string {
+	if repo == nil {
+		return ""
+	}
+	return repo.Name
+}
+
+func TestRegistryUpdate(t *testing.T) {
+	t.Run("env-row-replaced-whole", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [
+			{"name": "a", "path": "/tmp/a"},
+			{"name": "b", "path": "/tmp/b", "env": {"SKILL_FIMPLEMENT_BUILD": "make build", "SKILL_FIMPLEMENT_TEST": "make test"}}
+		]}`)
+		require.NoError(t, registry.Reload())
+
+		replacedEnv := map[string]string{"SKILL_FIMPLEMENT_TEST": "go test ./..."}
+		require.NoError(t, registry.Update(Repo{Env: replacedEnv, Name: "b", Path: "/tmp/b"}))
+
+		require.NoError(t, registry.Reload())
+		expected := []Repo{
+			{Name: "a", Path: "/tmp/a"},
+			{Env: map[string]string{"SKILL_FIMPLEMENT_TEST": "go test ./..."}, Name: "b", Path: "/tmp/b"},
+		}
+		assert.Equal(t, expected, registry.Repos())
+	})
+
+	t.Run("unknown-name-fails-file-unchanged", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Reload())
+
+		err := registry.Update(Repo{Name: "nope", Path: "/tmp/nope"})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "Unknown repo name")
+
+		require.NoError(t, registry.Reload())
+		assert.Equal(t, []Repo{{Name: "a", Path: "/tmp/a"}}, registry.Repos())
+	})
+
+	t.Run("external-edit-survives-update", func(t *testing.T) {
+		registry := writeRegistry(t, `{"repos": [{"name": "a", "path": "/tmp/a"}]}`)
+		require.NoError(t, registry.Reload())
+
+		touchRegistry(t, registry, `{"repos": [
+			{"name": "a", "path": "/tmp/a"},
+			{"name": "b", "path": "/tmp/b"}
+		]}`)
+		updatedEnv := map[string]string{"SKILL_FIMPLEMENT_TEST": "go test ./..."}
+		require.NoError(t, registry.Update(Repo{Env: updatedEnv, Name: "a", Path: "/tmp/a"}))
+
+		require.NoError(t, registry.Reload())
+		expected := []Repo{
+			{Env: map[string]string{"SKILL_FIMPLEMENT_TEST": "go test ./..."}, Name: "a", Path: "/tmp/a"},
+			{Name: "b", Path: "/tmp/b"},
+		}
+		assert.Equal(t, expected, registry.Repos())
+	})
 }
 
 func TestRepoLabel(t *testing.T) {

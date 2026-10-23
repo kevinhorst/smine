@@ -3,49 +3,36 @@ package server
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/kevinhorst/smine/internal/fsx"
+	"github.com/kevinhorst/smine/internal/presentation"
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
-const (
-	audienceCasual  = "casual"
-	languageEnglish = "en"
+const maxStyleProfileBytes = 65536
 
-	maxStyleProfileBytes = 65536
-)
-
-type presentationProfile struct {
-	Audience string
-	DevMode  bool
-	Language string
-}
-
-func (p *presentationProfile) isDeveloperAudience() bool {
-	return p.Audience != audienceCasual
-}
-
-// presentationStore holds the live profile behind the file it mirrors: saves
-// write the file atomically and re-read it, so the running server and the
-// disk never diverge and template funcs pick up edits without a restart
-// (plan D3).
+// presentationStore re-reads after each save so the running server and the disk never diverge.
 type presentationStore struct {
 	mu sync.RWMutex
 
-	path      string
-	profile   *presentationProfile
-	stylePath string
+	path         string
+	profile      *presentation.Profile
+	stylePath    string
+	templatePath string
+	trash        *trash.Store
 }
 
-func newPresentationStore(path, stylePath string) *presentationStore {
-	store := &presentationStore{
-		path:      path,
-		profile:   loadPresentationProfile(path),
-		stylePath: stylePath,
+func newPresentationStore(path, stylePath, templatePath string, store *trash.Store) *presentationStore {
+	opened := &presentationStore{
+		path:         path,
+		profile:      presentation.Load(path),
+		stylePath:    stylePath,
+		templatePath: templatePath,
+		trash:        store,
 	}
-	return store
+	return opened
 }
 
 func (st *presentationStore) audience() string {
@@ -54,10 +41,16 @@ func (st *presentationStore) audience() string {
 	return st.profile.Audience
 }
 
+func (st *presentationStore) autoMerge() bool {
+	st.mu.RLock()
+	defer st.mu.RUnlock()
+	return st.profile.AutoMerge
+}
+
 func (st *presentationStore) isDeveloperAudience() bool {
 	st.mu.RLock()
 	defer st.mu.RUnlock()
-	return st.profile.isDeveloperAudience()
+	return st.profile.IsDeveloperAudience()
 }
 
 func (st *presentationStore) isDevMode() bool {
@@ -73,37 +66,32 @@ func (st *presentationStore) language() string {
 }
 
 func (st *presentationStore) reload() {
-	profile := loadPresentationProfile(st.path)
+	profile := presentation.Load(st.path)
 	st.mu.Lock()
 	st.profile = profile
 	st.mu.Unlock()
 }
 
-// saveProfileSelection persists the declared audience/language/dev-mode:
-// all-default (developer, English, dev-mode off) deletes the file, the de
-// casual combo seeds from the repo template on first activation, anything
-// else rewrites only the frontmatter and keeps the body (plan D6). The
-// casual force-off for devMode lives in the handler — the store persists
-// what it is told.
-func (st *presentationStore) saveProfileSelection(audience, language string, devMode bool) error {
-	if audience == "" && language == languageEnglish && !devMode {
-		if err := os.Remove(st.path); err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("presentationStore.saveProfileSelection: Failed to remove %s: %w", st.path, err)
-		}
-		st.reload()
-		return nil
-	}
-
+// saveProfileSelection persists what it is told; the casual devMode force-off lives in the handler.
+func (st *presentationStore) saveProfileSelection(audience, language string, devMode, autoMerge bool) error {
 	body := profileBody(st.path)
-	if body == "" && audience == audienceCasual && language == languageGerman {
-		templatePath := filepath.Join("settings", "claude_code", "presentation-profile.de.md")
-		if template, err := os.ReadFile(templatePath); err == nil {
+	if body == "" && audience == presentation.AudienceCasual && language == languageGerman {
+		if template, err := os.ReadFile(st.templatePath); err == nil {
 			body = stripFrontMatter(string(template))
 		}
 	}
 
-	content := fmt.Sprintf("---\nlanguage: %s\naudience: %s\ndev-mode: %t\n---\n%s", language, audience, devMode, body)
-	if err := writeFileAtomic(st.path, content); err != nil {
+	profile := &presentation.Profile{
+		Audience:  audience,
+		AutoMerge: autoMerge,
+		DevMode:   devMode,
+		Language:  language,
+	}
+	entry := &trash.Entry{Action: "profile selection save", Reason: "presentation profile settings saved on the Profile page"}
+	if _, err := st.trash.Keep(st.path, entry); err != nil {
+		return fmt.Errorf("presentationStore.saveProfileSelection: %w", err)
+	}
+	if err := fsx.WriteFileAtomic([]byte(formatProfile(profile, body)), st.path, 0o644); err != nil {
 		return fmt.Errorf("presentationStore.saveProfileSelection: %w", err)
 	}
 
@@ -111,8 +99,35 @@ func (st *presentationStore) saveProfileSelection(audience, language string, dev
 	return nil
 }
 
+func (st *presentationStore) savePresentationBody(content string) error {
+	st.mu.RLock()
+	profile := *st.profile
+	st.mu.RUnlock()
+
+	entry := &trash.Entry{Action: "profile body save", Reason: "presentation profile edited on the Profile page"}
+	if _, err := st.trash.Keep(st.path, entry); err != nil {
+		return fmt.Errorf("presentationStore.savePresentationBody: %w", err)
+	}
+	if err := fsx.WriteFileAtomic([]byte(formatProfile(&profile, content)), st.path, 0o644); err != nil {
+		return fmt.Errorf("presentationStore.savePresentationBody: %w", err)
+	}
+
+	st.reload()
+	return nil
+}
+
+func (st *presentationStore) presentationContent() string {
+	st.mu.RLock()
+	defer st.mu.RUnlock()
+	return profileBody(st.path)
+}
+
 func (st *presentationStore) saveStyle(content string) error {
-	if err := writeFileAtomic(st.stylePath, content); err != nil {
+	entry := &trash.Entry{Action: "profile style save", Reason: "style profile edited on the Profile page"}
+	if _, err := st.trash.Keep(st.stylePath, entry); err != nil {
+		return fmt.Errorf("presentationStore.saveStyle: %w", err)
+	}
+	if err := fsx.WriteFileAtomic([]byte(content), st.stylePath, 0o644); err != nil {
 		return fmt.Errorf("presentationStore.saveStyle: %w", err)
 	}
 	return nil
@@ -129,50 +144,18 @@ func (st *presentationStore) styleContent() (string, error) {
 	return string(content), nil
 }
 
-// loadPresentationProfile reads the per-install profile; any absence or
-// parse problem falls back to defaults (English, developer) so machines
-// without a profile behave exactly as before (plan D2).
-func loadPresentationProfile(path string) *presentationProfile {
-	profile := &presentationProfile{
-		Audience: "",
-		Language: languageEnglish,
-	}
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return profile
-	}
-
-	inFrontMatter := false
-	for _, line := range strings.Split(string(content), "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "---" {
-			if inFrontMatter {
-				break
-			}
-			inFrontMatter = true
-			continue
-		}
-		if !inFrontMatter {
-			continue
-		}
-		if value, ok := strings.CutPrefix(trimmed, "language:"); ok {
-			profile.Language = strings.TrimSpace(value)
-		}
-		if value, ok := strings.CutPrefix(trimmed, "audience:"); ok {
-			profile.Audience = strings.TrimSpace(value)
-		}
-		if value, ok := strings.CutPrefix(trimmed, "dev-mode:"); ok {
-			profile.DevMode = strings.TrimSpace(value) == "true"
-		}
-	}
-	if profile.Language == "" {
-		profile.Language = languageEnglish
-	}
-	return profile
+// formatProfile is the single writer of the frontmatter shape, so every consumer parses one format.
+func formatProfile(profile *presentation.Profile, body string) string {
+	return fmt.Sprintf(
+		"---\nlanguage: %s\naudience: %s\ndev-mode: %t\nauto-merge: %t\n---\n%s",
+		profile.Language,
+		profile.Audience,
+		profile.DevMode,
+		profile.AutoMerge,
+		body,
+	)
 }
 
-// profileBody returns the profile file's content after its frontmatter block;
-// empty when the file is absent.
 func profileBody(path string) string {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -192,44 +175,4 @@ func stripFrontMatter(content string) string {
 		}
 	}
 	return content
-}
-
-// writeFileAtomic writes tmp + rename — the saveAutoApplyRules discipline —
-// creating the parent directory first (a fresh install has no
-// ~/.claude/context/global yet).
-func writeFileAtomic(path, content string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("writeFileAtomic: Failed to create %s: %w", filepath.Dir(path), err)
-	}
-
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(content), 0o644); err != nil {
-		return fmt.Errorf("writeFileAtomic: Failed to write %s: %w", tmp, err)
-	}
-
-	if err := fsx.ReplaceFile(tmp, path); err != nil {
-		os.Remove(tmp)
-		return fmt.Errorf("writeFileAtomic: Failed to rename %s to %s: %w", tmp, path, err)
-	}
-	return nil
-}
-
-// DefaultPresentationPath is the per-install profile location every consumer
-// shares (the global-context hook, the nightly routine, this server).
-func DefaultPresentationPath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, ".claude", "context", "global", "presentation-profile.md")
-}
-
-// DefaultStylePath is the learned style profile's location — a sibling of the
-// presentation profile, injected by the same global-context hook.
-func DefaultStylePath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, ".claude", "context", "global", "style-profile.md")
 }

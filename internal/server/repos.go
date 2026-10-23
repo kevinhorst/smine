@@ -14,11 +14,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kevinhorst/smine/internal/components"
 	"github.com/kevinhorst/smine/internal/contextdocs"
+	"github.com/kevinhorst/smine/internal/gitwt"
 	"github.com/kevinhorst/smine/internal/peek"
 	"github.com/kevinhorst/smine/internal/repos"
 	"github.com/kevinhorst/smine/internal/server/respond"
 	"github.com/kevinhorst/smine/internal/shell"
+	"github.com/kevinhorst/smine/internal/trash"
 )
 
 const (
@@ -32,11 +35,25 @@ const (
 	// registryLockKey serializes registry add/delete; reserved like _jetbrains.
 	registryLockKey = "_registry"
 
-	// chooseFolderLockKey keeps a second native dialog from piling onto an
-	// open one.
+	// chooseFolderLockKey keeps a second native dialog from piling onto an open one.
 	chooseFolderLockKey = "_choose-folder"
 
+	// jetbrainsLockKey never races a same-named repo's routes: the prune route is literal.
+	jetbrainsLockKey = "_jetbrains"
+
+	// peekSessionsTimeout: a cold peek blocks session_list for its ~1 min initial scan; the page must not.
+	peekSessionsTimeout = 5 * time.Second
+
 	tmplRepoPath = "_repo_path.html"
+
+	// statusKindAll is a cache scope and a chip, never a binary argument.
+	statusKindAll = "all"
+
+	// statusKindDefault is the kind a repo page opens on.
+	statusKindDefault = "claude"
+
+	// allWorktreesConfirm is the confirm every all-scope request asks (D7).
+	allWorktreesConfirm = "Load all worktrees of %s? This scans every agent branch and worktree at once and can overload this machine."
 )
 
 type commitListPage struct {
@@ -56,15 +73,12 @@ type opResult struct {
 	Subject  string
 }
 
-// stepTiming is one measured step of the status render, shown in the
-// fragment's timing line and logged per request (DR3).
 type stepTiming struct {
 	Ms   int64
 	Step string
 }
 
-// formatTimings renders "status=1840ms checkout=95ms sessions=210ms" for the
-// per-request timing log line.
+// formatTimings renders "status=1840ms checkout=95ms sessions=210ms".
 func formatTimings(timings []stepTiming) string {
 	parts := make([]string, 0, len(timings))
 	for _, t := range timings {
@@ -73,31 +87,50 @@ func formatTimings(timings []stepTiming) string {
 	return strings.Join(parts, " ")
 }
 
+// kindFilters keeps the loaded kind's chip even when the repo holds none of it.
+func kindFilters(active, confirm string, kinds []string) []worktreeFilter {
+	values := slices.Clone(kinds)
+	isHeld := slices.Contains(values, active)
+	if !isHeld && active != statusKindAll {
+		values = append(values, active)
+		slices.Sort(values)
+	}
+	all := worktreeFilter{Confirm: confirm, IsActive: active == statusKindAll, Label: statusKindAll, Value: statusKindAll}
+	filters := []worktreeFilter{all}
+	for _, kind := range values {
+		filter := worktreeFilter{IsActive: kind == active, Label: kind, Value: kind}
+		filters = append(filters, filter)
+	}
+	return filters
+}
+
 type repoDetailPage struct {
+	Kind  string
 	Page  string
 	Repo  repos.Repo
 	Title string
 }
 
-// worktreeFilter is one chip of the worktree-table filters (kind or base);
-// filtering is client-side — the chip carries its group value as a data
-// attribute and the detail page's JS owns the active state.
+// worktreeFilter base chips filter client-side; the detail page's JS owns their active state.
 type worktreeFilter struct {
-	Label string
-	Value string
+	Confirm  string
+	IsActive bool
+	Label    string
+	Value    string
 }
 
-// worktreeStatusPage feeds the #worktree-status fragment — everything the
-// status table needs, decoupled from the instant page shell (D3).
 type worktreeStatusPage struct {
 	BaseFilters       []worktreeFilter
 	Cached            bool
 	Checkout          *repos.CheckoutStatus
 	CheckoutErr       string
+	Confirm           string // the all-scope confirm on Reload and the repo-op refresh; empty for a kind scope
+	IsAgentwtOff      bool
+	Kind              string
 	KindFilters       []worktreeFilter
+	PeekSessions      map[string]peek.Session // keyed by session id, for the dashboard link and last-active time
 	Repo              repos.Repo
 	ScannedAt         time.Time
-	Sessions          map[string]peek.Session
 	SessionsErr       string
 	SessionsErrDetail string
 	StatusErr         string
@@ -105,8 +138,6 @@ type worktreeStatusPage struct {
 	Timings           []stepTiming
 }
 
-// contextBadge is the index-cell view of the context-system state: one text
-// badge, the detail in the tooltip.
 type contextBadge struct {
 	Class string
 	Label string
@@ -123,24 +154,31 @@ func newAcdslBadge(presence repos.ContextPresence) contextBadge {
 func newContextBadge(presence repos.ContextPresence, coverage repos.ContextCoverage, coverageErr error) contextBadge {
 	switch presence.State {
 	case repos.ContextSource:
-		return contextBadge{Class: "badge-ok", Label: "source", Title: "authors the context system (context/context.json)"}
+		return contextBadge{Class: "badge-ok", Label: "source", Title: "authors the context system (context/aspects.json)"}
 	case repos.ContextDeployed:
 		return deployedContextBadge(presence, coverage, coverageErr)
 	case repos.ContextNone:
-		return contextBadge{Class: "badge-error", Label: "✗", Title: "no context.json under context/ or docs/"}
+		return contextBadge{Class: "badge-error", Label: "✗", Title: "no context/aspects.json and no context build for this repo"}
 	}
 	return contextBadge{Class: "badge-error", Label: "✗", Title: "unknown context state " + presence.State}
 }
 
 func deployedContextBadge(presence repos.ContextPresence, coverage repos.ContextCoverage, coverageErr error) contextBadge {
+	prefix := "patch:"
+	if presence.IsWritten {
+		prefix = "synced:"
+	}
 	if coverageErr != nil {
-		badge := contextBadge{Class: "badge-action", Label: "deployed:" + presence.ContextDir}
+		badge := contextBadge{Class: "badge-action", Label: prefix + presence.ContextDir}
 		badge.Title = "coverage check failed: " + coverageErr.Error()
 		return badge
 	}
-	if len(coverage.Missing) == 0 {
-		badge := contextBadge{Class: "badge-ok", Label: "synced:" + presence.ContextDir}
-		badge.Title = fmt.Sprintf("all %d entries reaching this repo are deployed", coverage.Expected)
+	if isContextSynced(presence, coverage, coverageErr) {
+		badge := contextBadge{Class: "badge-ok", Label: prefix + presence.ContextDir}
+		badge.Title = fmt.Sprintf("all %d entries reaching this repo are in the build", coverage.Expected)
+		if !presence.IsWritten {
+			badge.Title += " — overlay built, not written to the repo"
+		}
 		return badge
 	}
 	shown := coverage.Missing
@@ -154,6 +192,14 @@ func deployedContextBadge(presence repos.ContextPresence, coverage repos.Context
 		badge.Title += fmt.Sprintf(" (+%d more)", len(coverage.Missing)-len(shown))
 	}
 	return badge
+}
+
+// isContextSynced is the Repos page's "synced" badge rule, which the Overview Repos tile counts too.
+func isContextSynced(presence repos.ContextPresence, coverage repos.ContextCoverage, coverageErr error) bool {
+	if presence.State != repos.ContextDeployed {
+		return false
+	}
+	return coverageErr == nil && len(coverage.Missing) == 0
 }
 
 type repoRow struct {
@@ -171,33 +217,7 @@ type reposIndexPage struct {
 	Title     string
 }
 
-// rootCause unwraps to the innermost error — the actionable fact of a wrapped
-// chain (e.g. "connection refused"); the full chain stays in the tooltip.
-// worktreeSessions attributes a session to each worktree row: the newest
-// session on the worktree's checked-out branch wins over the newest session
-// whose cwd is the directory — a pool-recycled dir otherwise shows its
-// previous occupant. The cwd fallback keeps detached-HEAD worktrees covered.
-func worktreeSessions(statuses []repos.WorktreeStatus, index *peek.SessionIndex) map[string]peek.Session {
-	if index == nil {
-		return nil
-	}
-
-	sessions := make(map[string]peek.Session)
-	for _, status := range statuses {
-		if status.Worktree == "" {
-			continue
-		}
-		if session, ok := index.ByBranch[status.Branch]; ok {
-			sessions[status.Worktree] = session
-			continue
-		}
-		if session, ok := index.ByCwd[status.Worktree]; ok {
-			sessions[status.Worktree] = session
-		}
-	}
-	return sessions
-}
-
+// rootCause shows the actionable innermost error; the full chain stays in the tooltip.
 func rootCause(err error) error {
 	for {
 		next := errors.Unwrap(err)
@@ -217,9 +237,7 @@ func (s *Server) findRepo(w http.ResponseWriter, r *http.Request) *repos.Repo {
 	return repo
 }
 
-// runRepoOp wraps every mutation: lock (D20/H1), operation, captured-output
-// fragment. Operation failures render inside the result block — the script
-// output is the UI, not an HTTP error.
+// runRepoOp renders failures inside the result block: the script output is the UI, not an HTTP error.
 func (s *Server) runRepoOp(lockKey, trigger string, op func(ctx context.Context) (string, error), w http.ResponseWriter, r *http.Request) {
 	if !s.repoLocks.TryAcquire(lockKey) {
 		respond.WithConflict("an operation is already running", w)
@@ -236,26 +254,32 @@ func (s *Server) runRepoOp(lockKey, trigger string, op func(ctx context.Context)
 		result.Error = err.Error()
 	}
 
-	// Every op may have mutated worktree state (also on error — partial
-	// effects); the detail page's #worktree-status listens for this event
-	// and re-pulls the table so removed worktrees never linger as rows.
+	// Fire even on error: partial effects may have changed worktree state.
 	w.Header().Set("HX-Trigger", trigger)
 	s.renderFragment(w, tmplOpResult, result)
 }
 
-func (s *Server) handleRepoCherryPick(w http.ResponseWriter, r *http.Request) {
-	repo := s.findRepo(w, r)
-	if repo == nil {
-		return
+// cachedStatuses treats a fingerprint error as changed: degrade to a fresh scan, never to stale rows.
+func (s *Server) cachedStatuses(ctx context.Context, kind string, refresh bool, repo *repos.Repo) (statusEntry, bool, error) {
+	key := statusKey{Kind: kind, Repo: repo.Name}
+	fingerprint, fingerprintErr := repos.Fingerprint(ctx, repo.Path)
+	entry, cached := s.statusCache.Get(key)
+	hit := cached && !refresh && fingerprintErr == nil && fingerprint == entry.Fingerprint
+	if hit {
+		return entry, true, nil
 	}
-
-	commit := r.FormValue("commit")
-	op := func(ctx context.Context) (string, error) {
-		return repos.CherryPick(ctx, commit, repo.Path, s.worktreeScripts)
+	binaryKind := kind
+	if kind == statusKindAll {
+		binaryKind = ""
 	}
-	s.runRepoOp(repo.Name, "repo-op", op, w, r)
+	scan, err := repos.Status(ctx, s.agentwt, binaryKind, repo.Path)
+	if err != nil {
+		return statusEntry{}, false, err
+	}
+	return s.statusCache.Store(key, fingerprint, scan), false, nil
 }
 
+// handleRepoCommits reads the cached document, so a drill-down spawns no subprocess.
 func (s *Server) handleRepoCommits(w http.ResponseWriter, r *http.Request) {
 	repo := s.findRepo(w, r)
 	if repo == nil {
@@ -276,16 +300,24 @@ func (s *Server) handleRepoCommits(w http.ResponseWriter, r *http.Request) {
 		respond.WithBadRequest(err.Error(), w)
 		return
 	}
-	commits, err := repos.Commits(r.Context(), branch, class, repo.Path, s.worktreeScripts)
+	// The branch's own kind scope: a drill-down never starts an all scan (D4).
+	entry, _, err := s.cachedStatuses(r.Context(), repos.AgentBranchKind(branch), false, repo)
 	if err != nil {
 		respond.WithInternalServerError(err, w)
+		return
+	}
+	index := slices.IndexFunc(entry.Statuses, func(status repos.WorktreeStatus) bool {
+		return status.Branch == branch
+	})
+	if index < 0 {
+		http.NotFound(w, r)
 		return
 	}
 
 	data := commitListPage{
 		Branch:  branch,
 		Class:   class,
-		Commits: commits,
+		Commits: repos.Commits(class, &entry.Statuses[index]),
 		Page:    pageRepos,
 		Repo:    repo.Name,
 		Title:   "Commits — " + branch,
@@ -299,7 +331,13 @@ func (s *Server) handleRepoDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The shell never opens on the all scope: a full scan starts only from a confirmed click.
+	kind := r.URL.Query().Get("kind")
+	if kind == "" || kind == statusKindAll {
+		kind = statusKindDefault
+	}
 	data := repoDetailPage{
+		Kind:  kind,
 		Page:  pageRepos,
 		Repo:  *repo,
 		Title: "Repo — " + repo.Name,
@@ -307,27 +345,36 @@ func (s *Server) handleRepoDetail(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, tmplRepoDetail, data)
 }
 
-// handleRepoWorktreeStatus renders the #worktree-status fragment — all
-// subprocess and peek cost lives here so the page shell paints instantly and
-// load, filter, and repo-op refreshes all swap this one element (D3).
+// handleRepoWorktreeStatus holds all subprocess and peek cost so the page shell paints instantly.
 func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request) {
 	repo := s.findRepo(w, r)
 	if repo == nil {
 		return
 	}
 
-	data := worktreeStatusPage{Repo: *repo}
+	kind := r.URL.Query().Get("kind")
+	if kind == "" {
+		kind = statusKindDefault
+	}
+	confirm := fmt.Sprintf(allWorktreesConfirm, repo.Name)
+	data := worktreeStatusPage{Kind: kind, Repo: *repo}
+	if kind == statusKindAll {
+		data.Confirm = confirm
+	}
 	refresh := r.URL.Query().Get("refresh") == "1"
+	// agentwt off is a choice: an explanation, never the red scan error (concept D9).
+	if !s.records.has(s.machine, components.Agentwt) {
+		data.IsAgentwtOff = true
+		s.renderFragment(w, tmplWorktreeStatus, data)
+		return
+	}
 
-	// Checkout and peek run concurrently with the dominant status script —
-	// sum becomes max, and a peek timeout no longer stacks on top (D7). Each
-	// goroutine writes only its own locals before wg.Wait(); degradation
-	// stays per-section: every error lands in its own page field (like D3).
+	// Each goroutine writes only its own locals before wg.Wait(), so errors stay per-section.
 	var wg sync.WaitGroup
 	var checkout *repos.CheckoutStatus
 	var checkoutErr error
 	var checkoutMs int64
-	var sessionIndex *peek.SessionIndex
+	var peekSessions map[string]peek.Session
 	var sessionsErr error
 	var sessionsMs int64
 	wg.Add(2)
@@ -340,35 +387,26 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 	go func() {
 		defer wg.Done()
 		start := time.Now()
-		sessionIndex, sessionsErr = s.peekClient.SessionIndex(r.Context())
+		peekCtx, cancel := context.WithTimeout(r.Context(), peekSessionsTimeout)
+		defer cancel()
+		peekSessions, sessionsErr = s.peekClient.SessionsById(peekCtx)
 		sessionsMs = time.Since(start).Milliseconds()
 	}()
 
-	// A plain load serves the last scan only while the fingerprint (branch
-	// tips + worktree set) still matches it; any structural change — and
-	// ?refresh=1 (Reload button, repo-op re-pull) — re-scans, so mutations
-	// and new worktrees never linger or hide. A fingerprint error counts as
-	// changed: degrade to a fresh scan, never to stale rows.
-	var statuses []repos.WorktreeStatus
-	var err error
+	// A plain load serves the last scan only while the fingerprint still matches.
 	start := time.Now()
-	fingerprint, fingerprintErr := repos.Fingerprint(r.Context(), repo.Path)
-	entry, cached := s.statusCache.Get(repo.Name)
-	data.Cached = cached && !refresh && fingerprintErr == nil && fingerprint == entry.Fingerprint
-	if data.Cached {
-		statuses = entry.Statuses
-	} else {
-		statuses, err = repos.Status(r.Context(), repo.Path, s.worktreeScripts)
-		if err == nil {
-			entry = s.statusCache.Store(repo.Name, fingerprint, statuses)
-		}
-	}
+	entry, cached, err := s.cachedStatuses(r.Context(), kind, refresh, repo)
+	statuses := entry.Statuses
+	data.Cached = cached
 	statusMs := time.Since(start).Milliseconds()
 	wg.Wait()
 	data.ScannedAt = entry.ScannedAt
 
 	data.Timings = []stepTiming{
 		{Ms: statusMs, Step: "status"},
+		{Ms: entry.Timings.AnalysisMs, Step: "analysis"},
+		{Ms: entry.Timings.WorktreesMs, Step: "worktrees"},
+		{Ms: entry.Timings.OrderMs, Step: "order"},
 		{Ms: checkoutMs, Step: "checkout"},
 		{Ms: sessionsMs, Step: "sessions"},
 	}
@@ -379,17 +417,15 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 		data.CheckoutErr = checkoutErr.Error()
 	}
 	data.Checkout = checkout
-	// peek down → degraded session column, the fragment still renders (D3);
-	// banner label carries the root cause + endpoint, full chain in the tooltip.
-	if sessionsErr != nil {
+	// peek down → degraded session column; the fragment still renders, and peek off shows no banner.
+	isPeekDown := sessionsErr != nil && s.records.has(s.machine, components.Peek)
+	if isPeekDown {
 		data.SessionsErr = fmt.Sprintf("%s at %s", rootCause(sessionsErr), s.peekClient.Endpoint())
 		data.SessionsErrDetail = sessionsErr.Error()
 	}
-	data.Sessions = worktreeSessions(statuses, sessionIndex)
+	data.PeekSessions = peekSessions
 
-	// Chips are the distinct base branches from the full list ("unknown" is a
-	// sentinel, not a base). Filtering itself is client-side — every row is
-	// rendered with data attributes and the detail page's JS owns visibility.
+	// "unknown" is a sentinel, not a base.
 	values := make(map[string]bool)
 	for _, status := range statuses {
 		if status.From != "unknown" {
@@ -397,16 +433,7 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 		}
 	}
 	data.Statuses = statuses
-	// Kind chips separate claude/* session worktrees from claude-routines/*
-	// routine lineages.
-	for _, kind := range []string{"", "claude", "claude-routines"} {
-		label := kind
-		if label == "" {
-			label = "all"
-		}
-		chip := worktreeFilter{Label: label, Value: kind}
-		data.KindFilters = append(data.KindFilters, chip)
-	}
+	data.KindFilters = kindFilters(kind, confirm, entry.Kinds)
 	for _, base := range append([]string{""}, slices.Sorted(maps.Keys(values))...) {
 		label := base
 		if label == "" {
@@ -416,47 +443,73 @@ func (s *Server) handleRepoWorktreeStatus(w http.ResponseWriter, r *http.Request
 		data.BaseFilters = append(data.BaseFilters, chip)
 	}
 
-	log.Printf("timing: repo=%s %s rows=%d cached=%t", repo.Name, formatTimings(data.Timings), len(statuses), data.Cached)
+	log.Printf("timing: repo=%s kind=%s %s rows=%d cached=%t", repo.Name, kind, formatTimings(data.Timings), len(statuses), data.Cached)
 	s.renderFragment(w, tmplWorktreeStatus, data)
 }
 
-func (s *Server) handleRepoMerge(w http.ResponseWriter, r *http.Request) {
-	repo := s.findRepo(w, r)
-	if repo == nil {
-		return
+// archiveSelected salvages a worktree before a forced removal and archives its branch before a deletion, into one trash stamp; returns the stash path.
+func (s *Server) archiveSelected(ctx context.Context, branch, repoPath string, isForce, isDeleteBranch bool) (string, error) {
+	if !isForce && !isDeleteBranch {
+		return "", nil
 	}
 
-	branch := r.PathValue("branch")
-	op := func(ctx context.Context) (string, error) {
-		return repos.Merge(ctx, branch, repo.Path, s.worktreeScripts)
+	worktrees, err := gitwt.List(ctx, repoPath)
+	if err != nil {
+		return "", fmt.Errorf("Server.archiveSelected: %w", err)
 	}
-	s.runRepoOp(repo.Name, "repo-op", op, w, r)
-}
 
-// removalSkipMarkers are the remove script's skip-line prefixes — the script
-// exits 0 on skips, so output is the only signal that rows were kept (D6).
-var removalSkipMarkers = []string{"skipped: ", "skipped branch: ", "no worktree checked out"}
+	base, err := shell.Run(ctx, repoPath, "git", "merge-base", "HEAD", branch)
+	if err != nil {
+		return "", fmt.Errorf("Server.archiveSelected: %s: %w", branch, err)
+	}
 
-// removalNeedsRefresh reports whether a remove run left rows the optimistic
-// UI hid — any error or skip means the table must re-sync from the server.
-func removalNeedsRefresh(output string) bool {
-	for line := range strings.Lines(output) {
-		for _, marker := range removalSkipMarkers {
-			if strings.HasPrefix(line, marker) {
-				return true
-			}
+	base = strings.TrimSpace(base)
+	index := slices.IndexFunc(worktrees, func(worktree gitwt.Worktree) bool { return worktree.Branch == branch })
+	isCheckedOut := index >= 0
+	isSalvageDue := isForce && isCheckedOut
+	if !isSalvageDue && !isDeleteBranch {
+		return "", nil
+	}
+
+	dest, err := s.trash.StampDir()
+	if err != nil {
+		return "", fmt.Errorf("Server.archiveSelected: %w", err)
+	}
+
+	if isSalvageDue {
+		request := &gitwt.SalvageRequest{
+			Base:          base,
+			Dest:          filepath.Join(dest, "worktree"),
+			IsArchiveOnly: true,
+			Repo:          repoPath,
+			Worktree:      worktrees[index].Path,
+		}
+		if _, err := gitwt.Salvage(ctx, request); err != nil {
+			return "", fmt.Errorf("Server.archiveSelected: %w", err)
 		}
 	}
-	return false
+
+	if isDeleteBranch {
+		sha, err := gitwt.ArchiveBranch(ctx, base, branch, filepath.Join(dest, "branches"), repoPath)
+		if err != nil {
+			return "", fmt.Errorf("Server.archiveSelected: %w", err)
+		}
+
+		entry := &trash.Entry{
+			Action: "repos remove",
+			Kind:   trash.KindBranchDeleted,
+			Path:   repoPath + "#" + branch,
+			Reason: "sha " + sha,
+			Stash:  s.trash.RelOf(dest) + "/branches",
+		}
+		if err := s.trash.Note(entry); err != nil {
+			return "", fmt.Errorf("Server.archiveSelected: %w", err)
+		}
+	}
+	return dest, nil
 }
 
-// handleRepoRemoveSelected removes every selected worktree in one op — the
-// checkbox selection posts its branches as form values; the shared repo lock
-// and one op-result cover the whole batch, stopping at the first failure.
-// The UI hides the selected rows optimistically on submit; a clean run sends
-// no refresh trigger (the hidden rows are the truth), while any error or
-// script-reported skip fires repo-op so the fragment re-sync restores the
-// actual state incl. partial effects (D4/D5/D6).
+// handleRepoRemoveSelected fires repo-op only on an error or skip: the optimistically hidden rows are otherwise the truth.
 func (s *Server) handleRepoRemoveSelected(w http.ResponseWriter, r *http.Request) {
 	repo := s.findRepo(w, r)
 	if repo == nil {
@@ -484,9 +537,22 @@ func (s *Server) handleRepoRemoveSelected(w http.ResponseWriter, r *http.Request
 	opStart := time.Now()
 	var outputs []string
 	var opErr error
+	skipped := false
 	for _, branch := range branches {
-		output, err := repos.Remove(r.Context(), branch, force, deleteBranch, repo.Path, s.worktreeScripts)
-		outputs = append(outputs, output)
+		stash, err := s.archiveSelected(r.Context(), branch, repo.Path, force, deleteBranch)
+		if err != nil {
+			opErr = fmt.Errorf("%s: %w", branch, err)
+			break
+		}
+
+		if stash != "" {
+			outputs = append(outputs, "archived "+branch+" -> "+stash)
+		}
+		output, err := repos.Remove(r.Context(), branch, force, deleteBranch, repo.Path, s.agentwt)
+		if output != nil {
+			outputs = append(outputs, output.Text)
+			skipped = skipped || output.HasSkips()
+		}
 		if err != nil {
 			opErr = fmt.Errorf("%s: %w", branch, err)
 			break
@@ -494,38 +560,23 @@ func (s *Server) handleRepoRemoveSelected(w http.ResponseWriter, r *http.Request
 	}
 
 	elapsed := time.Since(opStart)
-	output := strings.Join(outputs, "\n")
 	log.Printf("timing: op subject=%s ms=%d err=%v", repo.Name, elapsed.Milliseconds(), opErr != nil)
 	result := opResult{
 		Duration: elapsed.Round(100 * time.Millisecond).String(),
-		Output:   output,
+		Output:   strings.Join(outputs, "\n"),
 		Page:     pageRepos,
 		Subject:  repo.Name,
 	}
 	if opErr != nil {
 		result.Error = opErr.Error()
 	}
-	if opErr != nil || removalNeedsRefresh(output) {
+	if opErr != nil || skipped {
 		w.Header().Set("HX-Trigger", "repo-op")
 	} else {
-		// Clean run: the optimistic UI keeps the rows hidden and no re-scan
-		// fires — drop them from the cache so plain loads agree.
+		// Clean run: no re-scan fires, so drop the rows from the cache for plain loads to agree.
 		s.statusCache.DropBranches(repo.Name, branches)
 	}
 	s.renderFragment(w, tmplOpResult, result)
-}
-
-func (s *Server) handleRepoSync(w http.ResponseWriter, r *http.Request) {
-	repo := s.findRepo(w, r)
-	if repo == nil {
-		return
-	}
-
-	branch := r.PathValue("branch")
-	op := func(ctx context.Context) (string, error) {
-		return repos.Sync(ctx, branch, repo.Path, s.worktreeScripts)
-	}
-	s.runRepoOp(repo.Name, "repo-op", op, w, r)
 }
 
 func (s *Server) handleReposIndex(w http.ResponseWriter, r *http.Request) {
@@ -534,13 +585,12 @@ func (s *Server) handleReposIndex(w http.ResponseWriter, r *http.Request) {
 		title = translate(s.presentation.language(), "Projects")
 	}
 	data := reposIndexPage{Page: pageRepos, Title: title}
-	branchPrefixes := []string{"claude/", "claude-routines/"}
 	sourceIndexPath := filepath.Join(s.contextDir, repos.ContextFileName)
 	for _, repo := range s.repoRegistry.Repos() {
 		data.RepoNames = append(data.RepoNames, repo.Name)
-		worktrees := repos.WorktreeCounts(r.Context(), repo.Path, branchPrefixes)
-		presence := repos.DetectContext(repo.Path)
-		coverage, coverageErr := repos.DetectContextCoverage(sourceIndexPath, repo.Name, repo.Path, presence)
+		worktrees := repos.WorktreeCounts(r.Context(), repo.Path)
+		presence := repos.DetectContext(repo.Path, contextdocs.DeployRecordPath(s.stateDir, repo.Name))
+		coverage, coverageErr := repos.DetectContextCoverage(sourceIndexPath, repo.Name, presence)
 		row := repoRow{
 			Acdsl:     newAcdslBadge(presence),
 			Context:   newContextBadge(presence, coverage, coverageErr),
@@ -565,44 +615,33 @@ func (s *Server) handleReposAdd(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		name = filepath.Base(path)
 	}
-	// Casual installs always grant: the mining roster derives from
-	// additionalDirectories, so an unmined project must not be registrable (C6).
-	grantAccess := r.FormValue("additional-dir") == "on" || !s.presentation.isDeveloperAudience()
 	label := strings.TrimSpace(r.FormValue("label"))
 	repo := repos.Repo{Label: label, Name: name, Path: path}
-	// Validate before the op: its git init must never fire for a repo the
-	// registry would reject anyway (reserved or malformed name).
+	// Validate first: git init must never fire for a repo the registry would reject.
 	if err := repo.Validate(); err != nil {
 		respond.WithBadRequest(err.Error(), w)
 		return
 	}
+	// Path — a missing path or a file would register a dead project the roster can never mine
+	if info, err := os.Stat(path); err != nil || !info.IsDir() {
+		respond.WithBadRequest("path is not an existing folder: "+path, w)
+		return
+	}
 	op := func(ctx context.Context) (string, error) {
-		// A project the roster can't mine is a dead registration — an existing
-		// folder without a repo gets a local one (no remote, C19); a missing
-		// path keeps the registry's own error behavior.
-		if info, statErr := os.Stat(path); statErr == nil && info.IsDir() {
-			if _, gitErr := os.Stat(filepath.Join(path, ".git")); gitErr != nil {
-				if output, err := shell.Run(ctx, path, "git", "init", "-b", "main"); err != nil {
-					return "", fmt.Errorf("handleReposAdd: git init failed: %w\n%s", err, output)
-				}
+		// Fail before git init touches the folder; Add re-checks under its own lock and stays the authority.
+		if _, isRegistered := s.repoRegistry.Find(repo.Name); isRegistered {
+			return "", fmt.Errorf("handleReposAdd: Duplicate repo name %s", repo.Name)
+		}
+		// A folder without a repo gets a local one (no remote, C19).
+		if _, gitErr := os.Stat(filepath.Join(path, ".git")); gitErr != nil {
+			if output, err := shell.Run(ctx, path, "git", "init", "-b", "main"); err != nil {
+				return "", fmt.Errorf("handleReposAdd: git init failed: %w\n%s", err, output)
 			}
 		}
 		if err := s.repoRegistry.Add(repo); err != nil {
 			return "", err
 		}
-		if !grantAccess {
-			return fmt.Sprintf("added %s (%s)", repo.Name, repo.Path), nil
-		}
-		if err := s.appendClaudeItem("permissions.additionalDirectories", repo.Path); err != nil {
-			// Roll back the registry Add so add-with-grant is transactional:
-			// otherwise the repo is left registered with no grant and a retry
-			// errors "already exists" from Add, stranding it permanently.
-			if rollbackErr := s.repoRegistry.Remove(repo.Name); rollbackErr != nil {
-				return "", fmt.Errorf("handleReposAdd: additionalDirectories grant failed: %w; rollback of repo add also failed: %v", err, rollbackErr)
-			}
-			return "", fmt.Errorf("handleReposAdd: additionalDirectories grant failed, repo add rolled back: %w", err)
-		}
-		return fmt.Sprintf("added %s (%s) + additionalDirectories grant", repo.Name, repo.Path), nil
+		return fmt.Sprintf("added %s (%s)", repo.Name, repo.Path), nil
 	}
 	s.runRepoOp(registryLockKey, "repo-op", op, w, r)
 }
@@ -642,4 +681,13 @@ func (s *Server) handleReposChooseFolder(w http.ResponseWriter, r *http.Request)
 		data.Value = path
 	}
 	s.renderFragment(w, tmplRepoPath, data)
+}
+
+func (s *Server) handleReposPruneJetbrains(w http.ResponseWriter, r *http.Request) {
+	dryRun := r.FormValue("dry-run") == "on"
+	force := r.FormValue("force") == "on"
+	op := func(ctx context.Context) (string, error) {
+		return repos.PruneJetbrains(ctx, dryRun, force)
+	}
+	s.runRepoOp(jetbrainsLockKey, "repo-op", op, w, r)
 }

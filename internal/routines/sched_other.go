@@ -7,22 +7,24 @@ import (
 	"errors"
 )
 
-// errUnsupported degrades the scheduler surface on platforms without a
-// backend (launchd on darwin, Task Scheduler on windows). Exists so the
-// server package builds everywhere — CI runs the test suite on linux —
-// while routine start/stop/run stay honest errors there.
+// errUnsupported lets the server build on linux, where CI runs, while start/stop/run stay honest errors.
 var errUnsupported = errors.New("routines: no scheduler backend on this platform")
 
-// IsLoaded reports false everywhere: nothing can be loaded without a
-// scheduler backend.
 func IsLoaded(ctx context.Context, label string) (bool, error) {
 	return false, nil
 }
 
-// IsRunning reports false everywhere: nothing can run without a scheduler
-// backend.
 func IsRunning(ctx context.Context, label string) (bool, error) {
 	return false, nil
+}
+
+// RegisterLogonTask and StopTask are Task Scheduler verbs; there is no scheduler backend here.
+func RegisterLogonTask(ctx context.Context, label, xml string) (string, error) {
+	return "", errUnsupported
+}
+
+func StopTask(ctx context.Context, label string) (string, error) {
+	return "", errUnsupported
 }
 
 // RunNow is unsupported without a scheduler backend.
@@ -42,3 +44,8 @@ func Stop(ctx context.Context, label string) (string, error) {
 
 // SyncAll is a no-op without a scheduler backend; the server still starts.
 func SyncAll(ctx context.Context, dir string) {}
+
+// Unregister has nothing to remove without a scheduler backend.
+func Unregister(ctx context.Context, label string) (string, error) {
+	return "", nil
+}

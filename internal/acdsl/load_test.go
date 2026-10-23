@@ -29,6 +29,10 @@ func gitFixture(t *testing.T) string {
 	write("tasks/contract.acdsl", marker(`TASK-X-001 fake anchor="^internal/a/" lifetime="task" why="w"`)+"\n")
 	write("tasks/contract.acdsl.archived", marker(`TASK-X-999 fake anchor="x" lifetime="task" why="w"`)+"\n")
 	write("docs/note.md", "just data\n")
+	write("evals/run/probes/fixture.acdsl", marker(`X-002 fake anchor="x" why="w"`)+"\n")
+	write("evals/demo/2026-10-06-abc123/interpretation.md", "- a\n")
+	write("sessions/work/2026-W42/abc123.json", "{}\n")
+	write("plans/2026-01-01-x-wip-abc1234/reviews/round-1/probes/probes.acdsl", marker(`PROBE-X-001 absent anchor="x" lifetime="task" why="w"`)+"\n")
 	return root
 }
 
@@ -40,6 +44,10 @@ func TestFileUniverseAllAndPathspecs(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{
 		"internal/a/a.go", "tasks/contract.acdsl", "tasks/contract.acdsl.archived", "docs/note.md",
+		"evals/run/probes/fixture.acdsl",
+		"evals/demo/2026-10-06-abc123/interpretation.md",
+		"sessions/work/2026-W42/abc123.json",
+		"plans/2026-01-01-x-wip-abc1234/reviews/round-1/probes/probes.acdsl",
 	}, all)
 
 	goFiles, err := FileUniverse(ctx, root, "*.go")
@@ -75,9 +83,14 @@ func TestDiscoverRulesScansGoAndActiveAcdslOnly(t *testing.T) {
 	for _, rule := range discovery.Rules {
 		ids = append(ids, rule.Id)
 	}
-	// The renamed .acdsl.archived file is data, not a declaration surface.
+	// The renamed .acdsl.archived file is data, not a declaration surface;
+	// so is a persisted review round's probes.acdsl mirror.
 	assert.ElementsMatch(t, []string{"X-001", "TASK-X-001"}, ids)
 	// The anchor universe is every file — anchors alone decide scope.
 	assert.Contains(t, discovery.Universe, "docs/note.md")
 	assert.Contains(t, discovery.Universe, "internal/a/a.go")
+	// Recorded-artifact trees stay out, except the files rules gate.
+	assert.NotContains(t, discovery.Universe, "evals/run/probes/fixture.acdsl")
+	assert.Contains(t, discovery.Universe, "evals/demo/2026-10-06-abc123/interpretation.md")
+	assert.Contains(t, discovery.Universe, "sessions/work/2026-W42/abc123.json")
 }

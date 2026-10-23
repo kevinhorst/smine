@@ -1,0 +1,61 @@
+{
+  "sessions": [
+    {
+      "cacheCreationTokens": 0,
+      "cacheReadTokens": 132608,
+      "costUSD": 0.6951980000000001,
+      "directory": "2026/09/30",
+      "inputTokens": 52404,
+      "lastActivity": "2026-09-30T21:57:03.869Z",
+      "models": {
+        "gpt-6-astra": {
+          "cacheCreationTokens": 0,
+          "cacheReadTokens": 132608,
+          "inputTokens": 52404,
+          "isFallback": false,
+          "outputTokens": 771,
+          "reasoningOutputTokens": 11,
+          "totalTokens": 185783
+        }
+      },
+      "outputTokens": 771,
+      "reasoningOutputTokens": 11,
+      "sessionFile": "rollout-2026-09-30T23-56-29-01a0f451-b1d9-7a30-a996-08dae8ffed07",
+      "sessionId": "2026/09/30/rollout-2026-09-30T23-56-29-01a0f451-b1d9-7a30-a996-08dae8ffed07",
+      "totalTokens": 185783
+    },
+    {
+      "cacheCreationTokens": 0,
+      "cacheReadTokens": 21203328,
+      "costUSD": 29.537407999999996,
+      "directory": "2026/10/01",
+      "inputTokens": 674433,
+      "lastActivity": "2026-10-02T00:59:25.312Z",
+      "models": {
+        "gpt-6-astra": {
+          "cacheCreationTokens": 0,
+          "cacheReadTokens": 21203328,
+          "inputTokens": 674433,
+          "isFallback": false,
+          "outputTokens": 31795,
+          "reasoningOutputTokens": 6943,
+          "totalTokens": 21909556
+        }
+      },
+      "outputTokens": 31795,
+      "reasoningOutputTokens": 6943,
+      "sessionFile": "rollout-2026-10-01T00-03-38-01a0f458-3ae5-7290-b9df-b47f41995517",
+      "sessionId": "2026/10/01/rollout-2026-10-01T00-03-38-01a0f458-3ae5-7290-b9df-b47f41995517",
+      "totalTokens": 21909556
+    }
+  ],
+  "totals": {
+    "cacheCreationTokens": 0,
+    "cacheReadTokens": 34998272,
+    "costUSD": 53.19304950000001,
+    "inputTokens": 1719760,
+    "outputTokens": 81977,
+    "reasoningOutputTokens": 11451,
+    "totalTokens": 36800009
+  }
+}

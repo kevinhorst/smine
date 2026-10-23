@@ -1,0 +1,26 @@
+You compare anonymous runs of the same task; labels hide which setup produced which run.
+Task: <task>
+Runs:
+<runs><reference>
+
+Verify every defect you report against that run's worktree; drop claims you cannot verify.
+Severity: BLOCKER (wrong or broken result), MAJOR (requirement missed or real bug), MINOR (worth fixing, not wrong).
+Rank all labels best first: correctness, then completeness, then minimal scope.
+
+Write <run dir>/compare.json:
+{
+  "ranking": ["B", "A"],
+  "arms": [
+    {
+      "label": "A",
+      "summary": "one sentence",
+      "defects": [
+        {
+          "severity": "MAJOR",
+          "file": "cmd/toolpolicy/decide.go:201",
+          "claim": "acceptEdits path still returns none for flagged cp"
+        }
+      ]
+    }
+  ]
+}

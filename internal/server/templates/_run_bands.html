@@ -1,0 +1,51 @@
+{{define "_run_bands.html"}}
+<script>
+{{/* Day bands (client-side): consecutive rows of the table named by the
+     template argument grouped per UTC day — the stamps are UTC and the
+     Timestamp cell shows the UTC date; a clickable band header row per day,
+     newest expanded, older collapsed. Shared by the routine detail, the
+     global routines history and the skill detail's invocations. */}}
+(function () {
+  var tableId = "{{.}}";
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  var body = table.querySelector('tbody');
+  if (!body) return;
+  var span = table.tHead && table.tHead.rows[0] ? table.tHead.rows[0].cells.length : 1;
+  function dayStart(stamp) {
+    var date = new Date(stamp);
+    if (isNaN(date)) return null;
+    date.setUTCHours(0, 0, 0, 0);
+    return date;
+  }
+  function iso(date) { return date.toISOString().slice(0, 10); }
+  var bands = [], current = null;
+  Array.prototype.slice.call(body.querySelectorAll('tr[data-stamp]')).forEach(function (row) {
+    var start = dayStart(row.dataset.stamp);
+    var key = start ? iso(start) : 'unknown';
+    if (!current || current.key !== key) {
+      current = { key: key, start: start, rows: [] };
+      bands.push(current);
+    }
+    current.rows.push(row);
+  });
+  bands.forEach(function (band, index) {
+    var header = document.createElement('tr');
+    header.className = 'run-band';
+    var cell = document.createElement('td');
+    cell.colSpan = span;
+    var label = band.start ? iso(band.start) : 'unknown date';
+    cell.textContent = label + ' (' + band.rows.length + ')';
+    header.appendChild(cell);
+    body.insertBefore(header, band.rows[0]);
+    var collapsed = index > 0;
+    function apply() {
+      band.rows.forEach(function (row) { row.hidden = collapsed; });
+      header.classList.toggle('collapsed', collapsed);
+    }
+    header.addEventListener('click', function () { collapsed = !collapsed; apply(); });
+    apply();
+  });
+})();
+</script>
+{{end}}

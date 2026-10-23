@@ -1,0 +1,8 @@
+{{template "head" .}}
+{{template "nav" .}}
+<h1>{{.Week.Scope}} · {{t "Week"}} {{.Week.Label}}</h1>
+<div class="meta">{{.Week.Key}} · {{len .Week.Sessions}} {{t "sessions"}}</div>
+<p class="meta">{{t "Sessions /smine-batch has analysed this week — findings, frustration and positive signals per session."}}</p>
+
+{{template "_week_body.html" .}}
+{{template "foot" .}}

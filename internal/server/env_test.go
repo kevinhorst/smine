@@ -76,19 +76,39 @@ func TestEnvSectionOverriddenBadge(t *testing.T) {
 	assertSectionBadge(t, clean, "/api/env", "env", false)
 }
 
-func TestEnvMutationTriggersConfigOp(t *testing.T) {
+// Live: DEBUG shared, LOCAL local, PORT changed; fragment adds REPO as repo-only.
+func TestEnvRows(t *testing.T) {
+	live := map[string]string{"DEBUG": "1", "LOCAL": "x", "PORT": "7"}
+	fragment := map[string]string{"DEBUG": "1", "PORT": "8", "REPO": "y"}
+
+	rows := envRows(live, fragment, true)
+
+	expected := []envRow{
+		{Key: "DEBUG", Source: sourceShared, Value: "1"},
+		{Key: "LOCAL", Source: sourceLocal, Value: "x"},
+		{Key: "PORT", RepoValue: "8", Source: sourceChanged, Value: "7"},
+		{Key: "REPO", RepoValue: "y", Source: sourceRepoOnly},
+	}
+	assert.Equal(t, expected, rows)
+
+	unknown := envRows(live, nil, false)
+	require.Len(t, unknown, 3)
+	assert.Empty(t, unknown[0].Source)
+}
+
+func TestEnvMutationAnswersWithFragment(t *testing.T) {
 	settingsPath := filepath.Join(t.TempDir(), "settings.json")
 	server := newTestServer(t, &Options{SettingsPath: settingsPath})
 
 	response := httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, formPost("/api/env", url.Values{"key": {"FOO"}, "value": {"1"}}))
 	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-	assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+	assert.Empty(t, response.Header().Get("HX-Trigger"))
 
 	response = httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodDelete, "/api/env/FOO", nil))
 	require.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "config-op", response.Header().Get("HX-Trigger"))
+	assert.Empty(t, response.Header().Get("HX-Trigger"))
 
 	response = httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/env", nil))

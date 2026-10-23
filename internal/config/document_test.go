@@ -24,7 +24,7 @@ func TestDocumentRoundTrip(t *testing.T) {
 		s, err := Load(path)
 		require.NoError(t, err)
 		require.NoError(t, s.SetModel("sonnet"))
-		require.NoError(t, Save(path, s))
+		require.NoError(t, Save(path, s, nil))
 
 		reloaded, err := Load(path)
 		require.NoError(t, err)

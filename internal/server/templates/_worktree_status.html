@@ -4,9 +4,13 @@
      it re-fires on swapped-in content and would loop (D3). hx-disinherit
      keeps the refresh attributes off the op forms inside, whose responses
      target #op-result with the default swap. */}}
-<div id="worktree-status" hx-get="/repos/{{pathEscape .Repo.Name}}/status?refresh=1"
+<div id="worktree-status" hx-get="/repos/{{pathEscape .Repo.Name}}/status?kind={{queryEscape .Kind}}&refresh=1"
      hx-trigger="repo-op from:body" hx-swap="outerHTML"
+     {{with .Confirm}}hx-confirm="{{.}}"{{end}}
      hx-disinherit="*">
+{{if .IsAgentwtOff}}
+<div class="card"><span class="label">agentwt is off — worktree status and removal need it; turn it on in <a href="/profile#installation">Profile → Installation</a></span></div>
+{{else}}
 {{if .SessionsErr}}
 <div class="card card-error"><span class="label" title="{{.SessionsErrDetail}}">peek-mcp unavailable — session column degraded: {{.SessionsErr}}</span></div>
 {{end}}
@@ -15,7 +19,7 @@
 {{else if .Checkout}}
 <div class="meta checkout-line">checkout: {{.Checkout.Branch}}
   {{if gt .Checkout.Dirty 0}}
-  <span class="badge badge-error" title="merge and cherry-pick refuse on a dirty checkout — commit or stash first">{{.Checkout.Dirty}} uncommitted change(s)</span>
+  <span class="badge badge-error" title="informational — the overview runs no merges; a dirty checkout blocks nothing here">{{.Checkout.Dirty}} uncommitted change(s)</span>
   {{else}}
   <span class="badge badge-ok">clean</span>
   {{end}}
@@ -26,21 +30,26 @@
 {{else}}
 <div class="reload-form">
   <button type="button" class="small"
-          hx-get="/repos/{{pathEscape .Repo.Name}}/status?refresh=1"
+          hx-get="/repos/{{pathEscape .Repo.Name}}/status?kind={{queryEscape .Kind}}&refresh=1"
           hx-target="#worktree-status" hx-swap="outerHTML"
           hx-indicator="#status-reload-indicator" hx-disabled-elt="this"
+          {{with .Confirm}}hx-confirm="{{.}}"{{end}}
           title="re-run the worktree scan — plain loads serve the last scan">Reload</button>
   <span id="status-reload-indicator" class="htmx-indicator">scanning…</span>
   {{if not .ScannedAt.IsZero}}<span class="meta">as of {{.ScannedAt.Format "15:04:05"}}</span>{{end}}
 </div>
-{{/* Filtering is client-side (repo_detail.html script): chips carry their
-     group/value as data attributes; JS toggles row visibility and the
-     active-chip classes, and mirrors the state into ?base=&kind=. */}}
-<div class="card card-filter" title="kind chips separate claude/* session worktrees from claude-routines/* routine lineages; base chips show only branches created from the chosen base — the two combine">
+{{/* Kind chips are server-side: each requests its kind's rows and swaps this
+     fragment; the all chip confirms first. Base chips filter the loaded rows
+     client-side (repo_detail.html script, ?base=). */}}
+<div class="card card-filter" title="kind chips load one namespace's branches (claude/*, claude-<kind>/* — e.g. claude-routines/*, claude-review/* — or the codex pool); all scans every branch and worktree after a confirm; base chips show only loaded branches created from the chosen base">
   <span class="section-label">kind</span>
   {{range .KindFilters}}
-  <a class="badge badge-dim wt-filter" href="#"
-     data-group="kind" data-value="{{.Value}}">{{.Label}}</a>
+  <a class="badge {{if .IsActive}}badge-ok{{else}}badge-dim{{end}} wt-kind" href="#"
+     hx-get="/repos/{{pathEscape $.Repo.Name}}/status?kind={{queryEscape .Value}}"
+     hx-target="#worktree-status" hx-swap="outerHTML"
+     hx-indicator="#status-reload-indicator"
+     {{with .Confirm}}hx-confirm="{{.}}"{{end}}
+     data-kind="{{.Value}}">{{.Label}}</a>
   {{end}}
   {{if gt (len .BaseFilters) 1}}
   <hr class="filter-divider">
@@ -56,12 +65,7 @@
      script block below fills in hx-post/hx-confirm and the disabled states.
      It lives inside #worktree-status so every repo-op refresh resets it to
      the disabled no-selection state. */}}
-<div class="card card-actions" id="worktree-ops" data-repo="{{pathEscape .Repo.Name}}"
-     {{if and .Checkout (gt .Checkout.Dirty 0)}}data-checkout-dirty="1"{{end}}>
-  <form data-op="sync" hx-post="" hx-target="#op-result"
-        title="merge the base branch into the selected branch's worktree — skips a dirty worktree, aborts on conflict"><button type="submit" disabled>Sync</button></form>
-  <form data-op="merge" hx-post="" hx-target="#op-result"
-        title="merge the selected branch into the main checkout — requires a clean checkout, aborts on conflict"><button type="submit" disabled>Merge</button></form>
+<div class="card card-actions" id="worktree-ops" data-repo="{{pathEscape .Repo.Name}}">
   <form data-op="remove" data-delete-branch="1" hx-post="/repos/{{pathEscape .Repo.Name}}/remove-selected"
         title="remove the selected worktrees AND delete their branches — only when safe, or with force"
         hx-target="#op-result" hx-include="#op-force, input[name=branch]:checked">
@@ -80,30 +84,29 @@
   <thead>
     <tr>
       <th><input type="checkbox" class="select-all" title="select / deselect all rows"></th>
-      <th title="agent branch (claude/* session branches, claude-routines/* routine lineages)">Branch</th>
+      <th title="agent branch (claude/* session branches, claude-<kind>/* namespaces — e.g. claude-routines/*, claude-review/*); detached pool worktrees (Codex) show their tip commit instead">Branch</th>
       <th title="checkout directory name — hover the cell for the full path">Worktree</th>
-      <th title="branch this one was created from (reflog)">Base</th>
-      <th title="dirty/untracked · ahead/behind/unpicked — dirty: modified files in the worktree; untracked: untracked files excluding worktree infrastructure and tool droppings (.idea/, .claude/, .claude-worktree, .serena/, .DS_Store); ahead/behind: commits missing between this branch and Base; unpicked: commits transferred to no non-agent branch. Click a count for its commit list; – = no worktree / Base unknown">Counts</th>
-      <th title="probe results for commits missing from the base by patch-id: applied:n (patch applies empty on the base — change already present, byte-identical), resolved:n (conflicted re-pick on the base paired by range-diff — transferred verbatim after conflict), picked-resolved:n (landed on another branch as a same-subject twin with manual conflict resolution — counted as picked, but NOT auto-reconcilable: a merge or re-pick of this branch will conflict against the resolved version), squashed:n (branch content fully contained in a candidate via merge-tree — squash or reworded transfer; merging the branch there is a no-op)">Verdicts</th>
-      <th title="branch whose history has an actual merge commit for this branch's tip — empty when the state was only cherry-picked or fast-forwarded">Merged into</th>
-      <th title="every non-agent branch already containing all of this branch's work, base branch first">Contained in</th>
+      <th title="branch this one was created from (reflog); sha = the reflog recorded a bare commit and the closest candidate containing it was chosen; chain = created from another agent branch, its root is shown; unknown = nothing resolvable (never guessed)">Base</th>
+      <th class="wt-unpicked-head" title="own commits placed on no non-agent branch — this work exists only on this branch; click the count for its commit list">Unpicked</th>
+      <th title="dirty: tracked changes in the worktree (staged or unstaged); untracked: untracked files excluding worktree infrastructure and tool droppings (.idea/, .claude/, .claude-worktree, .cell-pids, .DS_Store); – = no worktree">Dirty / Untracked</th>
+      <th title="↗ ahead: commits on this branch missing from Base; ↙ behind: commits on Base missing from this branch; click a count for its commit list; – = Base unknown">Ahead / Behind</th>
+      <th title="the non-agent branch that already holds this branch's work — the base when it does, else the default branch, else any other; ancestor = the tip is in its history, placed = every own commit re-applies as a no-op or has a patch-id twin there (three-way merge simulation); – = the work lives nowhere else">Contained in</th>
+      <th title="session registered on this worktree (Claude pid registry / Codex rollouts); live = the process is alive, dead = its registry file outlived it; link opens the peek dashboard when peek knows the session">Session</th>
+      <th title="recommended merge order — #n = position in the simulated train (merges cleanly), #n ✗ = conflicts with a branch merged before it (hover for the paths); – = nothing to merge">Merge Order</th>
       <th title="date of the branch's newest commit">Last commit</th>
-      <th title="most recent Claude session in this worktree (via peek-mcp); link opens the peek dashboard">Session</th>
     </tr>
   </thead>
   <tbody>
     {{range .Statuses}}
-    <tr data-kind="{{if hasPrefix .Branch "claude-routines/"}}claude-routines{{else}}claude{{end}}" data-base="{{.From}}">
-      <td><input type="checkbox" name="branch" value="{{.Branch}}"
+    <tr data-kind="{{.Kind}}" data-base="{{.From}}">
+      <td>{{if .Branch}}<input type="checkbox" name="branch" value="{{.Branch}}"
            data-branch="{{.Branch}}" data-worktree="{{.Worktree}}"
-           {{if .SafeToRemove}}data-safe="1"{{end}}>
-        {{if and .SafeToRemove (gt .ResolvedPicks 0)}}<span class="badge badge-ok" title="all work is on a non-agent branch, but {{.ResolvedPicks}} commit(s) landed as manually conflict-resolved picks — NOT auto-reconcilable: a merge or re-pick of this branch will conflict against the resolved versions">✓ resolved</span>
-        {{else if and .SafeToRemove .SafeViaProbe}}<span class="badge badge-ok" title="safe via probe — a branch contains all work, partly by probe/twin verdict (see Verdicts)">✓</span>
-        {{else if and .SafeToRemove (lt .Dirty 0)}}<span class="badge badge-ok" title="no worktree checked out — nothing dirty to lose; every commit is contained on a non-agent branch">✓</span>
+           {{if .SafeToRemove}}data-safe="1"{{end}}>{{end}}
+        {{if and .SafeToRemove (lt .Dirty 0)}}<span class="badge badge-ok" title="no worktree checked out — nothing dirty to lose; every commit is contained on a non-agent branch">✓</span>
         {{else if .SafeToRemove}}<span class="badge badge-ok" title="safe to remove: every commit is contained on a non-agent branch and the worktree (if any) is clean">✓</span>
-        {{else}}<span class="badge badge-error" title="unsafe to remove: {{range $i, $r := .UnsafeReasons}}{{if $i}}, {{end}}{{$r}}{{end}}">✗</span>{{end}}
+        {{else}}<span class="badge badge-error" title="unsafe to remove: {{join .UnsafeReasons ", "}}">✗</span>{{end}}
       </td>
-      <td>{{.Branch}}</td>
+      <td>{{if .Branch}}{{.Branch}}{{else}}(detached {{.Head}}) {{if .Kind}}<span class="badge badge-dim" title="detached worktree of the {{.Kind}} pool — removal is branch-keyed, so this row has no checkbox">{{.Kind}}</span>{{end}}{{end}}</td>
       <td>
         {{if .Worktree}}
         <span title="{{.Worktree}}">{{baseName .Worktree}}</span>
@@ -112,36 +115,43 @@
         {{end}}
         {{else}}–{{end}}
       </td>
-      <td>{{.From}}</td>
-      <td class="wt-counts" title="dirty/untracked · ahead/behind/unpicked">
-        {{if lt .Dirty 0}}–{{else}}{{.Dirty}}{{end}}/{{if lt .Untracked 0}}–{{else}}{{.Untracked}}{{end}}
-        ·
-        {{if lt .Ahead 0}}–{{else if gt .Ahead 0}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/ahead"
-           hx-target="#commit-list" href="#">{{.Ahead}}</a>{{else}}0{{end}}/{{if lt .Behind 0}}–{{else if gt .Behind 0}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/behind"
-           hx-target="#commit-list" href="#">{{.Behind}}</a>{{else}}0{{end}}/{{if gt .Unpicked 0}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/unpicked"
-           hx-target="#commit-list" href="#">{{.Unpicked}}</a>{{else}}0{{end}}
+      <td>{{.From}}{{if eq .FromResolution "sha"}} <span class="badge badge-dim" title="reflog recorded a commit, not a branch; base = the closest candidate containing it">sha</span>{{else if eq .FromResolution "chain"}} <span class="badge badge-dim" title="created from another agent branch; base = that chain's root">chain</span>{{else if eq .FromResolution "reanchored"}} <span class="badge badge-dim" title="a rebase, reset or branch -f moved this branch onto this base after creation">moved</span>{{end}}</td>
+      <td class="wt-unpicked">
+        {{if gt .Unpicked 0}}<span class="st-badge st-badge-warn" title="{{.Unpicked}} own commit(s) placed on no non-agent branch — removing this branch loses them">⚠</span>
+        <span class="wt-unpicked-hot">{{if .Branch}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/unpicked"
+           hx-target="#commit-list" href="#">{{.Unpicked}}</a>{{else}}{{.Unpicked}}{{end}}</span>
+        {{else}}<span class="wt-zero">0</span>{{end}}
       </td>
-      <td>{{if .Verdicts}}{{.Verdicts}}{{else}}–{{end}}</td>
-      <td>{{if .MergedInto}}{{.MergedInto}}{{else}}–{{end}}</td>
+      <td>{{if lt .Dirty 0}}–{{else}}{{.Dirty}}/{{.Untracked}}{{end}}</td>
       <td>
-        {{if .In}}
-        {{range $i, $b := .In}}{{if lt $i 3}}{{if $i}}, {{end}}{{$b}}{{end}}{{end}}
-        {{if gt (len .In) 3}}
-        <a href="#" class="wt-more">…+{{len (slice .In 3)}}</a><span class="wt-more-rest" hidden>{{range slice .In 3}}, {{.}}{{end}}</span>
+        {{if lt .Ahead 0}}–{{else}}
+        <span class="wt-ahead{{if eq .Ahead 0}} wt-zero{{end}}" title="ahead of {{.From}}">↗ {{if and (gt .Ahead 0) .Branch}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/ahead"
+           hx-target="#commit-list" href="#">{{.Ahead}}</a>{{else}}{{.Ahead}}{{end}}</span>
+        <span class="wt-behind{{if eq .Behind 0}} wt-zero{{end}}" title="behind {{.From}}">↙ {{if and (gt .Behind 0) .Branch}}<a hx-get="/repos/{{pathEscape $.Repo.Name}}/branches/{{pathEscape .Branch}}/commits/behind"
+           hx-target="#commit-list" href="#">{{.Behind}}</a>{{else}}{{.Behind}}{{end}}</span>
         {{end}}
+      </td>
+      <td>
+        {{with .Contained}}<span title="{{.Rank}} branch">{{.Branch}}</span> {{if eq .Reason "ancestor"}}<span class="badge badge-dim" title="the tip is in this branch's history">ancestor</span>{{else if eq .Reason "all_commits_placed"}}<span class="badge badge-dim" title="every own commit is on this branch: re-applies as a no-op, was picked (same author, author time and subject, conflict resolution included) or has a patch-id twin">placed</span>{{else if eq .Reason "merge_adds_nothing"}}<span class="badge badge-dim" title="merging this branch into it changes nothing — squash-merged, or its commits cancel out">merged</span>{{else}}<span class="badge badge-warn" title="unknown containment reason {{.Reason}}">{{.Reason}}</span>{{end}}{{else}}–{{end}}
+      </td>
+      <td>
+        {{with .Session}}
+          {{if deref .Alive}}<span class="badge badge-ok">live</span>{{else if .Alive}}<span class="badge badge-dim" title="registry file present, process gone">dead</span>{{end}}
+          {{if .Status}}<span class="meta">{{.Status}}</span>{{end}}
+          {{$title := titleView .Name}}{{$label := $title.Text}}{{if not $label}}{{$label = printf "%s %s" .Agent .Entrypoint}}{{end}}
+          {{$peekURL := peekSessionURL .Id}}
+          {{if $peekURL}}<a href="{{$peekURL}}" title="{{.Id}} — open in peek">{{$label}}</a>{{else}}<span title="{{.Id}}">{{$label}}</span>{{end}} {{template "_title_state" $title}}
+          {{with index $.PeekSessions .Id}}<span class="meta">{{.LastActive.Format "2006-01-02 15:04"}}</span>{{end}}
         {{else}}–{{end}}
       </td>
-      <td>{{.LastCommit}}</td>
       <td>
-        {{with index $.Sessions .Worktree}}
-          {{if .Id}}
-            {{if .Live}}<span class="badge badge-ok">live</span>{{end}}
-            {{$peekURL := peekSessionURL .Id}}
-            {{if $peekURL}}<a href="{{$peekURL}}" title="{{.Id}} — open in peek">{{if .Title}}{{.Title}}{{else}}(untitled){{end}}</a>{{else}}{{.Title}}{{end}}
-            <span class="meta">{{.LastActive.Format "2006-01-02 15:04"}}</span>
+        {{if .Order}}
+          {{if eq .Order.State "clean"}}<span title="merges cleanly at this position of the train">#{{.Order.TrainPosition}}</span>
+          {{else if eq .Order.State "blocked"}}<span class="badge badge-error" title="conflicts after {{join .Order.BlockedBy ", "}}: {{join .Order.Paths ", "}}">#{{.Order.TrainPosition}} ✗</span>
           {{else}}–{{end}}
         {{else}}–{{end}}
       </td>
+      <td>{{.LastCommit}}</td>
     </tr>
     {{end}}
   </tbody>
@@ -149,11 +159,12 @@
 </div>
 <div class="empty" id="wt-filter-empty" hidden>No agent branches matching the active filter.</div>
 {{else}}
-<div class="empty">No agent branches (claude/*, claude-routines/*).</div>
+<div class="empty">No agent branches in this view (claude/*, claude-&lt;kind&gt;/*) — pick another kind above.</div>
 {{end}}
 {{end}}
 {{if .Timings}}
 <div class="meta">{{range $i, $t := .Timings}}{{if $i}} · {{end}}{{$t.Step}} {{$t.Ms}}ms{{end}}{{if .Cached}} · cached{{end}}</div>
+{{end}}
 {{end}}
 </div>
 {{end}}

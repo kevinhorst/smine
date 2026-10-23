@@ -29,8 +29,15 @@ func TestValidAcceptsNone(t *testing.T) {
 	assert.True(t, Valid(None))
 }
 
+func TestValidAcceptsAlwaysStandalone(t *testing.T) {
+	assert.True(t, Valid(Always))
+	assert.False(t, Valid("always,go"))
+	assert.False(t, Valid("go,always"))
+}
+
 func TestNamesSplitsListsAndEmptiesGlobal(t *testing.T) {
 	assert.Nil(t, Names(Global))
+	assert.Nil(t, Names(Always))
 	assert.Nil(t, Names(None))
 	assert.Nil(t, Names(""))
 	assert.Equal(t, []string{"smine"}, Names(ThisRepo))
@@ -51,6 +58,12 @@ func TestDeploysToNoneCoversNothing(t *testing.T) {
 	assert.False(t, DeploysTo(None, Global))
 	assert.False(t, DeploysTo(None, None))
 	assert.False(t, DeploysTo(None, ThisRepo))
+}
+
+func TestDeploysToAlwaysCoversNothing(t *testing.T) {
+	assert.False(t, DeploysTo(Always, "aqms"))
+	assert.False(t, DeploysTo(Always, ThisRepo))
+	assert.False(t, DeploysTo(Always, Always))
 }
 
 func TestDeploysToListCoversOnlyNamedTargets(t *testing.T) {

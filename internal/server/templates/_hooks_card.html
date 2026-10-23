@@ -1,0 +1,61 @@
+{{define "_hooks_card.html"}}
+<details class="section hooks-card" id="hooks-card-{{.Key}}"{{if .IsOpen}} open{{end}}>
+  <summary><span class="hooks-card-title">{{.Title}}</span>
+    {{if .IsOther}}<span class="badge badge-dim" title="live or parked groups no component fragment declares — idless groups included">no component</span>
+    {{else if .IsSelected}}<span class="badge badge-ok">on</span>{{else}}<span class="badge badge-dim" title="not installed — install it on the Profile page and its groups come back">off</span>{{end}}
+    <span class="badge badge-dim">{{len .Groups}} hook groups</span>
+    {{if not .IsUninstalled}}{{if and .ParkedCount (lt .ParkedCount .TogglableCount)}}<span class="badge badge-error">{{.ParkedCount}} of {{.TogglableCount}} off</span>{{else if .ParkedCount}}<span class="badge badge-error">all off</span>{{end}}{{end}}
+    {{if and .IsSelected .TogglableCount}}
+    <label class="toggle push-right" title="{{if .ParkedCount}}enable every group of {{.Title}}{{else}}disable every group of {{.Title}}{{end}}" onclick="event.stopPropagation()">
+      <input type="checkbox" {{if not .ParkedCount}}checked{{end}}
+             hx-post="/config/hooks/{{.Key}}/groups/toggle?enabled={{if .ParkedCount}}false{{else}}true{{end}}"
+             hx-target="#hooks-card-{{.Key}}" hx-swap="outerHTML">
+      <span class="slider"></span>
+    </label>
+    {{end}}
+  </summary>
+
+  {{range .Groups}}
+  <div class="card card-column {{if or (not .Enabled) (eq .Source "repoOnly")}}card-disabled{{end}}">
+    <div class="card-row">
+      <span class="label"><strong>{{.Name}}</strong></span>
+      <span class="meta">{{.Event}}</span>
+      {{if .Matcher}}<span class="meta">{{.Matcher}}</span>{{end}}
+      {{if eq .Source "local"}}<span class="badge badge-action" title="in your live settings but not the repo fragment — added locally">local</span>{{end}}
+      {{if eq .Source "changed"}}<span class="badge badge-action" title="the repo fragment declares this group id with different content — diff below">changed</span>{{end}}
+      {{if eq .Source "repoOnly"}}<span class="badge badge-dim" title="declared in the repo fragment, absent from your live settings">Repo Only</span>{{end}}
+      {{if and (not $.IsUninstalled) (not .Enabled) (ne .Source "repoOnly")}}<span class="badge badge-error">disabled</span>{{end}}
+      {{if ne .Source "repoOnly"}}
+      <label class="toggle push-right"{{if $.IsUninstalled}} title="install {{$.Title}} on the Profile page first"{{end}}>
+        <input type="checkbox" {{if .Enabled}}checked{{end}}{{if $.IsUninstalled}} disabled{{end}}
+               hx-post="/config/hooks/{{$.Key}}/groups/{{.Event}}/{{.Index}}/toggle?enabled={{.Enabled}}"
+               hx-target="#hooks-card-{{$.Key}}" hx-swap="outerHTML">
+        <span class="slider"></span>
+      </label>
+      <button class="small" hx-delete="/config/hooks/{{$.Key}}/groups/{{.Event}}/{{.Index}}?enabled={{.Enabled}}"
+              hx-confirm="Remove this hook group? The previous settings file goes to the trash."
+              hx-target="#hooks-card-{{$.Key}}" hx-swap="outerHTML">×</button>
+      {{end}}
+    </div>
+    {{if .Diff}}
+    <details class="hook-command">
+      <summary class="meta">repo fragment → live group diff</summary>
+      {{template "_diff.html" .Diff}}
+    </details>
+    {{end}}
+    <details class="hook-command">
+      <summary class="meta">command</summary>
+      <pre class="file-view">{{.Command}}</pre>
+      {{range .Views}}
+      {{if .Content}}
+      <details>
+        <summary class="meta">{{.ScriptPath}}</summary>
+        <pre class="file-view">{{.Content}}</pre>
+      </details>
+      {{end}}
+      {{end}}
+    </details>
+  </div>
+  {{end}}
+</details>
+{{end}}

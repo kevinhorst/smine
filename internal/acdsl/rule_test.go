@@ -320,6 +320,16 @@ func TestParseRulesInvalidReachIsViolation(t *testing.T) {
 	assert.Contains(t, violations[0], "reach must be global, none, or a comma-separated repo-name list")
 }
 
+func TestParseRulesAlwaysReachIsViolation(t *testing.T) {
+	lines := map[string][]string{
+		"a.go": {marker(`X-001 forbid-call anchor="x" reach="always" why="w"`)},
+	}
+	rules, violations := ParseRules(lines)
+	assert.Empty(t, rules)
+	require.Len(t, violations, 1)
+	assert.Contains(t, violations[0], "always reach is for context entries")
+}
+
 func TestFilterIdSelectsOneRule(t *testing.T) {
 	rules := []Rule{
 		{Id: "D-001", Lifetime: LifetimeDoctrine},

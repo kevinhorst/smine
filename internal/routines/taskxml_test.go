@@ -12,13 +12,13 @@ func intPointer(value int) *int { return &value }
 
 func TestTaskXMLDailyHourMinute(t *testing.T) {
 	xml, err := TaskXML("demo", []CalendarInterval{{Hour: intPointer(6), Minute: intPointer(15)}},
-		`C:\repo\bin\routinewrap.exe`, `C:\repo\routines\demo`)
+		`C:\repo\bin\routine.exe`, `C:\repo\routines\demo`)
 	require.NoError(t, err)
 	assert.Contains(t, xml, "<StartBoundary>2020-01-01T06:15:00</StartBoundary>")
 	assert.Contains(t, xml, "<ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay>")
 	assert.NotContains(t, xml, "<Repetition>")
-	assert.Contains(t, xml, `<Command>C:\repo\bin\routinewrap.exe</Command>`)
-	assert.Contains(t, xml, `<Arguments>C:\repo\routines\demo</Arguments>`)
+	assert.Contains(t, xml, `<Command>C:\repo\bin\routine.exe</Command>`)
+	assert.Contains(t, xml, `<Arguments>run &quot;C:\repo\routines\demo&quot;</Arguments>`)
 }
 
 func TestTaskXMLWeeklySundaySeven(t *testing.T) {

@@ -12,16 +12,19 @@ import (
 	"github.com/kevinhorst/smine/internal/reach"
 )
 
+// writeScript writes a stand-in verifier the registries run as
+// /bin/sh <script>: macOS scans a freshly written executable on its first
+// exec, which under a loaded audit took past the 10 s verifier timeout.
 func writeScript(t *testing.T, content string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "script.sh")
-	require.NoError(t, os.WriteFile(path, []byte(content), 0o755))
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o644))
 	return path
 }
 
 func checkSetup(script string) ([]Rule, map[string]RegistryEntry, []string) {
 	rules := []Rule{{Id: "X-001", Verifier: "fake", Anchor: `\.go$`, Why: "the why", Params: map[string]string{"b": "2", "a": "1"}}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{script}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", script}, Cache: CacheNone, TimeoutSec: 10}}
 	tracked := []string{"a.go", "b.go"}
 	return rules, registry, tracked
 }
@@ -112,7 +115,7 @@ func TestCheckExitOneWithoutContractLinesFallsBack(t *testing.T) {
 func TestCheckTaskZeroMatchYieldsDiagnostic(t *testing.T) {
 	script := writeScript(t, "#!/bin/sh\nexit 0\n")
 	rules := []Rule{{Id: "TASK-X-001", Verifier: "fake", Anchor: `^internal/planned/`, Why: "the why", Lifetime: LifetimeTask, File: "tasks/contract.acdsl", Line: 3}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{script}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", script}, TimeoutSec: 10}}
 	diagnostics, err := Check(context.Background(), "", rules, registry, []string{"a.go"})
 	require.NoError(t, err)
 	require.Len(t, diagnostics, 1)
@@ -125,7 +128,7 @@ func TestCheckAllowEmptyZeroMatchPasses(t *testing.T) {
 	// all archived) — zero matches is a legitimate state, not tool breakage.
 	script := writeScript(t, "#!/bin/sh\nexit 1\n")
 	rules := []Rule{{Id: "X-001", Verifier: "fake", Anchor: `^plans/[^/]+/design/`, AllowEmpty: true, Why: "w", Lifetime: LifetimeDoctrine}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{script}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", script}, TimeoutSec: 10}}
 	diagnostics, err := Check(context.Background(), "", rules, registry, []string{"a.go"})
 	require.NoError(t, err)
 	assert.Empty(t, diagnostics)
@@ -137,7 +140,7 @@ func TestCheckNeedsMissingSkipsRule(t *testing.T) {
 	// instead of running a verifier that would fail on the absent file.
 	script := writeScript(t, "#!/bin/sh\nexit 1\n")
 	rules := []Rule{{Id: "X-001", Verifier: "fake", Anchor: `\.go$`, Needs: []string{"context/context.json"}, Why: "w", Lifetime: LifetimeDoctrine}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{script}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", script}, TimeoutSec: 10}}
 	diagnostics, err := Check(context.Background(), t.TempDir(), rules, registry, []string{"a.go"})
 	require.NoError(t, err)
 	assert.Empty(t, diagnostics)
@@ -149,7 +152,7 @@ func TestCheckDoctrineZeroMatchIsError(t *testing.T) {
 	// by never shipping a rule without matching target files (Dist filter).
 	script := writeScript(t, "#!/bin/sh\nexit 0\n")
 	rules := []Rule{{Id: "X-001", Verifier: "fake", Anchor: `^nothing/`, Why: "w", Lifetime: LifetimeDoctrine}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{script}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", script}, TimeoutSec: 10}}
 	_, err := Check(context.Background(), "", rules, registry, []string{"a.go"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, ErrAnchorEmpty)
@@ -158,7 +161,7 @@ func TestCheckDoctrineZeroMatchIsError(t *testing.T) {
 func TestCheckNonGoAnchorResolvesInFullUniverse(t *testing.T) {
 	script := writeScript(t, "#!/bin/sh\nexit 0\n")
 	rules := []Rule{{Id: "TASK-X-001", Verifier: "fake", Anchor: `\.golden\.json$`, Why: "w", Lifetime: LifetimeTask}}
-	registry := map[string]RegistryEntry{"fake": {Argv: []string{script}, TimeoutSec: 10}}
+	registry := map[string]RegistryEntry{"fake": {Argv: []string{"/bin/sh", script}, Cache: CacheNone, TimeoutSec: 10}}
 	universe := []string{"a.go", "plans/x/observations/resp.golden.json"}
 	diagnostics, err := Check(context.Background(), "", rules, registry, universe)
 	require.NoError(t, err)
@@ -168,7 +171,7 @@ func TestCheckNonGoAnchorResolvesInFullUniverse(t *testing.T) {
 func TestCheckTimeoutKillIsError(t *testing.T) {
 	script := writeScript(t, "#!/bin/sh\nsleep 5\nexit 0\n")
 	rules, registry, tracked := checkSetup(script)
-	registry["fake"] = RegistryEntry{Argv: []string{script}, TimeoutSec: 1}
+	registry["fake"] = RegistryEntry{Argv: []string{"/bin/sh", script}, Cache: CacheNone, TimeoutSec: 1}
 	_, err := Check(context.Background(), "", rules, registry, tracked)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed")

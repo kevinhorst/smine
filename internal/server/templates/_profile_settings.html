@@ -1,0 +1,37 @@
+{{define "_profile_settings.html"}}
+{{/* One form, swapped in place: the save answers with it and its notice beside the Save button. */}}
+<form id="profile-settings-form" class="card-column profile-settings" hx-post="/profile" hx-target="#profile-settings-form" hx-swap="outerHTML">
+  <div class="card-row">
+    <span class="section-label">{{t "Audience"}}</span>
+    <span>{{if eq .Audience "casual"}}{{t "Casual"}}{{else}}{{t "Developer"}}{{end}}</span>
+    <span class="meta">{{t "set at install"}}</span>
+  </div>
+  <div class="card-row">
+    <span class="section-label">{{t "Language"}}</span>
+    <select name="language" title="{{t "Language"}}">
+      <option value="en" {{if ne .Language "de"}}selected{{end}}>English</option>
+      <option value="de" {{if eq .Language "de"}}selected{{end}}>Deutsch</option>
+    </select>
+  </div>
+  <div class="card-row">
+    <span class="section-label">{{t "Dev mode"}}</span>
+    <label class="inline-check">
+      <input type="checkbox" name="dev_mode" {{if .DevMode}}checked{{end}} {{if eq .Audience "casual"}}disabled{{end}}>
+      {{t "Dev mode — include smine and routine sessions in mining"}}
+    </label>
+  </div>
+  {{if ne .Audience "casual"}}
+  <div class="card-row">
+    <span class="section-label">{{t "Auto-merge"}}</span>
+    <label class="inline-check">
+      <input type="checkbox" name="auto_merge" {{if .AutoMerge}}checked{{end}}>
+      {{t "Auto-merge — the nightly merges its run into main automatically"}}
+    </label>
+  </div>
+  {{end}}
+  <div class="card-row">
+    <button type="submit">{{t "Save"}}</button>
+    {{if .Notice}}<span class="badge badge-ok">Ok</span> <span class="label">{{t .Notice}}</span>{{end}}
+  </div>
+</form>
+{{end}}

@@ -1,0 +1,157 @@
+{{define "_installation.html"}}
+<p class="meta">{{t "What this machine runs. Tick components, pick skills, then Apply selection stores the selection and runs every install, update and removal it needs; Preview changes lists those steps first. Nothing changes before Apply."}}</p>
+{{if .IsReadOnly}}<p class="meta">{{t "Development instance — the installation is shown read-only."}}</p>{{end}}
+{{if .LoadError}}<div class="card card-error"><span class="label">{{.LoadError}}</span></div>{{end}}
+{{if .SkillsError}}<div class="card card-error"><span class="label">{{.SkillsError}}</span></div>{{end}}
+{{if .IsApplyPending}}<div class="card card-error"><span class="badge badge-warn">⚠</span> <span class="label">{{t "The last apply did not finish — apply again"}}</span></div>{{end}}
+{{if .Notes}}
+<div class="card card-column install-notes">
+  <span class="section-label">{{t "Kept but unknown"}}</span>
+  <ul>{{range .Notes}}<li>{{.}}</li>{{end}}</ul>
+</div>
+{{end}}
+{{if .Suspended}}
+<div class="card card-column install-suspended">
+  <span class="section-label">{{t "Suspended until their components return"}}</span>
+  <ul>{{range .Suspended}}<li><code>{{.}}</code></li>{{end}}</ul>
+</div>
+{{end}}
+<form class="card-column profile-settings" hx-post="/profile/installation/preview" hx-target="#installation-preview" hx-swap="innerHTML">
+  {{range .Rows}}
+  <div class="install-row" id="installation-{{.Id}}">
+    <div class="card-row">
+      <label class="inline-check install-name">
+        <input type="checkbox" name="component" value="{{.Id}}"
+               {{if eq .State "on" "down"}}checked{{end}}
+               {{if or $.IsReadOnly (eq .State "unavailable") (eq .Id "config-server")}}disabled{{end}}
+               data-requires="{{join .RequireIds ","}}">
+        <strong>{{.Title}}</strong>
+      </label>
+      <span class="install-summary">{{.Summary}}</span>
+      {{template "_component_state" .}}
+    </div>
+    {{if .Detail}}<span class="check-detail install-health">{{.Detail}}</span>{{end}}
+    {{if .Fix}}<div class="fix"><span class="fix-label">fix:</span> {{.Fix}}</div>{{end}}
+    <details class="install-detail">
+      <summary class="meta">{{t "what happens"}}{{if .Requires}} · {{t "needs"}} {{join .Requires ", "}}{{end}}</summary>
+      <div class="install-effects">
+        <div class="install-effect">
+          <span class="section-label">{{t "on install"}}</span>
+          <ul>{{range .Brings}}<li>{{.}}</li>{{end}}</ul>
+        </div>
+        {{if .Without}}
+        <div class="install-effect">
+          <span class="section-label">{{t "without it"}}</span>
+          <ul>{{range .Without}}<li>{{.}}</li>{{end}}</ul>
+        </div>
+        {{end}}
+      </div>
+    </details>
+  </div>
+  {{end}}
+  <div class="card-row">
+    <span class="section-label">{{t "Skills"}}</span>
+    <select class="skills-mode" name="skills_mode" {{if .IsReadOnly}}disabled{{end}}>
+      <option value="all" {{if eq .SkillsMode "all"}}selected{{end}}>{{t "all the selected components allow"}}</option>
+      <option value="chosen" {{if eq .SkillsMode "chosen"}}selected{{end}}>{{t "chosen"}}</option>
+      <option value="none" {{if eq .SkillsMode "none"}}selected{{end}}>{{t "none — deployed smine skills are removed"}}</option>
+    </select>
+    <details class="reach-picker skills-pick"{{if ne .SkillsMode "chosen"}} hidden{{end}}>
+      <summary>{{t "select skills"}}</summary>
+      <div class="reach-options">
+        {{range .Skills}}<label data-requires="{{join .Requires ","}}"><input type="checkbox" name="skill" value="{{.Name}}"{{if .IsSelected}} checked{{end}}{{if $.IsReadOnly}} disabled{{end}} onchange="smineSkillPick(this)"> {{.Name}}</label>{{else}}<span class="meta">{{t "No repo skills found."}}</span>{{end}}
+      </div>
+    </details>
+  </div>
+  <div class="card-row">
+    <span class="section-label">{{t "Installer"}}</span>
+    <label class="inline-check">
+      <input type="checkbox" name="skills_confirmed" {{if .IsSkillsConfirmed}}checked{{end}} {{if .IsReadOnly}}disabled{{end}}>
+      {{t "Keep this skill selection — the terminal installer skips its skill question (untick and Apply to make it ask again)"}}
+    </label>
+  </div>
+  {{if not .IsReadOnly}}
+  <div class="card-row">
+    <button type="submit">{{t "Preview changes"}}</button>
+    <button type="button" hx-post="/profile/installation/apply" hx-include="closest form" hx-target="#op-result"
+            hx-disabled-elt="this" hx-confirm="{{t "Store this selection and apply it now, without a preview?"}}">{{t "Apply selection"}}</button>
+  </div>
+  {{end}}
+</form>
+<div id="installation-preview"></div>
+{{if .HistoryError}}<div class="card card-error"><span class="label">{{.HistoryError}}</span></div>{{end}}
+{{if .History}}
+<details class="section record-history-list">
+  <summary>{{t "Record history"}} ({{len .History}})</summary>
+  <p class="meta">{{t "Every save keeps the previous install.json beside it, the newest 50; a stamp shows its diff against the current file."}}</p>
+  <ul>
+    {{range .History}}<li><button type="button" class="small" hx-get="/profile/record-history/{{pathEscape .Stamp}}" hx-target="#record-history">{{.Time.Local.Format "2006-01-02 15:04:05"}}</button> <span class="meta">{{.Size}} B</span></li>{{end}}
+  </ul>
+  <div id="record-history"></div>
+</details>
+{{end}}
+<script>
+  window.smineSkillPick = function (box) {
+    var picker = box.closest('.skills-pick');
+    var picked = Array.from(picker.querySelectorAll('input:checked')).map(function (b) { return b.value; });
+    picker.querySelector('summary').textContent = picked.length ? picked.join(', ') : 'select skills';
+  };
+  // a skill whose required components are unticked is greyed, unticked and locked — the sync would skip it anyway
+  window.smineSkillAvailability = function (form) {
+    var ticked = { 'config-server': true };
+    form.querySelectorAll('input[name="component"]:checked').forEach(function (b) { ticked[b.value] = true; });
+    var isReadOnly = !!form.querySelector('.skills-mode[disabled]');
+    form.querySelectorAll('.skills-pick label[data-requires]').forEach(function (label) {
+      var missing = label.dataset.requires.split(',').filter(function (id) { return id && !ticked[id]; });
+      var box = label.querySelector('input');
+      label.classList.toggle('skill-unavailable', missing.length > 0);
+      label.title = missing.length ? 'needs ' + missing.join(', ') : '';
+      box.disabled = isReadOnly || missing.length > 0;
+      if (missing.length && box.checked) { box.checked = false; window.smineSkillPick(box); }
+    });
+  };
+  // unticking a component unticks every component that needs it, ticking one ticks what it needs — the Apply drops and suspends dependents the same way
+  window.smineComponentCascade = function (form, changed) {
+    var boxes = Array.prototype.slice.call(form.querySelectorAll('input[name="component"]'));
+    var byId = {};
+    boxes.forEach(function (b) { byId[b.value] = b; });
+    var needs = function (b) { return (b.dataset.requires || '').split(',').filter(Boolean); };
+    var queue = [changed];
+    while (queue.length) {
+      var box = queue.shift();
+      if (box.checked) {
+        needs(box).forEach(function (id) {
+          var required = byId[id];
+          if (required && !required.checked && !required.disabled) { required.checked = true; queue.push(required); }
+        });
+        continue;
+      }
+      boxes.forEach(function (other) {
+        if (other.checked && !other.disabled && needs(other).indexOf(box.value) >= 0) { other.checked = false; queue.push(other); }
+      });
+    }
+  };
+  document.querySelectorAll('#installation form').forEach(function (form) {
+    window.smineSkillAvailability(form);
+    form.querySelectorAll('input[name="component"]').forEach(function (b) {
+      b.addEventListener('change', function () {
+        window.smineComponentCascade(form, b);
+        window.smineSkillAvailability(form);
+      });
+    });
+  });
+  document.querySelectorAll('.skills-pick input:checked').forEach(function (box) { window.smineSkillPick(box); });
+  document.querySelectorAll('.skills-mode').forEach(function (mode) {
+    mode.addEventListener('change', function () {
+      mode.closest('.card-row').querySelector('.skills-pick').hidden = mode.value !== 'chosen';
+    });
+  });
+</script>
+{{end}}
+
+{{define "_component_state"}}
+{{if eq .State "on"}}<span class="badge badge-ok">on</span>
+{{else if eq .State "down"}}<span class="badge badge-error">down</span>
+{{else if eq .State "off"}}<span class="badge badge-dim">off</span>
+{{else}}<span class="badge badge-dim">unavailable</span>{{end}}
+{{end}}

@@ -1,37 +1,75 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"maps"
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/kevinhorst/smine/internal/fsx"
+	"github.com/kevinhorst/smine/internal/semver"
+	"github.com/kevinhorst/smine/internal/trash"
 )
+
+// MaxHookNameRunes caps a hook group's display name and the fallback label cut from its command.
+const MaxHookNameRunes = 32
 
 type Hook struct {
 	Async   bool   `json:"async,omitempty"`
-	Command string `json:"command"`
+	Command string `json:"command,omitempty"`
 	Name    string `json:"name,omitempty"`
+	Timeout int    `json:"timeout,omitempty"`
 	Type    string `json:"type"`
+	Url     string `json:"url,omitempty"`
 }
 
 type HookGroup struct {
-	Hooks   []Hook  `json:"hooks"`
-	Matcher *string `json:"matcher,omitempty"` // plain tool-name pattern, e.g. "Read" or "Write|Edit"
+	Id      string      `json:"smineId,omitempty"`
+	Hooks   []Hook      `json:"hooks"`
+	Matcher *string     `json:"matcher,omitempty"` // plain tool-name pattern, e.g. "Read" or "Write|Edit"
+	Name    string      `json:"smineName,omitempty"`
+	Reason  string      `json:"smineReason,omitempty"` // why smine parked the group; empty for a user's own park
+	Version HookVersion `json:"smineVersion,omitempty"`
+}
+
+// HookVersion is a hook group's semantic version; a legacy integer decodes as that major release.
+type HookVersion string
+
+func (v HookVersion) Compare(other HookVersion) (int, error) {
+	order, err := semver.Compare(string(v), string(other))
+	if err != nil {
+		return 0, fmt.Errorf("HookVersion.Compare: %w", err)
+	}
+	return order, nil
+}
+
+func (v *HookVersion) UnmarshalJSON(data []byte) error {
+	var text string
+	if err := json.Unmarshal(data, &text); err == nil {
+		*v = HookVersion(text)
+		return nil
+	}
+
+	var legacy int
+	if err := json.Unmarshal(data, &legacy); err != nil {
+		return fmt.Errorf("HookVersion.UnmarshalJSON: Not a version string or integer: %s", string(data))
+	}
+	*v = HookVersion(fmt.Sprintf("%d.0.0", legacy))
+	return nil
 }
 
 type Permissions struct {
 	AdditionalDirectories []string `json:"additionalDirectories,omitempty"`
 	Allow                 []string `json:"allow,omitempty"`
 	Ask                   []string `json:"ask,omitempty"`
+	Deny                  []string `json:"deny,omitempty"`
 }
 
-// Settings wraps the settings.json document. Typed views decode from and
-// encode into the document per call; keys the views do not model survive
-// untouched with their order preserved.
+// Keys the typed views do not model survive untouched with their order preserved.
 type Settings struct {
 	doc *Document
 }
@@ -91,6 +129,28 @@ func (s *Settings) SetEnv(env map[string]string) error {
 	return s.set("env", env, len(env) == 0)
 }
 
+// SkillOverrides returns the per-skill visibility overrides.
+func (s *Settings) SkillOverrides() (map[string]string, error) {
+	var overrides map[string]string
+	if err := s.get("skillOverrides", &overrides); err != nil {
+		return nil, err
+	}
+	return overrides, nil
+}
+
+// An empty map removes the key.
+func (s *Settings) SetSkillOverrides(overrides map[string]string) error {
+	return s.set("skillOverrides", overrides, len(overrides) == 0)
+}
+
+func (s *Settings) AvailableModels() ([]string, error) {
+	var models []string
+	if err := s.get("availableModels", &models); err != nil {
+		return nil, err
+	}
+	return models, nil
+}
+
 func (s *Settings) Model() (string, error) {
 	var model string
 	if err := s.get("model", &model); err != nil {
@@ -112,7 +172,8 @@ func (s *Settings) Permissions() (Permissions, error) {
 }
 
 func (s *Settings) SetPermissions(perms Permissions) error {
-	return s.set("permissions", perms, len(perms.Allow) == 0 && len(perms.Ask) == 0)
+	isEmpty := len(perms.Allow) == 0 && len(perms.Ask) == 0 && len(perms.Deny) == 0
+	return s.set("permissions", perms, isEmpty)
 }
 
 func (s *Settings) DisabledMcpjsonServers() ([]string, error) {
@@ -127,9 +188,7 @@ func (s *Settings) SetDisabledMcpjsonServers(servers []string) error {
 	return s.set("disabledMcpjsonServers", servers, len(servers) == 0)
 }
 
-// McpServerNames lists the MCP server names registered in Claude Code's
-// ~/.claude.json (top-level mcpServers keys). A missing file yields nil.
-// MCP bundles, plugins, and claude_desktop_settings.json are not consulted.
+// MCP bundles, plugins and claude_desktop_settings.json are not consulted.
 func McpServerNames(path string) ([]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -148,9 +207,7 @@ func McpServerNames(path string) ([]string, error) {
 	return slices.Sorted(maps.Keys(file.McpServers)), nil
 }
 
-// McpServer returns one registered server's command and args from Claude
-// Code's ~/.claude.json. A missing file or unregistered name is an error —
-// callers probing config health want the reason, not an empty value.
+// A missing file is an error: callers probing config health want the reason.
 func McpServer(path, name string) (string, []string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -207,37 +264,56 @@ func Load(path string) (*Settings, error) {
 	return s, nil
 }
 
-// LoadFragment loads a repo settings fragment, expanding the per-install
-// markers a fragment may carry (live settings files never do — use Load).
-func LoadFragment(path string) (*Settings, error) {
-	data, err := os.ReadFile(path)
+// ComposeSettings composes base.json plus the named components' fragments, markers expanded; a component without a fragment adds nothing.
+func ComposeSettings(settingsDir string, markers Markers, components []string) (*Settings, error) {
+	settings, err := LoadBaseSettings(settingsDir, markers)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return NewSettings(), nil
+		return nil, err
+	}
+
+	for _, id := range components {
+		fragment, err := LoadComponentFragment(settingsDir, id, markers)
+		if err != nil {
+			return nil, fmt.Errorf("ComposeSettings: %w", err)
 		}
-		return nil, fmt.Errorf("reading %s: %w", path, err)
+		if err := fragment.mergeInto(settings.doc); err != nil {
+			return nil, fmt.Errorf("ComposeSettings: %w", err)
+		}
 	}
-	s := NewSettings()
-	if err := json.Unmarshal(ExpandInstallMarkers(data), s.doc); err != nil {
-		return nil, fmt.Errorf("parsing %s: %w", path, err)
-	}
-	return s, nil
+	return settings, nil
 }
 
-func Save(path string, s *Settings) error {
+// LoadFragment composes base.json plus every component fragment, markers expanded; live settings files carry none — use Load.
+func LoadFragment(settingsDir string, markers Markers) (*Settings, error) {
+	paths, err := filepath.Glob(filepath.Join(settingsDir, ComponentFragmentDir, "*.json"))
+	if err != nil {
+		return nil, fmt.Errorf("LoadFragment: %w", err)
+	}
+
+	ids := make([]string, 0, len(paths))
+	for _, path := range paths {
+		ids = append(ids, strings.TrimSuffix(filepath.Base(path), ".json"))
+	}
+	return ComposeSettings(settingsDir, markers, ids)
+}
+
+// Save keeps the previous bytes of a user file in the trash, then writes atomically; keep is nil only for smine-owned scratch files.
+func Save(path string, s *Settings, keep *trash.Store) error {
 	data, err := json.MarshalIndent(s.doc, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling settings: %w", err)
 	}
 	data = append(data, '\n')
-
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err != nil {
-		return fmt.Errorf("writing %s: %w", tmp, err)
+	if current, err := os.ReadFile(path); err == nil && bytes.Equal(current, data) {
+		return nil
 	}
-	if err := fsx.ReplaceFile(tmp, path); err != nil {
-		os.Remove(tmp)
-		return fmt.Errorf("renaming %s to %s: %w", tmp, path, err)
+
+	entry := &trash.Entry{Action: "settings save", Reason: filepath.Base(path) + " rewritten"}
+	if _, err := keep.Keep(path, entry); err != nil {
+		return fmt.Errorf("Save: %w", err)
+	}
+	if err := fsx.WriteFileAtomic(data, path, 0o644); err != nil {
+		return fmt.Errorf("Save: %w", err)
 	}
 	return nil
 }

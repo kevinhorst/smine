@@ -2,7 +2,7 @@
 <details class="reach-picker">
   <summary>{{.Label}}</summary>
   <div class="reach-options">
-    {{range .Options}}<label><input type="checkbox" name="reach" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if $.Form}} form="{{$.Form}}"{{end}}> {{.Label}}</label>{{end}}
+    {{range .Options}}<label><input type="checkbox" name="reach" value="{{.Value}}"{{if .Exclusive}} data-exclusive{{end}}{{if .Selected}} checked{{end}}{{if $.Form}} form="{{$.Form}}"{{end}}> {{.Label}}</label>{{end}}
   </div>
 </details>
 {{end}}

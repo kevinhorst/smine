@@ -3,42 +3,47 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
+	"github.com/kevinhorst/smine/internal/presentation"
 	"github.com/kevinhorst/smine/internal/routines"
 	"github.com/kevinhorst/smine/internal/server/respond"
 	"github.com/kevinhorst/smine/internal/shell"
-	"github.com/kevinhorst/smine/internal/skills"
 )
 
 const (
-	pageProfile     = "profile"
-	tmplProfile     = "profile.html"
-	tmplProfileTest = "_profile_test.html"
+	noticeSaved             = "Saved"
+	pageProfile             = "profile"
+	tmplProfile             = "profile.html"
+	tmplProfilePresentation = "_profile_presentation.html"
+	tmplProfileSettings     = "_profile_settings.html"
+	tmplProfileStyle        = "_profile_style.html"
+	tmplProfileTest         = "_profile_test.html"
 )
 
-// styleTestPrompt is the fixed sample the test button sends: it forces the
-// answer through every surface the profile governs — language, register,
-// jargon handling (plan D9). It must read as a writing sample, never a task:
-// phrased as a task, the model started investigating the repo with tools and
-// died on --max-turns 1 (observed error_max_turns).
+// styleTestPrompt must read as a writing sample: phrased as a task, the model used tools and hit --max-turns 1.
 const styleTestPrompt = "This is a style check, not a task: do not use any tools or read any files — reply directly with prose only. Write me 3-4 sentences conveying exactly this: last night 12 of my work sessions were reviewed and 3 improvement suggestions came out."
 
 type profilePage struct {
-	Audience     string
-	DevMode      bool
-	Language     string
-	Page         string
-	ProfilePath  string
-	StyleContent string
-	StyleError   string
-	StylePath    string
-	Title        string
+	Audience            string
+	AutoMerge           bool
+	DevMode             bool
+	Installation        installationView
+	Language            string
+	Notice              string // a save's answer beside the saved form's button, translated at render
+	Page                string
+	PresentationContent string
+	ProfilePath         string
+	StyleContent        string
+	StyleError          string
+	StylePath           string
+	Title               string
+	TokenDir            string
 }
 
 type profileTestView struct {
@@ -49,8 +54,7 @@ type profileTestView struct {
 	Token  string
 }
 
-// styleTestTarget is the resolved model/token pair a test call runs with;
-// TokenName is the label (or "token file"), never the token value.
+// styleTestTarget.TokenName is the label, never the token value.
 type styleTestTarget struct {
 	Detail    string
 	Model     string
@@ -59,7 +63,9 @@ type styleTestTarget struct {
 }
 
 func (s *Server) handleProfilePage(w http.ResponseWriter, r *http.Request) {
-	s.renderFragment(w, tmplProfile, s.profilePageData())
+	data := s.profilePageData()
+	data.Installation = s.installationView(r.Context())
+	s.renderFragment(w, tmplProfile, data)
 }
 
 func (s *Server) handleProfileSave(w http.ResponseWriter, r *http.Request) {
@@ -68,46 +74,55 @@ func (s *Server) handleProfileSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// audience
-	audience := r.PostForm.Get("audience")
-	if audience != "" && audience != audienceCasual {
-		respond.WithBadRequest(fmt.Sprintf("unknown audience %q", audience), w)
-		return
-	}
+	// audience — fixed at install; a posted value is ignored
+	audience := s.presentation.audience()
 
 	// language
 	language := r.PostForm.Get("language")
-	if language != languageEnglish && language != languageGerman {
+	if language != presentation.LanguageEnglish && language != languageGerman {
 		respond.WithBadRequest(fmt.Sprintf("unsupported language %q", language), w)
 		return
 	}
 
 	// dev-mode — casual audience forces it off (self-mining stays locked)
-	devMode := r.PostForm.Get("dev_mode") == "on" && audience != audienceCasual
+	devMode := r.PostForm.Get("dev_mode") == "on" && audience != presentation.AudienceCasual
 
-	audienceChanged := (audience == "") != s.presentation.isDeveloperAudience()
-	if err := s.presentation.saveProfileSelection(audience, language, devMode); err != nil {
+	// auto-merge — developers may turn the orchestrate merge off; casual always merges
+	autoMerge := true
+	if audience != presentation.AudienceCasual {
+		autoMerge = r.PostForm.Get("auto_merge") == "on"
+	}
+
+	previous := s.presentation.language()
+	if err := s.presentation.saveProfileSelection(audience, language, devMode, autoMerge); err != nil {
 		respond.WithInternalServerError(err, w)
 		return
 	}
 
-	// The audience drives skill visibility (skillOverrides) — the sync
-	// script owns that flip, so an audience change re-runs it (plan D7).
-	if audienceChanged {
-		if !s.repoLocks.TryAcquire(skillsSyncLockKey) {
-			respond.WithConflict("a skills sync is already running — retry in a moment", w)
-			return
-		}
-		_, err := skills.Sync(r.Context(), false, s.syncScripts)
-		s.repoLocks.Release(skillsSyncLockKey)
-		if err != nil {
-			log.Printf("Server.handleProfileSave: Skills sync after audience change failed: %v", err)
-			respond.WithInternalServerError(fmt.Errorf("profile saved, but the skills sync failed: %w", err), w)
-			return
-		}
+	// A language change re-renders the whole page: the nav and every label switch, not only this form.
+	if language != previous {
+		w.Header().Set("HX-Refresh", "true")
+	}
+	s.renderProfileForm(w, tmplProfileSettings)
+}
+
+func (s *Server) handleProfilePresentationSave(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		respond.WithBadRequest("invalid form", w)
+		return
 	}
 
-	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+	content := r.PostForm.Get("presentation_content")
+	if len(content) > maxStyleProfileBytes {
+		respond.WithBadRequest("presentation profile exceeds 64 KiB", w)
+		return
+	}
+
+	if err := s.presentation.savePresentationBody(content); err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	s.renderProfileForm(w, tmplProfilePresentation)
 }
 
 func (s *Server) handleProfileStyleSave(w http.ResponseWriter, r *http.Request) {
@@ -126,13 +141,17 @@ func (s *Server) handleProfileStyleSave(w http.ResponseWriter, r *http.Request) 
 		respond.WithInternalServerError(err, w)
 		return
 	}
-	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+	s.renderProfileForm(w, tmplProfileStyle)
 }
 
-// handleProfileTest proves the live profile with one 1-turn headless claude
-// call — the run's SessionStart hook injects the just-saved profile files, so
-// the answer shows the style the machine actually produces (plan D8). Costs
-// one paid API call — the button carries hx-confirm.
+// renderProfileForm answers a save with the saved form, its notice beside the Save button.
+func (s *Server) renderProfileForm(w http.ResponseWriter, name string) {
+	data := s.profilePageData()
+	data.Notice = noticeSaved
+	s.renderFragment(w, name, data)
+}
+
+// handleProfileTest costs one paid API call, so the button carries hx-confirm.
 func (s *Server) handleProfileTest(w http.ResponseWriter, r *http.Request) {
 	target := s.styleTestTarget()
 	view := profileTestView{Model: target.Model, Token: target.TokenName}
@@ -143,7 +162,7 @@ func (s *Server) handleProfileTest(w http.ResponseWriter, r *http.Request) {
 	case bashPath == "":
 		view.Detail = "no bash available to run the test"
 	default:
-		script := verifyPathPrefix + `CLAUDE_CODE_OAUTH_TOKEN="$(tr -d '[:space:]' < "$1")" claude -p "$2" --model "$3" --max-turns 1 --output-format json`
+		script := verifyPathPrefix + `SMINE_HEADLESS=1 CLAUDE_CODE_OAUTH_TOKEN="$(tr -d '[:space:]' < "$1")" claude -p "$2" --model "$3" --max-turns 1 --disallowedTools "*" --output-format json`
 		output, err := shell.Run(r.Context(), "", bashPath, "-c", script, "bash", target.TokenPath, styleTestPrompt, target.Model)
 		if err != nil {
 			view.Detail = tailLines(output, 3)
@@ -155,17 +174,44 @@ func (s *Server) handleProfileTest(w http.ResponseWriter, r *http.Request) {
 	s.renderFragment(w, tmplProfileTest, view)
 }
 
+// handleProfileTokenAdd treats the value as write-only: never rendered or logged.
+func (s *Server) handleProfileTokenAdd(w http.ResponseWriter, r *http.Request) {
+	label, value := strings.TrimSpace(r.FormValue("token_label")), strings.TrimSpace(r.FormValue("token_value"))
+	if value == "" {
+		respond.WithBadRequest("token value required", w)
+		return
+	}
+
+	labels, err := routines.ListTokenLabels(s.tokenDir)
+	if err != nil {
+		respond.WithInternalServerError(err, w)
+		return
+	}
+	if label == "" {
+		label = defaultTokenLabel(labels)
+	}
+	if err := routines.SaveToken(label, value, s.tokenDir); err != nil {
+		respond.WithBadRequest(err.Error(), w)
+		return
+	}
+
+	s.renderFragment(w, tmplOpResult, opResult{Page: pageProfile, Subject: "add token " + label})
+}
+
 func (s *Server) profilePageData() profilePage {
 	styleContent, err := s.presentation.styleContent()
 	data := profilePage{
-		Audience:     s.presentation.audience(),
-		DevMode:      s.presentation.isDevMode(),
-		Language:     s.presentation.language(),
-		Page:         pageProfile,
-		ProfilePath:  s.presentation.path,
-		StyleContent: styleContent,
-		StylePath:    s.presentation.stylePath,
-		Title:        "Profile",
+		Audience:            s.presentation.audience(),
+		AutoMerge:           s.presentation.autoMerge(),
+		DevMode:             s.presentation.isDevMode(),
+		Language:            s.presentation.language(),
+		Page:                pageProfile,
+		PresentationContent: s.presentation.presentationContent(),
+		ProfilePath:         s.presentation.path,
+		StyleContent:        styleContent,
+		StylePath:           s.presentation.stylePath,
+		Title:               "Profile",
+		TokenDir:            s.tokenDir,
 	}
 	if err != nil {
 		data.StyleError = err.Error()
@@ -173,16 +219,12 @@ func (s *Server) profilePageData() profilePage {
 	return data
 }
 
-// styleTestTarget resolves what the test call runs with: the smine-nightly
-// routine's ROUTINE_MODEL / ROUTINE_TOKEN when configured, else the routine
-// default model and the token-verify pick order. Without the explicit model,
-// headless claude falls back to the settings.json model, which the routine
-// token's account may have no credits for (observed 429).
+// styleTestTarget always names a model: the settings.json fallback may lack credits on the routine token's account.
 func (s *Server) styleTestTarget() styleTestTarget {
 	tokenPath, detail := s.verifyTokenPath()
 	target := styleTestTarget{
 		Detail:    detail,
-		Model:     routineModelDefault,
+		Model:     smineNightlyModel,
 		TokenName: "token file",
 		TokenPath: tokenPath,
 	}
@@ -218,8 +260,16 @@ func (s *Server) styleTestTarget() styleTestTarget {
 	return target
 }
 
-// profileTestAnswer interprets the claude JSON envelope: the answer text is
-// the test result the user judges.
+// defaultTokenLabel yields token-2026-08-12, then token-2026-08-12-2 on a same-day collision.
+func defaultTokenLabel(labels []string) string {
+	base := time.Now().Format("token-2006-01-02")
+	label := base
+	for suffix := 2; slices.Contains(labels, label); suffix++ {
+		label = fmt.Sprintf("%s-%d", base, suffix)
+	}
+	return label
+}
+
 func profileTestAnswer(output string) profileTestView {
 	view := profileTestView{Detail: "claude answered, but the response envelope was unreadable"}
 	start := strings.Index(output, "{")

@@ -1,0 +1,48 @@
+{{define "_week_body.html"}}
+<div id="batch-body">
+  {{if .Week.Sessions}}
+  <h2>{{t "Filter by dimension"}}</h2>
+  <div class="card card-filter">
+    {{$page := .}}
+    <a class="badge {{if not .Dimension}}badge-ok{{else}}badge-dim{{end}}"
+       href="/sessions/{{.Week.Scope}}/{{.Week.Key}}{{if $page.SessionsParam}}?session={{$page.SessionsParam}}{{end}}"
+       hx-get="/sessions/{{.Week.Scope}}/{{.Week.Key}}{{if $page.SessionsParam}}?session={{$page.SessionsParam}}{{end}}"
+       hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">{{t "all"}}</a>
+    {{range .Dimensions}}
+    <a class="badge {{if eq . $page.Dimension}}badge-ok{{else}}badge-dim{{end}}"
+       href="/sessions/{{$page.Week.Scope}}/{{$page.Week.Key}}?dimension={{.}}{{if $page.SessionsParam}}&session={{$page.SessionsParam}}{{end}}"
+       hx-get="/sessions/{{$page.Week.Scope}}/{{$page.Week.Key}}?dimension={{.}}{{if $page.SessionsParam}}&session={{$page.SessionsParam}}{{end}}"
+       hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">{{t .}}</a>
+    {{end}}
+  </div>
+  <div class="section-controls">
+    <button type="button" class="small" onclick="document.querySelectorAll('#session-list details.session-day, #session-list details.session-card').forEach(d => d.open = true)">{{t "Expand all"}}</button>
+    <button type="button" class="small" onclick="document.querySelectorAll('#session-list details.session-day, #session-list details.session-card').forEach(d => d.open = false)">{{t "Collapse all"}}</button>
+    {{if .SessionIds}}<button type="button" class="small" hx-get="/sessions/{{.Week.Scope}}/{{.Week.Key}}{{if .Dimension}}?dimension={{.Dimension}}{{end}}" hx-target="#batch-body" hx-swap="outerHTML" hx-push-url="true">{{t "Show all sessions"}}</button>{{end}}
+  </div>
+  {{end}}
+  {{template "_session_list.html" .}}
+</div>
+<script>
+  (function () {
+    // The arrival target is the linked finding, else the first linked session card.
+    function arrivalTarget() {
+      var byHash = location.hash && document.getElementById(location.hash.slice(1));
+      if (byHash) return byHash;
+      var linked = new URLSearchParams(location.search).get('session');
+      return linked && document.getElementById('session-' + linked.split(',')[0]);
+    }
+    function openFragment() {
+      var target = arrivalTarget();
+      if (!target) return;
+      for (var node = target.closest('details'); node; node = node.parentElement && node.parentElement.closest('details')) node.open = true;
+      target.scrollIntoView({block: 'center'});
+      target.classList.remove('arrival-flash');
+      void target.offsetWidth;
+      target.classList.add('arrival-flash');
+    }
+    window.addEventListener('hashchange', openFragment);
+    openFragment();
+  })();
+</script>
+{{end}}
