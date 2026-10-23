@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "2.0",
+  "table": "schemas/severity-table.json",
+  "fixtures": [
+    {"id": "incorrect-often", "effect": "incorrect", "exposure": "often", "severity": "BLOCKER", "discriminator": "exposure=often: a normal input class hits it", "example": true}
+  ]
+}

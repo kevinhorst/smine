@@ -1,117 +1,355 @@
 {
+  "golangci": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/golangciwrap"
+    ],
+    "cache": "none",
+    "timeout_s": 60,
+    "description": "fails when golangci-lint reports findings on anchored Go files; dep-gated on the golangci-lint binary; config is the repo's committed .golangci.yml (differential: findings on changed lines only); the run covers the packages of Go files changed against the merge-base with main"
+  },
   "forbid-call": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/forbidcall"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/forbidcall"
+    ],
+    "cache": "files",
     "timeout_s": 30,
     "description": "fails when any anchored file calls <pkg>.<func> (import-alias aware, syntax-level)"
   },
   "lint-tags": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/linttags"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/linttags"
+    ],
     "timeout_s": 30,
     "description": "fails when a style guide's 'Covered by' linter claims disagree with the nearest golangci config above the guide — a claimed linter must be enabled, a claimed sub-check live; a [lint] headline must carry a coverage bullet; guides with no config above them pass"
   },
   "literal-owner": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/literalowner"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/literalowner"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails when a file outside the allowed path regexp contains the literal"
   },
+  "literal-gate": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/literalgate"
+    ],
+    "cache": "files",
+    "timeout_s": 30,
+    "description": "fails when a hook package file outside protocol.go holds a package-level literal declaration or a non-trivial numeric literal in a function body — every behavioural value is a catalog row (internal/components)"
+  },
   "forbid-addr-lit": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/forbidaddrlit"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/forbidaddrlit"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails on address-of composite literal (&T{...}) — the pre-Go-1.26 idiom new(expr) replaces"
   },
   "errorf-prefix": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/errorfprefix"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/errorfprefix"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails when a fmt.Errorf/errors.New message literal lacks the Component.Method: prefix (RULE-GOLANG-ERR-001)"
   },
   "test-schema": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/testschema"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/testschema"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails when t.Run names a case with anything but the house schema's test._id (RULE-GOLANG-TEST-001..005)"
   },
   "gofmt": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/gofmtwrap"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/gofmtwrap"
+    ],
+    "cache": "files",
     "timeout_s": 30,
     "description": "fails when an anchored file is not gofmt-formatted (wraps gofmt -l; exit-0-with-findings normalized to the contract)"
   },
   "func-signature": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/funcsig"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/funcsig"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails when a FuncDecl violates RULE-GOLANG-FUNC-001: ctx first (named ctx), error last, at most 3 return values"
   },
-  "exhaustive-switch": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/exhaustivewrap"],
+  "comment-cap": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/commentcap"
+    ],
+    "cache": "files",
     "timeout_s": 60,
+    "description": "Comment blocks in the listed Go files run at most max lines"
+  },
+  "exhaustive-switch": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/exhaustivewrap"
+    ],
+    "timeout_s": 300,
     "description": "fails when a switch over a typed-constant enum misses members (ACTION-IMPL-INTEG-005); go tool exhaustive over the anchored packages"
   },
+  "file-baseline": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/filebaseline"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
+    "description": "fails when an anchored file is absent from the committed baseline list — freezes a file class so no new files of it can be added"
+  },
   "symbol-exists": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/symbolexists"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/symbolexists"
+    ],
+    "timeout_s": 60,
     "description": "task contract: named symbol exists in the anchored files, optionally with the planned signature"
   },
   "symbol-coverage": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/symbolcoverage"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/symbolcoverage"
+    ],
     "timeout_s": 60,
     "description": "task contract: named function's coverage in the anchored package is at least min percent"
   },
   "golden-diff": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/goldendiff"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/goldendiff"
+    ],
+    "timeout_s": 60,
     "description": "observation anchor: GET url, normalize, materialize observed=, line-diff against the anchored golden"
   },
   "skill-meta": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/skillmeta"],
-    "timeout_s": 20,
-    "description": "SKILL.md metadata checks by mode= param: version-sync (frontmatter version == changelog.json[0].version), frontmatter (required single-line keys + description shape), allowed-tools (permission-rule dialect)"
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/skillmeta"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/"
+    ],
+    "timeout_s": 60,
+    "description": "skill metadata checks by mode= param: version-sync (the model file (`<leaf>.cue`) loads — skillgraph.Check owns frontmatter version == changelog[0].version), runtime-meta (the model file (`<leaf>.cue`) loads — skillgraph.Check owns the runtime placement rules), frontmatter (required single-line keys + description shape), allowed-tools (permission-rule dialect) — every mode but version-sync, runtime-meta and routing reads the SKILL.md text, rendered in memory from the model file (`<leaf>.cue`) (a SKILL.md fixture is read as is)"
   },
   "skill-context": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/skillcontext"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/skillcontext"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/"
+    ],
+    "timeout_s": 60,
+    "description": "validates the SKILL.md frontmatter acdsl-context: declaration, the SKILL.md text rendered in memory from the model file (`<leaf>.cue`) (a SKILL.md fixture is read as is) — token grammar (entry ID or trailing-* glob), exact IDs exist in the index= file, globs match at least one entry"
+  },
+  "skill-map": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/skillmap"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/"
+    ],
+    "timeout_s": 60,
+    "description": "validates context-map.json lane maps — schema (schemaVersion, skill == dir name), lane token grammar and resolvability against the index= file, and each lane's entry set a subset of the skill's acdsl-context declaration, read from the SKILL.md text rendered in memory from the sibling model file (`<leaf>.cue`) (a sibling SKILL.md fixture where no model exists)"
+  },
+  "severity-table": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/severitytable"
+    ],
     "timeout_s": 30,
-    "description": "validates the SKILL.md frontmatter context: declaration — token grammar (entry ID or trailing-* glob), exact IDs exist in the index= file, globs match at least one entry"
+    "description": "validates a skill's severity-fixtures.json against its sibling schemas/severity-table.json — axes enumerated, every vector combination resolves to exactly one row, every fixture resolves to its expected severity, ids unique"
   },
   "skill-entries": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/skillentries"],
-    "timeout_s": 30,
-    "description": "validates the SKILL.md entry grammar — **SKILL-<NAME>-<TOPIC>-NNN** `[class]` — statement headlines, NAME = leaf dir upper-cased without hyphens, known class tags, unique ids, payload entries followed by one fenced block; skills without entries pass"
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/skillentries"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/",
+      "acdsl/",
+      "cmd/hooks/"
+    ],
+    "timeout_s": 60,
+    "description": "the skill model (the model file `<leaf>.cue`) loads (schema, skillgraph.Check — a format-3 skill's fields, links, titles and sources included), entry ids name the leaf dir, gate/hook/schema pointer bullets of a format-2 skill resolvable (the script channel is model-checked on format 3 only), inline enumerations ≤ 6 items"
+  },
+  "skill-plan-template": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/skillplantemplate"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/"
+    ],
+    "timeout_s": 60,
+    "description": "validates a skill model's plan-template: declaration — the named [payload] entry exists, its template (payloads/<entry-id>.md) opens with ## TLDR, catalog sections (rules/plan.md RULE-PLAN-002) keep catalog order, non-catalog sections carry an <override: placeholder; skills without the key pass"
   },
   "bash32-compat": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/bash32compat"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/bash32compat"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails when a shell script uses a bash-4+ construct — hooks/routines run under macOS bash 3.2 (launchd)"
   },
   "shellcheck": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/shellcheckwrap"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/shellcheckwrap"
+    ],
+    "cache": "files",
     "timeout_s": 30,
     "description": "fails on shellcheck findings over the anchored scripts (brew dep, accepted Band D); missing binary is a tool error, never a silent pass"
   },
   "jsonschema": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/jsonschemacheck"],
-    "timeout_s": 20,
-    "description": "fails when an anchored JSON file does not conform to the draft-07 schema named by schema= (santhosh-tekuri/jsonschema/v6)"
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/jsonschemacheck"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
+    "description": "fails when an anchored JSON file does not conform to the schema named by schema= — the draft its $schema declares, 2020-12 when absent (santhosh-tekuri/jsonschema/v6)"
   },
   "rules-check": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/rulescheck"],
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/rulescheck"
+    ],
     "timeout_s": 60,
-    "description": "wraps cmd/rules by mode= param: validate (ACTION/FACT contract) or generate-check (rules.json currency); replaces the raw Makefile audit lines"
+    "description": "wraps cmd/rules by mode= param: validate (ACTION/FACT contract); replaces the raw Makefile audit line"
   },
   "evalgen-bounds": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/evalgenbounds"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/evalgenbounds"
+    ],
+    "timeout_s": 60,
     "description": "fails when a verifier main.go leaves the acdsl/evalgen.json bounds — line count, or an import outside stdlib/internal/go.mod requires (generation may never add a dependency)"
   },
   "id-grammar": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/idgrammar"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/idgrammar"
+    ],
+    "timeout_s": 60,
     "description": "fails when a doctrine declaration id leaves the KIND-SCOPE[-TOPIC]-NNN grammar or uses an unregistered taxonomy scope/topic; task-lifetime entries exempt"
   },
   "plan-format": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/planformat"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/planformat"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "lintable subset of style/plan.md over design plans: TLDR first, Changelog present, canonical section order"
   },
   "runbook-format": {
-    "argv": ["go", "run", "./cmd/acdsl/verifiers/runbookformat"],
-    "timeout_s": 20,
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/runbookformat"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
     "description": "fails when a Bruno runbook request file lacks a non-empty docs block or an assert block (rules/runbooks.md lintable subset)"
+  },
+  "interpretation-format": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/interpretationformat"
+    ],
+    "cache": "files",
+    "timeout_s": 60,
+    "description": "fails when an eval run's interpretation.md holds a heading, a paragraph, more bullets than the cap or a bullet over the rune cap (rules/skills.md RULE-SKILL-020, bounds in internal/evals)"
+  },
+  "forbid-phrase": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/forbidphrase"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/"
+    ],
+    "timeout_s": 60,
+    "description": "fails when any anchored file matches the forbidden `pattern` regex, or when `require` is set and no anchored file contains it (content-level)"
+  },
+  "model-token": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/modeltoken"
+    ],
+    "timeout_s": 60,
+    "description": "Every committed model token resolves against the repo templates' availableModels, and subagent-selecting ones may run a subagent (internal/models)"
+  },
+  "skill-model": {
+    "argv": [
+      "go",
+      "run",
+      "./cmd/acdsl/verifiers/skillmodelcheck"
+    ],
+    "cache": "files",
+    "reads": [
+      "skills/"
+    ],
+    "timeout_s": 60,
+    "description": "formal clauses parse; every atom source is arg, session, environment or runtime bound to an enforce capture; atoms resolve and kinds are enforced when the skill sets tier: \"strict\""
   }
 }

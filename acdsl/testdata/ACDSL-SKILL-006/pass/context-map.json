@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0",
+  "skill": "pass",
+  "lanes": {
+    "critical": [
+      "ACTION-CONCEPT-HOT-*"
+    ],
+    "tests": [
+      "ACTION-REVIEW-TEST-*"
+    ]
+  }
+}

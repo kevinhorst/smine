@@ -1,11 +1,14 @@
 {
-  "batch": {
-    "scope": "personal",
-    "file": "sessions-batch-01.md"
-  },
-  "sessions": [
+  "id": "0f8f6f66-1111-2222-3333-444455556666",
+  "agent": "claude",
+  "repo": "claude-configs",
+  "week": "2026-W39",
+  "lastActive": "2026-09-24T10:00:00Z",
+  "title": "Fixture session",
+  "findings": [
     {
-      "id": "0f8f6f66-1111-2222-3333-444455556666"
+      "dimension": "exemplar",
+      "summary": "a finding"
     }
   ]
 }

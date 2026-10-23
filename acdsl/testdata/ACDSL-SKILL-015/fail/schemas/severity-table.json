@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "2.0",
+  "axes": {
+    "effect": ["destructive", "incorrect", "degraded", "debt", "cosmetic"],
+    "exposure": ["always", "often", "rare", "eventually"]
+  },
+  "rows": [
+    {"effect": ["destructive"], "exposure": ["always", "often", "rare"], "severity": "BLOCKER"},
+    {"effect": ["destructive"], "exposure": ["eventually"], "severity": "MAJOR"},
+    {"effect": ["incorrect"], "exposure": ["always", "often"], "severity": "BLOCKER"},
+    {"effect": ["incorrect"], "severity": "MAJOR"},
+    {"effect": ["incorrect"], "exposure": ["eventually"], "severity": "MINOR"},
+    {"effect": ["degraded"], "exposure": ["always", "often"], "severity": "MAJOR"},
+    {"effect": ["degraded"], "exposure": ["rare"], "severity": "MINOR"},
+    {"effect": ["degraded"], "exposure": ["eventually"], "severity": "NIT"},
+    {"effect": ["debt"], "exposure": ["always", "often"], "severity": "MINOR"},
+    {"effect": ["debt"], "exposure": ["rare", "eventually"], "severity": "NIT"},
+    {"effect": ["cosmetic"], "severity": "NIT"}
+  ]
+}

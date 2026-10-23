@@ -1,0 +1,6 @@
+# Frozen set of shell scripts (ACDSL-SHELL-003): no new .sh files in this repo.
+# An addition here needs explicit user approval; entries shrink freely as scripts are deleted.
+acdsl/testdata/ACDSL-SHELL-003/pass/existing.sh
+claude-shim.sh
+cmd/sync/sync_public.sh
+install.sh

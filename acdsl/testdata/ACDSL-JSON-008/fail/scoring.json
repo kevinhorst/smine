@@ -1,0 +1,27 @@
+{
+  "judgeGuide": "Match run findings against golden entries by consequence and trigger.",
+  "minutes": {
+    "BLOCKER": 120,
+    "MAJOR": 90,
+    "MINOR": 30,
+    "NIT": 10
+  },
+  "escapeMultiplier": {
+    "BLOCKER": 5,
+    "MAJOR": 3,
+    "MINOR": 2,
+    "NIT": 1,
+    "INFO": 1
+  },
+  "triageLine": "MINOR",
+  "fixFactor": {
+    "BLOCKER": 0.5,
+    "MAJOR": 0.4,
+    "MINOR": 0.25,
+    "NIT": 0.1,
+    "INFO": 0.1
+  },
+  "thresholds": {
+    "weighted_recall": 0.35
+  }
+}

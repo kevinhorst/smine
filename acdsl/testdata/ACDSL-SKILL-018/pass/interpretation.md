@@ -1,0 +1,3 @@
+- Recall 13.6% against the 352-entry g2 v1 golden: 48 matched, 304 missed, 11 false positives, 6 uncataloged genuine defects. Review score −0% (threshold 0.5).
+- Hit the session limit after round 1, resumed 4 h later via `arm -resume`: 6h 16m wall, 23m active, $326.36, 452 permission denials.
+- Worker pins: lanes `1[sonnet:medium]`, station `opus:medium`, root opus/high, judges `opus`.

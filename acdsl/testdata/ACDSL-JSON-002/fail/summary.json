@@ -1,6 +1,9 @@
 {
-  "batch": {
-    "scope": "personal"
-  },
-  "sessions": []
+  "id": "0f8f6f66-1111-2222-3333-444455556666",
+  "agent": "claude",
+  "repo": "claude-configs",
+  "week": "2026-39",
+  "lastActive": "2026-09-24T10:00:00Z",
+  "title": "Fixture session",
+  "findings": []
 }

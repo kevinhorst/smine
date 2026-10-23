@@ -1,0 +1,67 @@
+{
+  "dispositions": [
+    {
+      "finding_id": "correctness-MAJ-1-r1",
+      "disposition": "maybe",
+      "reason": "probe RED on internal/server/peek.go:42",
+      "probe": "PROBE-R1-01"
+    },
+    {
+      "finding_id": "code-style-NIT-1-r1",
+      "disposition": "duplicate-of",
+      "duplicate_of": "correctness-MAJ-1-r1"
+    }
+  ],
+  "ranked_plan": [
+    {
+      "finding_id": "correctness-MAJ-1-r1",
+      "file": "internal/server/peek.go",
+      "line": 42,
+      "severity": "MAJOR",
+      "claim": "nil guard missing on the branch lookup",
+      "fix": "guard the nil map before indexing",
+      "evidence": "re-read peek.go:30-60",
+      "route": "auto-fix",
+      "ignored": false,
+      "known": false
+    }
+  ],
+  "unverified": [],
+  "funnel": {
+    "produced": 2,
+    "confirmed": 1,
+    "unverified": 0,
+    "duplicates": 1,
+    "rejected": 0,
+    "debunked": 0
+  },
+  "permanent_checks": [],
+  "build_test": {
+    "build": "ok",
+    "tests": "ok"
+  },
+  "debunked": [],
+  "resolved": [],
+  "intentional_deviations": [],
+  "coverage_gaps": [],
+  "escalations": [],
+  "definition_of_done": [
+    {
+      "criterion": "End-to-end verification",
+      "status": "PASS",
+      "notes": ""
+    }
+  ],
+  "recommendation": "CONDITIONAL",
+  "handoff_json": "/tmp/artifacts/round-1/review.json",
+  "probes": [
+    {
+      "id": "PROBE-R1-01",
+      "script": "probe-r1-01.sh",
+      "fixture": "fixtures/probe-r1-01.go",
+      "verdict": "RED on internal/server/peek.go:42",
+      "finding_id": "correctness-MAJ-1-r1"
+    }
+  ],
+  "probes_dir": "/tmp/artifacts/round-1/probes"
+}

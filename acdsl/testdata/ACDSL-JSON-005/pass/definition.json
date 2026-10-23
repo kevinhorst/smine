@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "4.0",
+  "skill": "example-skill",
+  "invocation": {
+    "args": [
+      {
+        "name": "scope",
+        "value": "branch[{base}]"
+      },
+      {
+        "name": "spec",
+        "value": [
+          "plans/a.md",
+          "plans/b.md"
+        ]
+      },
+      {
+        "name": "rounds",
+        "value": "1"
+      },
+      {
+        "name": "run-id",
+        "value": "{runId}"
+      },
+      {
+        "name": "nightly"
+      }
+    ],
+    "open": [
+      "rounds"
+    ]
+  },
+  "environment": {
+    "range": {
+      "baseSha": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+      "headSha": "a342811b4cf7b8bb2b54359ced6c786d3b5f349b"
+    }
+  },
+  "findings": {
+    "glob": "round-*/review.json",
+    "arrayKey": "ranked_plan",
+    "claimKeys": [
+      "claim",
+      "finding"
+    ]
+  },
+  "scoring": "eval/golden/scoring.json",
+  "budgets": {
+    "armUsd": 10,
+    "armTimeoutS": 3600
+  },
+  "goldens": [
+    {
+      "id": "example-1",
+      "goldenVersion": 1,
+      "file": "eval/golden/example-1.json",
+      "input": "example repo a..b",
+      "produce": {
+        "seedFile": "eval/golden/example-1.seed.json",
+        "args": [
+          {
+            "name": "known",
+            "value": "{seed}"
+          }
+        ]
+      },
+      "test": {
+        "args": []
+      }
+    }
+  ]
+}

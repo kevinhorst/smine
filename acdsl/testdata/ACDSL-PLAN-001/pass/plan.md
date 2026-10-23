@@ -30,6 +30,10 @@ Fixture change.
 
 - [ ] Fixture verifies.
 
+## Stop conditions
+
+Leftover section of a pre-removal plan — unknown headings are ignored.
+
 ## Changelog
 
 | Date | Trigger | What changed |

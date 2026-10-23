@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "4.0",
+  "skill": "example-skill",
+  "invocation": {
+    "command": "/example-skill scope: branch[{base}] run-id: {runId}"
+  },
+  "environment": {
+    "range": {
+      "baseSha": "b4981b88d52deaa69d6ed1d60eb51b57ead47ba0",
+      "headSha": "a342811b4cf7b8bb2b54359ced6c786d3b5f349b"
+    }
+  },
+  "findings": {
+    "glob": "round-*/review.json",
+    "claimKeys": [
+      "claim"
+    ]
+  },
+  "scoring": "eval/golden/scoring.json",
+  "budgets": {
+    "armUsd": 10,
+    "armTimeoutS": 3600
+  },
+  "goldens": [
+    {
+      "id": "example-1",
+      "file": "eval/golden/example-1.json",
+      "input": "example repo a..b",
+      "bootstrap": true
+    }
+  ]
+}

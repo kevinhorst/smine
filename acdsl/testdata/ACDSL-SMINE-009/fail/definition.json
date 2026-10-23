@@ -1,0 +1,14 @@
+{
+  "invocation": {
+    "args": [
+      {
+        "name": "lanes",
+        "value": "2[opus:medium]"
+      },
+      {
+        "name": "station",
+        "value": "haiku:medium"
+      }
+    ]
+  }
+}

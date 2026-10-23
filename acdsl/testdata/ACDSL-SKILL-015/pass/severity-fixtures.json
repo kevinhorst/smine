@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "2.0",
+  "table": "schemas/severity-table.json",
+  "fixtures": [
+    {"id": "incorrect-often", "effect": "incorrect", "exposure": "often", "severity": "BLOCKER", "discriminator": "exposure=often: a normal input class hits it (any retry after a timeout)", "example": true},
+    {"id": "incorrect-rare", "effect": "incorrect", "exposure": "rare", "severity": "MAJOR", "discriminator": "exposure=rare: an unusual but real input hits it (a home directory containing a space)", "example": true},
+    {"id": "incorrect-spec-gap", "effect": "incorrect", "exposure": "rare", "severity": "MAJOR", "discriminator": "effect=incorrect: the plan requires this edge case handled and it is not — the required outcome is absent; checklist cites the item", "example": true},
+    {"id": "destructive-rare", "effect": "destructive", "exposure": "rare", "severity": "BLOCKER", "discriminator": "effect=destructive: data deleted, even on a rare path", "example": true},
+    {"id": "destructive-eventually", "effect": "destructive", "exposure": "eventually", "severity": "MAJOR", "discriminator": "exposure=eventually: the delete path exists but no caller reaches it today — never below MAJOR", "example": true},
+    {"id": "degraded-always", "effect": "degraded", "exposure": "always", "severity": "MAJOR", "discriminator": "effect=degraded: every request re-reads the config file — works, slower, users feel it", "example": true},
+    {"id": "debt-often", "effect": "debt", "exposure": "often", "severity": "MINOR", "discriminator": "effect=debt: a helper duplicated in two packages every change touches — only developers feel it", "example": true},
+    {"id": "cosmetic-untested-branch", "effect": "cosmetic", "exposure": "often", "severity": "NIT", "discriminator": "effect=cosmetic: an untested branch no spec mentions", "example": true}
+  ]
+}

@@ -2,7 +2,7 @@
   "mode": "free",
   "dist_mode": "gated",
   "base_ref": "",
-  "editable_scopes": ["GOLANG", "PYTHON", "SHELL", "SQL", "JSON"],
+  "editable_scopes": ["GOLANG", "PYTHON", "SHELL", "SQL"],
   "verifier_allowlist": [],
   "local_overrides": [],
   "allow_task_contracts": true
